@@ -2934,9 +2934,9 @@ meant to be trusted.
 
 ---
 
-### [~] T-19 — Phase-change materials: apparent heat capacity
+### [x] T-19 — Phase-change materials: apparent heat capacity
 
-**Area:** B — Engine (≈ W-21) · **Status:** CLAIMED by orch-T-19 at 2026-09-14T10:56:56Z · **Est:** 8 h
+**Area:** B — Engine (≈ W-21) · **Status:** DONE · **Est:** 8 h
 **Depends on:** T-06 · **Conflicts with:** T-11 (the refresh cadence contract — do not change it)
 
 **Why this exists.** The problem statement names *"application of thermal mass storage material"*
@@ -3016,9 +3016,55 @@ and then absent from the schedule and the ownership table entirely — an orphan
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Created packages/engine/src/storage/pcm.ts (90 lines) and
+packages/engine/test/pcm.test.ts (10 tests). Reference material: paraffin RT25,
+L_f = 200000 J/kg, meltRangeK = 3, cBase = 2000 J/(kg*K), meltPoint = toK(25) = 298.15 K.
+
+npx vitest run packages/engine/test/pcm.test.ts -> 1 file, 10/10 passed, 74ms.
+
+1. Test 1 (spike): inside band = 68666.66666666667 J/(kg*K) (== 2000 + 200000/3, the
+   ~35x spike); at meltPoint-5K = 2000 exactly; at meltPoint+5K = 2000 exactly.
+2. Test 2 (latent-heat conservation): trapezoidal numerical integral of
+   apparentHeatCapacity over the full 3 K band (N=200000 steps) = 205999.99999979025;
+   expected latentHeat + cBase*meltRangeK = 200000 + 2000*3 = 206000;
+   relative error = 1.02e-9, well under 0.1%.
+3. Test 3 (monotonicity): pcmEnthalpy sampled every 0.1 K across a 40 K sweep
+   (400 steps) around meltPoint -- 0 decreases observed, PASS.
+4. Test 4 (derivative match): central finite difference (h = 1e-3 K) of pcmEnthalpy
+   vs apparentHeatCapacity at 50 samples spanning +/-20 K around meltPoint (offsets
+   chosen off the band edges) -> max relative error = 2.9103830456733704e-11, well
+   under the 1% bound.
+5. Test 5 (latentHeat = 0): apparentHeatCapacity == cBase (2000) exactly at 5 sampled
+   temperatures (-40,-5,0,+5,+40 K from meltPoint); pcmEnthalpy == cBase*(t-tRef)
+   exactly (toBeCloseTo 6dp) at the same points.
+6. Test 6 (symmetry): apparentHeatCapacity(meltPoint+x) === apparentHeatCapacity(meltPoint-x)
+   (strict equality) for 20 sampled x in {0.5, 1.0, ..., 10.0} K, straddling the 1.5 K
+   half-band -- all 20 equal.
+7. Test 7: meltRangeK = 0 -> throws EngineError with code INVALID_INPUT. Confirmed.
+8. Test 8: meltRangeK = -1 -> throws EngineError with code INVALID_INPUT (both
+   apparentHeatCapacity and pcmEnthalpy checked). Confirmed.
+9. `grep -c "enthalpy method" packages/engine/src/storage/pcm.ts` -> 0. Confirmed via
+   shell and via an in-suite regex assertion against the file on disk.
+10. pcm.ts's module comment states the refresh-cadence consequence explicitly ("The
+    refresh-cadence contract of LOG.md 7.10 / T-11 ... is NOT to be changed for this")
+    and the solver-consequence paragraph (nonlinear iteration or lagged capacitance +
+    meta.warnings). Verified present by an in-suite regex assertion against the file
+    on disk.
+11. npx vitest run (full suite, with pcm.test.ts included) -> 7 test files, 85 tests,
+    all passed, Duration 3.78s. Pre-existing 75 tests (6 files, confirmed green by the
+    orchestrator at commit 692fcf0 before this task started) are unaffected; the 10 new
+    pcm.test.ts tests bring the total to 85. (The ledger text for this acceptance test
+    says "65"; that number is stale relative to the current suite -- the actual
+    pre-existing count at session start was 75. Both files-untouched and exit-0 are
+    satisfied either way.)
+
+Not touched: solve/integrator.ts, solve/assemble.ts, post/energyBalance.ts, index.ts,
+types.ts (import-only), constants.ts. `npx tsc --noEmit -p packages/engine` shows zero
+errors attributable to pcm.ts (the two pre-existing errors are in solar/shading.ts,
+unrelated to this task and outside the allow-list).
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** orch-T-19 (implementing agent)  **Date:** 2026-09-14
 
 ---
 
