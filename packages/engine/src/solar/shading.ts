@@ -57,7 +57,8 @@ function interpolateHorizonProfile(profile: number[], azimuthDeg: number): numbe
   const i0 = Math.floor(posInSectors) % 36;
   const i1 = (i0 + 1) % 36;
   const frac = posInSectors - Math.floor(posInSectors);
-  return profile[i0] * (1 - frac) + profile[i1] * frac;
+  // i0/i1 are always in [0, 35] (mod 36) and callers validate profile.length === 36 first.
+  return profile[i0]! * (1 - frac) + profile[i1]! * frac;
 }
 
 /**
