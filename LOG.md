@@ -2241,9 +2241,9 @@ limiting), which owns the HTTP boundary this data actually arrives through.
 
 ---
 
-### [~] T-07 — Canonical test fixtures, including the C-01 kill-shot pair
+### [x] T-07 — Canonical test fixtures, including the C-01 kill-shot pair
 
-**Area:** A — Foundation (≈ W-04) · **Status:** CLAIMED by orch-T-07 at 2026-09-14T10:56:56Z · **Est:** 5 h
+**Area:** A — Foundation (≈ W-04) · **Status:** DONE · **Est:** 5 h
 **Depends on:** T-06
 **Conflicts with:** T-23, T-62 (they import these fixtures and must never edit them)
 
@@ -2341,9 +2341,74 @@ across agents guarantees the C-01 pair and the helpers disagree about units.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Verified in an isolated git worktree checked out at commit 7f93967 (T-18/T-19 landed, HEAD at the
+time of this task), to avoid contamination from other agents' concurrent uncommitted edits in the
+shared working tree (T-21 was mid-flight on src/index.ts, src/loads/infiltration.ts, src/types.ts).
+fixtures.ts/helpers.ts were then copied byte-identical into the shared tree; T-07 touches only
+packages/engine/test/fixtures.ts (extended) and packages/engine/test/helpers.ts (new).
+
+1. `npx vitest run` in the clean worktree, before this task's changes: 8 test files, 97 tests, all
+   green (baseline had already grown past the ledger's stale "65 tests" figure via T-18/T-19).
+   After adding MAT/shelterA_stone400/shelterB_steelPuf/singleWallSemiInfinite/adiabaticBox/
+   steadyStateBox/sineWeather/constantWeather to fixtures.ts and creating helpers.ts: still
+   8 test files, 97 tests, all green, unchanged pass count -- exit 0.
+
+2. analyticalDecrementLag(8.29e-7, 0.30, 86400) = { f: 0.13712859334669872, phiHours: 7.589155087543331 }
+   -- f within 0.00013 of 0.137 (tol 0.002), phiHours within 0.011 of 7.6 (tol 0.1). PASS.
+
+3. analyticalDecrementLag(5.98e-7, 0.20, 86400) = { f: 0.21023203845839955, phiHours: 5.957017036356123 }
+   -- f within 0.0012 of 0.209 (tol 0.01), phiHours within 0.043 of 6.0 (tol 0.2). PASS.
+
+4. analyticalDecrementLag(4.49e-7, 0.20, 86400) = { f: 0.1653315108868338, phiHours: 6.8747397729927435 }
+   -- f within 0.0013 of 0.164 (tol 0.01), phiHours within 0.025 of 6.9 (tol 0.2). PASS.
+
+5. decrementAndLag fed two synthetic 300 s-sampled, 86400 s-period sinusoids (drive amplitude 10,
+   response amplitude 5, response delayed 3 h behind drive) recovered
+   { f: 0.4999999999999997, phiHours: 3.000000000000004 } -- f within 3e-16 of the known 0.5
+   (tol 1 %  = 0.005), phiHours within 4e-15 h of the known 3 h (tol 5 min = 0.0833 h). PASS.
+
+6. shelterA_stone400 vs shelterB_steelPuf: volume [64, 64] m^3, floorArea [16, 16] m^2, total window
+   area [1.5, 1.5] m^2 -- all three pairs identical to within 1e-9 (bit-identical, in fact: both
+   shelters are built by the same private buildC01Shelter() scaffold and differ only in the
+   `construction` argument). PASS.
+
+7. C-01 validity condition, both including identical surface films
+   (h_o = hConvExterior(2, 3500), h_i = hConvInterior('wall', ., ., 3500)):
+     C01_U_A (400 mm stone masonry)      = 1.4557789618469557 W/(m^2*K)
+     C01_U_B (1 mm steel + 50 mm PUF)    = 0.3930693499319932 W/(m^2*K)
+   U_B <= U_A holds (0.393 <= 1.456) -- shelter B is genuinely the better-insulated shelter, so the
+   C-01 pair is valid. This also holds for the fabric alone (R_A = 0.4/2.8 = 0.143 m^2K/W ->
+   fabricU_A = 7.0; R_B = 0.001/50 + 0.05/0.025 = 2.00002 m^2K/W -> fabricU_B = 0.49999), so the
+   ordering is not an artefact of the assumed film coefficients. PASS.
+
+8. MAT.denseConcrete.k / (MAT.denseConcrete.rho * MAT.denseConcrete.c) = 8.285984848484849e-7 --
+   within 4.0e-10 of 8.29e-7 (tol 1e-9). PASS.
+
+9. MAT.rammedEarth diffusivity = 5.980861244019139e-7 (within 8.6e-11 of 5.98e-7, tol 1e-9).
+   MAT.firedBrick diffusivity  = 4.491017964071856e-7 (within 9.2e-11 of 4.49e-7, tol 1e-9). PASS.
+
+10. For both shelterA_stone400 and shelterB_steelPuf:
+      back = requestFromJson(JSON.parse(JSON.stringify(requestToJson(shelter))))
+    `assert.deepStrictEqual(back, shelter)` -- true for both A and B (Float64Array round-trips
+    correctly through the plain-array JSON boundary, and every other field is unchanged). PASS.
+
+11. Every one of the 10 MAT entries (stone, denseConcrete, rammedEarth, firedBrick, eps, puf, steel,
+    mudPlaster, water, pcmRt25) has a non-empty `source` string -- 0 bad entries found by scanning
+    Object.entries(MAT). PASS.
+
+12. simulate(shelterA_stone400): no throw, meta.energyBalanceResidual = 1.843548225298783e-7.
+    simulate(shelterB_steelPuf): no throw, meta.energyBalanceResidual = 0.00007550878830531086.
+    Both well under the 1e-3 contract limit. PASS.
+
+Pre-existing, unrelated defect noted (not touched, not mine to fix per rule 16): `tsc -b
+packages/engine` reports two TS2532 "Object is possibly undefined" errors in
+packages/engine/src/solar/shading.ts:60 (T-18's file) on both the pre-T-07 baseline and after this
+task's changes -- confirmed identical via `git stash`/`git stash pop` in the verification worktree.
+It does not affect `vitest run` (esbuild transpilation, no type-check) and is outside T-07's
+allow-list (packages/engine/src is off limits to this task). Flagging upward for T-18's owner.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** T-07 agent (orch-T-07)  **Date:** 2026-09-14
 
 ---
 
