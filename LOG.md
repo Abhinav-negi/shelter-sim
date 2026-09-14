@@ -121,7 +121,7 @@ Kept current by whoever ticks a box.
 
 | Area | Name | Done / Total |
 |---|---|---|
-| A | Foundation & contracts | 1 / 7 |
+| A | Foundation & contracts | 2 / 7 |
 | B | Engine | 10 / 16 |
 | C | Data layer | 0 / 5 |
 | D | Database tier | 0 / 7 |
@@ -131,7 +131,7 @@ Kept current by whoever ticks a box.
 | H | Scenarios | 0 / 3 |
 | I | Validation & credibility | 0 / 4 |
 | J | Delivery | 0 / 4 |
-| | **TOTAL** | **11 / 69** |
+| | **TOTAL** | **12 / 69** |
 
 **THE HARD GATE: PASSED.** See §10.
 
@@ -1528,9 +1528,9 @@ Verified 2026-09-14 by direct execution on this machine.
 
 ---
 
-### [~] T-02 — Put the project under version control
+### [x] T-02 — Put the project under version control
 
-**Area:** A — Foundation (≈ W-01, the `git init` half) · **Status:** CLAIMED by claude-sonnet-5 at 2026-09-14T05:46:51Z · **Est:** 1 h
+**Area:** A — Foundation (≈ W-01, the `git init` half) · **Status:** DONE · **Est:** 1 h
 **Depends on:** none
 **Conflicts with:** none — but do this FIRST, before anyone writes anything
 
@@ -1588,9 +1588,21 @@ undo. Every hour this stays true is an hour where one bad `rm` loses the hard ga
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+$ git status                                exit 0, no "not a git repository"
+$ git log --oneline | wc -l                 1
+$ git log --oneline --reverse | head -1     6da2d87 T-02: initial commit -- engine green at 65/65
+$ git status --porcelain                    (empty -- clean)
+$ git ls-files | grep -c "^packages/engine/src/"   24
+$ git ls-files | grep -c "dist/"                    0
+$ git ls-files | grep -c "node_modules"             0
+$ git ls-files | grep -c "^LOG.md$"                 1
+$ npx vitest run                             5 test files, 65 tests, all passed (4.20s)
+$ wc -l README.md                            14 (< 30)
+$ grep -c "one branch per task" README.md    1
+$ git show --stat HEAD | grep -c "\.ts "     31 (> 30)
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** claude-sonnet-5  **Date:** 2026-09-14
 
 ---
 
