@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.next/
+.env
+.env.local
+.cache/
+*.db
+*.db-journal
+prisma/dev.db*
+.work/BOARD.md
+coverage/
+test-output/
