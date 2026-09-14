@@ -2241,9 +2241,9 @@ limiting), which owns the HTTP boundary this data actually arrives through.
 
 ---
 
-### [ ] T-07 — Canonical test fixtures, including the C-01 kill-shot pair
+### [~] T-07 — Canonical test fixtures, including the C-01 kill-shot pair
 
-**Area:** A — Foundation (≈ W-04) · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** A — Foundation (≈ W-04) · **Status:** CLAIMED by orch-T-07 at 2026-09-14T10:56:56Z · **Est:** 5 h
 **Depends on:** T-06
 **Conflicts with:** T-23, T-62 (they import these fixtures and must never edit them)
 
@@ -2841,9 +2841,9 @@ both readings clear their budgets. Always record your own number, never copy one
 
 ---
 
-### [ ] T-18 — Shading: mountain horizon and window overhangs
+### [~] T-18 — Shading: mountain horizon and window overhangs
 
-**Area:** B — Engine (≈ W-14) · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** B — Engine (≈ W-14) · **Status:** CLAIMED by orch-T-18 at 2026-09-14T10:56:56Z · **Est:** 6 h
 **Depends on:** T-06 · **Conflicts with:** none — safe to run in parallel with anything
 
 **Why this exists.** `solar/shading.ts` is listed in `TECH.md` §5 and **does not exist on disk**.
@@ -2934,9 +2934,9 @@ meant to be trusted.
 
 ---
 
-### [ ] T-19 — Phase-change materials: apparent heat capacity
+### [~] T-19 — Phase-change materials: apparent heat capacity
 
-**Area:** B — Engine (≈ W-21) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** B — Engine (≈ W-21) · **Status:** CLAIMED by orch-T-19 at 2026-09-14T10:56:56Z · **Est:** 8 h
 **Depends on:** T-06 · **Conflicts with:** T-11 (the refresh cadence contract — do not change it)
 
 **Why this exists.** The problem statement names *"application of thermal mass storage material"*
@@ -3119,9 +3119,9 @@ disagree about node indices, which is the worst class of bug in this codebase an
 
 ---
 
-### [ ] T-21 — Couple infiltration to opening area (closes AUDIT F-6)
+### [~] T-21 — Couple infiltration to opening area (closes AUDIT F-6)
 
-**Area:** B — Engine (≈ W-18, the unfinished half) · **Status:** NOT STARTED · **Est:** 4 h
+**Area:** B — Engine (≈ W-18, the unfinished half) · **Status:** CLAIMED by orch-T-21 at 2026-09-14T10:56:56Z · **Est:** 4 h
 **Depends on:** T-06 · **Conflicts with:** T-16 (edits `loads/infiltration.ts`)
 
 **Why this exists.** `CHALLENGE.md` calls the glazing sweep **"the sharpest single diagnostic in the
@@ -3400,9 +3400,9 @@ test files exclusively. They share no file. Give each its own acceptance tests f
 
 ---
 
-### [ ] T-24 — Material, glazing and construction catalogues, every row cited
+### [~] T-24 — Material, glazing and construction catalogues, every row cited
 
-**Area:** C — Data (≈ W-26) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** C — Data (≈ W-26) · **Status:** CLAIMED by orch-T-24 at 2026-09-14T10:56:56Z · **Est:** 8 h
 **Depends on:** T-06 · **Conflicts with:** T-28 (reads these by id, never edits them)
 
 **Why this exists.** Every number the engine looks up rather than computes, each with a citation a
