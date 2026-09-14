@@ -1,0 +1,8 @@
+# T-03 scope: lint/format tooling only. The engine package is frozen, verified
+# source (T-01/T-08..T-17) -- this task must not produce a diff inside it.
+packages/engine/
+
+# Pre-existing project docs, out of this task's allow-list.
+LOG.md
+ENGINE_BLUEPRINT.md
+plan.md
