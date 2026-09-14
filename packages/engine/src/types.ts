@@ -213,6 +213,12 @@ export interface Operation {
   };
   /** K. */
   comfortBand: { lower: Kelvin; upper: Kelvin };
+  /**
+   * True when the shelter has an unvented combustion appliance (a bukhari stove).
+   * Raises the infiltration safety floor from ACH_MIN to
+   * ACH_MIN + ACH_MIN_COMBUSTION_ALLOWANCE (T-21, closes AUDIT F-6). Default false.
+   */
+  hasUnventedCombustion?: boolean;
 }
 
 // ============================== REQUEST ==============================

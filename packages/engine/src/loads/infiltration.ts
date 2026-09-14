@@ -7,9 +7,10 @@
  * insulation", that is a real, deployable finding.
  */
 
-import { ACH_MIN, C_P_AIR } from '../constants.js';
+import { ACH_MIN, ACH_MIN_COMBUSTION_ALLOWANCE, C_P_AIR } from '../constants.js';
 import { airDensity } from '../air.js';
 import type { Kelvin } from '../units.js';
+import { EngineError } from '../types.js';
 
 export interface InfiltrationResult {
   /** kg/s. */
@@ -51,6 +52,57 @@ export function infiltration(
  * the air; ignoring them makes the system numerically stiff and the temperature
  * curve unrealistically twitchy. M = 4 is defensible standard practice.
  */
+export interface EffectiveAchResult {
+  /** Air changes per hour actually used, after the opening-area coupling and safety floor. */
+  ach: number;
+  /** True when the coupled value was below the safety floor and was raised to it. */
+  clampedBySafetyFloor: boolean;
+}
+
+/**
+ * CALIBRATION KNOB. Additional air changes per hour per unit of glazing-area fraction.
+ *
+ * Physical justification: crack length scales with opening perimeter, and openable glazing
+ * leaks more per m^2 than opaque envelope does. This is an empirical coupling, not a derived
+ * one -- it is here so that the glazing sweep can produce the non-monotonic optimum the physics
+ * should show (CHALLENGE.md C-06, K-05; AUDIT.md F-6).
+ *
+ * TUNE THIS if a measured blower-door figure for a real Ladakhi shelter ever becomes available.
+ * That single measurement is what would turn this from a plausible coupling into a calibrated one.
+ */
+export const ACH_PER_GLAZING_FRACTION = 1.2;
+
+/**
+ * Couples the air-change rate to the fraction of the envelope that is openable glazing
+ * (AUDIT.md F-6). Without this, the glazing sweep's loss side never moves as glazing grows,
+ * so the tool could recommend glazing an entire wall -- actively harmful advice on a
+ * -25 degC Ladakh night.
+ *
+ * SAFETY: the combined floor is enforced here exactly as in `infiltration()` above -- this is
+ * intentional defence in depth (global rule 10), not redundancy to be cleaned up. A design with
+ * unvented combustion floors at ACH_MIN + ACH_MIN_COMBUSTION_ALLOWANCE (0.70), not ACH_MIN (0.35).
+ */
+export function effectiveAch(
+  baseAch: number,
+  glazingAreaM2: number,
+  envelopeAreaM2: number,
+  hasUnventedCombustion: boolean,
+  allowUnsafe = false,
+): EffectiveAchResult {
+  if (envelopeAreaM2 <= 0) {
+    throw new EngineError(
+      'INVALID_INPUT',
+      'envelopeAreaM2 must be greater than zero to compute the opening-area infiltration coupling.',
+    );
+  }
+  const coupled = baseAch + ACH_PER_GLAZING_FRACTION * (glazingAreaM2 / envelopeAreaM2);
+  const achMin = ACH_MIN + (hasUnventedCombustion ? ACH_MIN_COMBUSTION_ALLOWANCE : 0);
+  if (coupled < achMin && !allowUnsafe) {
+    return { ach: achMin, clampedBySafetyFloor: true };
+  }
+  return { ach: coupled, clampedBySafetyFloor: false };
+}
+
 export function effectiveAirCapacitance(
   volumeM3: number,
   altitudeM: number,

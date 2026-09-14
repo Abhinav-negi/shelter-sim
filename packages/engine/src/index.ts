@@ -11,7 +11,7 @@
  * See ENGINE_BLUEPRINT.md for the physics.
  */
 
-import { effectiveAirCapacitance } from './loads/infiltration.js';
+import { effectiveAch, effectiveAirCapacitance } from './loads/infiltration.js';
 import { buildModel, AIR_NODE, STAR_NODE } from './solve/assemble.js';
 import { integrate } from './solve/integrator.js';
 import { energyBalance } from './post/energyBalance.js';
@@ -49,8 +49,47 @@ export function simulate(req: SimulationRequest): SimulationResult {
   const started = Date.now();
   validateRequest(req);
 
-  const model = buildModel(req.building, req.materials, req.glazings, req.options.meshTargetDx);
-  const { records, initialT, warnings, spinUpDaysUsed } = integrate(req, model);
+  // T-21 (AUDIT F-6): couple the achSchedule actually used to the opening area,
+  // computed once here rather than inside the solver's per-hour coefficient
+  // refresh, so `solve/` stays untouched and the coupling is a single, auditable
+  // step ahead of the physics.
+  const glazingAreaM2 = req.building.windows.reduce((sum, w) => sum + w.area, 0);
+  const envelopeAreaM2 =
+    req.building.surfaces
+      .filter((s) => s.boundary === 'exterior')
+      .reduce((sum, s) => sum + s.area, 0) + glazingAreaM2;
+  const hasUnventedCombustion = req.operation.hasUnventedCombustion ?? false;
+  let achClampedBySafetyFloor = false;
+  /*
+   * envelopeAreaM2 <= 0 means there is no exterior envelope at all to compute an
+   * opening-area FRACTION against -- only the fully-adiabatic capacitance fixture
+   * (validation Test 4, `boundary: 'adiabatic'` on every surface) does this, and
+   * it also has zero windows. The coupling is inapplicable there, not invalid, so
+   * the schedule passes through unchanged; `loads/infiltration.ts`'s
+   * `infiltration()` still enforces ACH_MIN independently downstream (defence in
+   * depth, global rule 10) for every real building, which always has a positive
+   * envelope area. `effectiveAch()` itself keeps throwing on envelopeAreaM2 <= 0
+   * when it IS asked to compute a fraction (see its own tests) -- this guard only
+   * decides whether to ask it.
+   */
+  const achSchedule =
+    envelopeAreaM2 <= 0
+      ? req.operation.achSchedule
+      : req.operation.achSchedule.map((baseAch) => {
+          const coupled = effectiveAch(
+            baseAch,
+            glazingAreaM2,
+            envelopeAreaM2,
+            hasUnventedCombustion,
+            req.options.allowUnsafeVentilation,
+          );
+          if (coupled.clampedBySafetyFloor) achClampedBySafetyFloor = true;
+          return coupled.ach;
+        });
+  const couplingReq: SimulationRequest = { ...req, operation: { ...req.operation, achSchedule } };
+
+  const model = buildModel(couplingReq.building, couplingReq.materials, couplingReq.glazings, couplingReq.options.meshTargetDx);
+  const { records, initialT, warnings, spinUpDaysUsed } = integrate(couplingReq, model);
 
   if (records.length === 0) {
     throw new Error('The integrator produced no timesteps; check simulationDays and timestepSeconds.');
@@ -123,6 +162,11 @@ export function simulate(req: SimulationRequest): SimulationResult {
   }
   if (req.weather.RH === undefined) {
     allWarnings.push('No humidity data, so condensation risk could not be assessed. It is reported as unavailable, not as zero.');
+  }
+  if (achClampedBySafetyFloor) {
+    allWarnings.push(
+      'Ventilation was raised to the safety floor for at least one hour: the requested design was sealed tighter than is safe. This prevents a carbon monoxide build-up from any unvented combustion appliance (a bukhari stove); do not seal this shelter any tighter than shown.',
+    );
   }
 
   return {
