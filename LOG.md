@@ -2841,9 +2841,9 @@ both readings clear their budgets. Always record your own number, never copy one
 
 ---
 
-### [~] T-18 — Shading: mountain horizon and window overhangs
+### [x] T-18 — Shading: mountain horizon and window overhangs
 
-**Area:** B — Engine (≈ W-14) · **Status:** CLAIMED by orch-T-18 at 2026-09-14T10:56:56Z · **Est:** 6 h
+**Area:** B — Engine (≈ W-14) · **Status:** DONE · **Est:** 6 h
 **Depends on:** T-06 · **Conflicts with:** none — safe to run in parallel with anything
 
 **Why this exists.** `solar/shading.ts` is listed in `TECH.md` §5 and **does not exist on disk**.
@@ -2928,9 +2928,57 @@ meant to be trusted.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+DEVIATION (not a blocker): the PROMPT's pseudocode used sun.altitudeDeg / sun.azimuthDeg / sun.isUp,
+but the SunPosition interface actually on disk in solar/geometry.ts (done, not edited by this task)
+uses altitude / azimuth (already degrees) and has no isUp field. Per this ledger's own rule that
+disk wins over prose, shading.ts reads sun.altitude / sun.azimuth and treats "sun is up" as
+sun.altitude > 0. Documented in a comment at the top of shading.ts and in .work/T-18.md.
+
+Test 1 (no profile, full day at Leh 21 Dec): factor 1 at every hour altitude > 0, 0 otherwise,
+  swept at 0.05 h resolution over the full 24 h day. Measured sunrise = 7.4326 h,
+  sunset = 17.1510 h (via sunriseSunset()).
+Test 2 (flat 20 deg horizon): factor matches (altitude >= 20 ? 1 : 0) exactly, swept at 0.02 h
+  resolution over the full day. Measured transition hours (0.001 h scan against sunPosition
+  directly): morning = 9.501 h, evening = 15.083 h; cross-checked +/-0.01 h either side of both
+  transitions.
+Test 3 (36 zeros == no profile): matched exactly at every sampled hour, 0.05 h steps over 24 h.
+Test 4 (35-value profile): throws EngineError with code === 'INVALID_INPUT' -- verified via
+  toThrow(EngineError) and by catching and asserting the code field directly.
+Test 5 (overhangDepth = 0): returns exactly 1.0 for 200 pseudo-random sun positions (altitude
+  sampled across [-90, 90], including below-horizon cases) and surface azimuths across [-180, 180].
+Test 6 (classic Leh overhang design: south window, windowHeight = 1.2 m, overhangDepth = 1.0 m,
+  overhangHeightAbove = 1.0 m): at 21 Jun solar noon (measured altitude 79.2998 deg) fraction = 0
+  exactly; at 21 Dec solar noon (measured altitude 32.4002 deg) fraction = 1 exactly.
+Test 7 (bounds): 1000 pseudo-random samples (sun altitude/azimuth, surface azimuth, windowHeight
+  0.5-2.5 m, overhangDepth 0-2 m, overhangHeightAbove 0-1 m) all landed in [0, 1].
+Test 8 (continuity): sweeping altitude 0-80 deg in 0.1 deg steps at wallRelativeAzimuth = 0,
+  overhangDepth = 0.5 m, overhangHeightAbove = 0.3 m, windowHeight = 1.2 m -- measured max jump
+  between consecutive samples = 0.007185, well under the 0.05 threshold. Getting this required
+  changing the horizon guard in overhangSunlitFraction from `altitude <= 0` to `altitude < 0`:
+  at exactly 0 deg the geometric formula already gives shadedHeight = 0 (tan(0) = 0), so a `<=`
+  cutoff produced a spurious 0->1 cliff right at the horizon instead of a smooth rise. Documented
+  in a code comment at the guard.
+Test 9 (wallRelativeAzimuth = 150 deg, sun behind the wall): returns exactly 0.
+Test 10: a `// SIMPLIFICATION:` comment is present in shading.ts naming the beam-only ceiling
+  (diffuse/ground-reflected untouched, so a blocked horizon or deep overhang also blocking part
+  of the sky dome is not modelled) and its upgrade path (a sky-dome view-factor reduction),
+  tracked for the limitations list (T-64) / EQUATIONS.md.
+Test 11: `npx vitest run` -- verified twice. (a) In the live working tree: 8 test files, 97 tests,
+  94 passed / 3 failed -- the 3 failures are in integrator.test.ts, caused entirely by another
+  parallel agent's uncommitted, unrelated in-progress changes to loads/infiltration.ts and
+  index.ts (an envelopeAreaM2 validation guard being added, apparently for T-21's ACH/opening-area
+  coupling), not touched by this task. (b) To isolate this task's own correctness from that
+  concurrent work-in-progress, verified against the clean committed baseline instead: a disposable
+  git worktree at HEAD (68efcb9, "T-19: PCM apparent heat capacity module") with only
+  solar/shading.ts and test/shading.test.ts copied in -- 8 test files, 97 tests, ALL PASSED, exit
+  0. Baseline before this task (7 files, no shading.test.ts) was 85 tests; this task added 1 file
+  and 12 tests, taking it to 97, matching the orchestrator's expected count exactly. Perf spot
+  numbers from that clean run: full simulate() incl. spin-up 50.5 ms/run, 100-variant sweep
+  2.60 s -- both well inside the T-06/section-7.15 budgets; unaffected by this task since
+  shading.ts is not wired into index.ts.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude (orch-T-18 session)  **Date:** 2026-09-14
 
 ---
 
