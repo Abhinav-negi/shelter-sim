@@ -121,7 +121,7 @@ Kept current by whoever ticks a box.
 
 | Area | Name | Done / Total |
 |---|---|---|
-| A | Foundation & contracts | 3 / 7 |
+| A | Foundation & contracts | 4 / 7 |
 | B | Engine | 10 / 16 |
 | C | Data layer | 0 / 5 |
 | D | Database tier | 0 / 7 |
@@ -131,7 +131,7 @@ Kept current by whoever ticks a box.
 | H | Scenarios | 0 / 3 |
 | I | Validation & credibility | 0 / 4 |
 | J | Delivery | 0 / 4 |
-| | **TOTAL** | **13 / 69** |
+| | **TOTAL** | **14 / 69** |
 
 **THE HARD GATE: PASSED.** See §10.
 
@@ -1729,9 +1729,9 @@ tsconfig.base.json and .gitignore: untouched (confirmed via git diff, no output)
 
 ---
 
-### [ ] T-04 — Continuous integration
+### [x] T-04 — Continuous integration
 
-**Area:** A — Foundation (≈ W-01, the CI half) · **Status:** NOT STARTED · **Est:** 2 h
+**Area:** A — Foundation (≈ W-01, the CI half) · **Status:** DONE · **Est:** 2 h
 **Depends on:** T-02, T-03
 **Conflicts with:** none
 
@@ -1794,9 +1794,74 @@ now" without trusting anyone's self-report.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Context: packages/engine/test/fixtures.ts today (before T-07) exports only material/glazing
+catalogues (M, G), not runnable SimulationRequest fixtures -- those land in T-07/T-28. T-04's
+allow-list forbids touching any engine test file, so scripts/ci-energy-balance.mjs defines its own
+two small, self-contained fixtures (rammed-earth-300mm; concrete+EPS insulated, glazed) built with
+the same proven shape as packages/engine/test/box.ts's buildBox. This is flagged in the script's
+header comment per Global Rule 13, with the upgrade path (extend FIXTURES once T-07/T-28 land).
+
+1. `node scripts/ci-energy-balance.mjs` -- exit 0, one residual line per fixture:
+     rammed-earth-300mm: residual 3.5247975261483056e-7
+     concrete-eps-insulated-glazed: residual 0.00003336907696226158
+     MAX RESIDUAL: 0.00003336907696226158
+
+2. Final line `MAX RESIDUAL: 0.00003336907696226158` -- matches `^MAX RESIDUAL: `, value
+   3.34e-5 < 1e-3. PASS.
+
+3. Negative control -- edited packages/engine/src/post/energyBalance.ts line 50 to
+   `const boundary = [r.Q1, r.Q2, r.Q3, r.Q4, r.Q5, r.Q8, r.Q9, r.Q10, r.Q11, r.Qaux];`
+   (added r.Q5), rebuilt (`npm run typecheck`), reran the script:
+     rammed-earth-300mm: residual 0.016214728446627483
+     concrete-eps-insulated-glazed: residual 0.033733222319573104
+     MAX RESIDUAL: 0.033733222319573104
+     Energy-balance gate FAILED: a fixture's residual reached or exceeded 0.001.
+     exit code 1
+   Both residuals (0.0162, 0.0337) exceed 0.01. Reverted the edit
+   (`git diff --stat packages/engine/src/post/energyBalance.ts` empty after revert), rebuilt, reran:
+     rammed-earth-300mm: residual 3.5247975261483056e-7
+     concrete-eps-insulated-glazed: residual 0.00003336907696226158
+     MAX RESIDUAL: 0.00003336907696226158
+     exit code 0
+   Clean residual matches the pre-fault run exactly. PASS.
+
+4. `npx --yes js-yaml .github/workflows/ci.yml > /dev/null` -- exit 0. PASS.
+
+5. Step named literally `THE HARD GATE` present (running
+   `npx vitest run packages/engine/test/gate.test.ts`). PASS.
+
+6. Step order, read from the parsed YAML: Checkout, Set up Node, Install dependencies (npm ci),
+   Typecheck, Lint, Format check, THE HARD GATE, Run full test suite, energy-balance-gate.
+   Matches install -> typecheck -> lint -> format:check -> gate -> tests -> energy balance. PASS.
+
+7. Full local sequence (fresh checkout state: deleted node_modules, packages/engine/dist and
+   *.tsbuildinfo first) -- `npm ci && npm run typecheck && npm run lint && npm run format:check
+   && npx vitest run packages/engine/test/gate.test.ts && npx vitest run
+   && node scripts/ci-energy-balance.mjs`, every command exited 0:
+     npm ci: 141 packages installed
+     typecheck: tsc -b packages/engine, no errors (also produces dist/, since packages/engine
+       uses composite:true and no noEmit)
+     lint: eslint . -- no issues
+     format:check: prettier --check . -- all files formatted
+     gate test: 8/8 passed
+     full suite: 5 test files, 65/65 passed
+     energy-balance-gate: 2/2 fixtures under threshold, MAX RESIDUAL 0.00003336907696226158
+   TOTAL WALL CLOCK: 14 seconds (measured with `SECONDS=0` ... `echo $SECONDS`). Well under 3 min.
+
+8. Read `.github/workflows/ci.yml` in full: no `secrets.*`, no `env:` block, no `${{ ... }}`
+   interpolation of any kind anywhere in the file. PASS.
+
+Baseline (start-of-session ritual, before this task's edits): `npx vitest run` -- 5 test files,
+65 tests, all passed, 5.26s. perf.test.ts: "full simulate() incl. spin-up: 86.1 ms/run",
+"100-variant sweep: 3.93 s". Suite was green; proceeded per §2.
+
+Root `package.json` already had a `typecheck` script (`tsc -b packages/engine`) before this task,
+so per the PROMPT's own instruction ("Add a root typecheck script if one does not already exist")
+package.json was left untouched -- zero-line diff, verified with `git diff --stat package.json`.
+`eslint.config.js` and `.prettierrc` are also untouched (`git diff --stat` empty for both).
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude Sonnet 5 (T-04 CI agent)  **Date:** 2026-09-14
 
 ---
 
