@@ -95,6 +95,27 @@ export interface WindowSpec {
   overhangHeightAbove?: number;
 }
 
+/**
+ * A discrete thermal storage element coupled to the room (water drum, PCM, rock
+ * bed). Added by T-06 for T-19 (PCM node) / T-22 (storage in the node graph).
+ */
+export interface StorageElement {
+  id: string;
+  kind: 'water' | 'pcm' | 'rock';
+  materialId: string;
+  massKg: number;
+  /** m^2. */
+  surfaceAreaToRoom: number;
+  /** W/K. */
+  conductanceToRoom: number;
+  /** K. PCM only. */
+  meltPoint?: Kelvin;
+  /** K. PCM only, default 3. */
+  meltRangeK?: number;
+  /** J/kg. PCM only. */
+  latentHeat?: number;
+}
+
 export interface Building {
   /** m^2. */
   floorArea: number;
@@ -106,6 +127,8 @@ export interface Building {
   windows: WindowSpec[];
   /** Multiplier on envelope UA to account for thermal bridges. Typically 1.05-1.20. */
   thermalBridgeFactor: number;
+  /** Optional discrete storage elements (water drums, PCM, rock bed). Added by T-06. */
+  storageElements?: StorageElement[];
 }
 
 // ============================== SITE & WEATHER ==============================
@@ -345,6 +368,7 @@ export type EngineErrorCode =
   | 'GEOMETRY_INCONSISTENT'
   | 'WEATHER_INVALID'
   | 'SOLVER_DIVERGED'
+  | 'DATA_SCHEMA_MISMATCH'
   | 'SINGULAR_MATRIX';
 
 export class EngineError extends Error {
@@ -356,4 +380,104 @@ export class EngineError extends Error {
     super(message);
     this.name = 'EngineError';
   }
+}
+
+// ============================== PRESETS (added by T-06, LOG.md 7.11) ==============================
+
+/**
+ * A named, ready-to-run starting point shown in the UI. Resolves against a bundled
+ * TMY file via `locationId`; the caller supplies weather/materials/glazings.
+ */
+export interface Preset {
+  id: string;
+  name: string;
+  nameHi?: string;
+  description: string;
+  /**
+   * Ways this preset is a simplification of reality (e.g. the Trombe-wall caveat).
+   * Surfaced in the UI, never hidden -- LOG.md rule 13.
+   */
+  approximations?: string[];
+  /** Resolves to a bundled TMY file. */
+  locationId: string;
+  request: Omit<SimulationRequest, 'weather' | 'materials' | 'glazings'>;
+}
+
+// ============================== WORKER PROTOCOL (added by T-06, LOG.md 7.14) ==============================
+
+/**
+ * One protocol shared by the browser Web Worker (T-43) and the server worker-thread
+ * pool (T-40), so the two cannot drift. Every request carries a caller-generated id;
+ * every response echoes it, so a superseded request (the user moved the slider again)
+ * can be cancelled by id instead of racing a stale result into the store.
+ */
+export type WorkerRequest =
+  | { id: string; kind: 'simulate'; payload: SimulationRequest }
+  | { id: string; kind: 'sweep'; payload: SweepRequest }
+  | { id: string; kind: 'cancel'; targetId: string };
+
+export type WorkerResponse =
+  | { id: string; kind: 'result'; payload: SimulationResult }
+  | { id: string; kind: 'sweepResult'; payload: SweepResult }
+  | { id: string; kind: 'progress'; done: number; total: number }
+  | { id: string; kind: 'error'; code: EngineErrorCode; message: string };
+
+// ============================== SWEEP CONTRACT (added by T-06, LOG.md 7.15) ==============================
+
+/**
+ * Does not exist in any source document -- AUDIT.md F-3 records that Compare and
+ * Optimise existed only as two words in an ASCII mockup, with no contract, no
+ * target and no owner. This is that contract.
+ */
+export type VariableSpec =
+  | { kind: 'wallConstruction'; values: string[] }
+  | { kind: 'insulationThickness'; values: number[] } // metres
+  | { kind: 'insulationPosition'; values: ('inside' | 'outside' | 'cavity')[] }
+  | { kind: 'roofConstruction'; values: string[] }
+  | { kind: 'glazing'; values: string[] }
+  | { kind: 'wwr'; orientation: 'S' | 'E' | 'W' | 'N'; values: number[] } // 0-1
+  | { kind: 'buildingAzimuth'; values: number[] } // degrees
+  | { kind: 'aspectRatio'; values: number[] }
+  | { kind: 'nightShutters'; values: boolean[] }
+  | { kind: 'massStrategy'; values: ('none' | 'floor' | 'trombe' | 'water' | 'pcm')[] }
+  | { kind: 'ach'; values: number[] };
+
+export interface SweepRequest {
+  base: SimulationRequest;
+  variables: VariableSpec[];
+  mode: 'grid' | 'random' | 'nsga2';
+  /** Hard cap. Default 200. */
+  maxVariants: number;
+  constraints: {
+    /** NEVER below ACH_MIN. */
+    achMin: number;
+    localMaterialsOnly?: boolean;
+    budgetCeilingINR?: number;
+    fixedFloorArea?: boolean;
+  };
+  objectives: { metric: keyof SimulationKpis; direction: 'min' | 'max' }[];
+}
+
+export interface SweepVariant {
+  id: string;
+  /** Human-readable, for the UI. */
+  overrides: Record<string, string | number | boolean>;
+  kpis: SimulationKpis;
+  capitalCostINR: number;
+  embodiedCarbonKg: number;
+  feasible: boolean;
+  /** e.g. "ACH below safety floor". */
+  infeasibleReason?: string;
+  /** 1 = on the Pareto front. */
+  paretoRank: number;
+}
+
+export interface SweepResult {
+  /** Ordered by PRIMARY_METRIC, ties preserved. */
+  variants: SweepVariant[];
+  /** Ids grouped where |delta| < RANK_NOISE_FLOOR. */
+  ties: string[][];
+  baselineId: string;
+  best: SweepVariant;
+  meta: { evaluated: number; wallClockMs: number; workers: number; spinUpShared: boolean };
 }

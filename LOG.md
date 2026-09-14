@@ -121,7 +121,7 @@ Kept current by whoever ticks a box.
 
 | Area | Name | Done / Total |
 |---|---|---|
-| A | Foundation & contracts | 5 / 7 |
+| A | Foundation & contracts | 6 / 7 |
 | B | Engine | 10 / 16 |
 | C | Data layer | 0 / 5 |
 | D | Database tier | 0 / 7 |
@@ -131,7 +131,7 @@ Kept current by whoever ticks a box.
 | H | Scenarios | 0 / 3 |
 | I | Validation & credibility | 0 / 4 |
 | J | Delivery | 0 / 4 |
-| | **TOTAL** | **15 / 69** |
+| | **TOTAL** | **16 / 69** |
 
 **THE HARD GATE: PASSED.** See §10.
 
@@ -2021,9 +2021,9 @@ T-05 file; noted here only so the next agent hitting the same wall doesn't lose 
 
 ---
 
-### [ ] T-06 — Extend the shared contract with the types the rest of the build needs
+### [x] T-06 — Extend the shared contract with the types the rest of the build needs
 
-**Area:** A — Foundation (≈ W-02) · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** A — Foundation (≈ W-02) · **Status:** DONE · **Est:** 5 h
 **Depends on:** T-01
 **Conflicts with:** **every other task** — `types.ts` and `constants.ts` are read by all of them
 and writable only by this one. Run it alone.
@@ -2140,9 +2140,85 @@ needs to stay coherent.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+1. `npm run typecheck` -> `tsc -b packages/engine` -- exit 0, no output (no errors).
+
+2. `npx vitest run`:
+     Test Files  6 passed (6)
+     Tests  75 passed (75)
+   (baseline was 65; packages/engine/test/serialise.test.ts adds exactly 10 new
+   tests: 65 + 10 = 75. All 5 pre-existing files -- mesh, solar, gate, integrator,
+   perf -- still pass unchanged, including gate.test.ts's Test 2 and
+   integrator.test.ts's Tests 7/8.)
+   perf.test.ts numbers this run: full simulate() incl. spin-up: 70.0 ms/run;
+   100-variant sweep: 3.40 s (both unaffected by this task, pasted for the
+   session record per LOG.md 2).
+
+3. `git diff packages/engine/src/types.ts | grep -c '^-'` -> `1`. The single `-`
+   line is the diff-header line `--- a/packages/engine/src/types.ts` (excluded
+   per the acceptance wording); `git diff packages/engine/src/types.ts | grep '^-'`
+   shows only that one header line, zero content deletions. Confirmed additive-only.
+
+4. Scratch file (created outside the allow-list, deleted immediately after):
+     import type { Kelvin, Celsius } from './packages/engine/src/units.js';
+     import { toK } from './packages/engine/src/units.js';
+     const x: Kelvin = 20;
+     const y: Kelvin = toK(20 as Celsius);
+   `npx tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext ./scratch_kelvin_check.ts`
+   exit 2, actual compiler error text:
+     scratch_kelvin_check.ts(4,7): error TS2322: Type 'number' is not assignable to type 'Kelvin'.
+       Type 'number' is not assignable to type '{ readonly __unit: "K"; }'.
+   With only the `toK(20 as Celsius)` line present, the same tsc invocation
+   exits 0 (compiles cleanly). Scratch files deleted after the check
+   (`git status --porcelain` shows no scratch file left behind).
+
+5. `seriesFromJson(seriesToJson(a))` for a 1,000-element random Float64Array:
+   `expect(roundTripped).toEqual(a)` and `expect(roundTripped).toBeInstanceOf(Float64Array)`
+   both pass (packages/engine/test/serialise.test.ts, "round-trips a 1,000-element
+   random Float64Array to exact bit equality").
+
+6. `requestFromJson(JSON.parse(JSON.stringify(requestToJson(req))))` round-trips a
+   full SimulationRequest (built with `buildBox`) to `toEqual` deep equality, and
+   `weather.T_amb` / `GHI` / `v_wind` (plus optional `DNI`/`RH` in a second case)
+   come back `instanceof Float64Array`. Both pass.
+
+7. `requestFromJson({})` throws `EngineError` with `code === 'DATA_SCHEMA_MISMATCH'`
+   and `detail = { path: 'site' }` (first missing required field) -- truthy,
+   not `{}`. A second test confirms the same code when `weather` is present but
+   missing its own required sub-fields. Both pass.
+
+8. `canonicalRequestHash` on two `SimulationRequest` objects built with the same
+   field values but different object-literal key insertion order returns an
+   identical hash string. Pass.
+
+9. `canonicalRequestHash` returns a different string when `site.elevation`
+   changes, when `building.volume` changes, and when `operation.achSchedule[3]`
+   changes -- three separate assertions, all pass.
+
+10. `canonicalRequestHash` returns the identical string for a weather series
+    expressed as `Float64Array` versus the equivalent plain `number[]` form.
+    Pass.
+
+11. Measured: `RANK_NOISE_FLOOR === 0.05` -> true. `ACH_MIN_COMBUSTION_ALLOWANCE === 0.35`
+    -> true. `ACH_MIN + ACH_MIN_COMBUSTION_ALLOWANCE` -> `0.7`, `=== 0.70` -> true
+    (0.35 + 0.35, no floating-point surprise at this precision).
+
+12. `grep -c "ACH_PER_GLAZING_FRACTION" packages/engine/src/constants.ts` -> `0`
+    (grep exit code 1, meaning "no match" -- constant correctly absent; it
+    belongs to T-21).
+
+Additional checks run (not in the numbered list, for the session record):
+`npx eslint packages/engine/src/types.ts packages/engine/src/constants.ts
+packages/engine/src/serialise.ts packages/engine/test/serialise.test.ts` -> no
+output, clean. `npx prettier --check` on the same four files -> "All files
+formatted correctly". `git status --porcelain` shows only the 4 allow-listed
+files touched (2 modified, 2 new) before this LOG.md edit:
+  M packages/engine/src/constants.ts
+  M packages/engine/src/types.ts
+  ?? packages/engine/src/serialise.ts
+  ?? packages/engine/test/serialise.test.ts
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude Sonnet 5 (agent-af695ecc9e9a5aea7)  **Date:** 2026-09-14
 
 ---
 
