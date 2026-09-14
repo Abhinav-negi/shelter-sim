@@ -19,13 +19,26 @@ export function seriesFromJson(a: number[]): Float64Array {
   return Float64Array.from(a);
 }
 
+// Bound recursion depth against a maliciously deep JSON tree (e.g. `{"a":{"a":{...}}}`
+// thousands of levels deep reaching resultFromJson/canonicalRequestHash from an API
+// boundary): a real SimulationRequest/Result never nests anywhere near this deep, so this
+// only ever bites a crafted payload. A stack overflow crashes the whole Node process;
+// a clean thrown error does not.
+const MAX_SERIALISE_DEPTH = 64;
+
 /** Recursively converts every Float64Array in a value tree to a plain array. */
-function toJsonDeep(v: unknown): unknown {
+function toJsonDeep(v: unknown, depth = 0): unknown {
+  if (depth > MAX_SERIALISE_DEPTH) {
+    throw new EngineError('DATA_SCHEMA_MISMATCH', 'value nested too deeply to serialise', { path: '$' });
+  }
   if (v instanceof Float64Array) return Array.from(v);
-  if (Array.isArray(v)) return v.map(toJsonDeep);
+  if (Array.isArray(v)) return v.map((x) => toJsonDeep(x, depth + 1));
   if (v && typeof v === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const [k, val] of Object.entries(v)) out[k] = toJsonDeep(val);
+    // Object.create(null) -- not {} -- so an attacker-supplied key literally named
+    // "__proto__" lands as an ordinary own property instead of tripping the inherited
+    // Object.prototype.__proto__ setter and reassigning this object's prototype.
+    const out: Record<string, unknown> = Object.create(null);
+    for (const [k, val] of Object.entries(v)) out[k] = toJsonDeep(val, depth + 1);
     return out;
   }
   return v;
@@ -101,7 +114,8 @@ const HEAT_FLOW_SERIES_KEYS = [
 ] as const;
 
 function seriesRecordFromJson(obj: Record<string, unknown>): Record<string, Float64Array> {
-  const out: Record<string, Float64Array> = {};
+  // Object.create(null): keys here are attacker-controlled surface ids from JSON.
+  const out: Record<string, Float64Array> = Object.create(null);
   for (const [k, v] of Object.entries(obj)) out[k] = seriesFromJson(v as number[]);
   return out;
 }
@@ -125,7 +139,8 @@ export function resultFromJson(j: unknown): SimulationResult {
   if (!isPlainObject(surfacesJson)) {
     throw new EngineError('DATA_SCHEMA_MISMATCH', 'temperatures.surfaces must be a JSON object', { path: 'temperatures.surfaces' });
   }
-  const surfaces: SimulationResult['temperatures']['surfaces'] = {};
+  // Object.create(null): `id` here is an attacker-controlled surface id from JSON.
+  const surfaces: SimulationResult['temperatures']['surfaces'] = Object.create(null);
   for (const [id, sv] of Object.entries(surfacesJson)) {
     if (!isPlainObject(sv)) {
       throw new EngineError('DATA_SCHEMA_MISMATCH', `temperatures.surfaces.${id} must be a JSON object`, {
@@ -199,13 +214,19 @@ function roundToSigFigs(n: number, sig: number): number {
  * so floating-point noise (e.g. 0.1 + 0.2) never produces a spurious cache miss.
  * Do not change the rounding or sort rule without a migration plan for that table.
  */
-function canonicalize(v: unknown): unknown {
+function canonicalize(v: unknown, depth = 0): unknown {
+  if (depth > MAX_SERIALISE_DEPTH) {
+    throw new EngineError('DATA_SCHEMA_MISMATCH', 'value nested too deeply to hash', { path: '$' });
+  }
   if (v instanceof Float64Array) return Array.from(v, (n) => roundToSigFigs(n, 9));
   if (typeof v === 'number') return roundToSigFigs(v, 9);
-  if (Array.isArray(v)) return v.map(canonicalize);
+  if (Array.isArray(v)) return v.map((x) => canonicalize(x, depth + 1));
   if (v && typeof v === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const k of Object.keys(v).sort()) out[k] = canonicalize((v as Record<string, unknown>)[k]);
+    // Object.create(null): a SimulationRequest reaching this from requestFromJson can
+    // carry arbitrary attacker-supplied keys past validation (extra fields are not
+    // rejected); a literal "__proto__" key must not reassign this object's prototype.
+    const out: Record<string, unknown> = Object.create(null);
+    for (const k of Object.keys(v).sort()) out[k] = canonicalize((v as Record<string, unknown>)[k], depth + 1);
     return out;
   }
   return v;

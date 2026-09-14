@@ -2220,6 +2220,25 @@ files touched (2 modified, 2 new) before this LOG.md edit:
 
 **Completed by:** Claude Sonnet 5 (agent-af695ecc9e9a5aea7)  **Date:** 2026-09-14
 
+**Post-merge hardening (2026-09-14, same session, orchestrator, not a reopen of the task):**
+An automated security review of the merge commit flagged two issues in `serialise.ts`: (1)
+`toJsonDeep`, `canonicalize`, `seriesRecordFromJson` and the `surfaces` map in `resultFromJson`
+all built their output objects as `{}` and assigned into them with attacker-reachable dynamic
+keys (`out[k] = val`) — a JSON payload containing a literal `"__proto__"` key reaching
+`requestFromJson`/`resultFromJson`/`canonicalRequestHash` could reassign that output object's
+prototype via the inherited `Object.prototype.__proto__` setter. Fixed by building those four
+objects with `Object.create(null)` instead, which has no inherited setter to trip — verified with
+a standalone repro (`Object.getPrototypeOf` unaffected after the fix, same payload polluted it
+before). (2) `toJsonDeep` and `canonicalize` recurse with no depth bound, so a deliberately deep
+JSON payload (`{"a":{"a":{"a":...}}}` far beyond any real `SimulationRequest`/`SimulationResult`
+shape) reaching `canonicalRequestHash` could exhaust the call stack and crash the process. Fixed
+with a `MAX_SERIALISE_DEPTH = 64` guard that throws `EngineError('DATA_SCHEMA_MISMATCH', ...)`
+instead; verified a 200-level-deep payload now throws cleanly rather than crashing. Both fixes are
+additive/defensive only — no exported function's signature or the 12 T-06 acceptance tests changed
+(re-ran after the fix: typecheck exit 0, 75/75 tests, lint clean, format clean). Full request/array
+**size** bounding (as opposed to structural depth) is left to T-42 (request validation and rate
+limiting), which owns the HTTP boundary this data actually arrives through.
+
 ---
 
 ### [ ] T-07 — Canonical test fixtures, including the C-01 kill-shot pair
