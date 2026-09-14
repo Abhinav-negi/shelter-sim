@@ -121,7 +121,7 @@ Kept current by whoever ticks a box.
 
 | Area | Name | Done / Total |
 |---|---|---|
-| A | Foundation & contracts | 4 / 7 |
+| A | Foundation & contracts | 5 / 7 |
 | B | Engine | 10 / 16 |
 | C | Data layer | 0 / 5 |
 | D | Database tier | 0 / 7 |
@@ -131,7 +131,7 @@ Kept current by whoever ticks a box.
 | H | Scenarios | 0 / 3 |
 | I | Validation & credibility | 0 / 4 |
 | J | Delivery | 0 / 4 |
-| | **TOTAL** | **14 / 69** |
+| | **TOTAL** | **15 / 69** |
 
 **THE HARD GATE: PASSED.** See §10.
 
