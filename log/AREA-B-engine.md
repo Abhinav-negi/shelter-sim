@@ -1141,9 +1141,9 @@ anything under `loads/`, `surfaces/`, `solar/`, `envelope/`.
 
 ---
 
-### [~] T-23 — Validation Test 5 against NOAA, and print every measured pair
+### [!] T-23 — Validation Test 5 against NOAA, and print every measured pair
 
-**Area:** B — Engine (≈ W-46, W-47) · **Status:** CLAIMED by orch-T-23 at 2026-09-15T00:00:00Z (Piece 2 done, Piece 1 in progress) · **Est:** 5 h
+**Area:** B — Engine (≈ W-46, W-47) · **Status:** BLOCKED — Piece 1's computed sunrise/sunset and equinox-adjacent peak altitude fall outside BLUEPRINT.md 9.5 tolerance vs real NOAA data; root cause is in solar/geometry.ts, not this test (blocking task: T-14, which owns that file and is closed "verify, do not rework"). Piece 2 is DONE. · **Est:** 5 h
 **Depends on:** T-07 · **Conflicts with:** T-07 (imports its helpers, never edits them)
 
 **Why this exists.** Two gaps. **(a)** Validation Test 5 is currently **PARTIAL**: `solar.test.ts`
@@ -1223,9 +1223,69 @@ test files exclusively. They share no file. Give each its own acceptance tests f
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Piece 1 -- NOAA reference retrieved 2026-09-15, year 2026, Leh 34.15N 77.58E, meridian 82.5E, IST.
+Sources: NOAA GML Solar Calculator table.php (sunrise/solar noon/sunset) and the published
+NOAA_Solar_Calculations_year.xls spreadsheet behind it (peak altitude, geometric column, evaluated
+at each date's own solar-noon row). Both fetched directly from gml.noaa.gov; committed as literals
+in packages/engine/test/validation-noaa.test.ts, which calls no network (test 6, verified below).
+
+1. SUNRISE, engine vs NOAA (tol 2 min) -- FAILS on all four dates:
+   MAR21  engine 06:28:38  NOAA 06:22:08  diff 6.50 min
+   JUN21  engine 05:12:33  NOAA 05:08:26  diff 4.12 min
+   SEP21  engine 06:13:20  NOAA 06:06:59  diff 6.35 min
+   DEC21  engine 07:25:57  NOAA 07:21:28  diff 4.48 min
+   Root cause: sunriseSunset()/halfDayHours() (solar/geometry.ts) define sunrise/sunset at a
+   geometric horizon (zenith 90 deg), NOAA's tabulated sunrise/sunset uses the standard
+   zenith 90.833 deg (34' refraction + 16' solar-disk radius). Structural ~4-6.5 min gap at Leh's
+   latitude, not a numerical-precision issue -- it is a different definition of "sunrise."
+
+2. SOLAR NOON, engine vs NOAA (tol 2 min) -- PASSES on all four dates:
+   MAR21  engine 12:27:33  NOAA 12:26:53  diff 0.67 min
+   JUN21  engine 12:21:00  NOAA 12:21:27  diff 0.45 min
+   SEP21  engine 12:12:47  NOAA 12:12:51  diff 0.07 min
+   DEC21  engine 12:17:30  NOAA 12:17:38  diff 0.13 min
+
+3. SUNSET, engine vs NOAA (tol 2 min) -- FAILS on all four dates, same root cause as (1):
+   MAR21  engine 18:26:27  NOAA 18:31:37  diff 5.17 min
+   JUN21  engine 19:29:27  NOAA 19:34:28  diff 5.02 min
+   SEP21  engine 18:12:14  NOAA 18:18:42  diff 6.47 min
+   DEC21  engine 17:09:04  NOAA 17:13:49  diff 4.75 min
+
+4. PEAK SOLAR ALTITUDE, engine vs NOAA (tol 0.2 deg) -- PASSES at both solstices, FAILS at both
+   equinox-adjacent dates:
+   MAR21  engine 55.4463  NOAA 56.1187  diff 0.6724 deg  FAIL
+   JUN21  engine 79.2998  NOAA 79.2881  diff 0.0117 deg  PASS
+   SEP21  engine 55.6482  NOAA 56.5217  diff 0.8735 deg  FAIL
+   DEC21  engine 32.4002  NOAA 32.4135  diff 0.0133 deg  PASS
+   Also re-asserts, unchanged: 32.4 / 55.85 / 79.3 for Dec21/equinox/Jun21 at +-0.5 deg
+   (toBeCloseTo(...,0)) -- all three PASS (engine gives 32.4002 / 55.4463 / 79.2998).
+   Root cause of the equinox failures: declination() (solar/geometry.ts) is the single-harmonic
+   Cooper (1969) approximation. Its zero-crossing (modelled equinox) is day-of-year 81 (22 Mar),
+   ~1.4 days after the true 2026 equinox NOAA's declination reflects; near the equinoxes, where
+   declination moves fastest (~0.4 deg/day), that phase lag costs 0.67-0.87 deg. Solstice dates,
+   far from the zero-crossing, are accurate to 0.01-0.02 deg.
+
+5. NOAA literals with retrieval date: PRESENT (2026-09-15, see file header and the `NOAA` object
+   in packages/engine/test/validation-noaa.test.ts).
+
+6. `grep -c "fetch(\|http" packages/engine/test/validation-noaa.test.ts` = 0: PASS.
+
+Neither root cause is fixable from a test file (global rule 16). T-14 owns solar/geometry.ts and
+is marked DONE/closed ("verify it, do not rework it"), so this is named as the blocking task
+rather than reopened here. The four sunrise cases, four sunset cases, and two equinox-altitude
+cases are `it.skip` in validation-noaa.test.ts with the measured numbers folded into the test
+title; solar noon (4/4), the two solstice altitudes, and the three analytical anchors are real,
+executing, passing `expect`/`assertWithin` assertions.
+
+Full suite: `npx vitest run` -- 11 files, 146 tests, 136 passed + 10 skipped, 0 failed (up from
+127; perf.test.ts's interactive-budget timing assertion is flaky under full-suite parallel load --
+156.4 ms vs a 150 ms budget on one run, 54-117 ms/run in isolation and in a clean full-suite rerun
+-- unrelated to this change, no source file touched). `npm run typecheck` clean.
+
+Piece 2 evidence (tests 7-12) is in .work/T-23.md and unchanged here.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** N/A -- BLOCKED  **Date:** 2026-09-15
 
 ---
 
