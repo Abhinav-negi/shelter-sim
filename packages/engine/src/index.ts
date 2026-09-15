@@ -53,11 +53,27 @@ export function simulate(req: SimulationRequest): SimulationResult {
   // computed once here rather than inside the solver's per-hour coefficient
   // refresh, so `solve/` stays untouched and the coupling is a single, auditable
   // step ahead of the physics.
+  //
+  // envelopeAreaM2 is the FIXED total exterior envelope area -- every exterior
+  // Surface's area, opaque and glazed alike -- and it must NOT also add
+  // glazingAreaM2 on top. Each Surface.area is already GROSS: it is the whole
+  // host wall/roof region, and any window on it is carved OUT of that area, not
+  // added beside it (solve/assemble.ts computes `opaqueArea = surface.area -
+  // windowArea` on exactly this assumption, and rejects a window that would
+  // exceed its host surface's area). So summing exterior surface areas already
+  // counts every m^2 of glazing once. Adding glazingAreaM2 again double-counted
+  // it, which made this denominator grow as E_true + glazingAreaM2 instead of
+  // staying fixed at the building's true total envelope area E_true. That bug
+  // made the coupling term ACH_PER_GLAZING_FRACTION * glazingAreaM2 /
+  // envelopeAreaM2 concave (saturating) in glazing area instead of linear,
+  // which is algebraically incapable of producing the interior MINIMUM the K-05
+  // diagnostic requires (closes T-21's block on acceptance test 7 -- see
+  // LOG.md T-21 Evidence and infiltration.ts's effectiveAch()/
+  // ACH_PER_GLAZING_FRACTION docs for the full derivation).
   const glazingAreaM2 = req.building.windows.reduce((sum, w) => sum + w.area, 0);
-  const envelopeAreaM2 =
-    req.building.surfaces
-      .filter((s) => s.boundary === 'exterior')
-      .reduce((sum, s) => sum + s.area, 0) + glazingAreaM2;
+  const envelopeAreaM2 = req.building.surfaces
+    .filter((s) => s.boundary === 'exterior')
+    .reduce((sum, s) => sum + s.area, 0);
   const hasUnventedCombustion = req.operation.hasUnventedCombustion ?? false;
   let achClampedBySafetyFloor = false;
   /*

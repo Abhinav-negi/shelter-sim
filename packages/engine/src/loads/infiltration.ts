@@ -67,6 +67,16 @@ export interface EffectiveAchResult {
  * one -- it is here so that the glazing sweep can produce the non-monotonic optimum the physics
  * should show (CHALLENGE.md C-06, K-05; AUDIT.md F-6).
  *
+ * The `glazingAreaM2 / envelopeAreaM2` fraction this multiplies is only LINEAR in glazing area
+ * -- and can therefore combine with the roughly-linear solar-gain/window-conduction trade-off to
+ * produce a genuine interior minimum, per K-05 -- when `envelopeAreaM2` is the FIXED total
+ * exterior envelope area of the building. If a caller instead grows the denominator alongside the
+ * swept glazing (e.g. by adding glazing area to an already glazing-inclusive envelope total), the
+ * fraction becomes concave (saturating) in glazing area, which is algebraically incapable of ever
+ * producing an interior minimum, no matter this constant's value (T-21 / AUDIT F-6: the coupling
+ * caller in index.ts was doing exactly this before it was fixed). See `effectiveAch()` below for
+ * the caller contract on `envelopeAreaM2`.
+ *
  * TUNE THIS if a measured blower-door figure for a real Ladakhi shelter ever becomes available.
  * That single measurement is what would turn this from a plausible coupling into a calibrated one.
  */
@@ -77,6 +87,15 @@ export const ACH_PER_GLAZING_FRACTION = 1.2;
  * (AUDIT.md F-6). Without this, the glazing sweep's loss side never moves as glazing grows,
  * so the tool could recommend glazing an entire wall -- actively harmful advice on a
  * -25 degC Ladakh night.
+ *
+ * `envelopeAreaM2` MUST be the FIXED total exterior envelope area: every exterior surface's
+ * area, opaque and glazed alike, summed once. It must NEVER be envelope-plus-glazing (i.e. never
+ * add glazing area on top of a sum that already includes it) -- each host surface's area is
+ * GROSS and already covers any window carved into it, so glazing area is counted once by simply
+ * summing exterior surface areas. Passing a denominator that grows alongside the glazing area
+ * being swept makes `glazingAreaM2 / envelopeAreaM2` concave instead of linear, which can never
+ * produce the interior-minimum K-05 diagnostic (see `ACH_PER_GLAZING_FRACTION`'s doc above) --
+ * this was T-21's exact bug, in the caller (`index.ts`), not in this function.
  *
  * SAFETY: the combined floor is enforced here exactly as in `infiltration()` above -- this is
  * intentional defence in depth (global rule 10), not redundancy to be cleaned up. A design with
