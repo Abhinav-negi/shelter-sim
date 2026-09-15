@@ -3,8 +3,8 @@
 Software thermal model for area-specific passive shelter design.
 DRDO / DIHAR Leh · SIH Problem Statement 26051.
 
-See `LOG.md` for the build ledger — the single authoritative source for project
-status, contracts and the task list. Start there.
+See `LOG.md` for the build ledger index — task status, dependencies and which file in `log/`
+holds each task's full entry (shared contracts are in `log/CONTRACTS.md`). Start there.
 
 ## Branch protocol
 
