@@ -3659,9 +3659,9 @@ test files exclusively. They share no file. Give each its own acceptance tests f
 
 ---
 
-### [~] T-24 — Material, glazing and construction catalogues, every row cited
+### [x] T-24 — Material, glazing and construction catalogues, every row cited
 
-**Area:** C — Data (≈ W-26) · **Status:** CLAIMED by orch-T-24 at 2026-09-14T10:56:56Z · **Est:** 8 h
+**Area:** C — Data (≈ W-26) · **Status:** DONE · **Est:** 8 h
 **Depends on:** T-06 · **Conflicts with:** T-28 (reads these by id, never edits them)
 
 **Why this exists.** Every number the engine looks up rather than computes, each with a citation a
@@ -3752,9 +3752,53 @@ three different citation conventions.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+1. MATERIALS 27/27, GLAZING 6/6, CONSTRUCTIONS 11/11 all have non-empty source. PASS.
+2. Ids unique: MATERIALS 27/27, GLAZING 6/6, CONSTRUCTIONS 11/11. PASS.
+3. Every k, rho, c > 0; every alphaSolar/emissivity in [0,1], all 27 materials. PASS.
+4. rammed earth k=1.00 rho=1900 c=880; EPS k=0.036 rho=20 c=1400; single glazing U=5.80 SHGC=0.86
+   b0=0.04; water c=4186; steel k=50 rho=7800 c=480. All exact. PASS.
+5. Diffusivity k/(rho*c): dense concrete 8.285984848484849e-7 (target 8.29e-7, |diff|=4.02e-10);
+   rammed earth 5.980861244019139e-7 (target 5.98e-7, |diff|=8.61e-10); fired clay brick
+   4.491017964071856e-7 (target 4.49e-7, |diff|=1.02e-10). All < 1e-9. PASS.
+6. materialById('nope') throws EngineError code UNKNOWN_MATERIAL; glazingById('nope') throws
+   UNKNOWN_GLAZING. PASS.
+7. All four categories present: structural 10, insulation 8, finish 6, storage 3. PASS.
+8. 12/27 materials locallyAvailableLadakh=true (>=6 required): mudBrickAdobe, rammedEarth,
+   stoneMasonryGranite, timberPoplarWillow, compressedEarthBlock, mudPlaster, strawBale, sheepWool,
+   airGap25mm, water, gravelSoilFill, whitewashLime. PASS.
+9. All 11 CONSTRUCTIONS entries' layers[].materialId resolve through materialById (also enforced at
+   module-load time inside constructions.ts itself). PASS.
+10. rammedEarth350EpsOutside vs rammedEarth350EpsInside via @shelter/engine's buildWallMesh +
+    constructionUValue (hOuter=20, hInner=8): U(outside)=0.3027754415475191 W/(m^2*K),
+    U(inside)=0.302775441547519 W/(m^2*K), |diff|=1.11e-16 (floating-point identical). PASS.
+11. All 27 materials have a non-empty blurb; regex for standalone k/rho/c/alpha/epsilon tokens
+    matches none. PASS.
+12. assertSchemaVersion(2) throws EngineError DATA_SCHEMA_MISMATCH; assertSchemaVersion(1) does not
+    throw. PASS.
+13. `npm run typecheck` (root script, tsc -b packages/engine, unchanged): exit 0. `npx tsc -b
+    packages/data` (separate invocation -- see .work/T-24.md Deviations for why the shared script
+    was not edited): exit 0. `npx vitest run`: 10 files / 126 tests, exit 0 (107 pre-existing engine
+    tests + 19 new packages/data tests; engine test count unaffected -- this line's "65 tests" is
+    stale text, live baseline at session start was 107). PASS.
+14. packages/data/package.json has no `dependencies` key (one devDependency, @shelter/engine).
+    Verified by inspection and by a test-time file read/parse. PASS.
+
+All 14 acceptance tests PASS. Full suite: 10 files / 126 tests green, exit 0.
+`npm run typecheck` exit 0; `npx tsc -b packages/data` exit 0.
+
+Type strategy: Material/Glazing/Layer/NamedConstruction/EngineError are all defined LOCALLY inside
+packages/data/src (not imported from @shelter/engine), keeping packages/data's own src/ at zero
+dependencies of any kind on the engine, consistent with LOG.md 7.13's "@shelter/data: ZERO [runtime
+dependencies]" and the Area E "data layer does not import physics correlations" boundary. A single
+devDependency on @shelter/engine (workspace-linked, version "0.1.0", npm workspaces -- not
+`workspace:*`, which is pnpm-only per D-2) is declared in packages/data/package.json solely so
+catalog.test.ts can call the real buildWallMesh/constructionUValue for acceptance test 10; nothing
+under packages/data/src imports it (git grep -n "@shelter/engine" packages/data/src -> 0 hits).
+Full reasoning and every other deviation (the 6th glazing row, tauVis provenance, 27-vs-23 material
+count, the typecheck-script boundary) is in .work/T-24.md.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** orch-T-24  **Date:** 2026-09-15
 
 ---
 
