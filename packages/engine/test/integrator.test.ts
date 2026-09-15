@@ -4,6 +4,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { afterAll } from 'vitest';
+import { mkdirSync, writeFileSync, appendFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { simulate } from '../src/index.js';
 import { buildBox } from './box.js';
 import { buildWallMesh, constructionUValue } from '../src/envelope/mesh.js';
@@ -13,6 +16,38 @@ import { infiltration } from '../src/loads/infiltration.js';
 import { toK, toC } from '../src/units.js';
 import { M } from './fixtures.js';
 import { ACH_MIN, EngineError } from '../src/index.js';
+
+// T-23 Piece 2: quotable-numbers reporting. Pure side effect -- prints and CSV
+// rows only, added beside existing comparisons. No assertion or tolerance here
+// is changed; every value below is the same one the real `expect(...)` a few
+// lines down already computes and checks.
+const CSV_PATH = fileURLToPath(new URL('./output/validation-numbers.csv', import.meta.url));
+const CSV_HEADER = 'test,case,measured,analytical,deviation_pct,tolerance,pass\n';
+const csvRows: string[] = [];
+
+function reportComparison(
+  test: string,
+  caseLabel: string,
+  measured: number,
+  analytical: number,
+  deviationPct: number,
+  tolerancePct: number,
+  pass: boolean,
+): void {
+  console.log(`${test} ${caseLabel}: measured ${measured}, analytical ${analytical}, deviation ${deviationPct}%`);
+  csvRows.push(`${test},"${caseLabel}",${measured},${analytical},${deviationPct},${tolerancePct},${pass}`);
+}
+
+afterAll(() => {
+  if (csvRows.length === 0) return;
+  mkdirSync(fileURLToPath(new URL('./output', import.meta.url)), { recursive: true });
+  try {
+    writeFileSync(CSV_PATH, CSV_HEADER, { flag: 'wx' }); // create-only: don't clobber a sibling file's rows
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
+  }
+  appendFileSync(CSV_PATH, csvRows.join('\n') + '\n');
+});
 
 describe('Test 1 -- steady state', () => {
   it('with no sun, no gains and no sky loss, the indoor air settles to ambient', () => {
@@ -26,6 +61,11 @@ describe('Test 1 -- steady state', () => {
         windSpeed: 2,
       }),
     );
+    const steadyDevK = Math.abs(r.kpis.meanIndoorTemp - ambient);
+    const steadyTolK = 0.01;
+    const steadyDevPct = (steadyDevK / Math.abs(ambient)) * 100;
+    const steadyTolPct = (steadyTolK / Math.abs(ambient)) * 100;
+    reportComparison('TEST1', 'steady state, no gains: indoor vs ambient', r.kpis.meanIndoorTemp, ambient, steadyDevPct, steadyTolPct, steadyDevK < steadyTolK);
     expect(Math.abs(r.kpis.meanIndoorTemp - ambient)).toBeLessThan(0.01);
     expect(r.kpis.peakToPeakSwing).toBeLessThan(0.01);
   });
@@ -64,6 +104,9 @@ describe('Test 1 -- steady state', () => {
     }
     const inf = infiltration(ach, area * side, altitude, ambient + dT);
     const expected = Q / (UA + inf.conductance);
+
+    const dtDevFrac = Math.abs(dT - expected) / expected;
+    reportComparison('TEST1', 'constant internal gain: dT vs hand calc', dT, expected, dtDevFrac * 100, 3, dtDevFrac < 0.03);
 
     // 3%: the hand calculation uses a single h_i, while the solver picks h_i per
     // surface per hour from the actual flow direction.
@@ -106,6 +149,8 @@ describe('Test 4 -- adiabatic box (capacitance assembly)', () => {
     const lastDayRise = T[T.length - 1]! - T[T.length - 1 - stepsPerDay]!;
     const slope = lastDayRise / 86400;
     const expected = gain / totalCapacitance(req);
+    const slopeDevFrac = Math.abs(slope - expected) / expected;
+    reportComparison('TEST4', 'adiabatic heating slope vs Q/sum(C)', slope, expected, slopeDevFrac * 100, 1, slopeDevFrac < 0.01);
     expect(Math.abs(slope - expected) / expected).toBeLessThan(0.01);
   });
 
@@ -136,6 +181,8 @@ describe('Test 4 -- adiabatic box (capacitance assembly)', () => {
     const to = T.length - 1;
     const energyIn = gain * (to - from) * dt;
     const energyStored = totalCapacitance(req) * (T[to]! - T[from]!);
+    const energyDevFrac = Math.abs(energyStored - energyIn) / energyIn;
+    reportComparison('TEST4', 'adiabatic energy conservation: stored vs supplied', energyStored, energyIn, energyDevFrac * 100, 1, energyDevFrac < 0.01);
     expect(Math.abs(energyStored - energyIn) / energyIn).toBeLessThan(0.01);
   });
 });
@@ -183,8 +230,14 @@ describe('Test 7 -- timestep independence on the full model', () => {
       };
       const reference = simulate(mk(30));
       const coarse = simulate(mk(300));
+      const tempDevK = Math.abs(coarse.kpis.tempAt0600 - reference.kpis.tempAt0600);
+      const tempTolK = 0.1;
+      const tempDevPct = (tempDevK / Math.abs(reference.kpis.tempAt0600)) * 100;
+      const tempTolPct = (tempTolK / Math.abs(reference.kpis.tempAt0600)) * 100;
+      reportComparison('TEST7', `${label}: tempAt0600, dt=300s vs dt=30s`, coarse.kpis.tempAt0600, reference.kpis.tempAt0600, tempDevPct, tempTolPct, tempDevK < tempTolK);
       expect(Math.abs(coarse.kpis.tempAt0600 - reference.kpis.tempAt0600)).toBeLessThan(0.1);
       const swingError = Math.abs(coarse.kpis.peakToPeakSwing - reference.kpis.peakToPeakSwing) / reference.kpis.peakToPeakSwing;
+      reportComparison('TEST7', `${label}: peakToPeakSwing, dt=300s vs dt=30s`, coarse.kpis.peakToPeakSwing, reference.kpis.peakToPeakSwing, swingError * 100, 1, swingError < 0.01);
       expect(swingError).toBeLessThan(0.01);
     });
   }
@@ -207,6 +260,8 @@ describe('Test 6 -- energy conservation', () => {
   for (const [label, opts] of scenarios) {
     it(`residual stays under 0.1% -- ${label}`, () => {
       const r = simulate(buildBox(opts));
+      const residualPct = r.meta.energyBalanceResidual * 100;
+      reportComparison('TEST6', `${label}: energy balance residual`, r.meta.energyBalanceResidual, 0, residualPct, 0.1, residualPct < 0.1);
       expect(r.meta.energyBalanceResidual).toBeLessThan(1e-3);
       expect(r.meta.warnings.some((w) => w.includes('Energy balance residual'))).toBe(false);
     });
@@ -220,6 +275,11 @@ describe('Test 8 -- symmetry and physical-sense checks', () => {
     const rotated = buildBox(sunny);
     rotated.building.azimuth = 360;
     const b = simulate(rotated);
+    const rotDevK = Math.abs(b.kpis.tempAt0600 - a.kpis.tempAt0600);
+    const rotTolK = 0.5e-9;
+    const rotDevPct = (rotDevK / Math.abs(a.kpis.tempAt0600)) * 100;
+    const rotTolPct = (rotTolK / Math.abs(a.kpis.tempAt0600)) * 100;
+    reportComparison('TEST8', '0 deg vs 360 deg rotation: tempAt0600', b.kpis.tempAt0600, a.kpis.tempAt0600, rotDevPct, rotTolPct, rotDevK < rotTolK);
     expect(b.kpis.tempAt0600).toBeCloseTo(a.kpis.tempAt0600, 9);
   });
 
@@ -299,6 +359,10 @@ describe('Test 8 -- symmetry and physical-sense checks', () => {
      */
     const swings = THICKNESSES.map((t) => dailySwingBox(t, { ach: 0.5 }).kpis.peakToPeakSwing);
     const minIndex = swings.indexOf(Math.min(...swings));
+    const antiphaseTol = 0.5e-5;
+    const antiphaseMeasured = THICKNESSES[minIndex]!;
+    const antiphaseDev = Math.abs(antiphaseMeasured - 0.4);
+    reportComparison('TEST8', 'antiphase thickness pi*d (rammed earth, ACH 0.5)', antiphaseMeasured, 0.4, (antiphaseDev / 0.4) * 100, (antiphaseTol / 0.4) * 100, antiphaseDev < antiphaseTol);
     expect(THICKNESSES[minIndex]).toBeCloseTo(0.4, 5);
     // And a thick wall still beats a thin one by a wide margin -- the design message survives.
     expect(swings[swings.length - 1]!).toBeLessThan(swings[0]! / 10);

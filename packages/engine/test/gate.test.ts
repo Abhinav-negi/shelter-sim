@@ -12,11 +12,46 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { afterAll } from 'vitest';
+import { mkdirSync, writeFileSync, appendFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { buildWallMesh, analyticalWavePenetration, diffusivity } from '../src/envelope/mesh.js';
 import { driveWall, harmonicFit, lagSeconds, nodeSeries, nodeAtDepth } from '../src/envelope/response.js';
 import { M } from './fixtures.js';
 
 const DAY = 86400;
+
+// T-23 Piece 2: quotable-numbers reporting. Pure side effect -- prints and CSV
+// rows only, added beside existing comparisons. No assertion or tolerance here
+// is changed; every value below is the same one the real `expect(...)` a few
+// lines down already computes and checks.
+const CSV_PATH = fileURLToPath(new URL('./output/validation-numbers.csv', import.meta.url));
+const CSV_HEADER = 'test,case,measured,analytical,deviation_pct,tolerance,pass\n';
+const csvRows: string[] = [];
+
+function reportComparison(
+  test: string,
+  caseLabel: string,
+  measured: number,
+  analytical: number,
+  deviationPct: number,
+  tolerancePct: number,
+  pass: boolean,
+): void {
+  console.log(`${test} ${caseLabel}: measured ${measured}, analytical ${analytical}, deviation ${deviationPct}%`);
+  csvRows.push(`${test},"${caseLabel}",${measured},${analytical},${deviationPct},${tolerancePct},${pass}`);
+}
+
+afterAll(() => {
+  if (csvRows.length === 0) return;
+  mkdirSync(fileURLToPath(new URL('./output', import.meta.url)), { recursive: true });
+  try {
+    writeFileSync(CSV_PATH, CSV_HEADER, { flag: 'wx' }); // create-only: don't clobber a sibling file's rows
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
+  }
+  appendFileSync(CSV_PATH, csvRows.join('\n') + '\n');
+});
 
 describe('Test 2 -- sinusoidal wave through a wall (THE gate test)', () => {
   /*
@@ -74,6 +109,14 @@ describe('Test 2 -- sinusoidal wave through a wall (THE gate test)', () => {
 
       const lagHours = lagSeconds(drive, inner, DAY) / 3600;
 
+      const decrementDevFrac = Math.abs(numericDecrement - analytic.decrement) / analytic.decrement;
+      reportComparison('TEST2', `${label} ${depth * 1000}mm decrement`, numericDecrement, analytic.decrement, decrementDevFrac * 100, 2, decrementDevFrac < 0.02);
+      const lagTolHours = 10 / 60;
+      const lagDevHours = Math.abs(lagHours - analytic.lagHours);
+      const lagDevPct = (lagDevHours / Math.abs(analytic.lagHours)) * 100;
+      const lagTolPct = (lagTolHours / Math.abs(analytic.lagHours)) * 100;
+      reportComparison('TEST2', `${label} ${depth * 1000}mm lag`, lagHours, analytic.lagHours, lagDevPct, lagTolPct, lagDevHours < lagTolHours);
+
       // BLUEPRINT.md 9.2 pass criteria: decrement within 2%, lag within 10 minutes.
       expect(Math.abs(numericDecrement - analytic.decrement) / analytic.decrement).toBeLessThan(0.02);
       expect(Math.abs(lagHours - analytic.lagHours)).toBeLessThan(10 / 60);
@@ -127,6 +170,10 @@ describe('Test 7 -- mesh and timestep independence', () => {
     const base = run(0.02, 120);
     const finerMesh = run(0.01, 120);
     const finerStep = run(0.01, 60);
+    const meshDevFrac = Math.abs(finerMesh - base) / base;
+    reportComparison('TEST7', 'mesh refinement dx 0.02->0.01 m (rammed earth)', finerMesh, base, meshDevFrac * 100, 1, meshDevFrac < 0.01);
+    const stepDevFrac = Math.abs(finerStep - finerMesh) / finerMesh;
+    reportComparison('TEST7', 'timestep refinement dt 120->60 s (rammed earth)', finerStep, finerMesh, stepDevFrac * 100, 1, stepDevFrac < 0.01);
     expect(Math.abs(finerMesh - base) / base).toBeLessThan(0.01);
     expect(Math.abs(finerStep - finerMesh) / finerMesh).toBeLessThan(0.01);
   });

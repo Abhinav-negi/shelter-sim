@@ -1141,9 +1141,9 @@ anything under `loads/`, `surfaces/`, `solar/`, `envelope/`.
 
 ---
 
-### [ ] T-23 — Validation Test 5 against NOAA, and print every measured pair
+### [~] T-23 — Validation Test 5 against NOAA, and print every measured pair
 
-**Area:** B — Engine (≈ W-46, W-47) · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** B — Engine (≈ W-46, W-47) · **Status:** CLAIMED by orch-T-23 at 2026-09-15T00:00:00Z (Piece 2 done, Piece 1 in progress) · **Est:** 5 h
 **Depends on:** T-07 · **Conflicts with:** T-07 (imports its helpers, never edits them)
 
 **Why this exists.** Two gaps. **(a)** Validation Test 5 is currently **PARTIAL**: `solar.test.ts`

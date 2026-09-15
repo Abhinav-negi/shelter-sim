@@ -6,6 +6,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { afterAll } from 'vitest';
+import { mkdirSync, writeFileSync, appendFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import {
   buildWallMesh,
   constructionUValue,
@@ -14,6 +17,38 @@ import {
   analyticalWavePenetration,
 } from '../src/envelope/mesh.js';
 import { M } from './fixtures.js';
+
+// T-23 Piece 2: quotable-numbers reporting. Pure side effect -- prints and CSV
+// rows only, added beside existing comparisons. No assertion or tolerance here
+// is changed; every value below is the same one the real `expect(...)` a few
+// lines down already computes and checks.
+const CSV_PATH = fileURLToPath(new URL('./output/validation-numbers.csv', import.meta.url));
+const CSV_HEADER = 'test,case,measured,analytical,deviation_pct,tolerance,pass\n';
+const csvRows: string[] = [];
+
+function reportComparison(
+  test: string,
+  caseLabel: string,
+  measured: number,
+  analytical: number,
+  deviationPct: number,
+  tolerancePct: number,
+  pass: boolean,
+): void {
+  console.log(`${test} ${caseLabel}: measured ${measured}, analytical ${analytical}, deviation ${deviationPct}%`);
+  csvRows.push(`${test},"${caseLabel}",${measured},${analytical},${deviationPct},${tolerancePct},${pass}`);
+}
+
+afterAll(() => {
+  if (csvRows.length === 0) return;
+  mkdirSync(fileURLToPath(new URL('./output', import.meta.url)), { recursive: true });
+  try {
+    writeFileSync(CSV_PATH, CSV_HEADER, { flag: 'wx' }); // create-only: don't clobber a sibling file's rows
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
+  }
+  appendFileSync(CSV_PATH, csvRows.join('\n') + '\n');
+});
 
 describe('capacitance assembly', () => {
   it('total capacitance equals sum(rho*c*L) exactly, for every construction', () => {
@@ -57,6 +92,10 @@ describe('Test 3 -- composite wall steady-state U-value', () => {
     ];
     const mesh = buildWallMesh(construction, M);
     const expectedR = construction.reduce((acc, l) => acc + l.thickness / M[l.materialId]!.k, 0);
+    const fabricRTol = 0.5e-10;
+    const fabricRMeasured = 1 / mesh.fabricU;
+    const fabricRDev = Math.abs(fabricRMeasured - expectedR);
+    reportComparison('TEST3', 'fabric resistance sum(L/k), 25x conductivity contrast', fabricRMeasured, expectedR, (fabricRDev / expectedR) * 100, (fabricRTol / expectedR) * 100, fabricRDev < fabricRTol);
     expect(1 / mesh.fabricU).toBeCloseTo(expectedR, 10);
   });
 
@@ -70,6 +109,8 @@ describe('Test 3 -- composite wall steady-state U-value', () => {
     const mesh = buildWallMesh(construction, M);
     const expected = 1 / (1 / h_o + 0.23 / 0.72 + 0.05 / 0.036 + 1 / h_i);
     const actual = constructionUValue(mesh, h_o, h_i);
+    const uDevFrac = Math.abs(actual - expected) / expected;
+    reportComparison('TEST3', 'U-value incl. surface films, fired brick + EPS', actual, expected, uDevFrac * 100, 0.5, uDevFrac < 0.005);
     expect(Math.abs(actual - expected) / expected).toBeLessThan(0.005);
   });
 
