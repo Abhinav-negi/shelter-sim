@@ -160,6 +160,26 @@ export function integrate(req: SimulationRequest, model: Model): RunOutput {
   const warnings: string[] = [];
   const prevStorageC = new Float64Array(model.storageNodes.length); // T-20: persists across days, for the 25%-jump check
 
+  /*
+   * T-61: exactly one supplied design day (<=86400 s of samples) is the
+   * long-standing contract -- every reported day repeats it, same as spin-up
+   * always has. More than one day supplied signals real multi-day intent, and
+   * then the window must be FULLY covered: a silent wrap would turn a 9-day
+   * sunless streak into the same day nine times, wrong with a convincing shape.
+   */
+  const availableSeconds = weather.T_amb.length * weather.stepSeconds;
+  const requiredSeconds = options.simulationDays * 86400;
+  const multiDay = availableSeconds > 86400;
+  if (multiDay && availableSeconds < requiredSeconds) {
+    throw new EngineError(
+      'WEATHER_INVALID',
+      `The weather series covers ${(availableSeconds / HOURS).toFixed(1)} h but a ` +
+        `${options.simulationDays}-day simulation needs ${(requiredSeconds / HOURS).toFixed(1)} h -- ` +
+        `short by ${((requiredSeconds - availableSeconds) / HOURS).toFixed(1)} h. Supply a longer series; ` +
+        'the engine will not silently wrap around.',
+    );
+  }
+
   // Initial condition: everything at the mean ambient temperature.
   let meanAmb = 0;
   for (let i = 0; i < weather.T_amb.length; i++) meanAmb += weather.T_amb[i]!;
@@ -167,7 +187,7 @@ export function integrate(req: SimulationRequest, model: Model): RunOutput {
 
   let T: Float64Array = new Float64Array(n).fill(meanAmb);
   const Tprev = new Float64Array(n);
-  const series = precomputeEnvironment(req, model, stepsPerDay);
+  const series = precomputeEnvironment(req, model, stepsPerDay, 0);
 
   // --- spin-up -------------------------------------------------------------
   /*
@@ -249,7 +269,11 @@ export function integrate(req: SimulationRequest, model: Model): RunOutput {
   const initialT = Float64Array.from(T);
   const records: StepRecord[] = [];
   for (let day = 0; day < options.simulationDays; day++) {
-    T = runOneDay(req, model, T, series, records, warnings, prevStorageC);
+    // day 0 always reuses `series` (bit-identical to the pre-T-61 behaviour);
+    // later days do too UNLESS the caller supplied genuine multi-day weather,
+    // in which case each day marches through its own real hours (validated above).
+    const daySeries = day === 0 || !multiDay ? series : precomputeEnvironment(req, model, stepsPerDay, day * 86400);
+    T = runOneDay(req, model, T, daySeries, records, warnings, prevStorageC);
   }
 
   Tprev.set(T);
@@ -377,6 +401,7 @@ function precomputeEnvironment(
   req: SimulationRequest,
   model: Model,
   stepsPerDay: number,
+  dayOffsetSeconds: number,
 ): EnvironmentSeries {
   const { weather, site, options } = req;
   const S = model.surfaces.length;
@@ -398,10 +423,14 @@ function precomputeEnvironment(
 
   for (let step = 0; step < stepsPerDay; step++) {
     const secondsIntoDay = step * dt;
+    // T-61: absSeconds carries the multi-day offset into the WEATHER lookup and
+    // the calendar day (so day 2+ samples its own hours and its own sun
+    // position); hourOfDay stays LOCAL (schedules are always 24h clock time).
+    const absSeconds = dayOffsetSeconds + secondsIntoDay;
     const hourOfDay = (weather.startHour + secondsIntoDay / HOURS) % 24;
-    const weatherIdx = (secondsIntoDay / weather.stepSeconds) % weather.T_amb.length;
+    const weatherIdx = (absSeconds / weather.stepSeconds) % weather.T_amb.length;
     const dayOfYear =
-      weather.startDayOfYear + Math.floor((weather.startHour + secondsIntoDay / HOURS) / 24);
+      weather.startDayOfYear + Math.floor((weather.startHour + absSeconds / HOURS) / 24);
 
     const T_amb = sample(weather.T_amb, weatherIdx);
     out.T_amb[step] = T_amb;

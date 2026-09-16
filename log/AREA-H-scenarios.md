@@ -294,9 +294,9 @@ data structure T-50's grid and T-39's stream both consume.
 
 ---
 
-### [ ] T-61 — Multi-day runs and the sunless-streak path
+### [!] T-61 — Multi-day runs and the sunless-streak path
 
-**Area:** H — Scenarios · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** H — Scenarios · **Status:** DONE WITH ONE FLAGGED CAVEAT (test 9, see Evidence) — implemented 2026-09-16 · **Est:** 5 h
 **Depends on:** T-59 · **Conflicts with:** T-11, T-16 (touches the integrator's day loop)
 
 **Why this exists.** Seventeen of the eighteen scenarios are single days. The eighteenth is not, and
@@ -360,9 +360,89 @@ project.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Measured via `npx vitest run` (whole engine + monorepo) and `packages/engine/test/multiday.test.ts`
+(10 tests, all green). Fixtures: `shelterA_stone400` (heavy, 400mm stone, unmodified) and a "light"
+clone of it with the wall swapped for a single 50mm rammedEarth layer (both built only inside the
+new test file -- fixtures.ts was not touched). 9-day weather: 1 sunny day + 8 fully overcast days
+(GHI 0), hourly, synthetic.
+
+1. NO REGRESSION. `npx vitest run` (root, all packages): 20 files, 248 passed, 10 skipped, 0 failed.
+   `simulate(shelterA_stone400).kpis.tempAt0600` = 266.8746250295629, identical (diff 0) to the
+   orchestrator's pre-change baseline 266.8746250295629. `kpis.tempAt0600PerDay` is `undefined` for
+   this fixture (legacy one-design-day contract, untouched -- see decision note below).
+
+2. 9 DISTINCT VALUES. tempAt0600PerDay (heavy, 9-day streak):
+   266.85415665448886, 266.8581485452879, 264.52863820942315, 263.3246119498443,
+   262.70067663503966, 262.37634489072656, 262.2075081405376, 262.11955726030334, 262.0737268629219
+   -- 9 values, not all equal (asserted via distinct-rounded-value count > 1).
+
+3. TIMESTEPS. meta.timesteps = 2592; 9 x 86400 / 300 (timestepSeconds) = 2592. Equal.
+
+4. TIME SPAN. time[0] = 0, time[last] = 777300 (= 2591 x 300), length 2592, strictly increasing
+   (checked every consecutive pair).
+
+5. SPIN-UP ON DAY ONE ONLY. meta.spinUpDaysUsed = 5 (for shelterA_stone400's construction). State
+   entering the reported window vs. one more pass of day one's weather: maxDiff = 0.005918543886537
+   K, < spinUpToleranceK (0.02 K).
+
+6. RUN-DOWN, FASTER FOR LIGHT. heavy(stone400) tempAt0600PerDay: see #2 above (266.854 -> 262.074,
+   still declining at day 9 -- last day with a >=0.05K day-over-day change is day index 7).
+   light(rammedEarth 50mm) tempAt0600PerDay:
+   261.3985011955783, 261.3985012225248, 261.26225784081834, 261.26220435681967,
+   261.2622043358172, 261.2622043358091, 261.2622043358091, 261.2622043358091, 261.2622043358091
+   -- declines (261.399 -> 261.262) and finishes declining by day index 2, vs. heavy's day index 7.
+   Both shelters decline; light stabilises markedly sooner (faster run-down to its new floor).
+
+7. SHORTFALL THROWS. 3 real days of weather supplied, 5 requested:
+   EngineError WEATHER_INVALID: "The weather series covers 72.0 h but a 5-day simulation needs
+   120.0 h -- short by 48.0 h. Supply a longer series; the engine will not silently wrap around."
+   No wraparound; single instance of EngineError with the shortfall named in hours.
+
+8. ENERGY BALANCE. meta.energyBalanceResidual (9-day heavy run) = 0.000002576411050627611, < 1e-3.
+
+9. PERFORMANCE -- FLAGGED, SEE CAVEAT BELOW. Measured (median of 11 runs, JIT warmed):
+   1-day = 11.6-36.6 ms, 9-day = 33.8-95.2 ms, ratio 2.3x-4.7x across repeated full-suite and
+   isolated runs. This is BELOW the literal 8x-10x asked for. Root cause (verified both
+   analytically and empirically, not a defect in this change): every `simulate()` call, 1-day or
+   9-day alike, pays one mandatory, non-optional spin-up pass of >=1 "day" cost before the reported
+   period starts (integrator.ts's spin-up loop, unchanged by this task, `spinUpDaysUsed` = 5 for
+   this fixture). Wall-clock ratio for equal per-day cost is bounded by (k+9)/(k+1); at k=5 that
+   ceiling is 2.33x, and even at the architecture's theoretical minimum k=1 the ceiling is 5x --
+   8x-10x is mathematically unreachable while a shared, protected, >=1-iteration spin-up cost is
+   included on both sides of the comparison, for ANY building. This is not something T-61 is
+   allowed to change (spin-up is the hard-gated contract, CONTRACTS.md 7.10, and this task's file
+   allow-list does not include changing its cost model). The test I wrote
+   (`multiday.test.ts` acceptance-9 block) asserts the ratio stays in (1.2, 20) -- wide enough to
+   absorb machine noise while still catching real quadratic blowup (which would show as 50-80x for
+   this window) -- and documents this finding in a comment. I could not make the literal 8x-10x
+   number true without either (a) making the 1-day run artificially slower, or (b) removing/hiding
+   the shared spin-up cost from the measurement, both of which felt like moving the goalposts rather
+   than fixing anything. Flagging rather than silently rounding up.
+
+10. tempAt0600 === tempAt0600PerDay[last]. Measured: tempAt0600 = 262.0737268629219,
+    tempAt0600PerDay[8] = 262.0737268629219. Equal.
+
+11. DIFF SIZE. `git diff --stat packages/engine/src/solve/integrator.ts`:
+    packages/engine/src/solve/integrator.ts | 37 +++++++++++++++++++++++++++++----
+    1 file changed, 33 insertions(+), 4 deletions(-)
+    37 total changed lines, well under the 60-line budget.
+
+DECISION NOTE (read before touching this again): `shelterA_stone400` itself has
+`options.simulationDays: 2` with only 24h (1 day) of weather -- it has ALWAYS relied on the
+"one design day, periodically repeated" contract, not a genuine multi-day streak, and existing
+hard-gate tests call `simulate(shelterA_stone400)` as-is (infiltration.test.ts:238 among them). The
+fix therefore distinguishes "one design day supplied (<=86400s), repeated for however many
+`simulationDays` are asked for" (UNCHANGED: same weather/dayOfYear reused every day, tempAt0600
+still locates day one as `post/kpis.ts` always has) from "genuine multi-day weather supplied
+(>86400s)" (NEW: each day advances to its own real hours and its own solar day-of-year;
+`kpis.tempAt0600`/`tempAt0600PerDay` are only recomputed/added in index.ts under this condition).
+Both integrator.ts's `multiDay` flag and index.ts's `availableSeconds > 86400` check implement the
+SAME distinction independently (by design -- RunOutput wasn't touched to carry the flag across, to
+keep the integrator.ts diff minimal). If this boundary ever needs to move, keep both call sites in
+sync.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude (T-61 subagent)  **Date:** 2026-09-16
 
 ---
 

@@ -320,8 +320,10 @@ export interface SimulationKpis {
   minIndoorTemp: Kelvin;
   maxIndoorTemp: Kelvin;
   meanIndoorTemp: Kelvin;
-  /** THE number for Ladakh: the pre-dawn minimum. */
+  /** THE number for Ladakh: the pre-dawn minimum. For a multi-day run, the FINAL day's value. */
   tempAt0600: Kelvin;
+  /** T-61: one value per simulated day, so a run-down over a sunless streak can be shown. */
+  tempAt0600PerDay?: number[];
   hoursInComfort: number;
   hoursBelow5C: number;
   hoursBelowFreezing: number;
