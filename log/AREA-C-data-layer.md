@@ -378,9 +378,9 @@ Type/design notes for a zero-context successor:
 
 ---
 
-### [ ] T-26 — NASA POWER and Open-Meteo request builders and response parsers
+### [~] T-26 — NASA POWER and Open-Meteo request builders and response parsers
 
-**Area:** C — Data (≈ W-27, the sources half) · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** C — Data (≈ W-27, the sources half) · **Status:** CLAIMED by orchestrator-session at 2026-09-16T05:40:34Z · **Est:** 5 h
 **Depends on:** T-25 · **Conflicts with:** none
 
 **Why this exists.** The two upstream weather sources have to be reachable from the server tier, but
