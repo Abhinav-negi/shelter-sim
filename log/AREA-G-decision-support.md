@@ -16,9 +16,9 @@
 
 ---
 
-### [ ] T-54 — The sweep engine: expand, dispatch, collect
+### [~] T-54 — The sweep engine: expand, dispatch, collect
 
-**Area:** G — Decision support (≈ W-30) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** G — Decision support (≈ W-30) · **Status:** CLAIMED by orchestrator at 2026-09-16T12:07:16Z · **Est:** 8 h
 **Depends on:** T-06, T-24, T-28 · **Conflicts with:** T-55 (same package, sequential)
 
 **Why this exists.** *"Because one simulation takes about 50 milliseconds, we do not ask 'how does
