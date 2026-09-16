@@ -95,7 +95,7 @@ export function requestFromJson(j: unknown): SimulationRequest {
 // ============================== SimulationResult ==============================
 
 const RESULT_FIELDS = ['meta', 'time', 'temperatures', 'solar', 'heatFlows', 'kpis'] as const;
-const TEMPS_FIELDS = ['indoorAir', 'ambient', 'sky', 'meanRadiant', 'surfaces'] as const;
+const TEMPS_FIELDS = ['indoorAir', 'ambient', 'sky', 'meanRadiant', 'ground', 'surfaces'] as const;
 const SOLAR_FIELDS = ['incidentBySurface', 'absorbedOpaque', 'transmittedGlazed', 'dailyTotalKWh'] as const;
 const HEAT_FLOW_SERIES_KEYS = [
   'Q1_solarOpaque',
@@ -111,6 +111,7 @@ const HEAT_FLOW_SERIES_KEYS = [
   'Q11_internalGains',
   'Qaux',
   'storageRate',
+  'deltaT',
 ] as const;
 
 function seriesRecordFromJson(obj: Record<string, unknown>): Record<string, Float64Array> {
@@ -182,6 +183,7 @@ export function resultFromJson(j: unknown): SimulationResult {
       ambient: seriesFromJson(temps.ambient as number[]),
       sky: seriesFromJson(temps.sky as number[]),
       meanRadiant: seriesFromJson(temps.meanRadiant as number[]),
+      ground: seriesFromJson(temps.ground as number[]),
       surfaces,
     },
     solar: {

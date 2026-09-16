@@ -163,7 +163,9 @@ describe('T-21 acceptance 7 -- the K-05 curve, end to end', () => {
       return {
         glazingPct: Math.round(f * 100),
         auxEnergyKWhPerDay: r.kpis.auxEnergyKWhPerDay,
-        infiltrationKWhPerDay: r.heatFlows.dailyTotalsKWh.infiltration,
+        // T-22 renamed dailyTotalsKWh's keys to match the series field names
+        // 1:1 (no name-mapping table) -- this was `.infiltration` before.
+        infiltrationKWhPerDay: r.heatFlows.dailyTotalsKWh.Q9_infiltration,
         energyBalanceResidual: r.meta.energyBalanceResidual,
       };
     });

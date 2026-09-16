@@ -304,6 +304,14 @@ export interface HeatFlows {
   Qaux: Float64Array;
   /** Rate of change of energy stored in the fabric, W. */
   storageRate: Float64Array;
+  /**
+   * indoorAir - ambient, Kelvin-degrees. PS deliverable 3 names this series
+   * explicitly ("heat flow details as per the temperature difference between
+   * ambient and shelter temperature"). Added by T-22 (CONTRACTS.md 7.7).
+   * Plain `number`, never branded `Kelvin` -- a difference is identical in K
+   * and degC (LOG.md section 6 rule 5).
+   */
+  deltaT: Float64Array;
   /** Period totals, kWh, keyed by pathway name. Feeds the Sankey. */
   dailyTotalsKWh: Record<string, number>;
 }
@@ -352,6 +360,16 @@ export interface SimulationResult {
     ambient: Float64Array;
     sky: Float64Array;
     meanRadiant: Float64Array;
+    /**
+     * The floor's boundary node -- the fabric node adjoining the ground, one
+     * per timestep. Added by T-22 (CONTRACTS.md 7.7); the integrator already
+     * solved this node, it was just never surfaced. Distinct from any single
+     * `temperatures.surfaces[id].exterior`: it stays defined even when the
+     * ground-boundary surface isn't named "floor", and falls back to the deep-
+     * soil boundary condition when the building has no ground-boundary surface
+     * at all (e.g. the fully-adiabatic validation fixture).
+     */
+    ground: Float64Array;
     surfaces: Record<string, { exterior: Float64Array; interior: Float64Array; profile?: number[][] }>;
   };
   solar: {

@@ -124,6 +124,9 @@ export function simulate(req: SimulationRequest): SimulationResult {
   const ambient = new Float64Array(records.length);
   const sky = new Float64Array(records.length);
   const meanRadiant = new Float64Array(records.length);
+  // T-22: the floor's boundary node, which the integrator already solves and
+  // now surfaces on StepRecord.T_groundNode (CONTRACTS.md 7.7).
+  const ground = new Float64Array(records.length);
   const absorbedOpaque = new Float64Array(records.length);
   const transmittedGlazed = new Float64Array(records.length);
 
@@ -134,6 +137,7 @@ export function simulate(req: SimulationRequest): SimulationResult {
     ambient[i] = r.T_amb;
     sky[i] = r.T_sky;
     meanRadiant[i] = r.T[STAR_NODE]!;
+    ground[i] = r.T_groundNode;
     absorbedOpaque[i] = r.absorbedOpaque;
     transmittedGlazed[i] = r.Q2;
   }
@@ -197,7 +201,7 @@ export function simulate(req: SimulationRequest): SimulationResult {
       warnings: allWarnings,
     },
     time,
-    temperatures: { indoorAir, ambient, sky, meanRadiant, surfaces },
+    temperatures: { indoorAir, ambient, sky, meanRadiant, ground, surfaces },
     solar: {
       incidentBySurface,
       absorbedOpaque,

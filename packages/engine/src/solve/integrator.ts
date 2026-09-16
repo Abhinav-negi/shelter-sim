@@ -63,6 +63,16 @@ export interface StepRecord {
   Qaux: number;
   incident: Float64Array;
   absorbedOpaque: number;
+  /**
+   * The floor's boundary node temperature -- the fabric node adjoining the
+   * ground, i.e. `T[sn.first]` for the surface with `boundary === 'ground'`.
+   * Surfaced by T-22 for `SimulationResult.temperatures.ground` (CONTRACTS.md
+   * 7.7); the solver already computed this node, it was simply never read back
+   * out. Falls back to the deep-soil boundary condition `env.T_ground` when the
+   * building has no ground-boundary surface at all (the fully-adiabatic
+   * validation fixture, Test 4).
+   */
+  T_groundNode: number;
 }
 
 /** Coefficients held constant across one weather hour. */
@@ -641,6 +651,10 @@ function record(
   let Q7 = 0;
   let Q10 = 0;
   let absorbedOpaque = 0;
+  // Falls back to the deep-soil boundary condition when no surface actually
+  // borders the ground (the fully-adiabatic fixture has none) -- see the
+  // StepRecord.T_groundNode doc comment.
+  let T_groundNode = env.T_ground;
 
   for (let s = 0; s < S; s++) {
     const sn = model.surfaces[s]!;
@@ -654,6 +668,7 @@ function record(
       Q4 += c.hrSkyA[s]! * (env.T_sky - Text);
     } else if (sn.surface.boundary === 'ground') {
       Q10 += c.groundA[s]! * (env.T_ground - Text);
+      T_groundNode = Text;
     }
     // Conduction into the innermost fabric node from its neighbour.
     if (sn.mesh.n > 1) {
@@ -700,5 +715,6 @@ function record(
     Qaux: qAux,
     incident: Float64Array.from(env.incident),
     absorbedOpaque,
+    T_groundNode,
   };
 }
