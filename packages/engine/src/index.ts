@@ -264,5 +264,7 @@ export {
   seriesFromJson,
   requestToJson,
   requestFromJson,
+  resultToJson,
+  resultFromJson,
   canonicalRequestHash,
 } from './serialise.js';
