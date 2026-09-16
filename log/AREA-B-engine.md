@@ -1060,9 +1060,9 @@ assuming 290 W/m^2 transfers.
 
 ---
 
-### [ ] T-22 — Split out `post/heatFlows.ts` and add the ΔT and ground series
+### [~] T-22 — Split out `post/heatFlows.ts` and add the ΔT and ground series
 
-**Area:** B — Engine (≈ W-24) · **Status:** NOT STARTED · **Est:** 4 h
+**Area:** B — Engine (≈ W-24) · **Status:** CLAIMED by subagent-T22 at 2026-09-16T00:52:56Z · **Est:** 4 h
 **Depends on:** T-06 · **Conflicts with:** T-16 (edits `post/kpis.ts`)
 
 **Why this exists.** The problem statement's **deliverable 3** is phrased *"Heat flow details **as
