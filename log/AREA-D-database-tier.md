@@ -22,9 +22,9 @@
 
 ---
 
-### [ ] T-29 — Prisma schema, the four tables, and the first migration
+### [~] T-29 — Prisma schema, the four tables, and the first migration
 
-**Area:** D — Database · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** D — Database · **Status:** CLAIMED by orchestrator at 2026-09-16T10:53:09Z · **Est:** 6 h
 **Depends on:** T-03, T-06 · **Conflicts with:** T-30…T-35 (all read this schema)
 
 **Why this exists.** Four things need persisting and nothing else does. Getting the schema right

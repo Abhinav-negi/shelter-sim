@@ -360,7 +360,7 @@ with an Area file again, the Area file is right — fix this table.)*
 
 | | ID | Title | Depends on |
 |---|---|---|---|
-| [ ] | T-29 | Prisma schema, the four tables, and the first migration | T-03, T-06 |
+| [~] | T-29 | Prisma schema, the four tables, and the first migration | T-03, T-06 |
 | [ ] | T-30 | The database client wrapper, and the DB-off mode that must always work | T-29 |
 | [ ] | T-31 | The weather cache repository | T-26, T-30 |
 | [ ] | T-32 | Design snapshots and share links | T-30 |
