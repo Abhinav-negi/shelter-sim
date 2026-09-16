@@ -234,7 +234,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | [x] | T-17 | The performance budget | T-16 |
 | [x] | T-18 | Shading: mountain horizon and window overhangs | T-06 |
 | [x] | T-19 | Phase-change materials: apparent heat capacity | T-06 |
-| [ ] | T-20 | Water and rock thermal storage, and the `StorageElement` node | T-06, T-19 |
+| [~] | T-20 | Water and rock thermal storage, and the `StorageElement` node | T-06, T-19 |
 | [x] | T-21 | Couple infiltration to opening area (closes AUDIT F-6) | T-06 |
 | [x] | T-22 | Split out `post/heatFlows.ts` and add the ΔT and ground series | T-06 |
 | [!] | T-23 | Validation Test 5 against NOAA, and print every measured pair | T-07 |

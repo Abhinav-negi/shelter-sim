@@ -775,9 +775,9 @@ unrelated to this task and outside the allow-list).
 
 ---
 
-### [ ] T-20 — Water and rock thermal storage, and the `StorageElement` node
+### [~] T-20 — Water and rock thermal storage, and the `StorageElement` node
 
-**Area:** B — Engine (≈ W-55, de-stretched) · **Status:** NOT STARTED · **Est:** 10 h
+**Area:** B — Engine (≈ W-55, de-stretched) · **Status:** CLAIMED by orchestrator-session at 2026-09-16T04:15:33Z · **Est:** 10 h
 **Depends on:** T-06, T-19 · **Conflicts with:** T-10, T-11 (you add a node type to their files)
 
 **Why this exists.** Water is the **cheapest thermal mass available** — `c = 4186 J/(kg·K)`, four
