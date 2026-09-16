@@ -210,6 +210,19 @@ packages/optimise` (vitest, 11/11 green); `npm run lint` (root, 55 pre-existing 
 the Node-script measurements above were run directly against packages/engine/dist and
 packages/optimise/dist outside the repo (scratch script, not committed) to avoid the no-console
 ESLint rule that applies to packages/optimise/test/**.
+
+NOTE FOR T-55 (browser worker pool, depends on this file as-is): runSweep dispatches
+`runner()` calls SEQUENTIALLY -- one variant in flight at a time, `await`ed before the next
+starts. That is deliberate here: it is what lets AbortSignal cancellation land "within one
+variant's runtime" (acceptance test 7) and what lets the spin-up cache learn a mass group's
+first member before its siblings dispatch. But it also means a multi-worker pool `runner`
+injected by T-55 will only ever be given ONE job at a time from this loop -- it cannot actually
+parallelise across N workers unless T-55 either (a) confirms sequential dispatch is still fast
+enough on target hardware (plausible: this task's own numbers show a synchronous runner alone
+clears the 10s/100-variant budget by ~5x, so per-call overhead from postMessage may still fit),
+or (b) needs a change to this dispatch loop, in which case that is a change to sweep.ts (T-54's
+file, not T-55's per the Files-you-may-touch split) and belongs in a report back through the
+ledger, not a fork of this loop inside pool.ts.
 ```
 
 **Completed by:** claude (T-54 subagent, session 2026-09-16)  **Date:** 2026-09-16
