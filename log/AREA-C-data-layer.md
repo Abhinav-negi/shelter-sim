@@ -157,9 +157,9 @@ count, the typecheck-script boundary) is in .work/T-24.md.
 
 ---
 
-### [~] T-25 — The weather pipeline, with the mandatory lapse-rate correction
+### [x] T-25 — The weather pipeline, with the mandatory lapse-rate correction
 
-**Area:** C — Data (≈ W-27) · **Status:** CLAIMED by orchestrator-session at 2026-09-16T04:57:35Z · **Est:** 12 h
+**Area:** C — Data (≈ W-27) · **Status:** DONE · **Est:** 12 h
 **Depends on:** T-24 · **Conflicts with:** T-27 (owns the payloads; you own the schema)
 
 **Why this exists.** NASA POWER's grid cell is ~55 km × 58 km. In the Himalaya **one cell can
@@ -261,9 +261,112 @@ structure; splitting them across agents means six different opinions about where
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+1. TECH.md 9.3 worked example: source at 4120 m, site at 3500 m -> lapseCorrectionK measured=4.03,
+   expected 6.5*0.62=4.03 (exact to the test's 2-decimal tolerance). Every T_amb sample raised by
+   4.03 K. PASS.
+2. User-CSV source: provenance.lapseCorrectionK=0, provenance.sourceElevation=null (even though the
+   raw record's own sourceElevation was deliberately set non-null in the test, to prove the
+   isUserCsv branch -- not just a null check -- is what skips stage 2). T_amb identical to input to
+   <1e-12 (assertion passed at that tolerance). PASS.
+3. Energy-conserving resample, 3600s -> 300s, asymmetric step profile (GHI=800 W/m^2 for hours
+   0-11, else 0, so values[0] != values[23] and the boundary-cancellation degenerate case is
+   avoided): srcIntegral=34,560,000 W*s/m^2; resampleConserving integral=34,560,000
+   (conservedDeviation=0.000000%, PASS < 0.1%); resampleLinear integral=33,240,000
+   (linearDeviation=3.8194%, PASS > 0.1% -- documenting the difference is the point). PASS.
+4. gapFill: a 2h NaN gap -> filled [10,11,12,13,14,15], notes=[] (silent, PASS). A 5h NaN gap ->
+   filled [10,11,12,13,14,15,16], notes=["T_amb: gap of 5h (indices 1-5) interpolated (> 3h silent
+   threshold)"] (PASS, names the field and the gap).
+5. Erbs closure identity, GHI-only input, physically self-consistent clear-sky profile (kt=0.75
+   constant, so decompose()'s own documented DNI extraterrestrial cap never triggers): 10 of 24
+   hours had zenith < 87 deg; max |DNI*cosZenith + DHI - GHI| over those hours = 5.684341886080802e-14
+   (<< 1e-9). PASS.
+6. LW_down: absent -> Swinbank-derived LW_down[0]=128.5310630707777 W/m^2 (matches
+   SIGMA*skyTemperature(T_amb)^4 exactly, to the test's 1e-6 tolerance); present (measured=180) ->
+   passed through unchanged, LW_down[0]=180. The two differ by 51.53 W/m^2. provenance.notes
+   contains a Swinbank mention only in the absent case. PASS.
+7. AUDIT.md false-positive case, Leh (34.15N, 77.58E), day 15: computed sunriseHour=8 (first integer
+   hour with sun altitude > 0). GHI=40 W/m^2 at hour 7 (1h before sunrise, sun still below the
+   horizon, but bordering daylight) -> 0 warnings. GHI=300 W/m^2 at 02:00 (deep winter night, no
+   adjacent daylight hour) -> 1 warning:
+   "GHI[2] = 300 W/m^2 more than 1h outside any daylight window (day 15, hour 2.00)". PASS.
+8. A NaN at GHI[3] -> EngineError, code=WEATHER_INVALID, message="GHI[3] is NaN". PASS.
+9. T_amb=400 K -> EngineError code=WEATHER_INVALID, message="T_amb[0] = 400 K is outside the
+   plausible range [180, 330] K". T_amb=250 K -> no throw. PASS.
+10. v_wind array truncated to length 3 against a length-6 series -> EngineError code=WEATHER_INVALID,
+    message="v_wind has length 3, expected 6 (array-length mismatch)". PASS.
+11. 50-row CSV with row 47's v_wind cell set to "NOT_A_NUMBER": rowErrors=[{"row":47,
+    "column":"v_wind","message":"'NOT_A_NUMBER' is not a number"}]. Row 47's T_amb_C and GHI cells
+    still parsed correctly (5.0, 100); only v_wind[46] is NaN. Rows 1 and 50 (and every other row)
+    parsed correctly and untouched: exactly 1 of 50 v_wind values is NaN. PASS.
+12. `grep -rn "fetch(" packages/data/src` (run both as an automated in-test check via execFileSync
+    and manually from the repo root) returns no matches. PASS.
+13. normaliseWeather() output (nasa-power source, Leh site, resampled to 300s) fed directly into
+    simulate() with no adaptation, on a rammed-earth/single-glazing shelter built from
+    @shelter/data's own catalogue: meta.energyBalanceResidual = 2.2876252186297872e-7 (< 1e-3). PASS.
+
+All 13 acceptance tests PASS.
+
+Full suite: `npx vitest run` from the worktree root -> 14 test files, 183 tests (172 passed, 10
+skipped, 1 FAILED), exit code non-zero because of that 1 failure. `npx tsc -b packages/data` exit 0.
+`npx tsc -b packages/engine` exit 0 (unmodified).
+
+The 1 failing test is `packages/data/test/catalog.test.ts` > "T-24 acceptance test 14 -- zero runtime
+dependencies > packages/data/package.json has no dependencies key" -- it asserts
+`pkg.dependencies === undefined`, which is now false because `packages/data/package.json` carries
+`{"dependencies": {"@shelter/engine": "0.1.0"}}`, exactly as `log/CONTRACTS.md` D-10 and this task's
+own "Files you may touch" instruction require (move `@shelter/engine` from devDependencies to
+dependencies). D-10's text says "T-24's completed work is unaffected... this only lifts the
+constraint for T-25 onward" -- true of T-24's *source* (materials.ts/glazing.ts/constructions.ts
+still import nothing from `@shelter/engine`), but T-24's own acceptance test 14 hard-codes the
+pre-D-10 constraint as a literal assertion, and D-10 necessarily makes that literal assertion false.
+This is a real, foreseeable consequence of the human's own D-10 decision, not a defect introduced by
+this task's diff, and not a corner cut silently: `catalog.test.ts` is NOT in this task's Files-you-
+may-touch allow-list (only `pipeline.ts`, `csv.ts`, `weather.test.ts`, and a scoped edit to
+`package.json` are), so it is left untouched, per SUBAGENT RULES 1 ("never touch a file outside your
+allow-list") and 1 ("if two rules conflict... stop and report it," rather than silently editing
+across the boundary). Flagged here for the orchestrator: the fix is a one-line change to
+`catalog.test.ts`'s test 14 (assert `pkg.dependencies` deep-equals `{"@shelter/engine": "0.1.0"}`
+instead of `undefined`), plus updating T-24's own Evidence block line 14 and its
+`log/CONTRACTS.md`/`LOG.md` §7.13 cross-references if any exist elsewhere -- a tiny, separate,
+well-scoped follow-up, not a T-25 defect.
+
+Type/design notes for a zero-context successor:
+- `RawWeather`, `NormaliseOptions` are defined locally in `pipeline.ts` (not in `log/CONTRACTS.md`,
+  which does not specify them) -- per the ledger's own rule that a task needing a type not in the
+  shared contract defines it locally in its own module and exports it.
+- `EngineError` is imported directly from `@shelter/engine` in `pipeline.ts` and `csv.ts` (per D-10
+  and this task's explicit instruction), NOT from the local `@shelter/data/src/errors.ts` mirror.
+  `errors.ts` itself is untouched, out of allow-list, and still used by `materials.ts`/`glazing.ts`/
+  `constructions.ts` -- two parallel EngineError classes now co-exist in this package on purpose,
+  each import site choosing the one appropriate to it. Do not "fix" this by unifying them without a
+  new task, since `errors.ts` is out of scope here.
+- The lapse-rate calibration knob is `DEFAULT_LAPSE_RATE_K_PER_M` in `pipeline.ts` (defaults to the
+  engine's own `LAPSE_RATE`, 6.5e-3 K/m), overridable per-call via `NormaliseOptions.lapseRateKPerM`
+  (rule 14: named constant, comment on what evidence -- a measured paired-station comparison --
+  would justify changing it).
+- Stage 4's "derive missing pressure" is implemented as a note-only barometric-formula computation
+  (`pressureAtAltitude(site.elevation)`) logged into `provenance.notes`; `WeatherSeries` (LOG.md
+  §7.6) has no per-timestep pressure field to store a value in, and every engine consumer that needs
+  pressure already derives it from `Site.elevation` directly, so there was nothing else to wire it
+  into. If a future task adds a pressure field to the contract, this is the place to start returning
+  it as an array too.
+- `validateWeatherSeries` is exported (not just used internally by `normaliseWeather`) specifically
+  so acceptance tests 7-10 can hit stage 6 directly with hand-built `WeatherSeries` objects, without
+  needing full `NormaliseOptions`.
+- `resampleLinear`/`resampleConserving` are both exported for the same reason -- acceptance test 3
+  needs to compare them directly, not just observe `normaliseWeather`'s (conserving-only) internal
+  choice.
+- `csv.ts`'s parser is a deliberately simple `split(',')` tokenizer with no quoted-field support
+  (marked `ponytail:` in the file, with the stated upgrade path). One CSV row is fixed at exactly one
+  hour (`ONE_ROW_IS_ONE_HOUR_SECONDS`), also marked as a documented, deliberate simplification with
+  its upgrade path spelled out in a comment (rule 13).
+- Neither `pipeline.ts` nor `csv.ts` is wired into `packages/data/src/index.ts`'s public barrel --
+  `index.ts` is not in this task's allow-list. `weather.test.ts` imports directly from
+  `../src/weather/pipeline.js` and `../src/weather/csv.js`. A future task (T-26/T-27, or a tiny
+  follow-up) should add the re-export once it needs these functions from outside `packages/data`.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** claude-subagent-T-25  **Date:** 2026-09-16
 
 ---
 

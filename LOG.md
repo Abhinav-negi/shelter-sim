@@ -201,7 +201,7 @@ with an Area file again, the Area file is right — fix this table.)*
 |---|---|---|---|
 | A | Foundation & contracts | 7 / 7 | `log/AREA-A-foundation-contracts.md` |
 | B | Engine | 15 / 16 | `log/AREA-B-engine.md` |
-| C | Data layer | 1 / 5 | `log/AREA-C-data-layer.md` |
+| C | Data layer | 2 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 0 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 0 / 7 | `log/AREA-E-server-tier.md` |
 | F | Frontend | 0 / 11 | `log/AREA-F-frontend.md` |
@@ -209,7 +209,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | H | Scenarios | 0 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **23 / 69** | |
+| | **TOTAL** | **24 / 69** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
@@ -248,12 +248,12 @@ with an Area file again, the Area file is right — fix this table.)*
 | [x] | T-22 | Split out `post/heatFlows.ts` and add the ΔT and ground series | T-06 |
 | [!] | T-23 | Validation Test 5 against NOAA, and print every measured pair | T-07 |
 
-### Area C — Data layer — 1 / 5 — `log/AREA-C-data-layer.md`
+### Area C — Data layer — 2 / 5 — `log/AREA-C-data-layer.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
 | [x] | T-24 | Material, glazing and construction catalogues, every row cited | T-06 |
-| [~] | T-25 | The weather pipeline, with the mandatory lapse-rate correction | T-24 |
+| [x] | T-25 | The weather pipeline, with the mandatory lapse-rate correction | T-24 |
 | [ ] | T-26 | NASA POWER and Open-Meteo request builders and response parsers | T-25 |
 | [ ] | T-27 | Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer | T-25, T-26 |
 | [ ] | T-28 | Presets: the app opens on an interesting result | T-24, T-27 |
