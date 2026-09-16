@@ -15,9 +15,9 @@
 
 ---
 
-### [ ] T-59 — The eighteen-scenario matrix, built from real recorded history
+### [~] T-59 — The eighteen-scenario matrix, built from real recorded history
 
-**Area:** H — Scenarios (≈ `plan.md` §7) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** H — Scenarios (≈ `plan.md` §7) · **Status:** CLAIMED by orchestrator at 2026-09-16T15:27:04Z · **Est:** 8 h
 **Depends on:** T-27, T-28 · **Conflicts with:** none
 
 **Why this exists.** *"We do not ask 'how does this design do on a typical day?' We ask 'how does
