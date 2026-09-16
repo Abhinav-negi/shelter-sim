@@ -864,7 +864,7 @@ without, or stop and report.
 |---|---|
 | root (dev only) | `typescript`, `vitest`, `@types/node`, `prettier`, `eslint`, `eslint-config-next` |
 | `@shelter/engine` | **ZERO.** Never any. Not prisma, not react, not a numerics library. |
-| `@shelter/data` | **ZERO.** TMY payloads are JSON files in the repo. |
+| `@shelter/data` | `@shelter/engine` only (D-10). TMY payloads are JSON files in the repo. |
 | `@shelter/optimise` | `@shelter/engine` only. |
 | `apps/web` | `next`, `react`, `react-dom`, `@prisma/client`, `prisma` (dev), `d3-shape`, `d3-scale`, `d3-sankey`, `d3-array`, and their `@types/*` as dev deps. |
 
@@ -1160,6 +1160,26 @@ that `CHALLENGE.md` C-06 and K-05 both test for. T-21 closes it.
 all; the caller always hands over a resolved `WeatherSeries`, and the materials and glazings needed
 are handed over inline on the request. This is simpler and preserves the no-I/O property equally
 well. Keep it.
+
+### D-10 — `@shelter/data` is allowed one runtime dependency: `@shelter/engine`.
+
+T-24 established, and this table originally required, that `@shelter/data` carries **zero** runtime
+dependencies — not even on `@shelter/engine` — to stay decoupled from the physics package
+(`packages/data/src/errors.ts`'s own doc comment records that decision and mirrors `EngineError`
+locally instead of importing it). T-25 then needed `packages/data/src/weather/pipeline.ts` to derive
+missing weather fields (`DNI`/`DHI` via Erbs, `LW_down` via Swinbank, pressure via the barometric
+formula) and its own task text was explicit: **import these from `@shelter/engine`, do not
+reimplement them** — the same rule that governs every other physics function in this project (global
+rule 11: name the source; global rule 16 discourages parallel implementations that can drift).
+
+Those two decisions directly conflict — the human user was asked and chose to keep one canonical
+implementation of each correlation in `@shelter/engine` rather than fork three functions into
+`@shelter/data` by hand. `@shelter/engine`'s own runtime-dependency count stays **zero** either way
+(nothing changes in `packages/engine`); only `@shelter/data`'s stays revised, from `ZERO` to
+`@shelter/engine only`, matching the row `@shelter/optimise` already had. `packages/data/package.json`
+moves `@shelter/engine` from `devDependencies` to `dependencies` accordingly. T-24's completed work is
+unaffected — it never imported `@shelter/engine` at runtime and still doesn't; this only lifts the
+constraint for T-25 onward.
 
 ---
 
