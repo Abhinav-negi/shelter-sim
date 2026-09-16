@@ -886,9 +886,9 @@ resume_notes: once the export lands (in the main repo / merged into this
 
 ---
 
-### [ ] T-33 — The simulation-run cache
+### [x] T-33 — The simulation-run cache
 
-**Area:** D — Database · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** D — Database · **Status:** DONE. All 13 acceptance tests pass. · **Est:** 6 h
 **Depends on:** T-06, T-30 · **Conflicts with:** none
 
 **Why this exists.** The survival grid re-runs eighteen scenarios every time the page loads, and the
@@ -964,9 +964,88 @@ a cached result from a different engine version is a wrong answer, not a stale o
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+NOTE: this task's subagent was interrupted mid-work by a session rate limit before finishing --
+apps/web/lib/repo/runs.ts and apps/web/test/repo-runs.test.ts existed uncommitted in the worktree,
+fully written but never run to completion. The orchestrator picked up from there: merged master
+(barrel-export and vitest-concurrency fixes from T-32/T-34's investigations), replaced the
+subagent's own deep-relative-import workaround for canonicalRequestHash/resultToJson/resultFromJson
+(`../../../../packages/engine/src/serialise.js`) with the normal `@shelter/engine` package import
+now that the barrel re-exports them, then ran the actual test file for the first time.
+
+TWO REAL BUGS FOUND AND FIXED (neither was in the already-committed master work; both confined to
+this task's own new files):
+
+1. PRISMA/SQLITE JSON PRECISION LOSS (a genuine environment limitation, not a code bug in
+   resultToJson/resultFromJson or anywhere in packages/engine -- packages/engine/test/serialise.test.ts's
+   plain in-memory round trip is unaffected). Minimal reproduction, run directly against this
+   worktree's dev.db: writing the bare number 267.77519906129874 into a Prisma `Json` field and
+   reading it back returned 267.7751990612987 -- the last significant digit silently dropped.
+   Confirmed this is specific to Prisma's SQLite JSON storage/retrieval, not to JS's own
+   JSON.stringify/parse (which round-trips doubles exactly by spec). Fixed in `runs.ts` itself
+   (in scope, does not touch db.ts/schema.prisma/serialise.ts): added `encodeNumbers`/
+   `decodeNumbers`, a small recursive pair that marks every number as a string
+   (`' n:' + n.toString()`) before writing and reverses it after reading -- SQLite's JSON
+   formatter never touches string content, so the original bits survive untouched. Verified with
+   the same minimal reproduction: round-tripped the string-encoded value and got back the exact
+   original number (`===` true). This is why tests 1, 6 and 9 (the ones doing exact float
+   comparisons) failed before this fix and pass after.
+2. TEST-FILE BUG (not a runs.ts bug): test 4 ("version gating") writes a row with
+   `engineVersion: '0.0.1'` directly via Prisma and never deleted it. Since all 13 tests in this
+   file share the same dev.db and run in one process (vitest.config.ts's fileParallelism: false),
+   that leftover row was still present when test 5's `purgeRunsForOtherVersions()` ran, inflating
+   its count from the expected 2 to 3. Fixed by adding a cleanup `delete` at the end of test 4's
+   body. Confirmed stable across 3 repeated full runs of this file after the fix (13/13 each time).
+
+ACCEPTANCE TESTS -- MEASURED (npx vitest run apps/web/test/repo-runs.test.ts, this worktree):
+1. PASS. original energyBalanceResidual=6.684703226067254e-8, cached=6.684703226067254e-8, diff=0
+   (exact match, not merely within a tolerance -- the precision fix above is what makes this exact
+   rather than off in the last digit).
+2. PASS. All 4 varied fields (site.elevation, building.volume, operation.achSchedule[3],
+   options.timestepSeconds) were misses when tested separately.
+3. PASS. A request differing only in object key insertion order was a hit.
+4. PASS. Row written under engineVersion='0.0.1'; running engine ENGINE_VERSION='0.1.0' -> miss.
+5. PASS. purgeRunsForOtherVersions() removed=2 (expected 2), version-matched row (reqC) kept.
+6. PASS. readFullRun round-tripped 576 timesteps; time and temperatures.indoorAir Float64Arrays
+   and kpis all deep-equal to the original result (genuinely, after the precision fix -- see bug 1
+   above for what this looked like before).
+7. PASS. readFullRun after storeFull=false -> null (not a partial object).
+8. PASS. Fresh run's meta.warnings = ["No humidity data, so condensation risk could not be
+   assessed. It is reported as unavailable, not as zero."]; cached run's meta.warnings has the same
+   entry plus "served from cache" appended.
+9. PASS. Compared all 15 SimulationKpis fields between a cached read and a second live run:
+   mismatches=[] (empty -- see bug 1 above; before the precision fix this reported
+   ["maxIndoorTemp","timeLagHours"] as differing).
+10. PASS. DB OFF: readRun=null, writeRun resolved silently (no throw), 18 live simulate() calls
+    (the survival-grid's own scenario count) completed in 281ms with no database present.
+11. PASS. DB UNREACHABLE (bogus file: URL, same technique as T-30/T-31/T-32/T-34): readRun 67ms ->
+    null, writeRun 7ms -> resolved silently. Both well under the 5s budget.
+12. PASS. 10 concurrent writeRun calls with the same request: rejected=0, resulting row count=1.
+13. PASS. Stored row bytes: without storeFull=1123, with storeFull=555078 (the full per-timestep
+    result is ~494x the size of KPIs+meta alone for this fixture, consistent with the prompt's
+    "two to three orders of magnitude larger" expectation).
+
+Full suite (`npx vitest run` from worktree root, after `npm run db:seed` to restore the Material
+table -- see gotcha below): 25 files, 298 passed, 10 skipped, exit 0. Reran 3 times total, stable
+every time. `npm run lint`: exit 0, 0 errors, 12 pre-existing warnings unrelated to this task.
+
+GOTCHAS FOR THE NEXT AGENT:
+- This worktree's `apps/web/prisma/dev.db` accumulated stray rows across this session's manual
+  debugging (precision-repro scripts) and repeated targeted test-file runs; a stray full-suite run
+  once showed repo-materials.test.ts (T-34) failing on an empty-Material-table state from an
+  interrupted earlier invocation -- fixed with `npm run db:seed` (idempotent, safe). Not a defect
+  in this task or in T-34; just a consequence of a long-lived local dev.db across many manual runs
+  in one sitting. A genuinely fresh worktree would not hit this.
+- `bare tsc --noEmit -p apps/web/tsconfig.json` reports several errors (an `exactOptionalPropertyTypes`
+  issue in this test file at the Prisma `WhereUniqueInput` type, plus `rootDir`/`rootDir` errors
+  tracing into packages/engine/src via declaration-map resolution) -- confirmed these are
+  PRE-EXISTING on master too (reproduced identically against apps/web/test/repo-designs.test.ts's
+  own Kelvin-branding lines), unrelated to this task, and not part of this project's actual
+  required checks (`npx vitest run` + `npm run lint` + `tsc -b packages/engine`, per CONTRACTS.md
+  §2/§10). Do not chase this invocation; it was never a green baseline to begin with.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** orchestrator (continuing the T-33 subagent's interrupted, uncommitted work)
+**Date:** 2026-09-17
 
 ---
 
