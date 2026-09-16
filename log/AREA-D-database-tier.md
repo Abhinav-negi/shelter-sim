@@ -817,11 +817,12 @@ a cached result from a different engine version is a wrong answer, not a stale o
 
 ---
 
-### [!] T-34 — The material repository and the seed script
+### [x] T-34 — The material repository and the seed script
 
-**Area:** D — Database · **Status:** BLOCKED ON T-30 (test 10: `npx vitest run` is not exit-0 due
-to a pre-existing T-30 defect in `apps/web/test/db.test.ts`, unrelated to T-34 -- see Evidence)
-· **Est:** 4 h
+**Area:** D — Database · **Status:** DONE. All 10 acceptance tests pass. Test 10 was originally
+blocked on a real cross-file Vitest race (see its Evidence entry, updated 2026-09-17) which the
+orchestrator root-caused and fixed via a committed `vitest.config.ts`; re-verified genuinely green
+after. · **Est:** 4 h
 **Depends on:** T-24, T-30 · **Conflicts with:** T-24 (code catalogue is the source of truth)
 
 **Why this exists.** The browser should not ship the entire material catalogue in its bundle, and
@@ -956,27 +957,40 @@ Setup: fresh worktree had no apps/web/prisma/dev.db. Ran, once:
    (the same exported upsert function `db:seed` uses) so later runs are not
    polluted. vitest test "9." PASS.
 
-10. `npx vitest run` (whole monorepo, from the worktree root):
-      Test Files  1 failed | 21 passed (22)
-      Tests       1 failed | 262 passed | 10 skipped (273)
-    NOT exit 0 -- see "Decisions/gotchas" below: the one failure is
-    apps/web/test/db.test.ts > "T-30 db.ts > 1. getDb() returns null and does
-    not throw when DATABASE_URL is unset", `RangeError: Maximum call stack
-    size exceeded`. Confirmed via `git stash` that this reproduces
-    identically on the bare T-30 commit (05cedff), before any T-34 file
-    existed, running `npx vitest run test/db.test.ts` alone. This is a
-    pre-existing T-30 defect, not something T-34 introduced, and both
-    apps/web/lib/db.ts and apps/web/test/db.test.ts are outside T-34's
-    "files you may touch" list -- reported upward per LOG.md rule 16, not
-    fixed here. The 10 skipped tests are all in
-    packages/engine/test/validation-noaa.test.ts, unrelated to T-34 and
-    unrelated to my change (present identically before and after). All 7 of
-    T-34's own tests (test/repo-materials.test.ts) pass; nothing T-34 touched
-    broke. Engine test files total 142 passing tests across 12 files (up from
-    the "65" figure in this task's original prompt -- the engine has grown
-    since T-34 was written), all green. PASS/FAIL split: test 10 is FAIL on
-    its literal wording ("exits 0"); every other file in the suite T-34 could
-    affect is green.
+10. UPDATE (orchestrator, 2026-09-17): the subagent's original evidence here
+    reported this FAIL with an incorrect diagnosis -- "confirmed via `git
+    stash` that this reproduces on the bare T-30 commit" -- but a bare
+    `git stash` (no `-u`) does not stash untracked files, so their own new,
+    not-yet-committed `materials.ts`/`seed.ts`/`repo-materials.test.ts` were
+    still present on disk during that "bare T-30" check, silently
+    invalidating it (this project's own harness gotcha explicitly warns
+    against bare `git stash` for exactly this reason).
+    The orchestrator independently root-caused the real failure instead: it
+    is a genuine race on the real, process-wide `process.env.DATABASE_URL`
+    between test FILES run concurrently by Vitest's default scheduler --
+    every apps/web/test/*.ts file (db.test.ts, repo-*.test.ts) mutates that
+    same real env var directly to exercise DB on/off/unreachable, and two
+    files' async hooks can interleave, handing `getDb()` a live client when
+    a test expects null. Chai's inspector then hangs trying to pretty-print
+    that client's proxy-heavy internals, producing the RangeError (with no
+    capturable stack -- the crash is inside chai, not the code under test).
+    Confirmed directly with a forced-output debug probe: immediately after
+    `delete process.env.DATABASE_URL` in one file, `process.env.DATABASE_URL`
+    read back as a live path set by a concurrently-running sibling file.
+    Fixed at the root by committing `vitest.config.ts`
+    (`fileParallelism: false`, `poolOptions.forks.singleFork: true`), which
+    is infra outside any task's file allow-list. Re-ran after the fix and
+    after merging master's fixes into this branch:
+      Test Files  23 passed (23)
+      Tests       274 passed | 10 skipped (284)
+    exit 0. PASS, genuinely, not just on its literal wording. `npm run lint`
+    also re-confirmed: exit 0, 0 errors, 12 pre-existing warnings unrelated
+    to T-34. See `LOG.md`'s HANDOFF and the `vitest.config.ts` header comment
+    for the full root-cause writeup. T-34's original diagnosis that this was
+    "not something T-34 introduced" was correct in spirit (the underlying
+    race predates T-34 and could have hit any two Area D test files) but the
+    specific supporting evidence (the git-stash check) was not — corrected
+    here rather than left standing.
 
 DECISIONS / ASSUMPTIONS:
 - getMaterial/listMaterials go through lib/db.ts's withDb() exclusively, per
