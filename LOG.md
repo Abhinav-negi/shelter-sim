@@ -274,14 +274,14 @@ with an Area file again, the Area file is right — fix this table.)*
 | A | Foundation & contracts | 7 / 7 | `log/AREA-A-foundation-contracts.md` |
 | B | Engine | 15 / 16 | `log/AREA-B-engine.md` |
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
-| D | Database tier | 2 / 7 | `log/AREA-D-database-tier.md` |
+| D | Database tier | 3 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 0 / 7 | `log/AREA-E-server-tier.md` |
 | F | Frontend | 0 / 11 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **30 / 69** | |
+| | **TOTAL** | **31 / 69** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
@@ -330,7 +330,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | [x] | T-27 | Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer | T-25, T-26 |
 | [x] | T-28 | Presets: the app opens on an interesting result | T-24, T-27 |
 
-### Area D — Database tier — 2 / 7 — `log/AREA-D-database-tier.md`
+### Area D — Database tier — 3 / 7 — `log/AREA-D-database-tier.md`
 
 *(The header above read "0 / 7" before this edit even though T-29 was already `[x]` --
 stale, not touched by T-30. Corrected here while flipping T-30, per §5's own rule: the
@@ -340,7 +340,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 |---|---|---|---|
 | [x] | T-29 | Prisma schema, the four tables, and the first migration | T-03, T-06 |
 | [x] | T-30 | The database client wrapper, and the DB-off mode that must always work | T-29 |
-| [ ] | T-31 | The weather cache repository | T-26, T-30 |
+| [x] | T-31 | The weather cache repository | T-26, T-30 |
 | [ ] | T-32 | Design snapshots and share links | T-30 |
 | [ ] | T-33 | The simulation-run cache | T-06, T-30 |
 | [ ] | T-34 | The material repository and the seed script | T-24, T-30 |
