@@ -343,7 +343,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [ ] | T-31 | The weather cache repository | T-26, T-30 |
 | [ ] | T-32 | Design snapshots and share links | T-30 |
 | [ ] | T-33 | The simulation-run cache | T-06, T-30 |
-| [ ] | T-34 | The material repository and the seed script | T-24, T-30 |
+| [!] | T-34 | The material repository and the seed script (all 9 own acceptance tests pass; test 10 blocked by a pre-existing T-30 `db.test.ts` defect, not by T-34's own code) | T-24, T-30 |
 | [ ] | T-35 | The DB-off integration proof | T-31, T-32, T-33, T-34 |
 
 ### Area E — Server tier — 0 / 7 — `log/AREA-E-server-tier.md`
