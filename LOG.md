@@ -4,16 +4,34 @@
 
 **Completed this session:** T-20 (water/rock/PCM thermal storage nodes), T-25 (the weather
 pipeline, mandatory lapse-rate correction), T-26 (NASA POWER / Open-Meteo request builders and
-response parsers), and T-27 (bundled TMY for Leh, Kargil, Drass, Nubra, Jaisalmer). All four done
-in single subagents working in isolated worktrees, all independently re-verified by the
-orchestrator (reran `npx vitest run` and `npx tsc -b` on every affected package from the worktree
-AND again after merging to master; read every diff against each task's file-scope allow-list;
-spot-checked the trickier acceptance tests — T-20's PCM negative control, T-25's Erbs-closure and
-energy-conserving-resample tests, T-26's cross-source day-mean comparison, T-27's GHI/January-mean/
-byte-identical-radiation claims — by independently recomputing the numbers from the raw source data
-myself, not just trusting pasted numbers). Area B now 15/16, Area C now **5/5, fully done**, ledger
-total **27/69**. Full suite green: 16 files, 202 passed, 10 skipped (212 total), exit 0; `tsc -b
-packages/engine` and `tsc -b packages/data` both exit 0.
+response parsers), T-27 (bundled TMY for Leh, Kargil, Drass, Nubra, Jaisalmer), and T-28 (presets).
+All five done in single subagents working in isolated worktrees, all independently re-verified by
+the orchestrator (reran `npx vitest run` and `npx tsc -b` on every affected package from the
+worktree AND again after merging to master; read every diff against each task's file-scope
+allow-list; spot-checked the trickier acceptance tests — T-20's PCM negative control, T-25's
+Erbs-closure and energy-conserving-resample tests, T-26's cross-source day-mean comparison, T-27's
+GHI/January-mean/byte-identical-radiation claims, T-28's HDKR-divergence and gross/net-area
+findings below — by independently recomputing or reproducing the numbers myself, not just trusting
+pasted numbers). Area B now 15/16, Area C now **5/5, fully done**, ledger total **28/69**. Full
+suite green: 17 files, 214 passed, 10 skipped (224 total), exit 0; `tsc -b packages/engine` and
+`tsc -b packages/data` both exit 0.
+
+**⚠ Real engine bug found this session, not yet fixed — needs a new task or a follow-up on Area B:**
+T-28 found and the orchestrator independently reproduced a solver-divergence bug in
+`packages/engine/src/solar/transposition.ts`'s HDKR sky model (owned by the already-`[x]` T-14; full
+writeup and reproduction steps are in T-14's own addendum in `log/AREA-B-engine.md`). `Rb =
+cosTheta / sun.cosZenith` has no upper clamp; at Leh in January near sunrise (`cosZenith` as low as
+0.0014, a real, verified value) `Rb` reaches several hundred and the diffuse term spikes to an
+unphysical multi-kW/m² value, diverging the solver. **This is `DEFAULT_SIM_OPTIONS`'s own default
+sky model** (`skyModel: 'hdkr'`), not an edge-case option — any future preset, scenario or sweep
+run near sunrise/sunset at Ladakh's latitude with the default config is at risk. T-28 worked around
+it (`skyModel: 'isotropic'`) for its own presets rather than fixing across the Area B boundary, per
+rule 16 — correct behaviour, but the underlying bug is still live. Whoever next touches Area B
+should open a task for this (likely: clamp `Rb` to a physically sensible bound, or gate the
+anisotropic term below a minimum solar altitude, then re-verify against T-12's hard-gate analytical
+tests). A smaller, related finding from the same session: `CONTRACTS.md` §7.5's `Surface.area`
+documentation says "NET, not gross," but the shipped code and every fixture treat it as gross —
+also detailed in T-14's addendum, worth a docs-only fix whenever someone next edits `CONTRACTS.md`.
 
 **T-26 note for whoever reads its Evidence block:** acceptance test 7 (cross-source day-mean
 temperature within 5K) fails on RAW/uncorrected data (6.536 K gap) because NASA POWER's and
@@ -114,14 +132,19 @@ session (out of scope for both T-20 and T-25).
 picks up a local diff every time `npx vitest run` executes (the CSV-writing test rewrites it each
 run) — reverted after every verification run this session, nothing to fix in source.
 
-**Recommended next step:** T-28 (Presets: the app opens on an interesting result,
-`log/AREA-C-data-layer.md`) is the first unblocked `[ ]` task — both `T-24` and `T-27` are now
-done, and **Area C is now fully complete (5/5)**, so T-28 finishes it. It's a smaller task (6 h
-estimate) than the last four: six presets built from catalogues and TMY data already on disk, no
-new external data to fetch and no network involved, so it should not need the orchestrator to
-pre-fetch anything this time. Read its Area entry in full before claiming — it needs `Preset` (a
-T-06 type), `packages/data/src/materials.ts`/`constructions.ts` (T-24) and `tmyById`/
-`groundAlbedoById` (T-27, this session) all wired together correctly.
+**Recommended next step:** **Area C is now fully complete (5/5).** In strict ledger-scan order
+(§2 ritual step 5 — first `[ ]` task whose every dependency is `[x]`), that's **T-29** (Prisma
+schema, the four tables, and the first migration, `log/AREA-D-database-tier.md`) — depends on T-03,
+T-06, both done. This opens a new Area (D, database tier) with its own global rules (17-21) about
+the DB being a cache/share layer, never a dependency — read those in `LOG.md` §6 again before
+starting, they weren't exercised by anything this session. **Also newly unblocked and worth
+considering instead:** T-54 (the sweep engine, Area G) now has all its dependencies (`T-06`, `T-24`,
+`T-28`) satisfied too — it's the thing that would let a future session replace T-28's placeholder
+"optimised" preset with a real one (see T-28's own `.work/T-28.md` note pointing at T-56, which
+depends on T-54). Whichever is picked, this session ran two consecutive platform rate-limit
+interruptions (during T-25 and T-28, both resumed successfully via `SendMessage` once the limit
+reset) — worth bearing in mind if starting a new, larger task rather than treating this session's
+smooth run as guaranteed to continue.
 
 ---
 
