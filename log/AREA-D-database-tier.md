@@ -1285,9 +1285,9 @@ tests, all passing). Nothing half-finished.
 
 ---
 
-### [ ] T-35 — The DB-off integration proof
+### [x] T-35 — The DB-off integration proof
 
-**Area:** D — Database · **Status:** NOT STARTED · **Est:** 4 h
+**Area:** D — Database · **Status:** DONE. All 10 acceptance tests pass — see Evidence. · **Est:** 4 h
 **Depends on:** T-31, T-32, T-33, T-34 · **Conflicts with:** none
 
 **Why this exists.** Each database task proves its **own** function degrades gracefully. None of
@@ -1350,9 +1350,83 @@ matrix.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Real numbers, apps/web/test/db-off.integration.test.ts, `npx vitest run apps/web/test/db-off.integration.test.ts`:
+
+Test 1 (live):        totalMs=780  materialsCount=27  slowest=eighteen-scenario-matrix(18 calls):269ms  exceptions=0
+Test 2 (unset):       totalMs=278  materialsCount=27  slowest=eighteen-scenario-matrix(18 calls):232ms  exceptions=0
+Test 3 (unreachable): totalMs=408  materialsCount=27  slowest=eighteen-scenario-matrix(18 calls):230ms  exceptions=0
+Test 4 (slowest call, modes 2/3): unset=232ms, unreachable=230ms -- both < 5000ms ceiling, by ~21x margin.
+Test 5 (exceptions caught, modes 2/3): unset=0, unreachable=0.
+Test 6 (listMaterials count, all 3 modes): live=27  unset=27  unreachable=27 -- identical (matches the
+  seeded 27-row catalogue from T-34; unset/unreachable fall back to the code catalogue, same 27 rows).
+Test 7 (simulate() KPIs on the Leh TMY, field-by-field, all 3 modes): mismatches=none.
+  `expect(unset.kpis).toEqual(live.kpis)` and `expect(unreachable.kpis).toEqual(live.kpis)` both pass
+  with plain `toEqual` (no tolerance) -- the physics genuinely does not know the database exists.
+Test 8 (eighteen-scenario matrix, DB-off/unset): 18/18 scenarios completed in 232ms total.
+Test 9: `node apps/web/scripts/check-db-off.mjs` with DATABASE_URL unset ->
+  "PASS -- db-off mode (DATABASE_URL unset): six-exercise matrix green in 1055ms", exit code 0.
+Test 10: root README.md has a "Before the demo" section naming the script (added, see diff).
+
+Whole-repo regression, `npx vitest run` (DATABASE_URL unset in the shell before running, per the
+root vitest.config.ts serialisation fix from this session): 26 test files, 306 tests passed,
+10 pre-existing skips (316 total), 22.65s. Nothing outside this task's own file broke.
+
+`npm run lint`: exit 0, 0 errors. 12 pre-existing warnings (`no-console` unused-disable) in files
+this task never touched (packages/data/test/weather.test.ts, packages/engine/test/pcm.test.ts,
+packages/engine/test/storage.test.ts) -- unrelated to T-35, not introduced by it.
+
+`npm run typecheck` (tsc -b packages/engine, the repo's only wired typecheck script): exit 0,
+unaffected by this task (touches apps/web only).
+
+DECISIONS / ASSUMPTIONS:
+- All six exercises run against PRESETS[0] (`traditionalLadakhiByre`, locationId 'leh') --
+  the task's own exercise 2 wording is "tmyById('leh') -> simulate()", and this is the bundled
+  preset for that location. Request assembly (materialId/glazingId -> Material/Glazing, weather
+  attachment) copies packages/data/test/presets.test.ts's own `resolve()` helper verbatim (the
+  documented, already-tested way a real caller assembles a SimulationRequest from a Preset) --
+  not reimplemented physics, just the same wiring recipe, restated because that test file is not
+  importable from apps/web.
+- Exercise 6 (eighteen-scenario matrix) uses the real `buildScenarios`/`scenarioWeather` (T-59)
+  against the Leh TMY with the same preset, sliced per scenario -- 18 simulate() calls, timed as
+  one block (per the PROMPT's "the wall-clock time in DB-off mode must be recorded"), separately
+  from the per-call 5s ceiling (which still applies to every individual call inside it -- none
+  came close).
+- `apps/web/scripts/check-db-off.mjs`'s "boot the app, hit the main page" instruction could not be
+  followed literally: Area F (frontend, T-36 builds the Next.js app) is 0/11, not started -- there
+  is no `app/` directory, no `next` dependency, no dev/build/start script in apps/web/package.json.
+  There is no main page to boot. Adapted: the script unsets DATABASE_URL and runs the "DATABASE_URL
+  absent" describe block of this task's own integration suite via `npx vitest run <file> -t
+  "DATABASE_URL absent"`, then prints exactly one PASS/FAIL line and exits 0/1 -- reusing the
+  already-rigorous six-exercise check rather than re-deriving a second, less-trusted one (documented
+  in the script's own header and in README.md's new "Before the demo" section). Flagging this
+  adaptation explicitly since it departs from the PROMPT's literal wording; recommend the script be
+  extended once T-36 ships a real page.
+
+DEFECT FOUND AND FIXED AT THE SOURCE (orchestrator, 2026-09-17) -- was reported by this task's
+subagent as a ledger gap spanning T-24/T-27/T-28/T-59, no single owning task:
+  `@shelter/data`'s public package surface -- `packages/data/src/index.ts`'s barrel -- did NOT
+  re-export `tmyById`, `TMY_LOCATIONS`, `presetById`, `PRESETS`, `buildScenarios` or
+  `scenarioWeather`. Confirmed by the subagent directly from apps/web:
+    `node -e "import('@shelter/data').then(m=>console.log(Object.keys(m)))"` listed only MATERIALS/
+    MATERIALS_SCHEMA_VERSION/GLAZING/GLAZING_SCHEMA_VERSION/CONSTRUCTIONS/CONSTRUCTIONS_SCHEMA_VERSION/
+    EngineError/assertSchemaVersion/glazingById/materialById -- no tmy/preset/scenario symbols.
+  T-24 created the barrel (materials/glazing/constructions only, before tmy.ts/presets.ts/
+  scenarios.ts existed); T-27, T-28 and T-59 each added one of those files but their own
+  `Files you may touch` allow-lists explicitly excluded `packages/data/src/index.ts`, so none of
+  them could have closed this even if they'd noticed it -- exactly the same class of gap as the
+  `@shelter/engine` barrel omission T-32/T-33 hit and the orchestrator closed earlier this session.
+  Since `packages/data/src/index.ts` is outside every task's allow-list, the orchestrator fixed it
+  directly: added `export { TMY_LOCATIONS, tmyById, groundAlbedoById } from './tmy.js'`,
+  `export { PRESETS, presetById, SCHEMA_VERSION as PRESETS_SCHEMA_VERSION } from './presets.js'`
+  and `export { buildScenarios, scenarioWeather } from './scenarios.js'` (plus the `TmyLocation`
+  and `Scenario` types). Rebuilt `packages/data` (`tsc -b`, clean), then replaced this test file's
+  relative-import-into-package-source workaround with the normal `@shelter/data` package import.
+  Reran: this file's own 8 tests still pass, whole suite 26 files/306 tests/exit 0 (unchanged from
+  before the fix, confirming no behaviour changed, only the import path), lint exit 0. Area E's
+  future `/api/scenarios` route and Area F's frontend can now import these normally.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** claude-subagent-T-35  **Date:** 2026-09-17
 
 ---
 
