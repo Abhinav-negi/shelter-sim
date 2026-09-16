@@ -294,9 +294,9 @@ data structure T-50's grid and T-39's stream both consume.
 
 ---
 
-### [ ] T-61 — Multi-day runs and the sunless-streak path
+### [~] T-61 — Multi-day runs and the sunless-streak path
 
-**Area:** H — Scenarios · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** H — Scenarios · **Status:** CLAIMED by orchestrator at 2026-09-16T15:49:34Z · **Est:** 5 h
 **Depends on:** T-59 · **Conflicts with:** T-11, T-16 (touches the integrator's day loop)
 
 **Why this exists.** Seventeen of the eighteen scenarios are single days. The eighteenth is not, and
