@@ -433,9 +433,9 @@ Decisions:
 
 ---
 
-### [ ] T-31 — The weather cache repository
+### [x] T-31 — The weather cache repository
 
-**Area:** D — Database · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** D — Database · **Status:** DONE · **Est:** 6 h
 **Depends on:** T-26, T-30 · **Conflicts with:** none
 
 **Why this exists.** NASA POWER and Open-Meteo are slow and rate-limited. The eighteen-scenario
@@ -511,9 +511,147 @@ anything under `packages/`.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Implementation: apps/web/lib/repo/weather.ts (new). Test: apps/web/test/repo-weather.test.ts (new).
+Ran via `npx vitest run apps/web/test/repo-weather.test.ts` from the worktree root.
+
+1. Write then read, same key: PASS. `got.T_amb instanceof Float64Array` true; `expect(got).toEqual(series)`
+   passed (deep-equal), including nested `provenance` object.
+
+2. weatherCellKey rounds 34.150014 and 34.149996 to the same latitude: PASS.
+   weatherCellKey(34.150014).latitude === weatherCellKey(34.149996).latitude === 34.15. A row written
+   under 34.150014 was read successfully under 34.149996.
+
+3. Different source / different date range is a miss: PASS. Both `readWeatherCache({...source:
+   'open-meteo'})` and `readWeatherCache({...endDate: '2020-06-03'})` returned null.
+
+4. Duplicate write upserts to one row, second call does not throw: PASS.
+   "T-31 test 4: row count after duplicate write = 1" (measured via a raw, independent PrismaClient
+   counting rows filtered to the test's exact key). The second writeWeatherCache call resolved
+   (resolves.toBeUndefined()), did not reject.
+
+5. Expired row is a miss but not deleted: PASS.
+   "T-31 test 5: row count before read = 1, after read = 1" -- readWeatherCache returned null for the
+   backdated-expiresAt row, and the row count (measured with a raw client) was unchanged by the read.
+
+6. purgeExpiredWeather removes exactly the expired rows and returns their count: PASS.
+   "T-31 test 6: expired rows before purge = 3, purgeExpiredWeather() removed = 3, expired rows after
+   = 0" (2 rows deliberately backdated + any leftover expired rows from earlier test runs of this same
+   file against the persistent dev.db, all counted table-wide immediately before the call so the
+   comparison is exact regardless of run history; a third, non-expired row in the same key-family was
+   confirmed still present after the purge).
+
+7. TTL is 90 days for a past range, 24h for a current one: PASS.
+   "T-31 test 7: past-range TTL = 7776000000ms (HISTORICAL_TTL_MS=7776000000), current-range TTL =
+   86400000ms (CURRENT_TTL_MS=86400000)" -- 7776000000 ms = 90*24*60*60*1000 exactly; 86400000 ms =
+   24*60*60*1000 exactly. Computed as (row.expiresAt - row.fetchedAt) read back via a raw client, not
+   just asserted against the exported constants.
+
+8. DB OFF (DATABASE_URL unset): PASS.
+   "T-31 test 8 (DB OFF): read=null, write threw=false, purge=0" -- all three via freshly re-imported
+   modules (globalThis client stash cleared + vi.resetModules(), same pattern as T-30's db.test.ts) so
+   no client from an earlier live test leaked in.
+
+9. DB UNREACHABLE (bogus file: URL to a nonexistent directory), within 5s each: PASS.
+   "T-31 test 9 (DB UNREACHABLE): read=null in 64ms, write threw=false in 1ms, purge=0 in 2ms" -- all
+   three well under the 5000ms budget (measured with Date.now() deltas around each call).
+
+10. Ten concurrent writes to the same key: PASS.
+    "T-31 test 10: row count = 1, rejections = 0" -- Promise.allSettled over 10 concurrent
+    writeWeatherCache() calls against one key; 0 of 10 rejected, exactly 1 row present afterwards
+    (measured via raw client, filtered to the test's exact key).
+
+11. rawPayload round-trips byte-identically: PASS.
+    "T-31 test 11: stored rawPayload = {"nested":{"arr":[1,2,3],"note":"unicode Ümläut ✈","nullish":
+    null},"list":[true,false,"x"],"float":12.345678}" -- read back via a raw, independent Prisma
+    client (bypassing readWeatherCache entirely) and deep-equal to the object passed into
+    writeWeatherCache, including a unicode string, nested arrays/objects, null and a float.
+
+`npx vitest run apps/web/test/repo-weather.test.ts`: Test Files 1 passed (1), Tests 11 passed (11),
+811ms.
+
+Whole-suite check: `npx vitest run` from the worktree root: Test Files 22 passed (22), Tests 267
+passed | 10 skipped (277), Duration 18.43s. (One run mid-session showed
+packages/optimise/test/sweep.test.ts's "100 variants complete in under 10s" perf assertion flake to
+14/17s under CPU contention from the three sibling T-32/T-33/T-34 worktrees building/testing in
+parallel; re-run of that file alone passed in 15.1s/3.6s. That file is outside my allow-list and
+unrelated to this task -- not touched.)
+
+`npm run lint` from the worktree root: exit code 0. 12 pre-existing "unused eslint-disable" warnings
+in packages/data/test/weather.test.ts and packages/engine/test/{pcm,storage}.test.ts (files I did not
+touch), 0 errors, nothing in apps/web/lib/repo/weather.ts or apps/web/test/repo-weather.test.ts.
+
+`npm run typecheck` (tsc -b packages/engine): exit code 0, no output.
+`npx tsc --noEmit -p apps/web/tsconfig.json`: no output (weather.ts and repo-weather.test.ts both
+typecheck clean).
+
+Decisions:
+- weatherCellKey rounds lat/lon with Math.round(n * 10^4) / 10^4 (4 dp, ~11 m at this latitude, per
+  the task prompt's own reasoning -- copied into a code comment).
+- TTL is computed by comparing endDate (a 'YYYY-MM-DD' string) lexically against today's UTC date
+  (also 'YYYY-MM-DD') -- ISO date strings sort the same lexically as chronologically, so no Date
+  parsing/timezone footgun is needed. endDate < today -> HISTORICAL_TTL_MS (90d); endDate >= today ->
+  CURRENT_TTL_MS (24h), matching the prompt's "today or later" wording exactly.
+- @shelter/engine exports only the per-Float64Array seriesToJson/seriesFromJson (used inline by its
+  own requestFromJson/requestToJson for the same WeatherSeries array fields) -- there is no
+  whole-WeatherSeries JSON helper. weather.ts does the same field-by-field conversion at its own JSON
+  boundary through those same two functions (T-06's serialisation boundary is still the only place
+  Float64Array<->number[] conversion happens; this file does not invent a new one, it just applies the
+  existing one to each of the 7 WeatherSeries array fields).
+- writeWeatherCache uses Prisma's native upsert() (single SQL statement with ON CONFLICT for SQLite)
+  keyed on the @@unique([source, latitude, longitude, startDate, endDate], name: "weather_cell_key")
+  constraint, wrapped in a small retry loop (up to 5 attempts, short backoff) that only retries on a
+  SQLITE_BUSY / "database is locked" error message -- any other error propagates up to withDb(), which
+  logs once and returns null as usual. This satisfies the "solve it in your repository code, not the
+  test" guidance for concurrent same-key writes; observed 0/10 rejections and exactly 1 row in test 10.
+- fetchedAt is generated explicitly as `new Date()` in writeWeatherCache (not left to Prisma's
+  `@default(now())`) so expiresAt is computed from the exact same instant, keeping the
+  "expiresAt = fetchedAt + TTL" relationship exact rather than approximate.
+- apps/web/package.json was NOT edited to add "@shelter/engine" as a declared dependency (it is
+  outside my Files-you-may-touch list). Resolution works because npm workspaces hoist the workspace
+  symlink (root node_modules/@shelter/engine -> packages/engine) regardless of whether the consuming
+  package's package.json lists it; this matches how the task brief points at packages/engine/src
+  directly rather than mentioning a package.json edit.
+
+Assumptions:
+- "todays date" for the historical/current TTL split uses server wall-clock UTC via
+  `new Date().toISOString().slice(0,10)`, not the request's timezone (WeatherKey carries no timezone).
+- The unique-constraint's Prisma-generated compound field name is `weather_cell_key` (the `name:`
+  argument on the schema's @@unique) -- confirmed by reading the generated
+  node_modules/.prisma/client/index.d.ts rather than assuming Prisma's default naming.
+
+Gotchas / setup notes for a future reader of this worktree:
+- packages/engine/dist did not exist in this fresh worktree (gitignored, not built by `npm install`).
+  `@shelter/engine` only has a "main"/"types" pointing at ./dist, so it had to be built once with
+  `npm run build --workspace=@shelter/engine` (plain `tsc -b`, no destructive/db-related step) before
+  weather.ts or its test could import from it. If a fresh checkout of this worktree fails to resolve
+  "@shelter/engine", run that build command first.
+- apps/web/prisma/dev.db and the generated Prisma client under node_modules/.prisma/client also did
+  not exist yet; both were created by the one allowed command from the brief:
+  `cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate`, which
+  applied the already-committed migration `20260916110054_init` (confirmed via `git ls-files` that it
+  was already tracked, not newly generated by this run) and ran `prisma generate`. No `migrate reset`
+  or the Claude-Code-consent env var was used or needed.
+- Test file uses the same fresh-module pattern as T-30's db.test.ts (clear the globalThis
+  `__sheltersimDb` stash + `vi.resetModules()` before re-importing) whenever DATABASE_URL changes
+  between cases, plus a second, independent `PrismaClient` instance (constructed with an explicit
+  `datasources.db.url`, always pointed at the live file) used only to verify what actually landed in
+  the table -- row counts, expiresAt, raw JSON bytes -- bypassing the repository functions under test.
+- Prisma's `count`/`deleteMany` take a `WhereInput` (plain field filters); only
+  `findUnique`/`findUniqueOrThrow`/`update`/`upsert` accept the compound `weather_cell_key` shape
+  under `WhereUniqueInput`. The test file has two small helpers (`rawWhere` vs `rawFilter`) for this;
+  mixing them up is a TS2559 type error, not a runtime bug, so tsc catches it early.
+
+What's finished: all 4 exported functions (weatherCellKey, readWeatherCache, writeWeatherCache,
+purgeExpiredWeather), all 11 acceptance tests, evidence recorded. Nothing half-finished.
+
+Commands to build/run/test this task's part:
+  npm run build --workspace=@shelter/engine        # only needed once per fresh worktree
+  cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate  # once
+  npx vitest run apps/web/test/repo-weather.test.ts   # from worktree root
+  npm run lint                                        # from worktree root
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** T-31 subagent (claude-sonnet-5)  **Date:** 2026-09-16
 
 ---
 
