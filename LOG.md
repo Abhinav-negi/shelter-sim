@@ -2,29 +2,46 @@
 
 ## HANDOFF (2026-09-16, end of session)
 
-**Completed this session:** T-20 (water/rock/PCM thermal storage nodes — `storage/waterMass.ts`,
-new `StorageNode` allocation in `solve/assemble.ts`, storage-node chains + PCM capacity refresh +
-25%-jump warning in `solve/integrator.ts`, `pcmEnthalpy`-based `ΔStored` for PCM nodes in
-`post/energyBalance.ts`). Done in a single subagent working in an isolated worktree
-(`../wt-T-20`, branch `task/T-20`), per the task's own "single agent, not fanned out" guidance.
-All 10 acceptance conditions verified independently by the orchestrator — not just the subagent's
-self-report: reran `npx vitest run` and `npx tsc -b packages/engine` from both the worktree and
-master after merge, read every diff (`assemble.ts`/`integrator.ts`/`energyBalance.ts`/`index.ts`)
-line by line against the task's file-scope allow-list, and read the negative-control and
-phase-change-plateau tests in `storage.test.ts` to confirm the pasted numbers are real. Merged via
-`git merge --no-ff task/T-20` at `6513b5f`; worktree and branch removed. Area B now 15/16, ledger
-total 23/69. Full suite green: 13 files, 160 passed, 10 skipped (170 total), exit 0; `tsc -b
-packages/engine` exit 0.
+**Completed this session:** T-20 (water/rock/PCM thermal storage nodes) and T-25 (the weather
+pipeline, mandatory lapse-rate correction). Both done in single subagents working in isolated
+worktrees, both independently re-verified by the orchestrator (reran `npx vitest run` and
+`npx tsc -b` on every affected package from the worktree AND again after merging to master; read
+every diff against each task's file-scope allow-list; spot-checked the trickier acceptance tests —
+T-20's PCM negative control, T-25's Erbs-closure and energy-conserving-resample tests — by reading
+the test bodies, not just trusting pasted numbers). Area B now 15/16, Area C now 2/5, ledger total
+24/69. Full suite green: 14 files, 173 passed, 10 skipped (183 total), exit 0; `tsc -b
+packages/engine` and `tsc -b packages/data` both exit 0.
 
-**Worktree gotcha found this session (repo-wide, not T-20-specific):** a freshly created
-`git worktree add` checkout does **not** inherit `node_modules` — plain `npm install
---workspaces --include-workspace-root=false` links the `@shelter/*` workspace packages but
-**not** root devDependencies (`@types/node` etc.), which silently breaks `tsc -b` with
-`Cannot find name 'node:crypto'` / `TextEncoder` errors that have nothing to do with any task's
-own diff. A **plain `npm install`** (no flags) at the new worktree's root is required before
-trusting any red result from a fresh worktree. Anyone dispatching a worktree-based subagent
-should have it run this before its first `npx vitest run`, and anyone verifying one should redo
-it themselves rather than assume the subagent's environment was equivalent to master's.
+**Architecture decision made this session (needs no further action, recorded for context):**
+T-25's own task prompt required importing Erbs/Swinbank/barometric-pressure correlations from
+`@shelter/engine`, which directly contradicted `CONTRACTS.md` §7.13's then-current rule that
+`@shelter/data` must have ZERO runtime dependencies (T-24's own precedent). The orchestrator caught
+this before dispatching T-25 and asked the human user, who chose to keep the correlations canonical
+in `@shelter/engine` rather than fork them. Recorded as `CONTRACTS.md` D-10: `@shelter/data` may now
+depend on `@shelter/engine` (mirroring `@shelter/optimise`'s row), and `packages/data/package.json`
+now lists it under `dependencies`. This broke T-24's own `catalog.test.ts` acceptance-test-14
+assertion ("no dependencies key") — the orchestrator fixed that test directly (not delegated, a
+1-line assertion update to match the new contract) and added a dated addendum to T-24's Evidence
+block pointing to D-10, without altering T-24's original historical measurement. If a future session
+finds `@shelter/data` importing something unexpected from `@shelter/engine`, D-10 is why that's
+allowed — anything beyond Erbs/Swinbank/barometric-pressure/the shared `WeatherSeries`/`EngineError`
+types would be new scope, not covered by this decision.
+
+**Worktree gotcha found last session (repo-wide, still true, confirmed again this session):** a
+freshly created `git worktree add` checkout does **not** inherit `node_modules`. A plain `npm
+install` (no flags) at the new worktree's root is required before trusting any red result — a
+partial/flagged install can leave root devDependencies (`@types/node` etc.) missing, producing
+`tsc -b` failures unrelated to any task's own diff. Both T-20's and T-25's subagents were told this
+explicitly in their briefs and both got clean baselines as a result.
+
+**New gotcha found this session:** the `rtk` bash-rewriting hook in this environment produced a
+**false-negative** `npx tsc -b packages/engine` result (2 phantom `TS2591`/`TS2304` errors in
+`serialise.ts` that do not exist) on an otherwise-clean worktree with `node_modules` correctly
+installed. Confirmed false by cross-checking with `rtk proxy npx tsc -b packages/engine` (raw,
+unfiltered), which showed exit 0, no errors. **Whenever a `tsc -b` or `vitest run` result looks
+suspicious — especially errors that don't correspond to anything in a task's diff — rerun it via
+`rtk proxy <command>` before trusting it or sending a task back to a subagent for a phantom bug.**
+Filed as product feedback separately; not yet fixed upstream as of this session.
 
 **In progress:** nothing. No open worktrees or branches (`git worktree list` / `git branch -a`
 both clean, everything lives on `master`).
@@ -33,20 +50,23 @@ both clean, everything lives on `master`).
 `solar/geometry.ts` (owned by closed task T-14), not fixable from a test file. See its Evidence
 block in `log/AREA-B-engine.md` for the full NOAA comparison numbers.
 
-**Still open from last session, unchanged:** T-22's finding that `Q7_interiorLongwave` in
+**Still open from prior sessions, unchanged:** T-22's finding that `Q7_interiorLongwave` in
 `solve/integrator.ts`'s `record()` is solver float noise (~1e-11 W), not a real gross
 interior-radiant-exchange wattage — flagged for T-49 (Sankey) or T-11's owner, not touched this
-session (out of T-20's scope).
+session (out of scope for both T-20 and T-25).
 
 **Repo hygiene, already handled, no action needed:** `packages/engine/test/output/validation-numbers.csv`
 picks up a local diff every time `npx vitest run` executes (the CSV-writing test rewrites it each
 run) — reverted after every verification run this session, nothing to fix in source.
 
-**Recommended next step:** T-25 (the weather pipeline, mandatory lapse-rate correction,
-`log/AREA-C-data-layer.md`) is the first unblocked `[ ]` task — `T-24` is done, and it starts a
-new Area (C, data layer) with no engine-file conflicts, so it's a clean parallelisation boundary
-if a future session ever wants to run two tasks at once (T-25 touches only the data layer, no
-Area B files). Read `log/AREA-C-data-layer.md`'s T-25 entry before claiming.
+**Recommended next step:** T-26 (NASA POWER and Open-Meteo request builders and response parsers,
+`log/AREA-C-data-layer.md`) is the first unblocked `[ ]` task — `T-25` is now done. Read its Area
+entry's "Conflicts with" line before claiming (T-25 flagged in its own entry that T-27 owns
+payloads while T-25/T-26 own schema/parsing — check that boundary is still respected). Also worth a
+skim before claiming: T-25's Evidence block notes `RawWeather`/`NormaliseOptions` are defined
+locally in `pipeline.ts` (not in `CONTRACTS.md`), which T-26's response parsers will presumably need
+to produce — read `packages/data/src/weather/pipeline.ts`'s `RawWeather` interface directly rather
+than assuming a shape.
 
 ---
 
