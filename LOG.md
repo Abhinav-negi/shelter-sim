@@ -274,14 +274,14 @@ with an Area file again, the Area file is right — fix this table.)*
 | A | Foundation & contracts | 7 / 7 | `log/AREA-A-foundation-contracts.md` |
 | B | Engine | 15 / 16 | `log/AREA-B-engine.md` |
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
-| D | Database tier | 0 / 7 | `log/AREA-D-database-tier.md` |
+| D | Database tier | 1 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 0 / 7 | `log/AREA-E-server-tier.md` |
 | F | Frontend | 0 / 11 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **28 / 69** | |
+| | **TOTAL** | **29 / 69** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
@@ -334,7 +334,7 @@ with an Area file again, the Area file is right — fix this table.)*
 
 | | ID | Title | Depends on |
 |---|---|---|---|
-| [!] | T-29 | Prisma schema, the four tables, and the first migration (10.5/11 -- lint blocked by T-25..T-28 debt, see its Evidence block) | T-03, T-06 |
+| [x] | T-29 | Prisma schema, the four tables, and the first migration | T-03, T-06 |
 | [ ] | T-30 | The database client wrapper, and the DB-off mode that must always work | T-29 |
 | [ ] | T-31 | The weather cache repository | T-26, T-30 |
 | [ ] | T-32 | Design snapshots and share links | T-30 |

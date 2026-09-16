@@ -18,7 +18,7 @@
 
 ### [!] T-54 — The sweep engine: expand, dispatch, collect
 
-**Area:** G — Decision support (≈ W-30) · **Status:** BLOCKED on acceptance test 4 only (see Evidence) — 11/12 tests pass · **Est:** 8 h
+**Area:** G — Decision support (≈ W-30) · **Status:** BLOCKED on acceptance test 4 only (see Evidence) — 12/12 tests pass except test 4 (test 12's lint sub-check fixed by the orchestrator 2026-09-16) · **Est:** 8 h
 **Depends on:** T-06, T-24, T-28 · **Conflicts with:** T-55 (same package, sequential)
 
 **Why this exists.** *"Because one simulation takes about 50 milliseconds, we do not ask 'how does
@@ -197,12 +197,10 @@ x 5 buildingAzimuth values (0/45/90/135/180).
 11. PASS. `packages/optimise/package.json` `dependencies` = `{"@shelter/engine":"0.1.0"}` only --
     asserted by a vitest test that reads and parses the file; also confirmed by hand.
 
-12. PARTIAL, in the sense already recorded for T-29 (see log/AREA-D-database-tier.md's T-29 Evidence
-    block): `npm run lint` fails project-wide with the SAME pre-existing 55 errors, all in
-    packages/data/test/*.ts and packages/engine/test/{pcm,storage}.test.ts (no-console violations
-    from earlier tasks, none of them touched by this diff). `packages/optimise` itself contributes
-    ZERO lint errors or warnings (`npx eslint packages/optimise` is silent). Confirmed the count is
-    unchanged (55 errors, same 6 files) before and after this task's diff.
+12. PASS (updated by the orchestrator, 2026-09-16 — see log/AREA-D-database-tier.md's T-29 Evidence
+    block, test 8, for the fix). `npm run lint` now exits 0 project-wide (0 errors, 12 pre-existing
+    warnings in packages/engine/test/{pcm,storage}.test.ts, unrelated to T-54). `packages/optimise`
+    itself still contributes ZERO lint errors or warnings.
 
 Commands used: `npm install` (root); `npx tsc -b packages/optimise` (also verified via
 `rtk proxy npx tsc -b packages/optimise` per this task's rtk gotcha -- both clean); `npm run test -w

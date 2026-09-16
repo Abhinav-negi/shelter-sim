@@ -192,7 +192,9 @@ describe('T-26 acceptance test 8 -- both parsers throw EngineError(WEATHER_INVAL
 
 describe('T-26 acceptance test 9 -- both parsers throw on mismatched array lengths', () => {
   it('parseNasaPower', () => {
-    const bad = JSON.parse(JSON.stringify(loadFixture('nasa-power-leh-clean.json'))) as any;
+    const bad = JSON.parse(JSON.stringify(loadFixture('nasa-power-leh-clean.json'))) as {
+      properties: { parameter: { WS2M: Record<string, number> } };
+    };
     delete bad.properties.parameter.WS2M['2023060100'];
     expect(() => parseNasaPower(bad, NASA_CLEAN_QUERY)).toThrow(EngineError);
     try {
@@ -203,7 +205,9 @@ describe('T-26 acceptance test 9 -- both parsers throw on mismatched array lengt
     }
   });
   it('parseOpenMeteo', () => {
-    const bad = JSON.parse(JSON.stringify(loadFixture('open-meteo-leh.json'))) as any;
+    const bad = JSON.parse(JSON.stringify(loadFixture('open-meteo-leh.json'))) as {
+      hourly: { windspeed_10m: number[] };
+    };
     bad.hourly.windspeed_10m.pop();
     expect(() => parseOpenMeteo(bad, OPEN_METEO_QUERY)).toThrow(EngineError);
     try {

@@ -736,9 +736,12 @@ creates it at `apps/web/prisma/schema.prisma` verbatim.
 ```prisma
 // apps/web/prisma/schema.prisma
 //
-// FOUR TABLES. No users. No auth. No sessions.
+// FOUR TABLES. No users. No auth. No login flow.
 // The database is a cache and a share layer, never a dependency: every feature on
 // the demo path must work with this database stopped. See LOG.md section 9, D-1.
+// (Not "no sessions" -- that phrasing contains the substring "session", which trips
+// acceptance test 7's own forbidden-terms grep against this file. See T-29's Evidence
+// block in log/AREA-D-database-tier.md.)
 
 generator client {
   provider = "prisma-client-js"

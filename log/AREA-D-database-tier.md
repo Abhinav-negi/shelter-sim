@@ -22,12 +22,13 @@
 
 ---
 
-### [!] T-29 — Prisma schema, the four tables, and the first migration
+### [x] T-29 — Prisma schema, the four tables, and the first migration
 
-**Area:** D — Database · **Status:** BLOCKED-EXTERNAL (10.5/11 acceptance tests pass; test 8's
-`npm run lint` sub-check fails only on pre-existing debt in `packages/data` and `packages/engine`
-test files owned by T-25/T-26/T-27/T-28, outside T-29's file allow-list — see Evidence). Every
-other test passes and every T-29 deliverable is finished and committed. · **Est:** 6 h
+**Area:** D — Database · **Status:** DONE. All 11 acceptance tests pass (test 8's `npm run lint`
+sub-check was the only holdout, blocked on Area C/B lint debt outside T-29's file allow-list; the
+orchestrator fixed that debt directly this session — see test 8's Evidence, updated
+2026-09-16). · **Est:** 6 h · **Completed by:** orchestrator (lint-debt fix) on top of the
+original subagent's work · **Date:** 2026-09-16
 **Depends on:** T-03, T-06 · **Conflicts with:** T-30…T-35 (all read this schema)
 
 **Why this exists.** Four things need persisting and nothing else does. Getting the schema right
@@ -183,9 +184,16 @@ ACCEPTANCE TESTS -- MEASURED
    source (CONTRACTS.md §7.12) so future tasks copying it verbatim don't hit the same self-
    contradiction; recorded here as a finding, not fixed in CONTRACTS.md (outside T-29's allow-list).
 
-8. PARTIAL. `grep -rn "@prisma/client" packages/ | wc -l` -> 0 (PASS). `npm run lint` -> exit 1
-   (FAIL), 57 errors, 0 of them in apps/web or caused by T-29 -- see "FINDING AGAINST
-   T-25/T-26/T-27/T-28" above. This is the one sub-check keeping this task at [!] instead of [x].
+8. PASS. `grep -rn "@prisma/client" packages/ | wc -l` -> 0. `npm run lint` -> exit 0 (0 errors,
+   12 pre-existing warnings in packages/engine/test/{pcm,storage}.test.ts, unrelated to T-29).
+   Orchestrator note (this session, 2026-09-16): the Area C/B no-console lint debt named in the
+   "FINDING AGAINST T-25/T-26/T-27/T-28" block above is now fixed -- eslint.config.js's
+   `packages/engine/test/**` no-console exception was extended to also cover
+   `packages/data/test/**` (matching the pattern the finding recommended), and the two
+   `as any` casts in `packages/data/test/sources.test.ts` (T-26, not called out in the original
+   finding but also blocking `npm run lint` exit 0) were replaced with minimal local object-shape
+   types. Re-ran `npx vitest run` after the fix: 20 files, 248 passed, 10 skipped, exit 0 --
+   unchanged from before the fix, confirming no test behaviour changed.
 
 9. PASS. `DATABASE_URL` and `DATABASE_PROVIDER` both confirmed unset in the shell; `npx vitest run`
    from repo root: "Test Files 17 passed (17) / Tests 214 passed | 10 skipped (224)", exit 0.

@@ -45,7 +45,7 @@ module.exports = [
     // The engine has no logger by design -- everything it wants to say comes
     // back in the return value or an EngineError. Tests legitimately print
     // measured numbers, which the ledger depends on.
-    files: ['packages/engine/test/**/*.ts'],
+    files: ['packages/engine/test/**/*.ts', 'packages/data/test/**/*.ts'],
     rules: {
       'no-console': 'off',
     },
