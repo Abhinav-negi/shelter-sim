@@ -184,12 +184,17 @@ describe('T-24 acceptance test 12 -- schema version mismatch throws', () => {
   });
 });
 
-describe('T-24 acceptance test 14 -- zero runtime dependencies', () => {
-  it('packages/data/package.json has no dependencies key', async () => {
+describe('T-24 acceptance test 14 -- runtime dependencies match CONTRACTS.md 7.13', () => {
+  // Originally asserted `dependencies` was absent entirely (true when T-24 measured it).
+  // CONTRACTS.md D-10 (added for T-25) deliberately supersedes that: @shelter/data is now
+  // allowed exactly one runtime dependency, @shelter/engine, so packages/data/src/weather
+  // can import Erbs/Swinbank/barometric correlations instead of reimplementing them. See
+  // D-10 and log/AREA-C-data-layer.md's T-24 addendum for the full reasoning.
+  it('packages/data/package.json depends on exactly @shelter/engine, nothing else', async () => {
     const fs = await import('node:fs/promises');
     const url = await import('node:url');
     const path = new URL('../package.json', import.meta.url);
     const pkg = JSON.parse(await fs.readFile(url.fileURLToPath(path), 'utf8'));
-    expect(pkg.dependencies).toBeUndefined();
+    expect(pkg.dependencies).toEqual({ '@shelter/engine': '0.1.0' });
   });
 });
