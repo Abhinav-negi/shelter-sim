@@ -341,7 +341,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-29 | Prisma schema, the four tables, and the first migration | T-03, T-06 |
 | [x] | T-30 | The database client wrapper, and the DB-off mode that must always work | T-29 |
 | [ ] | T-31 | The weather cache repository | T-26, T-30 |
-| [ ] | T-32 | Design snapshots and share links | T-30 |
+| [!] | T-32 | Design snapshots and share links | T-30 |
 | [ ] | T-33 | The simulation-run cache | T-06, T-30 |
 | [ ] | T-34 | The material repository and the seed script | T-24, T-30 |
 | [ ] | T-35 | The DB-off integration proof | T-31, T-32, T-33, T-34 |
