@@ -157,9 +157,9 @@ count, the typecheck-script boundary) is in .work/T-24.md.
 
 ---
 
-### [ ] T-25 — The weather pipeline, with the mandatory lapse-rate correction
+### [~] T-25 — The weather pipeline, with the mandatory lapse-rate correction
 
-**Area:** C — Data (≈ W-27) · **Status:** NOT STARTED · **Est:** 12 h
+**Area:** C — Data (≈ W-27) · **Status:** CLAIMED by orchestrator-session at 2026-09-16T04:57:35Z · **Est:** 12 h
 **Depends on:** T-24 · **Conflicts with:** T-27 (owns the payloads; you own the schema)
 
 **Why this exists.** NASA POWER's grid cell is ~55 km × 58 km. In the Himalaya **one cell can
@@ -220,7 +220,11 @@ engineering submission rather than a demo. Most teams will use POWER raw and nev
 > is the only thing that makes a network call.
 
 **Files you may touch.** `packages/data/src/weather/pipeline.ts`, `packages/data/src/weather/csv.ts`,
-`packages/data/test/weather.test.ts`.
+`packages/data/test/weather.test.ts`, and `packages/data/package.json` (move `@shelter/engine`
+from `devDependencies` to `dependencies` only — see `log/CONTRACTS.md` D-10, added this session:
+the user decided `@shelter/data` may depend on `@shelter/engine` at runtime specifically so this
+task can import Erbs/Swinbank/barometric-pressure rather than reimplement them. Touch nothing
+else in `package.json`).
 **Files you may NOT touch.** `packages/data/src/materials.ts`, `glazing.ts`, `constructions.ts`,
 `packages/data/tmy/*`, anything under `packages/engine/`.
 
