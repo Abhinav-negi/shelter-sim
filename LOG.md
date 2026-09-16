@@ -221,7 +221,7 @@ with an Area file again, the Area file is right — fix this table.)*
 |---|---|---|---|
 | A | Foundation & contracts | 7 / 7 | `log/AREA-A-foundation-contracts.md` |
 | B | Engine | 15 / 16 | `log/AREA-B-engine.md` |
-| C | Data layer | 2 / 5 | `log/AREA-C-data-layer.md` |
+| C | Data layer | 3 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 0 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 0 / 7 | `log/AREA-E-server-tier.md` |
 | F | Frontend | 0 / 11 | `log/AREA-F-frontend.md` |
@@ -229,7 +229,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | H | Scenarios | 0 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **24 / 69** | |
+| | **TOTAL** | **25 / 69** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
