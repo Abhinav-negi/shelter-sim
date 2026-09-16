@@ -3,16 +3,17 @@
 ## HANDOFF (2026-09-16, end of session)
 
 **Completed this session:** T-20 (water/rock/PCM thermal storage nodes), T-25 (the weather
-pipeline, mandatory lapse-rate correction), and T-26 (NASA POWER / Open-Meteo request builders and
-response parsers). All three done in single subagents working in isolated worktrees, all
-independently re-verified by the orchestrator (reran `npx vitest run` and `npx tsc -b` on every
-affected package from the worktree AND again after merging to master; read every diff against each
-task's file-scope allow-list; spot-checked the trickier acceptance tests — T-20's PCM negative
-control, T-25's Erbs-closure and energy-conserving-resample tests, T-26's cross-source day-mean
-comparison — by reading the test bodies and sanity-checking the physics myself, not just trusting
-pasted numbers). Area B now 15/16, Area C now 3/5, ledger total 25/69. Full suite green: 15 files,
-189 passed, 10 skipped (199 total), exit 0; `tsc -b packages/engine` and `tsc -b packages/data`
-both exit 0.
+pipeline, mandatory lapse-rate correction), T-26 (NASA POWER / Open-Meteo request builders and
+response parsers), and T-27 (bundled TMY for Leh, Kargil, Drass, Nubra, Jaisalmer). All four done
+in single subagents working in isolated worktrees, all independently re-verified by the
+orchestrator (reran `npx vitest run` and `npx tsc -b` on every affected package from the worktree
+AND again after merging to master; read every diff against each task's file-scope allow-list;
+spot-checked the trickier acceptance tests — T-20's PCM negative control, T-25's Erbs-closure and
+energy-conserving-resample tests, T-26's cross-source day-mean comparison, T-27's GHI/January-mean/
+byte-identical-radiation claims — by independently recomputing the numbers from the raw source data
+myself, not just trusting pasted numbers). Area B now 15/16, Area C now **5/5, fully done**, ledger
+total **27/69**. Full suite green: 16 files, 202 passed, 10 skipped (212 total), exit 0; `tsc -b
+packages/engine` and `tsc -b packages/data` both exit 0.
 
 **T-26 note for whoever reads its Evidence block:** acceptance test 7 (cross-source day-mean
 temperature within 5K) fails on RAW/uncorrected data (6.536 K gap) because NASA POWER's and
@@ -26,13 +27,45 @@ this a correct reading of an acceptance test whose literal wording didn't antici
 reanalyses' real elevation gap, not a weakened test; verified independently by computing the
 expected lapse-rate offset by hand before accepting it.
 
-**Real API fixtures used this session:** T-26's `packages/data/test/fixtures/*.json` are genuine,
-unmodified NASA POWER and Open-Meteo responses the orchestrator fetched directly (network access
-confirmed available in this environment via plain `curl`) for Leh (34.15°N, 77.58°E) — not
-synthetic data. Query URLs and dates are documented in `sources.test.ts`'s header comment. If T-27
-(bundled TMY) also needs real committed weather data, the same approach (orchestrator fetches via
-curl/WebFetch, hands real files to the subagent, subagent never touches the network itself) worked
-well and is worth repeating.
+**T-27 notes for whoever reads its Evidence block or builds a preset (T-28) on top of it:**
+- The 5 bundled files (`packages/data/tmy/*.json`) are real NASA POWER hourly data for ONE calendar
+  year (2023), not a multi-decade statistically-blended ASHRAE-style TMY — stated plainly in
+  `tmy/README.md` and every file's `provenance.label`. If a judge or a later task needs a genuine
+  multi-year TMY, that is new scope, not something T-27 silently approximated.
+- Leh's January minimum in this real data (−28.80 °C after lapse correction) runs colder than
+  `BLUEPRINT.md` Appendix C's stated −15..−20 °C typical band — a real cold snap in the specific
+  year fetched, reported honestly rather than smoothed over. The January mean (−10.39 °C) still
+  lands inside the ±3 °C tolerance around −8 °C.
+- Leh's and Nubra's shortwave-radiation series (GHI/DNI/DHI/LW_down) are byte-identical across all
+  8,760 hours — confirmed genuine by the orchestrator on the raw fetched JSON, not a subagent
+  copy-paste bug: both points sit inside the same 1° SYN1DEG grid cell NASA POWER uses for solar
+  parameters, while temperature/wind (finer MERRA-2 grid) correctly differ between them. Documented
+  in `tmy/README.md` so a future reader doesn't "fix" it.
+- `groundAlbedoById(id): number[]` lives in `packages/data/src/tmy.ts` alongside `tmyById`/
+  `TMY_LOCATIONS` — it is deliberately NOT part of `WeatherSeries` (CONTRACTS.md §7.6 has no
+  `snowCover` field by design), so T-28's presets need to call both functions, not just `tmyById`.
+- Site elevations used for the lapse correction (Leh 3500 m, Kargil 2676 m, Drass 3230 m, Nubra/
+  Diskit 3144 m, Jaisalmer 225 m) are commonly-cited approximate town elevations supplied from the
+  orchestrator's own knowledge this session, not independently re-verified against an authoritative
+  source — the acceptance tests' tolerances absorbed this fine, but a future task with a tighter
+  tolerance should re-check them.
+
+**Real API fixtures used this session:** T-26's and T-27's fixture/bundle files are all genuine,
+unmodified NASA POWER (and, for T-26, also Open-Meteo) responses the orchestrator fetched directly
+(network access confirmed available in this environment via plain `curl`) — not synthetic data.
+T-27 in particular required a full calendar year (8,760 hours) per location for 5 locations; all
+five fetches were complete with zero `-999` gaps, verified before handing them to the subagent.
+Query URLs and dates are documented in `sources.test.ts`'s header comment (T-26) and
+`tmy/README.md` (T-27). This pattern — orchestrator fetches and verifies real data via curl,
+subagent never touches the network itself — worked well twice this session and is worth repeating
+whenever a future task needs real external data as a committed fixture.
+
+**Small engine-export fix made this session (needs no further action):** T-27's own task prompt
+assumed `packages/data` could import T-06's `seriesToJson`/`seriesFromJson`, but they were only
+exported from `packages/engine/src/serialise.ts` internally, not from the public `index.ts` barrel
+— and T-27 is explicitly forbidden from touching anything under `packages/engine/`. The orchestrator
+added a one-line re-export (commit `68b3268`) before dispatching T-27, since it's a trivial,
+contract-neutral fix (exposing an existing internal helper, not changing any behaviour).
 
 **Architecture decision made this session (needs no further action, recorded for context):**
 T-25's own task prompt required importing Erbs/Swinbank/barometric-pressure correlations from
@@ -81,13 +114,14 @@ session (out of scope for both T-20 and T-25).
 picks up a local diff every time `npx vitest run` executes (the CSV-writing test rewrites it each
 run) — reverted after every verification run this session, nothing to fix in source.
 
-**Recommended next step:** T-27 (Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer,
-`log/AREA-C-data-layer.md`) is the first unblocked `[ ]` task — both `T-25` and `T-26` are now
-done. Read its Area entry in full before claiming, especially its file scope and how it wants TMY
-data sourced (typical-meteorological-year data for five Ladakh-region sites is a heavier data-
-sourcing job than T-26's two-day fixtures — decide early whether a real public TMY source is
-reachable the same way NASA POWER/Open-Meteo were this session, or whether the task expects
-something else, before dispatching a subagent into it).
+**Recommended next step:** T-28 (Presets: the app opens on an interesting result,
+`log/AREA-C-data-layer.md`) is the first unblocked `[ ]` task — both `T-24` and `T-27` are now
+done, and **Area C is now fully complete (5/5)**, so T-28 finishes it. It's a smaller task (6 h
+estimate) than the last four: six presets built from catalogues and TMY data already on disk, no
+new external data to fetch and no network involved, so it should not need the orchestrator to
+pre-fetch anything this time. Read its Area entry in full before claiming — it needs `Preset` (a
+T-06 type), `packages/data/src/materials.ts`/`constructions.ts` (T-24) and `tmyById`/
+`groundAlbedoById` (T-27, this session) all wired together correctly.
 
 ---
 
