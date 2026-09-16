@@ -984,7 +984,7 @@ this task's own new files):
    JSON.stringify/parse (which round-trips doubles exactly by spec). Fixed in `runs.ts` itself
    (in scope, does not touch db.ts/schema.prisma/serialise.ts): added `encodeNumbers`/
    `decodeNumbers`, a small recursive pair that marks every number as a string
-   (`' n:' + n.toString()`) before writing and reverses it after reading -- SQLite's JSON
+   (`String.fromCharCode(0) + 'n:' + n.toString()`) before writing and reverses it after reading -- SQLite's JSON
    formatter never touches string content, so the original bits survive untouched. Verified with
    the same minimal reproduction: round-tripped the string-encoded value and got back the exact
    original number (`===` true). This is why tests 1, 6 and 9 (the ones doing exact float
