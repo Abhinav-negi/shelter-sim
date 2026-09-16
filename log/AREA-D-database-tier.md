@@ -1402,32 +1402,28 @@ DECISIONS / ASSUMPTIONS:
   adaptation explicitly since it departs from the PROMPT's literal wording; recommend the script be
   extended once T-36 ships a real page.
 
-DEFECT FOUND, REPORTED NOT FIXED (LOG.md global rule 16) -- affects T-24/T-27/T-28/T-59, no single
-owning task, a ledger gap:
-  `@shelter/data`'s public package surface -- `packages/data/src/index.ts`'s barrel, and
-  `packages/data/package.json`'s `"exports"` field, which is only `{ ".": "./dist/index.js" }` --
-  does NOT re-export `tmyById`, `TMY_LOCATIONS`, `presetById`, `PRESETS`, `buildScenarios` or
-  `scenarioWeather`. Confirmed directly from apps/web:
-    `node -e "import('@shelter/data').then(m=>console.log(Object.keys(m)))"` lists only MATERIALS/
+DEFECT FOUND AND FIXED AT THE SOURCE (orchestrator, 2026-09-17) -- was reported by this task's
+subagent as a ledger gap spanning T-24/T-27/T-28/T-59, no single owning task:
+  `@shelter/data`'s public package surface -- `packages/data/src/index.ts`'s barrel -- did NOT
+  re-export `tmyById`, `TMY_LOCATIONS`, `presetById`, `PRESETS`, `buildScenarios` or
+  `scenarioWeather`. Confirmed by the subagent directly from apps/web:
+    `node -e "import('@shelter/data').then(m=>console.log(Object.keys(m)))"` listed only MATERIALS/
     MATERIALS_SCHEMA_VERSION/GLAZING/GLAZING_SCHEMA_VERSION/CONSTRUCTIONS/CONSTRUCTIONS_SCHEMA_VERSION/
     EngineError/assertSchemaVersion/glazingById/materialById -- no tmy/preset/scenario symbols.
-    `node -e "import('@shelter/data/dist/tmy.js')"` -> `ERR_PACKAGE_PATH_NOT_EXPORTED`.
   T-24 created the barrel (materials/glazing/constructions only, before tmy.ts/presets.ts/
   scenarios.ts existed); T-27, T-28 and T-59 each added one of those files but their own
-  `Files you may touch` allow-lists explicitly excluded `packages/data/src/index.ts` and
-  `package.json`, so none of them could have closed this even if they'd noticed it. It is
-  latent today only because nothing in apps/web has needed these symbols yet (Area E's future
-  `/api/scenarios` route and Area F's frontend will hit this the moment either writes
-  `import { tmyById } from '@shelter/data'`). Recommend a small follow-up task (or an amendment to
-  whichever task next touches `packages/data/src/index.ts`) adding the missing re-exports and
-  widening `package.json`'s `"exports"` map.
-  T-35 itself is NOT blocked by this: `packages/data/src/tmy.ts`, `presets.ts` and `scenarios.ts`
-  are real, correct, already-tested code (T-27/T-28/T-59 are all `[x]`/DONE) -- only their public
-  re-export is missing. Since this test file may not touch anything under `packages/**`, it reaches
-  these real functions via the same relative-import-into-package-source precedent already used and
-  merged in `apps/web/test/repo-runs.test.ts` (`canonicalRequestHash` from
-  `packages/engine/src/serialise.js`) -- see this test file's own header comment for the full
-  writeup. All ten acceptance tests above are measured against the REAL functions, not stand-ins.
+  `Files you may touch` allow-lists explicitly excluded `packages/data/src/index.ts`, so none of
+  them could have closed this even if they'd noticed it -- exactly the same class of gap as the
+  `@shelter/engine` barrel omission T-32/T-33 hit and the orchestrator closed earlier this session.
+  Since `packages/data/src/index.ts` is outside every task's allow-list, the orchestrator fixed it
+  directly: added `export { TMY_LOCATIONS, tmyById, groundAlbedoById } from './tmy.js'`,
+  `export { PRESETS, presetById, SCHEMA_VERSION as PRESETS_SCHEMA_VERSION } from './presets.js'`
+  and `export { buildScenarios, scenarioWeather } from './scenarios.js'` (plus the `TmyLocation`
+  and `Scenario` types). Rebuilt `packages/data` (`tsc -b`, clean), then replaced this test file's
+  relative-import-into-package-source workaround with the normal `@shelter/data` package import.
+  Reran: this file's own 8 tests still pass, whole suite 26 files/306 tests/exit 0 (unchanged from
+  before the fix, confirming no behaviour changed, only the import path), lint exit 0. Area E's
+  future `/api/scenarios` route and Area F's frontend can now import these normally.
 ```
 
 **Completed by:** claude-subagent-T-35  **Date:** 2026-09-17

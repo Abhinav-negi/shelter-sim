@@ -20,47 +20,26 @@
 // (see its own header comment) -- do not run this suite with fileParallelism
 // re-enabled.
 //
-// KNOWN DEFECT FOUND WHILE WRITING THIS TEST, REPORTED NOT FIXED (LOG.md
-// global rule 16; this task's own PROMPT says the same thing): @shelter/data's
-// public package surface -- packages/data/src/index.ts's barrel, and
-// package.json's "exports" field, which is only `{ ".": "./dist/index.js" }`
-// -- does NOT re-export `tmyById`, `TMY_LOCATIONS`, `presetById`, `PRESETS`,
-// `buildScenarios` or `scenarioWeather`. Confirmed directly:
-//   node -e "import('@shelter/data').then(m => console.log(Object.keys(m)))"
-//     -> MATERIALS, MATERIALS_SCHEMA_VERSION, GLAZING, GLAZING_SCHEMA_VERSION,
-//        CONSTRUCTIONS, CONSTRUCTIONS_SCHEMA_VERSION, EngineError,
-//        assertSchemaVersion, glazingById, materialById (no tmy/preset/scenario
-//        symbols at all)
-//   node -e "import('@shelter/data/dist/tmy.js')"
-//     -> ERR_PACKAGE_PATH_NOT_EXPORTED
-// No task's file allow-list ever closed this: T-24 created the barrel
-// (materials/glazing/constructions only); T-27 (tmy.ts), T-28 (presets.ts)
-// and T-59 (scenarios.ts) each added a module but were each explicitly
-// restricted to their own new files and barred from touching
-// packages/data/src/index.ts or packages/data/package.json. This is a
-// ledger-level integration gap spanning T-24/T-27/T-28/T-59, not one task's
-// bug, and it will block Area E's real /api/scenarios route and Area F's
-// frontend the same way it blocks this test, the moment either tries
-// `import { tmyById } from '@shelter/data'`. T-35 may not touch anything
-// under packages/**, so it cannot close this gap itself (see this task's
-// Evidence block in log/AREA-D-database-tier.md for the full writeup and
-// recommendation). To still exercise the REAL, already-tested T-27/T-28/T-59
-// functions (not reimplementations) this file reaches them the same way
-// apps/web/test/repo-runs.test.ts already reaches @shelter/engine's
-// canonicalRequestHash: a relative import straight into the package's own
-// source, bypassing the incomplete barrel. This does not fix the barrel gap
-// and is not the path real application code should copy once that gap is
-// closed -- it exists only so this test can still exercise real code today.
+// DEFECT FOUND WHILE WRITING THIS TEST, FIXED AT THE SOURCE (orchestrator,
+// 2026-09-17): @shelter/data's public barrel (packages/data/src/index.ts)
+// did not re-export `tmyById`, `TMY_LOCATIONS`, `presetById`, `PRESETS`,
+// `buildScenarios` or `scenarioWeather` -- the same class of gap as the
+// @shelter/engine barrel omission T-32/T-33 hit and the orchestrator closed
+// earlier this session. No task's file allow-list had ever closed it: T-24
+// created the barrel (materials/glazing/constructions only); T-27 (tmy.ts),
+// T-28 (presets.ts) and T-59 (scenarios.ts) each added a module but were
+// each restricted to their own new files and barred from touching
+// packages/data/src/index.ts. Fixed directly in packages/data/src/index.ts
+// (outside every task's allow-list, so no task could have closed it itself)
+// by re-exporting all six symbols; this test now imports them the normal
+// way, through the `@shelter/data` package specifier, like every other
+// consumer.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
 import { simulate } from '@shelter/engine';
 import type { Material, Glazing, SimulationRequest, SimulationKpis, WeatherSeries } from '@shelter/engine';
-import { materialById, glazingById } from '@shelter/data';
-// See header comment: not on @shelter/data's public barrel today.
-import { tmyById } from '../../../packages/data/src/tmy.js';
-import { PRESETS } from '../../../packages/data/src/presets.js';
-import { buildScenarios, scenarioWeather } from '../../../packages/data/src/scenarios.js';
+import { materialById, glazingById, tmyById, PRESETS, buildScenarios, scenarioWeather } from '@shelter/data';
 import type { WeatherKey } from '../lib/repo/weather.js';
 
 const BOGUS_DATABASE_URL = 'file:/nonexistent-t35-test-dir-9c2e7/dev.db';

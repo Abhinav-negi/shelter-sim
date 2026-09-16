@@ -14,6 +14,14 @@ export type { Layer, NamedConstruction } from './constructions.js';
 export { EngineError } from './errors.js';
 export type { DataErrorCode } from './errors.js';
 
+export { TMY_LOCATIONS, tmyById, groundAlbedoById } from './tmy.js';
+export type { TmyLocation } from './tmy.js';
+
+export { PRESETS, presetById, SCHEMA_VERSION as PRESETS_SCHEMA_VERSION } from './presets.js';
+
+export { buildScenarios, scenarioWeather } from './scenarios.js';
+export type { Scenario } from './scenarios.js';
+
 import { EngineError } from './errors.js';
 import { SCHEMA_VERSION } from './materials.js';
 
