@@ -562,7 +562,7 @@ Type/design notes for a zero-context successor:
 
 ---
 
-### [~] T-27 — Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer
+### [x] T-27 — Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer
 
 **Area:** C — Data (≈ W-28) · **Status:** CLAIMED by orchestrator-session at 2026-09-16T05:58:58Z · **Est:** 10 h
 **Depends on:** T-25, T-26 · **Conflicts with:** T-25 (schema is theirs, payloads are yours)
@@ -641,9 +641,86 @@ combined `tmy.test.ts` passes.** Otherwise single agent.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+All 5 locations shipped -- no location dropped. Full pipeline: real NASA POWER hourly-point
+fixtures for calendar year 2023 (fetched by the orchestrator 2026-09-16, zero -999 gaps in any
+of the 8 parameters, verified before use) -> parseNasaPower (T-26, unmodified) -> normaliseWeather
+(T-25, unmodified, targetStepSeconds 3600, real site elevation applying the lapse-rate correction)
+-> seriesToJson (T-06) -> packages/data/tmy/<id>.json. 13/13 tests green,
+`npx vitest run packages/data/test/tmy.test.ts`.
+
+Test 1 (validates clean): leh/kargil/drass/nubra/jaisalmer all pass validateWeatherSeries with
+zero thrown errors.
+
+Test 2 (8760 hourly values, equal lengths): every array (T_amb, GHI, v_wind, DNI, DHI, LW_down,
+RH) on every file = 8760 (2023 is not a leap year).
+
+Test 3 (provenance complete): every label non-empty, names "NASA POWER", the grid-cell
+coordinates and the 2026-09-16 retrieval date; every sourceElevation is a number (Leh 4532.61 m,
+Kargil 4137.89 m, Drass 4054.38 m, Nubra 4548.84 m, Jaisalmer 173.4 m) -- the NASA POWER grid
+cell's elevation, distinct from the real site elevation the lapse correction targets.
+
+Test 4 (Leh January): mean = -10.39 degC (within +/-3 degC of the -8 degC BLUEPRINT.md Appendix C
+figure). Minimum = -28.80 degC, well past (colder than) the -15..-20 degC band the appendix
+names -- real hourly 2023 data has a more extreme cold snap than the appendix's typical range;
+reported honestly per rule 9, not adjusted.
+
+Test 5 (Leh annual GHI): 1916.3 kWh/m^2/yr -- inside the DRDO problem statement's 1900-2100
+kWh/m^2/yr band.
+
+Test 6 (Leh sunshine/clear days): mean daily sunshine = 8.93 h/day (WMO threshold, DNI > 120
+W/m^2), vs. the problem statement's stated 7.9 h/day -- about 13% high, within the documented
++/-25% "near" tolerance used in the test, and directionally consistent (this real single year
+reads sunnier, not the reverse). Clear days = 311 (kt = dailyGHI/dailyI0 > 0.5, tmy/README.md has
+the full sensitivity table: 338 @0.45, 311 @0.5, 275 @0.55, 223 @0.6, 181 @0.65) -- exceeds the
+300-day figure using the documented 0.5 threshold.
+
+Test 7 (Jaisalmer/Leh contrast): Jaisalmer July mean = 32.26 degC, Leh January mean = -10.39 degC,
+delta = 42.65 K (>= the required 20 K).
+
+Test 8 (ground albedo): Leh snow hours (albedo 0.75) = 3096; every one of Leh's July hours =
+0.30. Rule: Nov-Mar calendar day with daily-mean T_amb < 0 degC -> 0.75 for all 24 of that day's
+hours; every other day (all Ladakh locations) and all of Jaisalmer (desert, no snow, constant
+0.30, documented judgement call) -> 0.30. Snow-hour counts: Leh 3096, Kargil 1560, Drass 3072,
+Nubra 2832, Jaisalmer 0.
+
+Test 9 (bundle size): 2,045,004 bytes total (leh 396,121 + kargil 407,886 + drass 406,429 +
+nubra 418,174 + jaisalmer 406,394) = 1.950 MB, well under the 8 MB cap. Files are written as
+compact JSON (no whitespace), so this is already the minified size.
+
+Test 10 (README): packages/data/tmy/README.md exists, contains all 5 location ids, the
+2026-09-16 retrieval date, and 5 reproducible power.larc.nasa.gov URLs (one per location,
+exact nasaPowerUrl() output pasted in).
+
+Test 11 (no network, full simulate()): grep -rn "fetch(" packages/data/src -> zero matches
+(same structural proof T-25's own test 12 uses). tmyById('leh') -> simulate() (rammed-earth
+walls, single glazing, Leh site) -> meta.energyBalanceResidual = 5.2955e-7, well under the 1e-3
+gate (LOG.md 7.4).
+
+Test 12 (unknown id): tmyById('nope') and groundAlbedoById('nope') both throw
+EngineError('INVALID_INPUT', ...) -- never undefined.
+
+Full-suite regression check: `npx vitest run` from the worktree root -> 16 files, 202 passed / 10
+skipped, 0 failed (was 15 files / 189 passed before this task; net +1 file, +13 tests, 0
+regressions). `npx tsc -b packages/data` and `npx tsc -b packages/engine` both exit 0 clean
+(also re-checked with `rtk proxy npx tsc -b packages/data` per the rtk phantom-error warning --
+same clean result).
+
+Deviation from BLUEPRINT.md Appendix C worth flagging: this is real NASA POWER
+MERRA-2/SYN1deg reanalysis for ONE calendar year (2023), not a multi-decade statistically-blended
+TMY -- stated plainly in tmy/README.md's own opening section and in every file's
+provenance.label. Site elevations (Leh 3500 m, Kargil 2676 m, Drass 3230 m, Nubra/Diskit 3144 m,
+Jaisalmer 225 m) are the commonly-cited approximate town elevations the orchestrator supplied,
+unchanged, not independently re-verified this session -- the acceptance-test tolerances absorbed
+this fine (test 4 passed at +/-3 degC).
+
+Observed, not invented: Leh and Nubra's shortwave series (GHI/DNI/DHI/LW_down) are identical
+across all 8760 hours in the raw NASA POWER responses -- both query points fall inside the same
+1-degree SYN1deg grid cell NASA POWER uses for its solar parameters, while T2M/WS2M/RH2M/PS come
+from finer-resolution MERRA-2 and do differ between the two (January means -10.39 degC vs.
+-7.90 degC). Documented in tmy/README.md so it doesn't look like a copy-paste bug on inspection.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** claude (T-27 subagent)  **Date:** 2026-09-16
 
 ---
 
