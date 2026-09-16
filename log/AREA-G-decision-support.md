@@ -16,9 +16,9 @@
 
 ---
 
-### [~] T-54 — The sweep engine: expand, dispatch, collect
+### [!] T-54 — The sweep engine: expand, dispatch, collect
 
-**Area:** G — Decision support (≈ W-30) · **Status:** CLAIMED by orchestrator at 2026-09-16T12:07:16Z · **Est:** 8 h
+**Area:** G — Decision support (≈ W-30) · **Status:** BLOCKED on acceptance test 4 only (see Evidence) — 11/12 tests pass · **Est:** 8 h
 **Depends on:** T-06, T-24, T-28 · **Conflicts with:** T-55 (same package, sequential)
 
 **Why this exists.** *"Because one simulation takes about 50 milliseconds, we do not ask 'how does
@@ -103,9 +103,116 @@ scheme; two authors produce two schemes and the cache keys stop matching.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+packages/optimise/@shelter/optimise created. Root workspaces array is `["packages/*","apps/*"]` --
+the "packages/optimise" glob already matches, confirmed by `npm install` linking
+node_modules/@shelter/optimise -> ../../packages/optimise with no edit to package.json needed.
+
+All 12 tests measured against packages/optimise/test/sweep.test.ts (11 vitest tests, all green)
+plus a standalone Node script against the built dist (packages/optimise/src/sweep.ts is the only
+source file) for the wall-clock numbers this block asks to be pasted. Fixture: 4x4x4 m box, walls =
+0.3 m structural + 0.08 m EPS + 0.02 m cement plaster, windows on all four cardinal walls, Leh site,
+synthetic January design day (24 hourly samples). "The 100-variant sweep" = 5 wallConstruction
+materials (stone/rammedEarth/firedBrick/mudBrick/denseConcrete) x 4 wwr:S fractions (0.1/0.2/0.3/0.4)
+x 5 buildingAzimuth values (0/45/90/135/180).
+
+1. PASS. expandVariants() on the spec above returns exactly 100 entries (vitest asserts this AND a
+   field-by-field diff: only `building.azimuth`, the south window's `area`, and each wall surface's
+   `construction` may differ from base -- every other field, including site/operation/options/
+   materials/glazings and the roof/floor surfaces, is asserted `toEqual` the base value for all 100
+   variants). Node re-measurement: TEST1 count=100.
+
+2. PASS. maxVariants:20 on the identical spec returns exactly 20, and is the exact first-20 prefix
+   of the uncapped 100 (asserted by comparing `.overrides` arrays element-by-element). Node
+   re-measurement: TEST2 count=20.
+
+3. PASS. insulationPosition ['inside','outside'] on the south wall (rammedEarth 0.3 m + EPS 0.08 m +
+   cement plaster 0.02 m): total thickness identical (0.4 m both), steady-state U-value identical:
+     uInside = 0.323200 W/(m^2*K), uOutside = 0.323200 W/(m^2*K)  (buildWallMesh + constructionUValue,
+     hOuter=hConvExterior(2,3500), hInner=hConvInterior('wall',0,0,3500))
+   Layer order (exterior -> interior), DIFFERENT:
+     inside:  ["rammedEarth","cementPlaster","eps"]   (insulation innermost)
+     outside: ["eps","rammedEarth","cementPlaster"]   (insulation outermost)
+
+4. NOT MET as literally worded (>=2x AND <=0.05K simultaneously). Measured HONESTLY, with the
+   confound named below.
+     - Naive back-to-back measurement (unshared loop run first, `runSweep` second, same process):
+       unsharedMs=4639.6 sharedMs=2045.1 -> speedup=2.269x, maxDevK=0.0187.  This number is a JIT
+       warm-up artifact, not a sharing effect -- confirmed by re-running with the JIT pre-warmed by
+       one full throwaway sweep and by measuring both arms twice, interleaved:
+         u1=2136.1ms  s1=2130.4ms  u2=2177.0ms  s2=2158.1ms
+         speedup(u1/s1)=1.003x  speedup(u2/s2)=1.009x  speedup(u1/s2)=0.990x  speedup(u2/s1)=1.022x
+       i.e. ~1.00x once warm-up is controlled for. maxDevK stays 0.0187 K (well inside budget) in
+       every ordering -- the mechanism is answer-safe, just not fast, for this fixture.
+     - Root cause, verified by reading packages/engine/src/solve/integrator.ts directly (read-only;
+       packages/engine/** is outside this task's allow-list): `simulate()` has NO way to accept a
+       warm initial-temperature array. Every call starts spin-up from
+       `T = fill(mean(weather.T_amb))` and iterates its OWN Aitken-accelerated day-loop to its own
+       tolerance (`options.spinUpToleranceK`), independent of any other call. `@shelter/optimise`'s
+       only available lever from outside is `options.maxSpinUpDays` (a ceiling on that per-call
+       loop) -- there is no field in `SimulationRequest`/`SimOptions` to hand it a starting state.
+     - I measured the actual tradeoff this lever offers, on TWO fixtures (this task's realistic
+       0.3 m insulated wall, and a deliberately heavy 1.0 m uninsulated rammed-earth wall used only
+       to widen the signal): capping a mass-group's later members to its first member's own
+       `spinUpDaysUsed` + a margin never meaningfully truncates ANY realistic group (natural day-
+       count variance across wwr/azimuth/ACH within one mass hash was 1-5 days in every case tried,
+       heavy or light) -- hence ~1.0x, not 2x. Forcing the cap BELOW that natural need does buy real
+       wall-clock (on the heavy fixture: cap = firstDays-2 -> 1.11x speedup but 0.278 K deviation;
+       cap = firstDays-3 -> 1.65x but 0.681 K deviation), but every setting that clears 2x blows the
+       0.05 K budget by 5-15x. No margin threads both needles through this API.
+     - Conclusion: "reuse a cached converged initial state" as specified requires a warm-start hook
+       owned by `@shelter/engine` (an optional initial-temperature-array field on
+       `SimulationRequest`/`SimOptions`) that does not exist today, and packages/engine/** is
+       outside this task's Files-you-may-touch list (LOG.md rule 3/16: report across the boundary,
+       do not fix across it). `packages/optimise/src/sweep.ts` DOES implement the mass-hash cache
+       and the day-count-cap sharing described in the prompt (`SPIN_UP_SHARE_MARGIN_DAYS`,
+       documented there with this same finding); it ships with a safe (not misleading) margin of
+       1 day, so `meta.spinUpShared` is genuine (`true` when it actually caps something) and never
+       trades accuracy for a speed win the caller didn't ask for. Recommend a new task, owned by
+       whoever owns packages/engine/**, to add the warm-start field; T-54 cannot add it itself.
+
+5. PASS. 100 variants via `runSweep(..., syncRunner)`: elapsedS=2.046-2.111 (repeat runs),
+   meta.evaluated=100. Comfortably under the 10 s budget -- consistent with CONTRACTS.md §7.15's own
+   note that the engine alone already clears this without any sharing optimisation.
+
+6. PASS. ach spec [0.1, 0.5, 1.0] (achMin constraint = ACH_MIN = 0.35): infeasibleCount=1,
+   reason="ACH 0.100 below safety floor 0.350". All 3 variants remain present in `variants` (asserted
+   `result.variants.length === 3`); only the 0.1 one is marked `feasible:false`.
+
+7. PASS. AbortController.abort() called from inside the 2nd runner invocation: started=2 (loop
+   started variant 1, then variant 2 which triggered the abort and was allowed to finish, then
+   stopped before variant 3), elapsedMs=42-47 across runs, runSweep rejects with
+   `DOMException('Sweep cancelled','AbortError')`. No 3rd (or later) runner call is ever made.
+
+8. PASS. onProgress across the 100-variant sweep: callCount=101 (one `(0,100)` call before dispatch,
+   then one call per completed variant), strictly increasing `done`, last call = [100,100].
+
+9. PASS. Same SweepRequest (15-variant cap) run through a plain synchronous runner and through a
+   `setTimeout`-deferred "concurrent" runner: deepEqualKpis=true (every variant's `kpis` object is
+   `JSON`-identical between the two runs).
+
+10. PASS. aspectRatio [0.5,1,1.5,2,3]: maxFloorAreaDiff=0 (building.floorArea is never reassigned by
+    applyAspectRatio -- only wall surface areas change -- so it is bit-identical to base, not merely
+    within 1e-9).
+
+11. PASS. `packages/optimise/package.json` `dependencies` = `{"@shelter/engine":"0.1.0"}` only --
+    asserted by a vitest test that reads and parses the file; also confirmed by hand.
+
+12. PARTIAL, in the sense already recorded for T-29 (see log/AREA-D-database-tier.md's T-29 Evidence
+    block): `npm run lint` fails project-wide with the SAME pre-existing 55 errors, all in
+    packages/data/test/*.ts and packages/engine/test/{pcm,storage}.test.ts (no-console violations
+    from earlier tasks, none of them touched by this diff). `packages/optimise` itself contributes
+    ZERO lint errors or warnings (`npx eslint packages/optimise` is silent). Confirmed the count is
+    unchanged (55 errors, same 6 files) before and after this task's diff.
+
+Commands used: `npm install` (root); `npx tsc -b packages/optimise` (also verified via
+`rtk proxy npx tsc -b packages/optimise` per this task's rtk gotcha -- both clean); `npm run test -w
+packages/optimise` (vitest, 11/11 green); `npm run lint` (root, 55 pre-existing errors unchanged);
+the Node-script measurements above were run directly against packages/engine/dist and
+packages/optimise/dist outside the repo (scratch script, not committed) to avoid the no-console
+ESLint rule that applies to packages/optimise/test/**.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** claude (T-54 subagent, session 2026-09-16)  **Date:** 2026-09-16
 
 ---
 
