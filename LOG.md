@@ -149,7 +149,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | Area | Name | Done / Total | File |
 |---|---|---|---|
 | A | Foundation & contracts | 7 / 7 | `log/AREA-A-foundation-contracts.md` |
-| B | Engine | 13 / 16 | `log/AREA-B-engine.md` |
+| B | Engine | 14 / 16 | `log/AREA-B-engine.md` |
 | C | Data layer | 1 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 0 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 0 / 7 | `log/AREA-E-server-tier.md` |
@@ -158,7 +158,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | H | Scenarios | 0 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **21 / 69** | |
+| | **TOTAL** | **22 / 69** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
@@ -176,7 +176,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | [x] | T-06 | Extend the shared contract with the types the rest of the build needs | T-01 |
 | [x] | T-07 | Canonical test fixtures, including the C-01 kill-shot pair | T-06 |
 
-### Area B — Engine — 12 / 16 — `log/AREA-B-engine.md`
+### Area B — Engine — 14 / 16 — `log/AREA-B-engine.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
@@ -194,7 +194,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | [x] | T-19 | Phase-change materials: apparent heat capacity | T-06 |
 | [ ] | T-20 | Water and rock thermal storage, and the `StorageElement` node | T-06, T-19 |
 | [x] | T-21 | Couple infiltration to opening area (closes AUDIT F-6) | T-06 |
-| [~] | T-22 | Split out `post/heatFlows.ts` and add the ΔT and ground series | T-06 |
+| [x] | T-22 | Split out `post/heatFlows.ts` and add the ΔT and ground series | T-06 |
 | [!] | T-23 | Validation Test 5 against NOAA, and print every measured pair | T-07 |
 
 ### Area C — Data layer — 1 / 5 — `log/AREA-C-data-layer.md`
