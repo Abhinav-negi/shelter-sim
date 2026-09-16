@@ -775,9 +775,9 @@ unrelated to this task and outside the allow-list).
 
 ---
 
-### [~] T-20 — Water and rock thermal storage, and the `StorageElement` node
+### [x] T-20 — Water and rock thermal storage, and the `StorageElement` node
 
-**Area:** B — Engine (≈ W-55, de-stretched) · **Status:** CLAIMED by orchestrator-session at 2026-09-16T04:15:33Z · **Est:** 10 h
+**Area:** B — Engine (≈ W-55, de-stretched) · **Status:** DONE · **Est:** 10 h
 **Depends on:** T-06, T-19 · **Conflicts with:** T-10, T-11 (you add a node type to their files)
 
 **Why this exists.** Water is the **cheapest thermal mass available** — `c = 4186 J/(kg·K)`, four
@@ -866,9 +866,114 @@ disagree about node indices, which is the worst class of bug in this codebase an
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Implemented in packages/engine/src/storage/waterMass.ts (new: StorageNodeSpec, storageNodeSpec()),
+packages/engine/test/storage.test.ts (new, 13 tests), and surgical additions to
+solve/assemble.ts (StorageNode type + node allocation), solve/integrator.ts (storage-node
+chains in freezeCoefficients + PCM re-eval + 25%-jump warning + buildRhs override), and
+post/energyBalance.ts (PCM ΔStored via pcmEnthalpy). index.ts's ONE call site to
+energyBalance() was also touched (added `model.storageNodes` as a 7th argument) -- this falls
+under "index.ts beyond passing storageElements through, if even needed -- check first": the
+PCM correction needs per-node material/latentHeat/meltPoint data that only model.storageNodes
+carries, and buildModel's own `building` param already receives storageElements unchanged
+(Building already had the optional field from T-06), so no other index.ts change was needed.
+
+DESIGN: each storage node is modelled as a length-1 "chain" in the existing arrow/Schur
+structure (solve/schur.ts, untouched) -- hiA = conductanceToRoom, hrIA = 0 (no radiative/star
+coupling), symmetric coupling to the air node only, exactly like a 1-node surface chain that
+never touches the star row. This reused the existing per-chain machinery with zero changes to
+schur.ts. PCM capacity is re-evaluated once per coefficient refresh (matching the existing
+per-weather-hour cadence, not per-step) via storageNodeSpec(el, model.materials, T[node]),
+and the SAME frozen value is used in both the matrix (chain diag) and the RHS
+(buildRhs override) -- this mirrors the existing airCapacitance pattern exactly, avoiding the
+class of energy-creation bug that pattern's own comment warns about.
+
+CONDITIONS CHECKLIST (all measured this session, `cd packages/engine && npx vitest run`):
+
+1. Full suite: 141 passed | 10 skipped (151 total) -- up from the pre-task baseline of
+   128 passed | 10 skipped (138 total, measured before test/storage.test.ts existed). The task
+   text's "65 tests" is stale (ledger has grown since T-06); the real, measured baseline this
+   session was 128, and all 128 are still green. +13 new tests, 0 regressions.
+
+2. storageElements absent vs. explicit `[]`: deep-equal (modulo meta.wallClockMs), asserted in
+   storage.test.ts Test 2, PASS. (128 pre-existing tests that never set storageElements also
+   still pass unchanged -- the strongest form of this regression check.)
+
+3. Water case (shelterB_steelPuf + 500 kg water drum, conductanceToRoom=30 W/K):
+   tempAt0600  base=262.486677 K -> water=264.761945 K   delta = +2.275268 K (rises)
+   peakToPeak  base=24.897500 K  -> water=17.513374 K    delta = -7.384126 K (shrinks)
+
+4. storageNodeSpec(500 kg water, MAT, toK(20)).capacityJPerK = 2093000 exactly
+   (500 * 4186 = 2,093,000 -- within +/-1 trivially, it's exact).
+
+5. Energy balance residual with storage present:
+   water case residual = 4.0369e-5   (< 1e-3, margin ~25x)
+   PCM   case residual = 3.4325e-5   (< 1e-3, margin ~29x)
+
+6. Negative control (unit-level, energyBalance() called directly with a synthetic PCM node
+   whose T sweeps 263.15 K -> 278.15 K, fully crossing its 3 K melt band at meltPoint=271.15 K,
+   massKg=300, cBase=2000, latentHeat=200000 J/kg):
+     correct (pcmEnthalpy) residual = 0                (exact, by construction of the test)
+     naive C(T_end)*deltaT residual = 0.8695652173913043  (>> 0.01)
+   The naive method undercounts by exactly the 60 MJ of latent heat (60/69 = 87%) -- the
+   correction is not cosmetic.
+
+7. CHALLENGE.md C-07 (shelterB_steelPuf + 300 kg PCM paraffin RT25, meltPoint=toK(-2)=271.15 K,
+   meltRangeK=3, latentHeat=200000 J/kg, conductanceToRoom=40 W/K):
+     peakToPeak   base (no storage) = 24.897500 K
+     peakToPeak   PCM               = 15.798017 K   (-36.5% vs base)
+     peakToPeak   rock control (same mass/conductance, sensible-heat-only) = 17.165198 K
+     PCM beats the equal-mass sensible-heat-only control too (15.798 < 17.165), isolating the
+     latent-heat-specific benefit from the plain thermal-mass benefit.
+   Plateau (single design day, 13:00-20:00 evening descent window): the indoor-air curve
+   dwells inside the 3 K melt band for 2.25 h, with the local cooling rate falling to
+   ~0.02 K/h at the flattest point vs. a ~4.05 K/h peak descent rate just outside the band
+   (~200x suppression) -- the characteristic plateau near the phase-change point.
+
+8. The same PCM case (item 7) trips a meta.warnings entry: `Storage node "pcmPack" (PCM):
+   apparent heat capacity changed by more than 25% within one coefficient-refresh interval.`
+   -- names the node by its `id`, PASS.
+
+9. Refresh cadence: `grep -n "3600\|weather-hour" packages/engine/src/solve/integrator.ts`
+   still shows `const HOURS = 3600;` (top-level comment + constant) and the coefficient-refresh
+   comment block, unchanged text. `git diff --stat packages/engine/src/solve/integrator.ts` =
+   `34 insertions(+), 5 deletions(-)` = 39 changed lines, under the 40-line budget. The 5
+   deletions are all "add one function parameter" signature/call-site edits (runOneDay,
+   freezeCoefficients, the two runOneDay call sites, the dAir line, the factors line) -- no
+   cadence logic (`hourIndex`, `frozenHour`, the `if (coeffs === null || hourIndex !== frozenHour)`
+   branch) was touched. storage.test.ts's own Test 9 asserts the three cadence source strings
+   are still present, as a lightweight regression sentinel.
+
+10. Determinism: two identical simulate() calls on a request with BOTH a water and a PCM
+    storage node produce deep-equal results (storage.test.ts Test 10), PASS.
+
+GOTCHAS FOR A SUCCESSOR:
+- A storage node is literally a length-1 "chain" in solve/schur.ts's existing arrow/Schur
+  vocabulary (offset/sub/diag/sup/hiA/hrIA). Do not be tempted to special-case it outside that
+  structure -- the existing factorArrow()/solveArrow() already do the right thing for any
+  chain of length >= 1, including 1.
+- model.C[sn.index] for a PCM storage node is only ever a SEED value (evaluated at meltPoint
+  during buildModel). It is intentionally stale after the first coefficient refresh -- do not
+  read it expecting the current apparent capacity; read FrozenCoefficients.storageC (per-hour)
+  instead, or call storageNodeSpec() fresh.
+- The >25% jump comparison baseline (prevStorageC) persists across the WHOLE run (spin-up +
+  reported days), not per-day, because spin-up and the reported period share one continuous
+  T trajectory. It is a plain Float64Array threaded by reference through runOneDay ->
+  freezeCoefficients; it starts at 0, so the very first refresh never fires a spurious warning.
+- energyBalance()'s PCM correction is path-independent by construction (pcmEnthalpy is a state
+  function of T alone), so a periodic-steady-state run where the storage node's start-of-window
+  and end-of-window temperatures are nearly equal will show almost NO difference between the
+  correct and naive methods over that window, even though the correction is real and necessary
+  mid-run. This is why Test 6 (negative control) is a direct unit-level test of energyBalance()
+  with a large synthetic net T swing, not a full simulate() run -- a full converged run's window
+  net ΔT is too close to zero to demonstrate the bug.
+
+Build/test commands: `cd packages/engine && npx vitest run` (full suite);
+`npx vitest run test/storage.test.ts --reporter=verbose` (this task's tests, with console
+evidence numbers); `npx tsc -b packages/engine` (typecheck -- pre-existing serialise.ts
+node:crypto/TextEncoder errors are baseline, unrelated to this task, present before and after).
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** T-20 subagent (orchestrator-dispatched)  **Date:** 2026-09-16
 
 ---
 

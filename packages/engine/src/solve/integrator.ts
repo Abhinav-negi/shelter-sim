@@ -38,8 +38,10 @@ import {
 import { decompose } from '../solar/decomposition.js';
 import { sunPosition } from '../solar/geometry.js';
 import { albedoAt, transpose } from '../solar/transposition.js';
+import { storageNodeSpec } from '../storage/waterMass.js';
 import { EngineError } from '../types.js';
 import type { Operation, SimulationRequest } from '../types.js';
+import type { Kelvin } from '../units.js';
 import { AIR_NODE, STAR_NODE, type Model } from './assemble.js';
 import { factorArrow, solveArrow, type ArrowFactors } from './schur.js';
 
@@ -106,6 +108,7 @@ interface FrozenCoefficients {
   factors: ArrowFactors;
   /** Response of every node to 1 W injected at the air node. */
   unitAuxResponse: Float64Array;
+  storageC: Float64Array; // T-20: this hour's storage-node capacitance, J/K, indexed like model.storageNodes.
 }
 
 export interface RunOutput {
@@ -155,6 +158,7 @@ export function integrate(req: SimulationRequest, model: Model): RunOutput {
   const stepsPerDay = Math.round(86400 / dt);
   const n = model.n;
   const warnings: string[] = [];
+  const prevStorageC = new Float64Array(model.storageNodes.length); // T-20: persists across days, for the 25%-jump check
 
   // Initial condition: everything at the mean ambient temperature.
   let meanAmb = 0;
@@ -188,7 +192,7 @@ export function integrate(req: SimulationRequest, model: Model): RunOutput {
 
   for (let day = 0; day < options.maxSpinUpDays; day++) {
     const before = Float64Array.from(T);
-    T = runOneDay(req, model, T, series, null);
+    T = runOneDay(req, model, T, series, null, warnings, prevStorageC);
     spinUpDaysUsed = day + 1;
 
     let maxChange = 0;
@@ -245,7 +249,7 @@ export function integrate(req: SimulationRequest, model: Model): RunOutput {
   const initialT = Float64Array.from(T);
   const records: StepRecord[] = [];
   for (let day = 0; day < options.simulationDays; day++) {
-    T = runOneDay(req, model, T, series, records);
+    T = runOneDay(req, model, T, series, records, warnings, prevStorageC);
   }
 
   Tprev.set(T);
@@ -262,6 +266,8 @@ function runOneDay(
   T0: Float64Array,
   series: EnvironmentSeries,
   records: StepRecord[] | null,
+  warnings: string[],
+  prevStorageC: Float64Array,
 ): Float64Array {
   const { options } = req;
   const dt = options.timestepSeconds;
@@ -287,7 +293,7 @@ function runOneDay(
     // Refresh and refactorise only when the weather hour rolls over.
     const hourIndex = Math.floor(secondsIntoDay / HOURS);
     if (coeffs === null || hourIndex !== frozenHour) {
-      coeffs = freezeCoefficients(req, model, T, env, dt);
+      coeffs = freezeCoefficients(req, model, T, env, dt, warnings, prevStorageC);
       frozenHour = hourIndex;
     }
 
@@ -446,6 +452,8 @@ function freezeCoefficients(
   T: Float64Array,
   env: Environment,
   dt: number,
+  warnings: string[],
+  prevStorageC: Float64Array,
 ): FrozenCoefficients {
   const { site, building, operation } = req;
   const n = model.n;
@@ -539,10 +547,26 @@ function freezeCoefficients(
     };
   });
 
-  const dAir = cAir / dt + inf.conductance + windowG + totalConvectiveG;
+  // T-20: storage nodes are one-node chains coupled only to air; PCM capacity is refreshed here (T-19 contract), water/rock stay fixed.
+  let totalStorageG = 0;
+  const storageC = new Float64Array(model.storageNodes.length);
+  const storageChains = model.storageNodes.map((sn, k) => {
+    const g = sn.element.conductanceToRoom;
+    totalStorageG += g;
+    const cap = sn.element.kind === 'pcm'
+      ? storageNodeSpec(sn.element, model.materials, T[sn.index] as Kelvin).capacityJPerK
+      : sn.capacityJPerK;
+    if (sn.element.kind === 'pcm' && prevStorageC[k]! > 0 && Math.abs(cap - prevStorageC[k]!) / prevStorageC[k]! > 0.25) {
+      warnings.push(`Storage node "${sn.element.id}" (PCM): apparent heat capacity changed by more than 25% within one coefficient-refresh interval.`);
+    }
+    prevStorageC[k] = cap;
+    storageC[k] = cap;
+    return { offset: sn.index, sub: new Float64Array(1), diag: new Float64Array([cap / dt + g]), sup: new Float64Array(1), hiA: g, hrIA: 0 };
+  });
+  const dAir = cAir / dt + inf.conductance + windowG + totalConvectiveG + totalStorageG;
   const dStar = totalRadiantG;
 
-  const factors = factorArrow(chains, dAir, dStar, n, tieStarToAir);
+  const factors = factorArrow([...chains, ...storageChains], dAir, dStar, n, tieStarToAir);
 
   // Unit auxiliary-heat response: 1 W injected at the air node. Solved once per
   // refresh; linearity then gives the exact aux power without extra solves.
@@ -562,6 +586,7 @@ function freezeCoefficients(
     airCapacitance: cAir,
     factors,
     unitAuxResponse,
+    storageC,
   };
 }
 
@@ -583,6 +608,10 @@ function buildRhs(
   for (let i = 0; i < n; i++) b[i] = (model.C[i]! / dt) * T[i]!;
   b[AIR_NODE] = (c.airCapacitance / dt) * T[AIR_NODE]!;
   b[STAR_NODE] = 0;
+  for (let k = 0; k < model.storageNodes.length; k++) { // T-20: frozen (PCM-refreshed) capacity, matches the matrix
+    const idx = model.storageNodes[k]!.index;
+    b[idx] = (c.storageC[k]! / dt) * T[idx]!;
+  }
 
   // Air node boundary couplings and gains.
   b[AIR_NODE] = b[AIR_NODE]! + (c.infiltrationG + c.windowG) * env.T_amb;
