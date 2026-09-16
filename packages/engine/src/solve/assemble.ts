@@ -12,8 +12,10 @@
 
 import { buildWallMesh, type WallMesh } from '../envelope/mesh.js';
 import { skyViewFactor } from '../surfaces/exterior.js';
+import { storageNodeSpec } from '../storage/waterMass.js';
 import { EngineError } from '../types.js';
-import type { Building, Glazing, Material, Surface, WindowSpec } from '../types.js';
+import type { Building, Glazing, Material, StorageElement, Surface, WindowSpec } from '../types.js';
+import type { Kelvin } from '../units.js';
 
 export const AIR_NODE = 0;
 export const STAR_NODE = 1;
@@ -35,6 +37,28 @@ export interface SurfaceNodes {
   opaqueArea: number;
 }
 
+/**
+ * One allocated node per `Building.storageElements` entry (T-20), placed after
+ * every surface's through-thickness chain. Coupled ONLY to the air node
+ * (`solve/integrator.ts` adds a symmetric `conductanceToRoom` link there) --
+ * no radiative coupling, no surface coupling, per the task's own cut list.
+ */
+export interface StorageNode {
+  element: StorageElement;
+  material: Material;
+  /** Global node index. */
+  index: number;
+  /**
+   * Seed capacitance, J/K, used only to initialise `Model.C`. For 'water' and
+   * 'rock' this is the true, constant, run-long value. For 'pcm' it is a
+   * bootstrap guess (evaluated at `meltPoint`): `solve/integrator.ts`
+   * re-evaluates the real, state-dependent value at every coefficient
+   * refresh and that value -- never this seed -- is what the solver actually
+   * uses (T-19's apparent-heat-capacity contract).
+   */
+  capacityJPerK: number;
+}
+
 export interface Model {
   n: number;
   surfaces: SurfaceNodes[];
@@ -46,6 +70,8 @@ export interface Model {
   floorArea: number;
   materials: Record<string, Material>;
   glazings: Record<string, Glazing>;
+  /** One entry per `Building.storageElements`, in the same order. */
+  storageNodes: StorageNode[];
 }
 
 export function buildModel(
@@ -100,6 +126,17 @@ export function buildModel(
     cursor += mesh.n;
   }
 
+  // T-20: one node per storage element, allocated after every surface chain.
+  const storageNodes: StorageNode[] = (building.storageElements ?? []).map((el) => {
+    // Seed temp only (see StorageNode.capacityJPerK doc); meltPoint is a
+    // physically reasonable bootstrap guess for 'pcm', unused otherwise.
+    const seedTemp = (el.kind === 'pcm' ? el.meltPoint : undefined) ?? (293.15 as Kelvin);
+    const spec = storageNodeSpec(el, materials, seedTemp);
+    const node: StorageNode = { element: el, material: materials[el.materialId]!, index: cursor, capacityJPerK: spec.capacityJPerK };
+    cursor += 1;
+    return node;
+  });
+
   const n = cursor;
   const C = new Float64Array(n);
   let totalInteriorArea = 0;
@@ -114,8 +151,9 @@ export function buildModel(
   // The star node deliberately has zero capacitance: it is a fictitious radiant
   // temperature, not a physical mass. Its matrix row is an algebraic balance.
   C[STAR_NODE] = 0;
+  for (const sn of storageNodes) C[sn.index] = sn.capacityJPerK;
 
-  return { n, surfaces, C, totalInteriorArea, floorArea, materials, glazings };
+  return { n, surfaces, C, totalInteriorArea, floorArea, materials, glazings, storageNodes };
 }
 
 /** Wrap an azimuth into (-180, 180]. */

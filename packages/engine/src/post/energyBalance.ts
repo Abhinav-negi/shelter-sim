@@ -23,6 +23,9 @@
  */
 
 import type { StepRecord } from '../solve/integrator.js';
+import type { StorageNode } from '../solve/assemble.js';
+import { pcmEnthalpy } from '../storage/pcm.js';
+import type { Kelvin } from '../units.js';
 
 export interface EnergyBalance {
   /** Dimensionless fraction. Must be < 1e-3. */
@@ -42,6 +45,7 @@ export function energyBalance(
   initialT: Float64Array,
   finalT: Float64Array,
   dt: number,
+  storageNodes: StorageNode[] = [],
 ): EnergyBalance {
   let net = 0;
   let throughput = 0;
@@ -58,6 +62,23 @@ export function energyBalance(
   for (let i = 0; i < capacitance.length; i++) {
     const c = i === 0 ? airCapacitance : capacitance[i]!;
     deltaStored += c * (finalT[i]! - initialT[i]!);
+  }
+
+  // T-20 / CONTRACTS.md 7.4: a PCM node's capacitance is state-dependent, so the
+  // C(T_end)*deltaT term above silently mis-counts latent heat crossed mid-run.
+  // Replace it with the closed-form enthalpy integral from storage/pcm.ts
+  // (T-19's pcmEnthalpy) -- it is a function of T alone, so
+  // pcmEnthalpy(T_end) - pcmEnthalpy(T_0) equals the trapezoidal per-step sum
+  // the contract describes, without needing the full per-step T history.
+  for (const sn of storageNodes) {
+    if (sn.element.kind !== 'pcm') continue;
+    const i = sn.index;
+    deltaStored -= capacitance[i]! * (finalT[i]! - initialT[i]!);
+    const { massKg, latentHeat, meltPoint, meltRangeK } = sn.element;
+    deltaStored += massKg * pcmEnthalpy(
+      sn.material.c, latentHeat!, meltPoint!, meltRangeK ?? 3,
+      finalT[i]! as Kelvin, initialT[i]! as Kelvin,
+    );
   }
 
   const residual = throughput > 0 ? Math.abs(net - deltaStored) / throughput : 0;

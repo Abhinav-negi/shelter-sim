@@ -117,7 +117,9 @@ export function simulate(req: SimulationRequest): SimulationResult {
 
   const airC = effectiveAirCapacitance(req.building.volume, req.site.elevation, last.T[AIR_NODE]!);
   // Baseline is the state BEFORE the first recorded step, not records[0].T.
-  const balance = energyBalance(records, model.C, airC, initialT, last.T, dt);
+  // T-20: model.storageNodes is derived straight from building.storageElements;
+  // energyBalance needs it only for the PCM ΔStored correction (CONTRACTS.md 7.4).
+  const balance = energyBalance(records, model.C, airC, initialT, last.T, dt, model.storageNodes);
 
   const time = new Float64Array(records.length);
   const indoorAir = new Float64Array(records.length);
