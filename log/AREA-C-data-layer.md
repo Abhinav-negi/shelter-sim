@@ -155,6 +155,14 @@ count, the typecheck-script boundary) is in .work/T-24.md.
 
 **Completed by:** orch-T-24  **Date:** 2026-09-15
 
+**Addendum (2026-09-16, T-25 session — does not change the record above):** test 14's assertion
+("no `dependencies` key") was true when T-24 measured it and stays true as history. `CONTRACTS.md`
+D-10, added this session, deliberately supersedes it: `@shelter/data` is now allowed exactly one
+runtime dependency, `@shelter/engine`, so T-25's `pipeline.ts` can import Erbs/Swinbank/barometric
+correlations instead of reimplementing them. `packages/data/test/catalog.test.ts`'s test 14 was
+updated in the same commit that made this change to assert `dependencies` now deep-equals
+`{"@shelter/engine": "0.1.0"}` rather than `undefined` — see D-10 for the full reasoning.
+
 ---
 
 ### [~] T-25 — The weather pipeline, with the mandatory lapse-rate correction
