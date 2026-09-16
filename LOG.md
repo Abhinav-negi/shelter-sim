@@ -1,5 +1,47 @@
 # LOG.md — The ShelterSim Build Ledger
 
+## HANDOFF (2026-09-16, end of session)
+
+**Completed this session:** T-22 (split `post/heatFlows.ts`, added `deltaT` and
+`temperatures.ground`). All 12 acceptance tests verified independently by the orchestrator
+(reran `npx vitest run` and `npx tsc -b packages/engine` myself, not just trusted the subagent's
+report). 3 commits on master: `6799da0`/`c6223c5`/`0ec62db`, plus claim commit `f10a362`.
+Area B now 14/16, ledger total 22/69. Full suite green: 12 files, 147 passed, 10 skipped
+(157 total), exit 0.
+
+**In progress:** nothing. No open worktrees or branches (`git worktree list` / `git branch -a`
+both clean, everything lives on `master`).
+
+**Blocked (pre-existing, unchanged this session):** T-23 stays `[!]` — root cause is in
+`solar/geometry.ts` (owned by closed task T-14), not fixable from a test file. See its Evidence
+block in `log/AREA-B-engine.md` for the full NOAA comparison numbers.
+
+**New finding for whoever picks up T-49 (Sankey) or revisits T-11:** T-22's Evidence block
+documents that `Q7_interiorLongwave` as currently computed in `solve/integrator.ts`'s `record()`
+is the zero-capacitance star node's own residual (~1e-11 W, solver float noise), not a real
+gross interior-radiant-exchange wattage — its daily total is ~2.3e-14 kWh, indistinguishable
+from zero. Not fixed by T-22 (out of its scope per global rule 16); flagged for T-11's owner to
+consider redefining Q7 as a signed-positive or absolute-value sum if the Sankey needs a real
+number to chart.
+
+**Repo hygiene, already handled, no action needed:** found and reverted two pieces of local,
+uncommitted noise that were not real work: (1) `packages/engine/test/output/validation-numbers.csv`
+had duplicate appended rows from repeated `npx vitest run` invocations (the CSV-writing test
+rewrites the file each run; nothing to fix in source, just reverted the stray local diff), and
+(2) `log/AREA-C-data-layer.md` had one line corrupted mid-sentence (`keyless` → `keyles` + an
+unrelated fragment of conversational text) — reverted to the committed version; not a task-related
+edit and not investigated further since it did not recur.
+
+**Recommended next step:** T-20 (Water and rock thermal storage, `log/AREA-B-engine.md`) is the
+first unblocked `[ ]` task — `T-06` and `T-19` are both done. It is larger and riskier than T-22
+(10 h estimate, surgical edits across `solve/assemble.ts`, `solve/integrator.ts` and
+`post/energyBalance.ts` — the task's own text calls disagreeing node indices across those three
+files "the worst class of bug in this codebase"), so give it a full session with headroom to
+verify carefully, single subagent, not fanned out (per the task's own subagent guidance).
+
+---
+
+
 **Project:** ShelterSim — software thermal model for area-specific passive shelter design
 **Sponsor:** DRDO / DIHAR Leh · **SIH Problem Statement:** 26051
 **Repository root for all paths below:** `/home/abhinav/Downloads/SIH/shelter-sim`
