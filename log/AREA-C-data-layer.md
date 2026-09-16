@@ -724,9 +724,9 @@ from finer-resolution MERRA-2 and do differ between the two (January means -10.3
 
 ---
 
-### [ ] T-28 — Presets: the app opens on an interesting result
+### [~] T-28 — Presets: the app opens on an interesting result
 
-**Area:** C — Data (≈ W-29) · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** C — Data (≈ W-29) · **Status:** CLAIMED by orchestrator-session at 2026-09-16T06:20:14Z · **Est:** 6 h
 **Depends on:** T-24, T-27 · **Conflicts with:** T-24 (reads catalogues by id, never edits)
 
 **Why this exists.** `CHALLENGE.md` C-19 calls the empty first screen an **underrated failure**: a

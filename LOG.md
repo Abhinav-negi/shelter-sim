@@ -331,7 +331,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | [x] | T-25 | The weather pipeline, with the mandatory lapse-rate correction | T-24 |
 | [x] | T-26 | NASA POWER and Open-Meteo request builders and response parsers | T-25 |
 | [x] | T-27 | Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer | T-25, T-26 |
-| [ ] | T-28 | Presets: the app opens on an interesting result | T-24, T-27 |
+| [~] | T-28 | Presets: the app opens on an interesting result | T-24, T-27 |
 
 ### Area D — Database tier — 0 / 7 — `log/AREA-D-database-tier.md`
 
