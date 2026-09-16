@@ -410,7 +410,7 @@ with an Area file again, the Area file is right — fix this table.)*
 
 | | ID | Title | Depends on |
 |---|---|---|---|
-| [ ] | T-59 | The eighteen-scenario matrix, built from real recorded history | T-27, T-28 |
+| [x] | T-59 | The eighteen-scenario matrix, built from real recorded history | T-27, T-28 |
 | [ ] | T-60 | Run the matrix and shape the survival-grid contract | T-54, T-59 |
 | [ ] | T-61 | Multi-day runs and the sunless-streak path | T-59 |
 
