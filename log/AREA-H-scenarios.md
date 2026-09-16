@@ -15,9 +15,9 @@
 
 ---
 
-### [~] T-59 — The eighteen-scenario matrix, built from real recorded history
+### [x] T-59 — The eighteen-scenario matrix, built from real recorded history
 
-**Area:** H — Scenarios (≈ `plan.md` §7) · **Status:** CLAIMED by orchestrator at 2026-09-16T15:27:04Z · **Est:** 8 h
+**Area:** H — Scenarios (≈ `plan.md` §7) · **Status:** DONE · **Est:** 8 h
 **Depends on:** T-27, T-28 · **Conflicts with:** none
 
 **Why this exists.** *"We do not ask 'how does this design do on a typical day?' We ask 'how does
@@ -106,9 +106,102 @@ selection criteria mutually consistent, and consistency is what makes the grid c
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+All 12 acceptance tests measured via `npx vitest run packages/data/test/scenarios.test.ts`
+(13 tests, all green) against `tmyById('leh')` (NASA POWER 2023 hourly, 8760 samples).
+
+1. Exactly 18 scenarios, all ids unique:
+   month-01..month-12 (January..December), coldest-day, hottest-day, design-winter-day,
+   sunless-streak, clear-cold-night, annual-mean-day.
+
+2. Twelve monthly scenarios, all twelve calendar months covered, one each:
+   Jan=dayOfYear24, Feb=34, Mar=82, Apr=101, May=146, Jun=167, Jul=204, Aug=228, Sep=263,
+   Oct=302, Nov=330, Dec=349.
+
+3. Coldest day: dayOfYear 17, mean -18.34 deg C. Exhaustively checked against all 365
+   calendar-day windows in the record -- none lower.
+
+4. Hottest day: dayOfYear 199, mean 19.45 deg C. Exhaustively checked against all 365
+   calendar-day windows -- none higher.
+
+5. Design winter day (1-in-100): N=365 daily means, nearest-rank percentile,
+   rank = ceil(0.01 * 365) = 4 (1-indexed ascending) -> dayOfYear 23, mean -15.72 deg C.
+   Warmer than the coldest day (-18.34 deg C) and a different day. PASS.
+
+6. Sunless streak: length 2, startDayOfYear 41, mean daily GHI over the streak
+   2135.0 Wh/m^2 (both days individually below the 2500 Wh/m^2/day overcast threshold).
+   Exhaustively checked: no longer run below threshold exists anywhere in the 365-day
+   record. days=2 > 1. PASS.
+
+7. Clear cold night: dayOfYear 39, daytime k_t = 0.674 (> 0.6 threshold), overnight
+   (00:00-06:00) mean -24.20 deg C. Sky temperature at 03:00 (skyTemperature() from
+   @shelter/engine, using the real LW_down field, Swinbank not needed):
+     clear-cold-night day 39: 221.8595 K
+     coldest day (day 17):    221.8675 K
+   Clear night is colder by 0.0081 K -- PASS (the margin is real and deterministic, not
+   floating-point noise: it comes from the record's actual downward-longwave field, which
+   is genuinely slightly lower on day 39's early morning than day 17's, despite day 17
+   being colder in raw air temperature). Selection rule explicitly excludes the coldest
+   day itself from candidacy (see scenarios.ts comment on the clear-cold-night block) --
+   without that exclusion the coldest day (which is also clear, k_t=0.759) would win the
+   "lowest overnight mean temp among clear nights" ranking and trivially tie its own sky
+   temp, which is what test 7 exists to catch.
+
+8. Every sourceNote checked non-empty (min length in this run: 312 chars) and matches
+   /leh\.json|record|nasa-power|bundled-tmy/i -- names the record and the selection rule
+   in prose for all 18.
+
+9. The three threshold constants, exported from packages/data/src/scenarios.ts:
+   - OVERCAST_GHI_THRESHOLD_WHM2 = 2500
+     "A day's total horizontal insolation below this is classified 'overcast' ... Chosen
+     against the Leh 2023 record itself: at 2.5 kWh/m^2/day the classification separates
+     genuinely low-clearness-index (cloudy, daytime k_t typically < 0.4) days from
+     low-sun-angle winter days that are still cloudless (k_t 0.5-0.8) ... Raise it if a
+     longer, still-genuinely-cloudy run should be found in a different record; lower it
+     if a marginal day is being misclassified as overcast."
+   - CLEAR_SKY_KT_THRESHOLD = 0.6
+     "... 0.6 sits in the middle of a wide plateau in the Leh 2023 record (0.55-0.65 all
+     select the same night) so the pick is not sensitive to its exact value; push it
+     toward 0.8 (Ladakh's genuinely cloudless days) if a future, longer record makes the
+     plateau narrower."
+   - DESIGN_WINTER_PERCENTILE = 0.01
+     "... nearest-rank method, rank = ceil(p * N), 1-indexed. 0.01 (the '1-in-100' design
+     day) is standard professional practice for a cold-but-not-freak design condition;
+     raise it toward the coldest day itself (rank 1) only if the brief's design
+     philosophy changes from 'conventional cold snap' to 'worst case'."
+
+10. scenarioWeather output length == days * 24 / (stepSeconds/3600) asserted for all 18
+    (17 scenarios: 24 samples; sunless-streak: 48 samples). All PASS.
+
+11. scenarioWeather provenance checked for all 18: source and label preserved verbatim,
+    notes array grows by exactly 1 entry containing the scenario name, original series'
+    provenance.notes left un-mutated. All PASS.
+
+12. All 18 scenarioWeather(lehSeries, s) outputs passed validateWeatherSeries() (T-25,
+    packages/data/src/weather/pipeline.ts) with zero thrown errors.
+
+Full workspace regression: `npx vitest run` -> 19 test files, 238 passed, 10 skipped, 0
+failed (no existing test touched or broken). `npx tsc -b packages/data` clean.
+
+Lint: `npm run lint` error count rose from the documented 55 pre-existing to 67 (+12),
+entirely from `console.log` calls in the new packages/data/test/scenarios.test.ts --
+the same no-console violation already present in every sibling acceptance-test file in
+this package (presets.test.ts 13, weather.test.ts 14, tmy.test.ts 12, sources.test.ts 16)
+and used for the same purpose: pasting measured evidence numbers into stdout per LOG.md
+global rule 15. Not fixed, per the task brief's explicit note that T-59's acceptance
+tests do not mention lint; flagging here per rule 15 so it is not a surprise to the next
+reader of `npm run lint`'s output.
+
+Deliberate deviation from the PROMPT's Scenario.kind union (documented at the top of
+scenarios.ts): added a 7th literal, 'annualMean', for scenario 18. The PROMPT's own
+6-literal union ('monthly'|'coldest'|'hottest'|'designWinter'|'sunlessStreak'|
+'clearColdNight') only covers 17 of the 18 scenarios described in the same prompt; tagging
+the annual-mean reference day as 'monthly' would make a kind==='monthly' filter return 13
+results instead of the 12 acceptance test 2 requires. Scenario is declared only in this
+file, so the extension is additive and does not affect any other task's contract (T-60's
+ScenarioResult wraps `scenario: Scenario` without constraining `kind`).
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude (subagent, T-59)  **Date:** 2026-09-16
 
 ---
 
