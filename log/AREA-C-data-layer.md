@@ -724,7 +724,7 @@ from finer-resolution MERRA-2 and do differ between the two (January means -10.3
 
 ---
 
-### [~] T-28 — Presets: the app opens on an interesting result
+### [x] T-28 — Presets: the app opens on an interesting result
 
 **Area:** C — Data (≈ W-29) · **Status:** CLAIMED by orchestrator-session at 2026-09-16T06:20:14Z · **Est:** 6 h
 **Depends on:** T-24, T-27 · **Conflicts with:** T-24 (reads catalogues by id, never edits)
@@ -793,9 +793,92 @@ keeps them consistent.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Test 1 (all six run through simulate() without throwing): PASS for all six -- traditionalLadakhiByre,
+armyBroBarrack, modernRccNoInsulation, geresTrombeRetrofit, optimisedPassivePlaceholder,
+jaisalmerHotDryContrast.
+
+Test 2 (meta.energyBalanceResidual < 1e-3, all six): traditionalLadakhiByre=1.9019e-5,
+armyBroBarrack=1.1046e-4, modernRccNoInsulation=3.1672e-5, geresTrombeRetrofit=2.2302e-5,
+optimisedPassivePlaceholder=3.7850e-5, jaisalmerHotDryContrast=5.1556e-5. All six well under 1e-3
+(worst case ~9x under the gate).
+
+Test 3 (every materialId/glazingId resolves): 48 materialId references and 11 glazingId references
+across all six presets, zero throws.
+
+Test 4 (every locationId resolves to a bundled TMY): leh (x5), jaisalmer (x1) -- tmyById() clean for
+all six.
+
+Test 5 (ordering sanity, January Leh day, tempAt0600): traditional=6.77 degC, barrack=-10.54 degC,
+modernRcc=-8.39 degC, optimised(placeholder)=8.13 degC. optimised > all three, as expected of a
+well-insulated design -- not fudged, this is the real simulated result.
+
+Test 6 (preset 2 has the largest peakToPeakSwing among the five Ladakh presets): traditional=9.06 K,
+barrack=31.67 K, modernRcc=13.91 K, trombe=8.65 K, optimised=6.81 K. Barrack IS the largest, as
+physically expected from a thin, lightweight, poorly-insulated steel envelope -- not adjusted to
+force this, it came out of the real physics.
+
+Test 7 (preset 4 approximations non-empty, names the Trombe simplification): PASS. approximations =
+["The Trombe wall's glazing + ventilated air cavity is approximated as a single extra 25 mm
+sealed-air-gap layer on the outside of the massive absorber wall (added surface resistance only). A
+real two-air-node Trombe model -- a separate glazing pane, cavity convection, and top/bottom vents --
+is out of scope (LOG.md global rule 12); this cannot capture the cavity's trapped-air heat boost or a
+real installation's summer vent-bypass behaviour."]
+
+Test 8 (preset 5 never silently presented as optimised): PASS. approximations = ["placeholder -- to
+be replaced by a real sweep winner, see T-56"]. No fabricated SweepRequest is recorded anywhere --
+T-56 (the sweep engine) does not exist yet in this codebase, so there was no real sweep to paste; a
+comment in presets.ts explains this and points to T-56.
+
+Test 9 (preset 6 non-Ladakh, distinct locationId, runs clean): locationId="jaisalmer", distinct from
+every other preset's "leh"; energyBalanceResidual=5.1556e-5, well under 1e-3.
+
+Test 10 (comfortBand.lower === 288.15, every Ladakh preset, mechanically asserted): PASS for all 5
+Ladakh presets (traditionalLadakhiByre, armyBroBarrack, modernRccNoInsulation, geresTrombeRetrofit,
+optimisedPassivePlaceholder); explicitly asserted !== 293.15 too.
+
+Test 11 (preset 1's livestock contribution, reflected in gains and description): min hourly
+internalGainsSchedule value = 1585 W, always >= the 3-animal x 500 W/animal = 1500 W livestock floor
+(GAIN_WATTS.livestockPerAnimal); description contains both "livestock"/"animal" and "byre" in plain
+language.
+
+Test 12 (presetById("nope") throws): PASS -- throws EngineError, never undefined.
+
+Full-suite regression check: `npx vitest run` from the worktree root -> 17 files, 214 passed / 10
+skipped, 0 failed (was 16 files / 202 passed before this task; net +1 file, +12 tests, 0
+regressions). `npx tsc -b packages/data` and `npx tsc -b packages/engine` both exit 0 clean (also
+re-checked with `rtk proxy npx tsc -b packages/engine packages/data` per the rtk phantom-error
+warning -- same clean result).
+
+DISCOVERED ENGINE BUG, reported upward per LOG.md global rule 16 (not fixed here -- out of this
+task's `Files you may touch` allow-list, `packages/engine/**`): every Ladakh preset genuinely
+diverged (`EngineError('SOLVER_DIVERGED', ...)`) when first built with `DEFAULT_SIM_OPTIONS`'s own
+`skyModel: 'hdkr'` default, reproducibly at ~07:30 local on Leh's real bundled January 1st weather,
+across five structurally unrelated envelopes (earth/steel/RCC/Trombe/insulated). Bisected (by
+swapping site/weather/options independently) down to `packages/engine/src/solar/transposition.ts`'s
+HDKR branch: `Rb = sun.cosZenith > 1e-6 ? cosTheta / sun.cosZenith : 0` has a lower floor but no
+upper clamp. At Leh's latitude in January, `sunPosition(34.15, 77.58, 82.5, 1, 7.5).cosZenith` =
+0.0014 (sun ~0.08 deg above the horizon) while `cosTheta` on a south wall is not similarly tiny, so
+`Rb` reaches several hundred and `diffuse = DHI * Ai * Rb` spikes to an unphysical multi-kW/m^2 for
+that one hour. `packages/data/test/tmy.test.ts`'s own T-27 fixture already silently works around
+this by hardcoding `skyModel: 'isotropic'` rather than relying on the default -- this task's
+presets.ts does the same (documented in a code comment there) rather than shipping six presets that
+silently rely on the same undocumented workaround. HDKR is otherwise the more physically accurate
+model on a clear day (LOG.md 7.10) -- whoever owns `solar/transposition.ts` (Area B) should add the
+missing clamp (e.g. cap `Rb`, or gate the HDKR branch on a minimum solar altitude) so `'hdkr'` becomes
+safe to use as the default again for high-latitude-winter sites, not just Leh's own presets.
+
+Doc/code discrepancy flagged, not resolved unilaterally: CONTRACTS.md 7.5 states "Surface.area is
+NET, not gross ... do not subtract them again", but `packages/engine/src/solve/assemble.ts` (line
+109) computes `opaqueArea = s.area - windowArea` -- i.e. the CODE treats `Surface.area` as GROSS
+(including the window's own footprint) and subtracts the window area itself, exactly what the
+CONTRACTS text says not to do. Every existing fixture that passes (e.g. `tmy.test.ts` test 11, this
+task's own presets) builds `Surface.area` as the gross host-wall face and lets `assemble.ts` subtract
+the window -- i.e. the actual shipped precedent matches "gross", not the CONTRACTS.md prose. Followed
+the working code here for consistency; CONTRACTS.md 7.5's wording looks like it needs a fix, not the
+code.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** claude (T-28 subagent)  **Date:** 2026-09-16
 
 ---
 
