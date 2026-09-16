@@ -655,12 +655,12 @@ Commands to build/run/test this task's part:
 
 ---
 
-### [!] T-32 — Design snapshots and share links
+### [x] T-32 — Design snapshots and share links
 
-**Area:** D — Database · **Status:** BLOCKED — packages/engine/src/index.ts does not re-export
-requestToJson/requestFromJson from serialise.ts, so `@shelter/engine`'s public barrel cannot reach
-them at all (compile- and run-time confirmed); this task's allow-list forbids editing anything
-under `packages/` (blocking task: T-06) · **Est:** 5 h
+**Area:** D — Database · **Status:** DONE. All 11 acceptance tests pass. Was blocked on a missing
+`packages/engine/src/index.ts` barrel re-export (outside this task's allow-list); the orchestrator
+applied the fix the subagent had already diagnosed and verified, then this task's own tests were
+genuinely rerun green. · **Est:** 5 h
 **Depends on:** T-30 · **Conflicts with:** none
 
 **Why this exists.** `plan.md` says *"If you want to keep a design, you download it as a file."*
@@ -816,10 +816,45 @@ WHAT IS DONE AND BELIEVED CORRECT, PENDING THE UPSTREAM FIX:
   and this failure is unrelated to T-32). 258 passed, 9 failed, 10 skipped
   overall (8 of the 9 failures are this task's blocked tests).
 
-NOT DONE: cannot claim any acceptance test passes for real until the export
-fix lands and the suite is rerun clean.
+UPDATE (orchestrator, 2026-09-17): the export fix landed on master (commit
+9be9f7a, extended by 508cdd6 for T-33's canonicalRequestHash/resultToJson/
+resultFromJson needs) -- exactly the one-line change this task's subagent
+already diagnosed and verified. Merged master into this branch, rebuilt
+`packages/engine` and `@shelter/data` dist (gitignored, not built in this
+worktree until now), and reran for real:
 
-HELP_REQUEST
+  npx vitest run apps/web/test/repo-designs.test.ts --reporter=verbose:
+  1. PASS -- deep-equal round trip, Float64Array fields preserved.
+  2. PASS -- five generated ids: 2T6E2YUMDK, STKQPWSU7E, (+3 more), all
+     10 chars, all match /^[A-Za-z2-9]{10}$/, no 0/O/1/l/I present.
+  3. PASS -- same request saved twice -> two distinct ids, two rows.
+  4. PASS -- 10000 generated ids, 10000 distinct, 0 duplicates.
+  5. PASS -- loadDesign('nonexistent') -> null, no throw.
+  6. PASS -- malformed input rejected before write: row count before=432,
+     after=432 (unchanged).
+  7. PASS, genuinely this time (was a false positive per evidence item 3
+     above before the export fix -- rerun confirms the real requestFromJson
+     code path now executes and correctly returns null on corrupted JSON).
+  8. PASS -- expired row -> null.
+  9. PASS -- DB OFF: saveDesign/loadDesign both null, requestToJson/
+     requestFromJson round trip with no database present works.
+  10. PASS -- DB UNREACHABLE: resolved null in 60ms, well under 5s.
+  11. PASS -- 20 concurrent saveDesign calls, 20 distinct ids, 649ms.
+  Test Files 1 passed (1), Tests 11 passed (11).
+
+Full suite (`npx vitest run` from worktree root, after merging master and
+rebuilding both workspace dists): 24 files, 285 passed, 10 skipped, exit 0.
+Reran 6 times total across this session to check for the cross-file
+DATABASE_URL race T-34's investigation surfaced (see LOG.md HANDOFF and
+vitest.config.ts) -- 5 of 6 clean, 1 flaked on an unrelated file
+immediately after a fresh `npm run build`, not reproducing on retry; not
+chased further, noted as a known rare residual flake, not a T-32 defect.
+`npm run lint`: exit 0, 0 errors, 12 pre-existing warnings unrelated to
+this task's files.
+
+All 11 acceptance tests genuinely pass. HELP_REQUEST below is resolved.
+
+HELP_REQUEST (RESOLVED 2026-09-17, see UPDATE above)
 subtask: add the missing re-export to packages/engine/src/index.ts line 262:
   export { seriesToJson, seriesFromJson, requestToJson, requestFromJson, canonicalRequestHash }
     from './serialise.js';
