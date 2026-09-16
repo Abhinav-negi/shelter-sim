@@ -8,7 +8,7 @@
     "db:migrate": "node --env-file-if-exists=.env prisma/generate-schema.mjs && prisma migrate dev --schema=prisma/schema.generated.prisma",
     "db:migrate:deploy": "node prisma/generate-schema.mjs postgresql && prisma migrate deploy --schema=prisma/schema.generated.prisma",
     "db:reset": "node --env-file-if-exists=.env prisma/generate-schema.mjs && prisma migrate reset --force --schema=prisma/schema.generated.prisma",
-    "db:seed": "echo 'T-30: seed script not implemented yet'"
+    "db:seed": "node --env-file-if-exists=.env prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3"
