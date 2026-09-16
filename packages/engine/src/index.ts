@@ -171,6 +171,30 @@ export function simulate(req: SimulationRequest): SimulationResult {
   const heatFlows = assembleHeatFlows(records, dt);
   const kpis = computeKpis(req, records, dt);
 
+  /*
+   * T-61: `computeKpis` (post/kpis.ts, off-limits to this task) locates 06:00
+   * by an index that is only ever within DAY ONE of the reported period, which
+   * is exactly right for the long-standing "one design day, repeated" contract
+   * (a weather series of one day or less -- see `integrate()`'s identical
+   * `multiDay` test) and wrong for a GENUINE multi-day run of differing
+   * weather, which must report the final day's value (CONTRACTS.md 7.7) plus
+   * one entry per day. Only recomputed when that genuine-multi-day condition
+   * holds, so every pre-existing (single-design-day) request, including
+   * `shelterA_stone400`'s own `simulationDays: 2`, is untouched.
+   */
+  const availableSeconds = req.weather.T_amb.length * req.weather.stepSeconds;
+  if (availableSeconds > 86400 && req.options.simulationDays > 1) {
+    const stepsPerDay = Math.round(86400 / dt);
+    const numDays = Math.max(1, Math.round(records.length / stepsPerDay));
+    const idx0600Local = Math.round((((6 - req.weather.startHour + 24) % 24) * 3600) / dt) % stepsPerDay;
+    const tempAt0600PerDay = Array.from(
+      { length: numDays },
+      (_, d) => records[Math.min(d * stepsPerDay + idx0600Local, records.length - 1)]!.T[AIR_NODE]!,
+    );
+    kpis.tempAt0600PerDay = tempAt0600PerDay;
+    kpis.tempAt0600 = tempAt0600PerDay[tempAt0600PerDay.length - 1] as SimulationResult['kpis']['tempAt0600'];
+  }
+
   const allWarnings = [...warnings];
   if (balance.residual >= 1e-3) {
     allWarnings.push(
