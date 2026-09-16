@@ -562,9 +562,9 @@ Type/design notes for a zero-context successor:
 
 ---
 
-### [ ] T-27 — Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer
+### [~] T-27 — Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer
 
-**Area:** C — Data (≈ W-28) · **Status:** NOT STARTED · **Est:** 10 h
+**Area:** C — Data (≈ W-28) · **Status:** CLAIMED by orchestrator-session at 2026-09-16T05:58:58Z · **Est:** 10 h
 **Depends on:** T-25, T-26 · **Conflicts with:** T-25 (schema is theirs, payloads are yours)
 
 **Why this exists.** **Bundle first, fetch second.** A live API call on the demo path is a coin flip
