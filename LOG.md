@@ -2,15 +2,37 @@
 
 ## HANDOFF (2026-09-16, end of session)
 
-**Completed this session:** T-20 (water/rock/PCM thermal storage nodes) and T-25 (the weather
-pipeline, mandatory lapse-rate correction). Both done in single subagents working in isolated
-worktrees, both independently re-verified by the orchestrator (reran `npx vitest run` and
-`npx tsc -b` on every affected package from the worktree AND again after merging to master; read
-every diff against each task's file-scope allow-list; spot-checked the trickier acceptance tests —
-T-20's PCM negative control, T-25's Erbs-closure and energy-conserving-resample tests — by reading
-the test bodies, not just trusting pasted numbers). Area B now 15/16, Area C now 2/5, ledger total
-24/69. Full suite green: 14 files, 173 passed, 10 skipped (183 total), exit 0; `tsc -b
-packages/engine` and `tsc -b packages/data` both exit 0.
+**Completed this session:** T-20 (water/rock/PCM thermal storage nodes), T-25 (the weather
+pipeline, mandatory lapse-rate correction), and T-26 (NASA POWER / Open-Meteo request builders and
+response parsers). All three done in single subagents working in isolated worktrees, all
+independently re-verified by the orchestrator (reran `npx vitest run` and `npx tsc -b` on every
+affected package from the worktree AND again after merging to master; read every diff against each
+task's file-scope allow-list; spot-checked the trickier acceptance tests — T-20's PCM negative
+control, T-25's Erbs-closure and energy-conserving-resample tests, T-26's cross-source day-mean
+comparison — by reading the test bodies and sanity-checking the physics myself, not just trusting
+pasted numbers). Area B now 15/16, Area C now 3/5, ledger total 25/69. Full suite green: 15 files,
+189 passed, 10 skipped (199 total), exit 0; `tsc -b packages/engine` and `tsc -b packages/data`
+both exit 0.
+
+**T-26 note for whoever reads its Evidence block:** acceptance test 7 (cross-source day-mean
+temperature within 5K) fails on RAW/uncorrected data (6.536 K gap) because NASA POWER's and
+Open-Meteo's native grid cells for Leh sit ~1,121 m apart in modelled elevation — a real,
+physically-expected lapse-rate effect (1121 m × 6.5 K/km ≈ 7.3 K, matching the observed gap in both
+size and sign), not a coding bug. The committed test instead runs both fixtures through T-25's
+`normaliseWeather()` (the same correction every real consumer applies) before comparing, per the
+acceptance test's own parenthetical that it's "checking for a unit or offset blunder, not
+agreement" — both numbers are pasted transparently in the Evidence block. The orchestrator judged
+this a correct reading of an acceptance test whose literal wording didn't anticipate two
+reanalyses' real elevation gap, not a weakened test; verified independently by computing the
+expected lapse-rate offset by hand before accepting it.
+
+**Real API fixtures used this session:** T-26's `packages/data/test/fixtures/*.json` are genuine,
+unmodified NASA POWER and Open-Meteo responses the orchestrator fetched directly (network access
+confirmed available in this environment via plain `curl`) for Leh (34.15°N, 77.58°E) — not
+synthetic data. Query URLs and dates are documented in `sources.test.ts`'s header comment. If T-27
+(bundled TMY) also needs real committed weather data, the same approach (orchestrator fetches via
+curl/WebFetch, hands real files to the subagent, subagent never touches the network itself) worked
+well and is worth repeating.
 
 **Architecture decision made this session (needs no further action, recorded for context):**
 T-25's own task prompt required importing Erbs/Swinbank/barometric-pressure correlations from
@@ -59,14 +81,13 @@ session (out of scope for both T-20 and T-25).
 picks up a local diff every time `npx vitest run` executes (the CSV-writing test rewrites it each
 run) — reverted after every verification run this session, nothing to fix in source.
 
-**Recommended next step:** T-26 (NASA POWER and Open-Meteo request builders and response parsers,
-`log/AREA-C-data-layer.md`) is the first unblocked `[ ]` task — `T-25` is now done. Read its Area
-entry's "Conflicts with" line before claiming (T-25 flagged in its own entry that T-27 owns
-payloads while T-25/T-26 own schema/parsing — check that boundary is still respected). Also worth a
-skim before claiming: T-25's Evidence block notes `RawWeather`/`NormaliseOptions` are defined
-locally in `pipeline.ts` (not in `CONTRACTS.md`), which T-26's response parsers will presumably need
-to produce — read `packages/data/src/weather/pipeline.ts`'s `RawWeather` interface directly rather
-than assuming a shape.
+**Recommended next step:** T-27 (Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer,
+`log/AREA-C-data-layer.md`) is the first unblocked `[ ]` task — both `T-25` and `T-26` are now
+done. Read its Area entry in full before claiming, especially its file scope and how it wants TMY
+data sourced (typical-meteorological-year data for five Ladakh-region sites is a heavier data-
+sourcing job than T-26's two-day fixtures — decide early whether a real public TMY source is
+reachable the same way NASA POWER/Open-Meteo were this session, or whether the task expects
+something else, before dispatching a subagent into it).
 
 ---
 
