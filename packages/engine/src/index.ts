@@ -259,4 +259,10 @@ export { infiltration, effectiveAirCapacitance } from './loads/infiltration.js';
 export { GAIN_WATTS } from './loads/internal.js';
 export { soilTemperature } from './loads/ground.js';
 export { iam, effectiveWindowU } from './loads/windows.js';
-export { seriesToJson, seriesFromJson } from './serialise.js';
+export {
+  seriesToJson,
+  seriesFromJson,
+  requestToJson,
+  requestFromJson,
+  canonicalRequestHash,
+} from './serialise.js';
