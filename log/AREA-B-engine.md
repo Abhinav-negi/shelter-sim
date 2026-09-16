@@ -358,6 +358,35 @@ PARTIAL, not complete.
 ```
 **Completed by:** pre-existing, verified by ledger author  **Date:** 2026-09-14
 
+**Addendum (2026-09-16, T-28 session — does not change the record above, this is a NEW finding
+against already-`[x]` work):** T-28 (Area C, presets) found and reported a real, reproducible bug
+in `solar/transposition.ts`'s HDKR branch — out of T-28's own file scope to fix, reported upward
+per global rule 16, not yet fixed. **`Rb = sun.cosZenith > 1e-6 ? cosTheta / sun.cosZenith : 0`**
+(line ~71) has a lower floor (returns 0 below `1e-6`) but **no upper clamp**. Verified independently
+by the orchestrator: at Leh (34.15°N, 77.58°E), 1 Jan, hour 7.5 (a real moment just after sunrise),
+`sunPosition(...).cosZenith = 0.001400` exactly, while `cosTheta` for a south-facing tilted surface
+at that same moment is much larger — `Rb` reaches several hundred, and
+`diffuse = DHI * (Ai*Rb + ...)` spikes to an unphysical multi-kW/m² value, which diverges the solver
+(`EngineError('SOLVER_DIVERGED')`). Reproduced on 5 structurally unrelated envelopes (T-28's own
+five Ladakh presets) using `DEFAULT_SIM_OPTIONS`'s own default `skyModel: 'hdkr'` — **this is the
+engine's default configuration**, not an obscure option. T-28 worked around it by hardcoding
+`skyModel: 'isotropic'` for all its presets rather than touching `packages/engine` (correctly out of
+its scope), documented inline in `packages/data/src/presets.ts`. **Needs a real fix** — likely
+clamping `Rb` to a physically sensible bound, or gating the anisotropic HDKR term below some minimum
+solar altitude — verified against the existing hard-gate analytical tests (T-12) before shipping.
+Not yet assigned to a task; whoever picks up Area B next should either open a new task for this or
+fold it into a natural nearby one. Until fixed, any future preset/scenario/sweep near sunrise/sunset
+at Ladakh's latitude that uses the default `'hdkr'` sky model is at risk of the same divergence.
+
+**Second addendum, smaller, same session:** T-28 also found `CONTRACTS.md` §7.5's `Surface.area`
+documentation ("NET, not gross... a validator must not subtract them again") disagrees with the
+actual shipped code — `solve/assemble.ts` computes `opaqueArea = s.area - windowArea` (a GROSS
+convention), and every existing fixture across the whole ledger (including T-27's own `tmy.test.ts`)
+builds `Surface.area` as gross and relies on that subtraction working. T-28 followed the working
+code (gross), which the orchestrator agrees is the right call — this reads as `CONTRACTS.md`'s
+wording being stale/wrong, not the code. A documentation-only fix to §7.5 is worth a follow-up
+whenever someone next touches `CONTRACTS.md`.
+
 ---
 
 ### [x] T-15 — Surface boundary conditions, altitude-corrected in both directions
