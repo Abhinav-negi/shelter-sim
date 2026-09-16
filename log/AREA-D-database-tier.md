@@ -239,7 +239,7 @@ GOTCHAS FOR THE NEXT AGENT
 
 ---
 
-### [ ] T-30 — The database client wrapper, and the DB-off mode that must always work
+### [x] T-30 — The database client wrapper, and the DB-off mode that must always work
 
 **Area:** D — Database · **Status:** NOT STARTED · **Est:** 5 h
 **Depends on:** T-29 · **Conflicts with:** T-31…T-35 (they all import this)
@@ -304,9 +304,132 @@ right.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Measured this session, worktree wt-T-30, `node -v` = whatever this box has Node >=20,
+Prisma 6.19.3, local SQLite (DATABASE_PROVIDER=sqlite), apps/web/prisma/dev.db created via
+`npm run db:migrate` (applied the existing 20260916110054_init migration to a fresh file --
+NOT db:reset, no CLAUDECODE consent variable touched or needed).
+
+Test 1 -- getDb() with DATABASE_URL unset: returns null, does not throw. PASS.
+  (apps/web/test/db.test.ts, "1. getDb() returns null and does not throw...")
+
+Test 2 -- withDb(async db => db.material.count()) with DATABASE_URL unset:
+  resolved value = null. PASS.
+
+Test 3 -- withDb(...) with DATABASE_URL set to a bogus target:
+  resolved value = null, elapsed = 79ms (also observed 35-82ms across repeat runs).
+  Note on the bogus value used: a postgresql:// bogus-host URL was tried first, but the
+  Prisma client generated locally is built for the SQLite provider (see
+  apps/web/prisma/README.md's provider-switching workaround), so a postgresql:// URL only
+  ever trips an instant provider-mismatch validation error rather than exercising a real
+  "can't reach the database" path. Switched to a provider-consistent bogus SQLite URL
+  instead -- `file:/nonexistent-t30-test-dir-dbd41f/dev.db`, a directory that cannot exist
+  -- which fails via a genuine SQLite "unable to open database file" I/O error (no
+  network/DNS involved, so it is deterministic even in a network-isolated sandbox). Both
+  variants prove the same contract (withDb never throws, always resolves null on failure,
+  well inside the 5s budget); the file: variant is the more honest "bogus host" analog
+  for the client this repo actually tests against locally. Elapsed well under 5000ms.
+
+Test 4 -- withDb(async db => db.material.count()) with DATABASE_URL set correctly
+  (file:./dev.db, sqlite, freshly migrated, unseeded): resolved value = 0 (a number;
+  Material table is empty because no seed script exists yet -- T-34's job). PASS.
+
+Test 5 -- dbHealthy():
+  - DATABASE_URL unset:  false.
+  - DATABASE_URL bogus (same file: bogus target as test 3): false, elapsed = 4ms
+    (also observed 3-4ms across repeat runs) -- well under the 2000ms internal
+    HEALTH_CHECK_TIMEOUT_MS race, well under the 3s budget.
+  - DATABASE_URL live (file:./dev.db): true.
+  PASS.
+
+Test 6 -- getDb() called 100 times with a live DATABASE_URL: every call returned the
+  identical object (=== the first call's return value). PASS.
+
+Test 7 -- fn thrown inside withDb(): result resolved to null (not re-thrown), and the
+  mocked logError was called exactly 1 time (vi.fn() call count assertion). PASS.
+
+Test 8 -- log.ts with NODE_ENV='production': logError() and logInfo() both call
+  console.error/console.info internally, but with NODE_ENV=production neither console
+  spy was invoked (0 calls each). PASS.
+
+Test 9 -- grep -c "if (!db) throw\|if (db === null) throw" apps/web/lib apps/web/app -r:
+  apps/web/lib/log.ts:0, apps/web/lib/db.ts:0 -- total 0. (apps/web/app does not exist yet;
+  no app routes have been built by any task so far, so there is nothing to grep there --
+  expected at this point in the build, not a gap in this task.)
+  GOTCHA FOR SUCCESSORS: the PROMPT text above asks for the DB-off contract comment to be
+  written "in these words or better" including the literal sentence containing
+  `if (!db) throw`. Writing that literal substring as sample code inside the comment
+  self-triggers this exact grep and returns 1, failing test 9 against your own file. This
+  is a real conflict between the PROMPT's suggested wording and test 9's literal-substring
+  grep, not a hypothetical one -- it was hit and measured in this session. Resolved using
+  the PROMPT's own "or better" escape hatch: db.ts's contract comment states the same rule
+  (a null check that escalates into a thrown error is always a bug) without spelling out
+  the literal `if (!db) throw` code fragment. If you add more DB-off contract comments
+  elsewhere, avoid literally typing that fragment (or `if (db === null) throw`) even as
+  illustrative sample code.
+
+Test 10 -- `npx vitest run` from the worktree root:
+  Test Files  21 passed (21)
+       Tests  256 passed | 10 skipped (266)
+    Duration  16.89s (this run) -- run-to-run wall time varies, pass/fail counts did not.
+  Includes apps/web/test/db.test.ts (8 tests, all passing) plus every packages/engine test
+  file. The specific 5 hard-gate files/65 tests named in CONTRACTS.md §10 (mesh.test.ts 12,
+  solar.test.ts 16, gate.test.ts 8, integrator.test.ts 27, perf.test.ts 2 = 65) are all
+  still green individually inside this same run.
+  `npm run lint` (eslint .): exit 0. 12 pre-existing warnings in packages/engine/test and
+  packages/data/test (unused eslint-disable directives), none in apps/web -- pre-existing,
+  not introduced by this task, not touched by this task.
+  `npx tsc -b apps/web`: "TypeScript: No errors found", exit 0 (also independently
+  re-verified via `rtk proxy npx tsc -b apps/web` per the rtk-hook gotcha noted in this
+  task's brief -- both agree).
+
+GOTCHA FOR SUCCESSORS -- environment setup this session had to do first, not part of the
+db.ts deliverable itself but needed to make the acceptance tests runnable:
+  - apps/web/prisma/dev.db did not exist in this fresh worktree. Created it via
+    `DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate` from
+    apps/web -- applies the already-committed 20260916110054_init migration to a fresh
+    SQLite file. This is NOT db:reset and did not touch the
+    PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION variable; it ran cleanly with no consent
+    prompt.
+  - Prisma client was generated for SQLite via `npm run db:generate` (safe, non-destructive,
+    always allowed). Whoever next needs a client generated against Postgres for
+    integration testing will need to regenerate with DATABASE_PROVIDER=postgresql, per
+    apps/web/prisma/README.md.
+  - `packages/engine/dist/` did not exist in this fresh worktree either (only
+    `npm install` had been run, not `npm run build`), which made `packages/data/**` and
+    `packages/optimise/**` tests fail at collection time with "Failed to resolve entry for
+    package @shelter/engine" -- unrelated to db.ts, but it meant the FULL `npx vitest run`
+    (acceptance test 10, and the project rule that the whole suite must be green, not just
+    the new file) could not pass without it. Fixed by running `npm run build` from the
+    worktree root (a workspace build step, not an edit to any packages/** source file --
+    nothing inside packages/** was modified). Ran once at the top level (data built before
+    engine finished in npm's alphabetical workspace order and failed once), then rebuilt
+    `@shelter/data` alone once engine's dist existed; all three packages build clean now.
+    A stray tracked file, packages/engine/test/output/validation-numbers.csv, gets rewritten
+    as a side effect of running the engine's test suite (pre-existing behavior, not
+    something this task touches or commits).
+
+What's finished: apps/web/lib/db.ts, apps/web/lib/log.ts, apps/web/test/db.test.ts --
+all 10 acceptance tests pass, full suite green, lint clean, typecheck clean. Nothing
+half-finished. No repository (T-31+) code was written or touched.
+
+Decisions:
+  - getDb() checks `process.env.DATABASE_URL` fresh on every call rather than caching that
+    boolean, so if DATABASE_URL is ever unset mid-process it still reports null (matches the
+    PROMPT text literally: "getDb() returns null when process.env.DATABASE_URL is unset").
+  - Client memoisation: production uses a plain module-scope singleton; non-production
+    (matches Next.js dev too) stashes on `globalThis.__sheltersimDb`, the standard
+    Next.js + Prisma hot-reload pattern named in the PROMPT.
+  - dbHealthy() uses `Promise.race` against a 2000ms `HEALTH_CHECK_TIMEOUT_MS` named
+    constant (LOG.md rule 14) rather than relying on Prisma's own connect_timeout default,
+    so the 2-second budget is guaranteed regardless of provider or connection-string
+    settings.
+  - withDb() and dbHealthy() both funnel every caught error through
+    `logError()` in lib/log.ts exactly once per failure -- no double-logging path exists
+    (getDb()'s own try/catch around client construction is a separate, non-overlapping
+    failure mode from withDb()'s try/catch around the caller's fn).
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** T-30 subagent (anurawat1014@gmail.com)  **Date:** 2026-09-16
 
 ---
 
