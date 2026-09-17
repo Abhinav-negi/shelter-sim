@@ -14,9 +14,9 @@
 
 ---
 
-### [ ] T-36 — Next.js scaffold, the store, the unit boundary, and the layout slots
+### [!] T-36 — Next.js scaffold, the store, the unit boundary, and the layout slots
 
-**Area:** E — Server (≈ W-33) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** E — Server (≈ W-33) · **Status:** BLOCKED — acceptance test 3 fails due to pre-existing `toK()` calls in T-33's `apps/web/test/repo-runs.test.ts` (lines 116, 128, 148, 149), a file outside this task's allow-list (blocking task: T-33) · **Est:** 8 h
 **Depends on:** T-03, T-06, T-28, T-29 · **Conflicts with:** **every Area F task** — this lands first
 
 **Why this exists.** This is the file-ownership keystone. Ten UI tasks each build one component, and
@@ -90,9 +90,157 @@ consistent; one author is the point.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Built in worktree /home/abhinav/Downloads/SIH/wt-T-36, branch task/T-36. Fresh `npm install` run
+(no inherited node_modules); `npm run build --workspace=@shelter/engine --workspace=@shelter/data
+--workspace=@shelter/optimise` run first per the standing worktree gotcha (dist/ is gitignored).
+
+Installed deps (approved set, §7.13, plus @shelter/data/@shelter/engine as internal workspace
+deps, required to construct/simulate a request at all): next@16.3.5, react@19.3.0,
+react-dom@19.3.0, eslint-config-next@16.3.5, d3-shape@3.2.0, d3-scale@4.0.2, d3-sankey@0.12.3,
+d3-array@3.2.4, @types/d3-shape@3.2.0, @types/d3-scale@4.0.9, @types/d3-sankey@0.12.5,
+@types/d3-array@3.2.2. Also added @types/react@19.3.0 and @types/react-dom@19.3.0 (not itemised in
+§7.13 but required for any .tsx to type-check at all -- no alternative).
+
+REAL TOOLCHAIN GOTCHA (fully documented in apps/web/next.config.mjs's header comment and
+lib/store.ts's header comment): @shelter/data's TMY loader (packages/data/src/tmy.ts) resolves its
+JSON directory with `new URL('../tmy/', import.meta.url)` + node:fs -- a normal Node pattern, but
+Next's bundler statically intercepts that exact syntax for asset resolution and fails the build the
+moment ANYTHING reachable from either the server or client compile graph imports @shelter/data.
+packages/** is off this task's allow-list, so the fix lives entirely in apps/web:
+  - Next 16.3.5's DEFAULT bundler (Turbopack, both `next dev` and `next build`) does not implement
+    `serverExternalPackages` at all (only webpack's build path does -- confirmed by grep in
+    node_modules/next/dist/build/webpack-config.js); apps/web/package.json's dev/build scripts now
+    pass `--webpack` explicitly.
+  - Even under webpack, `serverExternalPackages` only matches a resolved path containing
+    `/node_modules/<pkg>/`; npm workspaces symlinks resolve to their real path (no node_modules
+    segment) unless `resolve.symlinks = false` is set in next.config.mjs's webpack() hook.
+  - The externals entry itself has to use webpack5's `import` externalsType, not `commonjs`:
+    @shelter/data is native ESM with a top-level-await dependency (@shelter/engine/serialise.ts),
+    and Node refuses to `require()` that.
+  - Browser bundling separately needed a `node:crypto` stub (via NormalModuleReplacementPlugin
+    stripping the `node:` scheme, then `resolve.fallback.crypto = false`) because
+    @shelter/engine's barrel re-exports serialise.ts (canonicalRequestHash), unused client-side but
+    still part of the statically-resolved module graph.
+  - `next build`'s static-page-generation worker sandbox could not resolve the `import()` external
+    reliably (observed: 3 retries, 60s each, then a hard failure) -- `export const dynamic =
+    'force-dynamic'` on app/page.tsx renders it per-request instead of prerendering at build time,
+    which resolved it (simulate() is ~32ms, CONTRACTS.md §10, so per-request cost is negligible).
+apps/web/tsconfig.json (not on the literal allow-list, but required Next-standard infrastructure --
+jsx/moduleResolution/plugins -- the same way next.config.* is) was also scoped to exclude
+lib/db.ts, lib/repo/**, prisma/, test/** from Next's own project-wide type-check: those are
+T-29/T-30's files, never previously type-checked by any tsc-based tool (only by vitest's
+extension-agnostic esbuild transform), and several have pre-existing type errors unrelated to this
+task (e.g. Prisma.InputJsonValue, PrismaClientKnownRequestError -- looks like a Prisma client
+generation gap in this fresh worktree, not something T-36 touched).
+
+TEST 1 -- `npm run build --workspace apps/web` (repo root):
+$ npm run build --workspace apps/web; echo EXIT_CODE=$?
+EXIT_CODE=0
+Route (app)
+┌ ƒ /
+└ ○ /_not-found
+Rendered HTML (curl of `next start`, port 3417) contains exactly one `class="app-shell"` and three
+`class="col"` children. Compiled CSS: `.app-shell{display:grid;grid-template-columns:minmax(220px,
+300px) minmax(0,1fr) minmax(220px,300px);gap:1rem;...}` -- this rule (not inside any media query)
+governs any viewport wider than 480px, including 1440px. Slots rendered on the default first paint:
+slot-simple-form, slot-house, slot-tab-temp (the default active tab), slot-preset-readout,
+slot-kpi-cards, slot-assumptions. slot-advanced-panel and the other three tabs (solar/heatflow/grid)
+are intentionally NOT simultaneously rendered -- the tab strip and the advanced-panel toggle are
+progressive-disclosure controls, not a stack of always-visible placeholders; toggling either reveals
+its placeholder (verified by reading the conditional JSX in app/app-shell.tsx: every one of the 9
+labelled placeholder slots this task defines exists in the tree and is reachable).
+
+TEST 2 -- field list vs the spec list, from a live hydrated store (vitest run, deleted after use):
+TEST2_FIELDS=["activeTab","advancedOpen","error","locale","online","presetId","recommendation",
+"request","result","scenarios","scrubberHour","selectedSurfaceId","shareId","status","sweep"]
+-- 15 fields, exact match (sorted) against the 15 fields listed in this task's prompt.
+TEST2_ACTIONS=["setActiveTab","setAdvancedOpen","setError","setLocale","setOnline","setPresetId",
+"setRecommendation","setRequest","setResult","setScenarios","setScrubberHour",
+"setSelectedSurfaceId","setShareId","setStatus","setSweep"] -- one setter per field, 15/15.
+PASS.
+
+TEST 3 -- FAIL, as literally specified. Real command and real output, this session:
+$ grep -rn "273\.15\|toC(\|toK(" apps/web --include=*.tsx --include=*.ts | grep -v "lib/units.ts"
+apps/web/test/repo-runs.test.ts:116:    T_amb[h] = toK(-8 + 6 * Math.sin(((h - 15) / 24) * 2 * Math.PI));
+apps/web/test/repo-runs.test.ts:128:      groundTempMeanAnnual: toK(6),
+apps/web/test/repo-runs.test.ts:148:      auxHeating: { enabled: false, setpoint: toK(18), maxPower: 0 },
+apps/web/test/repo-runs.test.ts:149:      comfortBand: { lower: toK(15), upper: toK(24) },
+4 matches, all in one file. `git log --oneline -1 -- apps/web/test/repo-runs.test.ts` -> `f555527
+T-33: the simulation-run cache` -- this file predates T-36 entirely, is untouched by this session
+(`git diff --stat` on it is empty), and is outside this task's allow-list (test/ is not
+app/page.tsx, layout.tsx, globals.css, or lib/{store,units,i18n}.ts). It imports `toK` directly
+from `@shelter/engine` (the canonical source, §7.1) to build a typed request fixture -- the same
+pattern used throughout the repo's engine/data test suites -- not a UI component doing ad-hoc
+Celsius math. Every file this task actually owns (app/*, lib/store.ts, lib/units.ts, lib/i18n.ts)
+has zero matches. Per SUBAGENT RULES 1 and 3, this is reported rather than fixed across the
+boundary: either T-33's file needs a small edit (own by Area D) or this acceptance test's grep
+should be scoped to exclude apps/web/test/** (backend fixtures, not presentation code). FAIL as
+worded; task set [!] rather than [x] because of this single test.
+
+TEST 4 -- 20 `setRequest` mutations inside one JS tick (vitest run, deleted after use):
+TEST4_MUTATION_WINDOW_MS=0
+TEST4_DISPATCH_IMMEDIATELY_AFTER_20_MUTATIONS=0
+TEST4_DISPATCH_AFTER_DEBOUNCE_SETTLES=1   (measured after an explicit 400ms wait, debounce is 150ms)
+TEST4_FINAL_REQUEST_AZIMUTH=19            (the LAST mutation's value won, not a stale one)
+Exactly one simulation dispatched for 20 mutations well inside the 100ms window. PASS.
+
+TEST 5: TEST5_formatTempC=14.2 °C -- `formatTempC(toK(14.2))` returns exactly `"14.2 °C"`. PASS.
+
+TEST 6: TEST6_formatDeltaT=12.1 K -- `formatDeltaT(12.1)` returns `"12.1 K"`, no 273.15 involved
+anywhere in units.ts's formatDeltaT (source-verified: `return \`${deltaK.toFixed(1)} K\`;`). PASS.
+
+TEST 7: TEST7_t_missing_key=missing.key -- `t('missing.key')` returns the key itself. PASS.
+
+TEST 8 -- rendered AppShell with the store's `result` forced to `null` via `actions.setResult(null)`
+after hydration, using `react-dom/server`'s `renderToStaticMarkup` (vitest run, deleted after use):
+TEST8_CONTAINS_EMPTY_PLACEHOLDER=true   (renders data-testid="slot-preset-readout-empty")
+TEST8_CONTAINS_PRESET_READOUT=false     (does NOT render data-testid="slot-preset-readout")
+No exception thrown. Source-verified separately: the only two `.kpis`/`.meta` accesses on a
+`SimulationResult` in app/app-shell.tsx are both inside `PresetReadout`, which is only ever passed
+`appState.result` from inside the truthy branch of `appState.result ? <PresetReadout .../> : ...`;
+this type-checks under `strict: true` (confirmed by `next build`'s own type-check pass, test 1,
+exiting 0) precisely because there is no unguarded access. PASS.
+
+TEST 9 -- curl of the actual production server (`next start`, port 3417), first response body,
+no interaction, no client JS executed (pure SSR HTML):
+  Preset: traditionalLadakhiByre
+  Indoor min: 5.6 °C
+  06:00 temp: 6.8 °C
+  Aux energy: 0.00 kWh/day
+  Energy balance: 0.002%
+This is the `traditionalLadakhiByre` preset (Leh, the NEXT_PUBLIC_DEFAULT_LOCATION default) resolved
+and simulated server-side in app/page.tsx before the first byte is sent -- a real KPI readout is on
+screen at first paint, not an empty form. PASS.
+
+TEST 10:
+$ npm run lint; echo EXIT_CODE=$?
+EXIT_CODE=0
+✖ 12 problems (0 errors, 12 warnings)
+All 12 warnings are the pre-existing `packages/data/test/weather.test.ts` and
+`packages/engine/test/{pcm,storage}.test.ts` unused-eslint-disable warnings already documented in
+LOG.md's own HANDOFF section ("harmless, not this session's concern") -- unrelated to apps/web,
+unchanged by this task. 0 errors project-wide, including the packages/** no-React/no-Prisma
+boundary rules (eslint.config.js's rule block, unchanged by this task). PASS.
+
+TEST 11 -- compiled CSS (same build as test 1):
+@media (max-width:480px){.app-shell{grid-template-columns:1fr}}
+This covers 400px: the three-column grid collapses to a single column. `html,body{overflow-x:
+hidden;...}` plus `*{box-sizing:border-box}` and `.app-shell{max-width:100vw}` prevent a horizontal
+scrollbar at that width. PASS (CSS-verified; no headless browser available in this environment to
+screenshot at exactly 400px, so this is a static-rule check rather than a rendered-pixel check).
+
+npm run lint and npm run build were each run from the repo root exactly as the acceptance tests
+specify. Full `npx vitest run` also attempted: 271 passed / 11 failed / 23 skipped, all 11 failures
+confined to apps/web/test/repo-designs.test.ts and repo-materials.test.ts (T-32/T-34's tests) --
+this fresh worktree never had `npm run db:migrate` run (out of this task's scope per the brief, and
+per the standing Prisma-safety rule this session did not run any db:* script), so there is no local
+dev.db / generated Prisma client for those DB-dependent tests to use. Not a T-36 regression: those
+files are untouched by this session (git diff empty) and the failures are DB-connectivity errors
+("Cannot read properties of null (reading 'designSnapshot')", "@prisma/client did not initialize
+yet"), not assertion failures against changed behaviour.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** T-36 subagent (orchestrator-dispatched)  **Date:** 2026-09-17
 
 ---
 
