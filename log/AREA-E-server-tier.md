@@ -335,9 +335,9 @@ a flag, off by default, and invisible in the UI when off.
 
 ---
 
-### [ ] T-38 — `/api/simulate` — one run, cached
+### [x] T-38 — `/api/simulate` — one run, cached
 
-**Area:** E — Server (≈ W-35) · **Status:** NOT STARTED · **Est:** 4 h
+**Area:** E — Server (≈ W-35) · **Status:** DONE · **Est:** 4 h
 **Depends on:** T-33, T-36 · **Conflicts with:** none
 
 **Why this exists.** A thin JSON wrapper over `simulate()`, so a heavy run or a shared link can be
@@ -399,9 +399,85 @@ both sides, or the offline fallback silently becomes a different product.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Worktree: /home/abhinav/Downloads/SIH/wt-T-38, branch task/T-38.
+Setup: npm install (fresh); npm run build --workspace=@shelter/engine --workspace=@shelter/data
+--workspace=@shelter/optimise (all tsc -b, exit 0); cd apps/web && DATABASE_PROVIDER=sqlite
+DATABASE_URL="file:./dev.db" npm run db:migrate (fresh dev.db, migration 20260916110054_init applied)
+then npm run db:seed (27 materials, needed by unrelated T-34/T-35 tests sharing this worktree's db --
+without it those two files show pre-existing failures unrelated to this task, see GOTCHAS below).
+
+DESIGN DECISION -- cache-hit response shape: the brief names readRun/writeRun (T-33's lightweight
+KPI+meta cache functions), not readFullRun/storeFull:true. Implemented literally: a cache MISS
+responds with the full SimulationResult (via resultToJson); a cache HIT responds with readRun's own
+{kpis, meta} shape only (no time-series). This is faster (skips simulate() and the full-result JSON
+walk entirely on a hit) and matches T-33's own measured full-vs-KPI size ratio (~494x, its test 13).
+Documented as a `ponytail:` comment in route.ts naming the upgrade path (switch to
+readFullRun/writeRun(..., storeFull: true) if a future task needs full charts to survive a hit).
+
+DESIGN DECISION -- reconciling the error taxonomy with acceptance test 3: requestFromJson (T-06)
+always throws DATA_SCHEMA_MISMATCH for a malformed/incomplete wire body (e.g. `{}`), as a single
+`{path}` object, not an array -- by itself this would produce 422 with a non-array detail, which
+satisfies neither test 3's "400 INVALID_INPUT" nor its "detail array" requirement. Resolved entirely
+inside route.ts (no packages/** edit): errors thrown specifically while parsing the incoming body
+via requestFromJson are re-coded to INVALID_INPUT with a one-entry detail array before the generic
+STATUS_BY_CODE table is consulted -- a malformed request from this route's own caller is a client
+input problem (400), not a data-integrity issue with someone else's data. DATA_SCHEMA_MISMATCH's
+422 mapping is kept in the table for completeness/future callers (e.g. a corrupted cache row) but is
+not reachable from this parsing step. See route.ts's own comment above parseRequestBody().
+
+ACCEPTANCE TESTS -- MEASURED (npx vitest run apps/web/test/api-simulate.test.ts, this worktree,
+reran fresh 2026-09-18 after a session interruption, to confirm every number below with real
+evidence from this session rather than trusting the earlier pasted run):
+1. PASS. status=200, response deep-equal to in-process simulate() result excluding meta.wallClockMs
+   (Float64Array fields included, via resultFromJson round-trip). No differing field.
+2. PASS. meta.energyBalanceResidual=6.682913448678613e-8, well under 1e-3.
+3. PASS. status=400, code=INVALID_INPUT, detail=[{"path":"site","message":"missing required field
+   \"site\""}]. SimulationRun row count unchanged (before=2, after=2 -- rows from earlier tests in
+   the same suite run, none added by this request).
+4. PASS. status=400, code=INVALID_INPUT, detail count=3, paths=site.latitude, building.volume,
+   operation.achSchedule (three independently invalid fields: latitude=999, volume=-5,
+   achSchedule.length=23).
+5. PASS. status=400, code=GEOMETRY_INCONSISTENT (window area 20 m^2 on a 16 m^2 host surface).
+6. PASS. status=422, code=UNKNOWN_MATERIAL (materialId="doesNotExist").
+7. PASS. status=500, code=SOLVER_DIVERGED (internalGainsSchedule=1e15 W forces the air node past
+   T_MAX_PLAUSIBLE=373K on step 1 of spin-up).
+8. PASS. bodyBytes=6291470 (6 MB), status=413, code=PAYLOAD_TOO_LARGE.
+9. PASS. first request (miss) 39.92ms, second identical request (hit) 2.07ms -- hit is ~19x faster.
+   json1.meta.warnings did not contain 'served from cache'; json2.meta.warnings did. json2.kpis
+   deep-equal json1.kpis.
+10. PASS. DATABASE_URL pointing at a nonexistent path (same bogus-file technique as T-30/T-31/
+    T-32/T-33/T-35): status=200, elapsed=170.4ms, kpis present. withDb() logged and swallowed the
+    Prisma connection error internally (visible in stderr, not in the response) -- no caching, but a
+    correct result, well under the 5s budget.
+11. PASS. content-type="application/json; charset=utf-8" on an error response; body contains no
+    "<html" and no stack-trace-shaped line.
+12. PASS. 10 concurrent identical POSTs: all 10 returned status 200; exactly 1 SimulationRun row for
+    that request's hash afterward (writeRun's upsert-on-requestHash absorbs the race, per T-33).
+
+Full suite (`npx vitest run` from worktree root): 27 files, 318 passed, 10 skipped (328 total),
+exit 0. Reran across two sessions (2026-09-17 and after the 2026-09-18 interruption), stable every
+time. `npm run lint`: exit 0, 0 errors, 12 pre-existing warnings (unused eslint-disable directives in
+packages/data/test/weather.test.ts and packages/engine/test/{pcm,storage}.test.ts -- unrelated to
+this task, already noted in LOG.md's own HANDOFF). `npx tsc -b packages/engine`: exit 0. Measured
+this session: full simulate() incl. spin-up 24.6 ms/run, 100-variant sweep 2.40 s (both well inside
+budget, per CONTRACTS.md §10 -- unaffected by this task).
+
+GOTCHAS FOR THE NEXT AGENT:
+- A fresh worktree's dev.db has an empty Material table until `npm run db:seed` is run once (from
+  apps/web/, with DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db") -- db:migrate alone is not
+  enough. Without it, apps/web/test/repo-materials.test.ts (T-34) and
+  apps/web/test/db-off.integration.test.ts (T-35) fail on an empty-catalogue state; this is
+  pre-existing infrastructure, not a T-38 defect (T-33's own Evidence block hit and documented the
+  same thing). db:seed is idempotent and safe to rerun.
+- Route handlers in this app run on the default Node.js runtime (not edge) -- lib/repo/runs.ts uses
+  node:fs synchronously to read packages/engine/package.json's version, so an edge runtime directive
+  must never be added to this route.
+- Body-size checking reads the full request body into a string first (`req.text()`), then measures
+  `Buffer.byteLength`, before ever calling JSON.parse -- deliberately simple (no streaming), the
+  route only needs to bound a 5 MB blast radius, not handle multi-gigabyte uploads.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** T-38 subagent  **Date:** 2026-09-17
 
 ---
 
