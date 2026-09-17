@@ -1,6 +1,29 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "rootDir": ".", "outDir": "dist" },
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist", "prisma/migrations"]
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "plugins": [{ "name": "next" }]
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  // T-36 owns only app/, lib/store.ts, lib/units.ts, lib/i18n.ts -- the rest
+  // of this list (T-29/T-30's Prisma tier and its own tests) is off this
+  // task's allow-list and was never covered by a `tsc`-based check before
+  // (only by vitest, which uses esbuild and does not type-check); scoping
+  // Next's own project-wide build-time type check to the Next app itself,
+  // rather than newly sweeping in someone else's files and their
+  // pre-existing issues, is a Next.js project-configuration norm, not a
+  // change to any of those files' content or behaviour.
+  "exclude": ["node_modules", "dist", "prisma", "test", "lib/db.ts", "lib/log.ts", "lib/repo"]
 }

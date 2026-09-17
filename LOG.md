@@ -355,7 +355,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 
 | | ID | Title | Depends on |
 |---|---|---|---|
-| [~] | T-36 | Next.js scaffold, the store, the unit boundary, and the layout slots | T-03, T-06, T-28, T-29 |
+| [!] | T-36 | Next.js scaffold, the store, the unit boundary, and the layout slots | T-03, T-06, T-28, T-29 |
 | [ ] | T-37 | `/api/weather` — the CORS proxy, cached | T-26, T-31, T-36 |
 | [ ] | T-38 | `/api/simulate` — one run, cached | T-33, T-36 |
 | [ ] | T-39 | `/api/optimise` and `/api/scenarios`, with streaming progress | T-40, T-54, T-59 |

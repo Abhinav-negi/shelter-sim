@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
     "db:generate": "node --env-file-if-exists=.env prisma/generate-schema.mjs && prisma generate --schema=prisma/schema.generated.prisma",
     "db:migrate": "node --env-file-if-exists=.env prisma/generate-schema.mjs && prisma migrate dev --schema=prisma/schema.generated.prisma",
     "db:migrate:deploy": "node prisma/generate-schema.mjs postgresql && prisma migrate deploy --schema=prisma/schema.generated.prisma",
@@ -11,9 +14,25 @@
     "db:seed": "node --env-file-if-exists=.env prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.3"
+    "@prisma/client": "^6.19.3",
+    "@shelter/data": "0.1.0",
+    "@shelter/engine": "0.1.0",
+    "d3-array": "^3.2.4",
+    "d3-sankey": "^0.12.3",
+    "d3-scale": "^4.0.2",
+    "d3-shape": "^3.2.0",
+    "next": "^16.3.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@types/d3-array": "^3.2.2",
+    "@types/d3-sankey": "^0.12.5",
+    "@types/d3-scale": "^4.0.9",
+    "@types/d3-shape": "^3.2.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint-config-next": "^16.3.5",
     "prisma": "^6.19.3"
   }
 }
