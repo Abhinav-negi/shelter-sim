@@ -261,9 +261,9 @@ yet"), not assertion failures against changed behaviour.
 
 ---
 
-### [ ] T-37 — `/api/weather` — the CORS proxy, cached
+### [~] T-37 — `/api/weather` — the CORS proxy, cached
 
-**Area:** E — Server (≈ W-35) · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** E — Server (≈ W-35) · **Status:** CLAIMED by orchestrator-session at 2026-09-17T16:35:26Z · **Est:** 6 h
 **Depends on:** T-26, T-31, T-36 · **Conflicts with:** none
 
 **Why this exists.** NASA POWER may require a proxy for browser calls, and it is the citable source
@@ -335,9 +335,9 @@ a flag, off by default, and invisible in the UI when off.
 
 ---
 
-### [ ] T-38 — `/api/simulate` — one run, cached
+### [~] T-38 — `/api/simulate` — one run, cached
 
-**Area:** E — Server (≈ W-35) · **Status:** NOT STARTED · **Est:** 4 h
+**Area:** E — Server (≈ W-35) · **Status:** CLAIMED by orchestrator-session at 2026-09-17T16:35:26Z · **Est:** 4 h
 **Depends on:** T-33, T-36 · **Conflicts with:** none
 
 **Why this exists.** A thin JSON wrapper over `simulate()`, so a heavy run or a shared link can be
@@ -574,9 +574,9 @@ models of the same queue.
 
 ---
 
-### [ ] T-41 — `/api/designs` and `/api/materials`
+### [~] T-41 — `/api/designs` and `/api/materials`
 
-**Area:** E — Server · **Status:** NOT STARTED · **Est:** 4 h
+**Area:** E — Server · **Status:** CLAIMED by orchestrator-session at 2026-09-17T16:35:26Z · **Est:** 4 h
 **Depends on:** T-32, T-34, T-36 · **Conflicts with:** none
 
 **Why this exists.** The share-link half of Deviation D-1, and the served material catalogue with
