@@ -14,9 +14,9 @@
 
 ---
 
-### [ ] T-36 — Next.js scaffold, the store, the unit boundary, and the layout slots
+### [~] T-36 — Next.js scaffold, the store, the unit boundary, and the layout slots
 
-**Area:** E — Server (≈ W-33) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** E — Server (≈ W-33) · **Status:** CLAIMED by orchestrator-session at 2026-09-17T14:52:41Z · **Est:** 8 h
 **Depends on:** T-03, T-06, T-28, T-29 · **Conflicts with:** **every Area F task** — this lands first
 
 **Why this exists.** This is the file-ownership keystone. Ten UI tasks each build one component, and
