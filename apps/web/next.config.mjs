@@ -34,12 +34,28 @@
 //    anyway. Setting `resolve.symlinks = false` makes webpack match on the
 //    symlinked path instead, which is what `serverExternalPackages` expects
 //    in an npm-workspaces monorepo.
+//
+// A THIRD, UNRELATED GOTCHA, found by T-37: `apps/web/lib/db.ts`, `lib/log.ts`
+// and `lib/repo/*.ts` (T-29/T-30/T-31, Area D, already closed tasks) write
+// NodeNext-style relative imports with an explicit `.js` suffix on a `.ts`
+// file (`import { logError } from './log.js'`) -- required by the repo's
+// root `tsconfig.base.json` (`moduleResolution: "NodeNext"`), which those
+// files were written under before T-36 gave `apps/web` its own Next-specific
+// `tsconfig.json` (`moduleResolution: "bundler"`). TypeScript's `bundler`
+// mode tolerates the `.js` specifier pointing at a `.ts` file at type-check
+// time, but webpack's actual module resolution does not, and fails with
+// "Module not found: Can't resolve './log.js'" the moment any route pulls
+// `lib/db.ts`/`lib/repo/*` into the real bundle (T-37 is the first task to
+// do so). Fixing this in Area D's already-closed files is out of scope here;
+// `resolve.extensionAlias` is webpack 5's own documented answer to exactly
+// this NodeNext/bundler mismatch, so the fix lives here instead.
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['@shelter/data'],
   webpack: (config, { isServer, webpack }) => {
     config.resolve.symlinks = false;
+    config.resolve.extensionAlias = { '.js': ['.ts', '.tsx', '.js'] };
     if (isServer) {
       // `serverExternalPackages` alone was not enough to keep this out of
       // the compiled bundle in this Next version (see the header comment) --
