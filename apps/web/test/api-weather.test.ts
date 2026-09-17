@@ -6,18 +6,11 @@
 // test -- it is run manually and pasted into the Evidence block, the same
 // way T-36 verified its own build-shape acceptance tests outside vitest.
 //
-// ============================================================================
-// BLOCKED: this whole file currently cannot run. `../app/api/weather/route.ts`
-// imports `normaliseWeather`/`nasaPowerUrl`/`parseNasaPower`/`openMeteoUrl`/
-// `parseOpenMeteo` from `@shelter/data`, none of which are re-exported from
-// that package's public barrel (`packages/data/src/index.ts`) -- confirmed
-// live: `Object.keys(await import('@shelter/data'))` does not include any of
-// those 5 names. `packages/**` is outside T-37's allow-list, so this cannot
-// be fixed from here. See log/AREA-E-server-tier.md's T-37 Evidence block for
-// the full repro and the one-line fix needed (a barrel re-export in
-// packages/data/src/index.ts). This file is written complete and ready to
-// run the moment that barrel gap is closed.
-// ============================================================================
+// Previously blocked on two cross-cutting defects outside this task's
+// allow-list (packages/data's barrel missing T-25/T-26's exports; apps/web's
+// webpack build not resolving lib/repo/*'s .js-suffixed imports) -- both
+// fixed by the orchestrator (see log/AREA-E-server-tier.md's T-37 Evidence
+// block for the full history) and re-verified green here.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
@@ -26,8 +19,11 @@ import { fileURLToPath } from 'node:url';
 import { PrismaClient } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { seriesFromJson, simulate } from '@shelter/engine';
-import type { SimulationRequest } from '@shelter/engine';
-import { PRESETS, tmyById } from '@shelter/data';
+import type { Glazing, Material, SimulationRequest } from '@shelter/engine';
+import { GLAZING, MATERIALS, PRESETS } from '@shelter/data';
+
+const ALL_MATERIALS: Record<string, Material> = Object.fromEntries(MATERIALS.map((m) => [m.id, m]));
+const ALL_GLAZINGS: Record<string, Glazing> = Object.fromEntries(GLAZING.map((g) => [g.id, g]));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROUTE_FILE = path.join(__dirname, '..', 'app', 'api', 'weather', 'route.ts');
@@ -159,14 +155,17 @@ describe('T-37 /api/weather', () => {
       RH: body.series.RH ? seriesFromJson(body.series.RH) : undefined,
     };
 
+    // Preset.request (CONTRACTS.md §7.11) deliberately omits weather/materials/
+    // glazings -- the caller supplies them. materials/glazings come from the
+    // full code catalogue (every id a preset's building might reference).
     const preset = PRESETS[0]!;
-    const weather = tmyById(preset.locationId) ?? series;
     const request: SimulationRequest = {
       ...preset.request,
       weather: series,
+      materials: ALL_MATERIALS,
+      glazings: ALL_GLAZINGS,
     } as unknown as SimulationRequest;
     expect(() => simulate(request)).not.toThrow();
-    void weather;
 
     expect(body.sourceElevation).toBe(NASA_SOURCE_ELEVATION_M);
     expect(body.siteElevation).toBe(TEST_BODY.siteElevation);

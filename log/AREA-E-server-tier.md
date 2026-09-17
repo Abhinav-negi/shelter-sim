@@ -261,13 +261,9 @@ yet"), not assertion failures against changed behaviour.
 
 ---
 
-### [!] T-37 — `/api/weather` — the CORS proxy, cached
+### [x] T-37 — `/api/weather` — the CORS proxy, cached
 
-**Area:** E — Server (≈ W-35) · **Status:** BLOCKED — two barrel/resolution gaps outside this
-task's allow-list (`packages/data/src/index.ts` missing T-25/T-26 re-exports; `apps/web/lib/repo/*`
-+ `lib/db.ts` + `lib/log.ts`'s `.js`-suffixed relative imports don't resolve under Next's webpack
-build without a `next.config.mjs` change) — see Evidence block. (blocking: a small follow-up task,
-unclaimed) · **Est:** 6 h
+**Area:** E — Server (≈ W-35) · **Status:** DONE · **Est:** 6 h
 **Depends on:** T-26, T-31, T-36 · **Conflicts with:** none
 
 **Why this exists.** NASA POWER may require a proxy for browser calls, and it is the citable source
@@ -333,116 +329,81 @@ a flag, off by default, and invisible in the UI when off.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
-Worktree /home/abhinav/Downloads/SIH/wt-T-37, branch task/T-37. Setup exactly per brief: fresh
-`npm install`, `npm run build --workspace=@shelter/engine --workspace=@shelter/data
---workspace=@shelter/optimise`, then from apps/web:
-`DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate` (applied the already-
-committed migration `20260916110054_init`, no db:reset, no consent env var).
+Worktree /home/abhinav/Downloads/SIH/wt-T-37, branch task/T-37 (commit 2de5608 -- the blocked
+implementation -- then merge 3b79616 from master, which carried the orchestrator's fixes for both
+blockers this task's own HELP_REQUEST named: packages/data/src/index.ts now re-exports
+normaliseWeather/RawWeather/NormaliseOptions and nasaPowerUrl/parseNasaPower/openMeteoUrl/
+parseOpenMeteo/WeatherQuery; apps/web/next.config.mjs's webpack hook now sets
+`resolve.extensionAlias = { '.js': ['.ts', '.tsx', '.js'] }`). After the merge: fresh `npm install`,
+`npm run build --workspace=@shelter/engine --workspace=@shelter/data --workspace=@shelter/optimise`
+(re-verified the barrel actually exports the five names at runtime -- see BLOCKER A note below), and
+the already-migrated apps/web/prisma/dev.db from the earlier session reused as-is (no db:reset).
 
-IMPLEMENTATION: apps/web/app/api/weather/route.ts (new) and apps/web/test/api-weather.test.ts (new)
-are both written COMPLETE, to the full spec -- flag gate, body validation collecting every problem
-at once, readWeatherCache check, T-26 URL builders, 10s AbortController timeout, T-26 parsers, T-25
-normaliseWeather, writeWeatherCache (best-effort), and a response body of
-`{ series, sourceElevation, siteElevation, lapseCorrectionK }`. Neither file currently BUILDS or
-fully RUNS, for two reasons entirely outside this task's allow-list (`lib/repo/*`, `lib/db.ts`,
-`packages/**` are all off-limits per the brief). Per SUBAGENT RULES 1/3 ("if completing the task
-requires editing a forbidden file, STOP and report, don't work around it"), neither was
-worked around. Both are new discoveries, not pre-existing documented issues.
-
-============================================================
-BLOCKER A -- packages/data's public barrel is missing T-25/T-26's exports
-============================================================
-The task prompt explicitly requires importing T-26's `nasaPowerUrl`/`parseNasaPower`/
-`openMeteoUrl`/`parseOpenMeteo` and T-25's `normaliseWeather` from `@shelter/data`. None of the five
-are re-exported by `packages/data/src/index.ts` (confirmed by reading it: it re-exports materials/
-glazing/constructions/tmy/presets/scenarios only, never `./weather/pipeline.js` or
-`./weather/sources.js`). T-25's and T-26's own Evidence blocks in log/AREA-C-data-layer.md flag this
-exact gap themselves ("Neither pipeline.ts nor csv.ts is wired into packages/data/src/index.ts's
-public barrel ... A future task ... should add the re-export once it needs these functions from
-outside packages/data" -- T-25 Evidence; T-26 never touches index.ts either). That future task is
-T-37, but T-37's own allow-list excludes `packages/**`.
-
-Reproduction (this session, this worktree, after the build steps above):
-$ node -e "
-import('@shelter/data').then(m=>{
-  const missing = ['normaliseWeather','nasaPowerUrl','parseNasaPower','openMeteoUrl','parseOpenMeteo'].filter(k=>!(k in m));
-  console.log('missing exports:', missing.join(', '));
-}).catch(e=>console.log('ERR', e.code, e.message));
-"
-missing exports: normaliseWeather, nasaPowerUrl, parseNasaPower, openMeteoUrl, parseOpenMeteo
-
-`npx tsc --noEmit -p apps/web/tsconfig.json` reported exactly 7 TS2305 errors, one per missing named
-export, all on route.ts's own import statement -- no other file, no other error. Under vitest
-(esbuild/Vite interop, more lenient than Node's own ESM resolver -- which throws
-ERR_PACKAGE_PATH_NOT_EXPORTED for a direct subpath import, confirmed separately for
-`@shelter/data/dist/weather/pipeline.js`), the missing names resolve to `undefined` at import time
-instead, surfacing downstream as `TypeError: nasaPowerUrl is not a function` at the call site
-(route.ts:263) -- reproduced live, see the TEST RUN below.
-
-THE FIX (one-line-per-export, entirely inside packages/data/src/index.ts, i.e. entirely outside this
-task's allow-list):
-  export { normaliseWeather } from './weather/pipeline.js';
-  export type { RawWeather, NormaliseOptions } from './weather/pipeline.js';
-  export { nasaPowerUrl, parseNasaPower, openMeteoUrl, parseOpenMeteo } from './weather/sources.js';
-  export type { WeatherQuery } from './weather/sources.js';
-This is the exact same class of defect as the two barrel gaps the orchestrator fixed directly in a
-prior session for packages/engine/src/index.ts (T-32/T-33) and packages/data/src/index.ts's own
-tmy/preset/scenario exports (T-35) -- see LOG.md's HANDOFF section. Recommend the same resolution: a
-small out-of-allow-list fix applied once by whoever has packages/** access, then this task's own
-tests genuinely rerun green.
+One real bug found and fixed while re-verifying (inside this task's own allow-listed
+apps/web/test/api-weather.test.ts, not a workaround for either blocker): acceptance test 2's
+SimulationRequest was built from `{ ...preset.request, weather: series }`, but
+`Preset.request` (CONTRACTS.md §7.11) is `Omit<SimulationRequest, 'weather'|'materials'|'glazings'>`
+-- materials/glazings are the caller's job to supply. The test crashed inside `simulate()`
+("Cannot read properties of undefined (reading 'singleGlazing')") until materials/glazings were
+built from the full `@shelter/data` catalogue (`MATERIALS`/`GLAZING`, keyed by id) and included in
+the request. Fixed; not a defect in route.ts itself, only in the test's own fixture-building.
 
 ============================================================
-BLOCKER B -- apps/web/lib/repo/*, lib/db.ts, lib/log.ts's `.js`-suffixed relative imports do not
-resolve under Next's webpack build (independent of Blocker A; blocks acceptance test 12 specifically)
+ALL 12 ACCEPTANCE TESTS -- fresh run, this session, after both blockers were fixed
 ============================================================
-`apps/web/lib/repo/weather.ts` (T-31, not on this task's allow-list) is written
-`import { withDb } from '../db.js';` -- the NodeNext-style suffix convention used correctly
-throughout `packages/**` and, evidently, copied into `apps/web/lib/{db,log,repo}/*` too. But
-`apps/web/tsconfig.json` uses `"moduleResolution": "bundler"` (T-36's choice, matching Next's own
-convention) and every file T-36 actually wrote uses EXTENSIONLESS relative imports (confirmed:
-`app/app-shell.tsx` imports `'../lib/store'`, not `'../lib/store.js'`). T-36's own tsconfig.json
-`exclude`s `lib/db.ts`, `lib/log.ts` and `lib/repo` from Next's type-check scope specifically because
-no `app/` file had ever imported them before (T-36's own comment says so). T-37 is the FIRST task to
-wire a `lib/repo/*` file into the actual Next app bundle, which is exactly what surfaces this: it
-type-checks fine under vitest's esbuild transform (lenient) but webpack's resolver has no
-`resolve.extensionAlias` mapping `.js` -> `.ts`/`.tsx`, so it cannot find a real file on disk.
 
-Reproduction:
-$ npm run build --workspace apps/web
-...
-./lib/repo/weather.ts
-Module not found: Can't resolve '../db.js'
-Import trace for requested module:
-./app/api/weather/route.ts
-> Build failed because of webpack errors
-
-(A first, now-fixed version of this same problem also hit route.ts's own relative import of
-`lib/repo/weather` -- I had written it `'../../../lib/repo/weather.js'` matching packages/**
-convention; apps/web's own convention is extensionless, so I corrected MY OWN file to
-`'../../../lib/repo/weather'`, which is within this task's allow-list and is not a workaround for
-anything -- it just matches T-36's established apps/web style. That fix alone was not enough; the
-SAME problem recurs one file deeper, inside lib/repo/weather.ts's own `'../db.js'` import, which is
-outside this task's allow-list to touch.)
-
-THE FIX is a `resolve.extensionAlias: { '.js': ['.ts', '.tsx', '.js'] }` entry in
-`apps/web/next.config.mjs`'s existing `webpack()` hook (or, alternatively, rewriting the handful of
-`.js`-suffixed imports inside `lib/db.ts`/`lib/log.ts`/`lib/repo/*.ts` to match apps/web's own
-extensionless convention) -- both are outside this task's allow-list (`next.config.*` is T-36's file,
-not listed as touchable here; `lib/db.ts`/`lib/repo/*` are explicitly forbidden by name).
-
-============================================================
-ACCEPTANCE TESTS -- what could and could not be verified given the above
-============================================================
-Tests 1, 8, 10, 11 need neither blocker and PASS, with pasted numbers, via
-`npx vitest run apps/web/test/api-weather.test.ts`:
+$ npx vitest run apps/web/test/api-weather.test.ts
+ ✓ apps/web/test/api-weather.test.ts (10 tests) 10857ms
+   ✓ T-37 /api/weather > 5: upstream timeout -> 502 UPSTREAM_UNAVAILABLE within 11s 10062ms
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+(10 `it` blocks cover acceptance tests 1, 2&3 combined, 4-11; test 12 is a separate build-time check,
+below.)
 
 TEST 1 (flag unset -> 501, no cache row, no fetch):
-TEST1_STATUS=501 TEST1_CODE=LIVE_WEATHER_DISABLED rows_before=0 rows_after=0 fetch_calls=0
+TEST1_STATUS=501 TEST1_CODE=LIVE_WEATHER_DISABLED rows_before=10 rows_after=10 fetch_calls=0
+PASS (rows_before==rows_after regardless of the absolute count, which accumulates harmlessly across
+repeated runs against the same dev.db -- no row was added by this request).
+
+TEST 2 (valid WeatherSeries that simulate() accepts): the route's own response was converted back
+into a WeatherSeries via seriesFromJson field-by-field, combined with a full materials/glazings
+catalogue and a preset's site/building/operation, and run through @shelter/engine's simulate() with
+no adaptation. No exception thrown. PASS.
+
+TEST 3 (response carries sourceElevation/siteElevation/lapseCorrectionK, matching
+6.5*(h_source-h_site)/1000 to +-0.01):
+TEST3_sourceElevation=4120 TEST3_siteElevation=3500 TEST3_lapseCorrectionK=4.03
+Expected: 6.5*(4120-3500)/1000 = 4.03 exactly. PASS.
+
+TEST 4 (cache hit makes zero additional upstream calls):
+TEST4_calls_after_first=1 TEST4_status_second=200 TEST4_calls_on_second_route_instance=0
+The first POST made exactly 1 upstream fetch; the second, identical POST (a fresh route-module
+import, its own independent fetch spy) made 0 -- a real cache hit, verified against `readWeatherCache`
+returning the row written by the first call. PASS.
+
+TEST 5 (upstream timeout -> 502 UPSTREAM_UNAVAILABLE within 11s):
+TEST5_status=502 TEST5_code=UPSTREAM_UNAVAILABLE TEST5_elapsedMs=10007
+The AbortController fired at the 10,000ms budget; the route returned in 10,007ms, under the 11,000ms
+ceiling. PASS.
+
+TEST 6 (upstream 500 -> 502, not a crash):
+TEST6_status=502 TEST6_code=UPSTREAM_UNAVAILABLE
+PASS.
+
+TEST 7 (upstream 200 with unparseable JSON -> 422 WEATHER_INVALID):
+TEST7_status=422 TEST7_code=WEATHER_INVALID
 PASS.
 
 TEST 8 (malformed body {} -> 400 INVALID_INPUT, non-empty detail, no cache row):
-TEST8_status=400 TEST8_code=INVALID_INPUT TEST8_detail_len=6 rows_before=0 rows_after=0
+TEST8_status=400 TEST8_code=INVALID_INPUT TEST8_detail_len=6 rows_before=10 rows_after=10
 PASS.
+
+TEST 9 (DB unreachable -> still a valid series within 15s, just uncached):
+TEST9_status=200 TEST9_elapsedMs=98
+With DATABASE_URL pointed at a nonexistent directory, `readWeatherCache` and `writeWeatherCache` both
+logged once (via lib/db.ts's withDb, "Error code 14: Unable to open the database file") and returned
+gracefully (null / no throw); the route still fetched, parsed, normalised and returned a 200 with a
+valid series in 98ms, far under the 15,000ms budget. PASS.
 
 TEST 10 (every error response is application/json, no stack trace) -- body pasted verbatim:
 TEST10_content_type=application/json
@@ -455,54 +416,61 @@ TEST10_body={"code":"INVALID_INPUT","detail":[{"path":"source","message":"source
 No stack frame, no HTML. PASS.
 
 TEST 11 (grep for api_key/apiKey/Bearer/process.env shows only the two base-URL vars + the flag):
-$ grep -n "api_key\|apiKey\|Bearer\|process.env" apps/web/app/api/weather/route.ts
+$ grep -n "api_key\|apiKey\|Bearer\|process\.env" apps/web/app/api/weather/route.ts
 64:const NASA_POWER_BASE_URL = process.env.NASA_POWER_BASE_URL;
 65:const OPEN_METEO_BASE_URL = process.env.OPEN_METEO_BASE_URL;
 234:  if (process.env.NEXT_PUBLIC_ENABLE_LIVE_WEATHER !== 'true') {
 3 lines, all one of the two documented base-URL vars or the feature flag. No api_key/apiKey/Bearer
-anywhere. PASS. (Note: an earlier draft's own comment prose contained the literal substring
-"process.env" in English text and self-tripped this same grep, the same class of self-referential
-bug CONTRACTS.md's own Prisma-schema header comment hit for "session" -- reworded, now clean.)
+anywhere. PASS.
 
-Tests 2, 3, 4, 5, 6, 7, 9 are BLOCKED by Blocker A (all require the actual fetch/parse/normalise
-pipeline) -- reproduced failing with `TypeError: nasaPowerUrl is not a function` at route.ts:263,
-every time, only ever that one error:
-$ npx vitest run apps/web/test/api-weather.test.ts
- Test Files  1 failed (1)
-      Tests  6 failed | 4 passed (10)
-(the "2 & 3" acceptance tests are combined into one `it` block in the test file, hence 10 `it`s for
-11 numbered acceptance tests; test 12 is a separate build-time check, see below.)
+TEST 12 (deleting apps/web/app/api/ still leaves `npm run build --workspace apps/web` succeeding) --
+performed literally, three builds in sequence:
 
-Test 12 (deleting apps/web/app/api/ still leaves `npm run build --workspace apps/web` succeeding) is
-BLOCKED by Blocker B, independent of whether Blocker A is fixed -- reproduced above (Module not
-found: Can't resolve '../db.js'). This is really testing the OPPOSITE direction right now (api/ still
-PRESENT, build already fails) so the acceptance test as stated cannot even be attempted until Blocker
-B is resolved.
+(a) Baseline, app/api/ present:
+$ npm run build --workspace apps/web; echo EXIT_CODE=$?
+EXIT_CODE=0
+Route (app): /, /_not-found, /api/designs, /api/designs/[shareId], /api/materials, /api/simulate,
+/api/weather
 
-Whole-suite regression check, this worktree, after all of the above:
+(b) app/api/ moved aside (`mv apps/web/app/api /tmp/api-backup-t37`), .next cleared, rebuilt:
+$ npm run build --workspace apps/web; echo EXIT_CODE=$?
+EXIT_CODE=0
+Route (app): /, /_not-found  -- no /api/* routes at all, confirming the app builds standalone.
+PASS.
+
+(c) app/api/ restored (`mv /tmp/api-backup-t37 apps/web/app/api`), .next cleared, rebuilt to confirm
+    nothing was left broken:
+$ npm run build --workspace apps/web; echo EXIT_CODE=$?
+EXIT_CODE=0
+Route (app): /, /_not-found, /api/designs, /api/designs/[shareId], /api/materials, /api/simulate,
+/api/weather -- identical to (a). `git status --short apps/web/app/api/` empty; `diff` against the
+committed route.ts confirmed byte-identical after the move/restore round trip.
+
+============================================================
+WHOLE-REPO REGRESSION CHECK, after all of the above
+============================================================
 $ npx vitest run
- Test Files  1 failed | 26 passed (27)
-      Tests  6 failed | 310 passed | 10 skipped (326)
-The only failing file is this task's own apps/web/test/api-weather.test.ts (the 6 Blocker-A-blocked
-tests); every other file in the repo (packages/**, apps/web/test/repo-*.test.ts, etc.) is unaffected
-and green -- confirmed this task's changes introduce no regression elsewhere.
+ Test Files  29 passed (29)
+      Tests  340 passed | 10 skipped (350)
+Full green suite, no regressions from either blocker's fix or from this task's own files (includes
+T-38's and T-41's own newly-merged tests, all passing).
 
-$ npm run lint
-0 errors, 12 pre-existing warnings (unused eslint-disable directives in packages/data/test/
-weather.test.ts and packages/engine/test/{pcm,storage}.test.ts -- same ones documented in LOG.md's
-own HANDOFF section, untouched by this task).
+$ npm run lint; echo EXIT_CODE=$?
+EXIT_CODE=0
+✖ 12 problems (0 errors, 12 warnings)
+Same 12 pre-existing "unused eslint-disable" warnings documented throughout this ledger's HANDOFF
+sections (packages/data/test/weather.test.ts, packages/engine/test/{pcm,storage}.test.ts) --
+unrelated to apps/web, unchanged by this task.
 
-Not done: this task cannot be marked [x]. Set to [!] per SUBAGENT RULES 6/7 -- blocked on two small,
-well-scoped, out-of-allow-list fixes (Blocker A: ~4 lines in packages/data/src/index.ts; Blocker B:
-one resolve.extensionAlias entry in apps/web/next.config.mjs, or equivalently rewriting a handful of
-.js-suffixed imports in lib/db.ts/lib/log.ts/lib/repo/*.ts). Recommend the orchestrator apply both
-(same pattern as the T-32/T-33/T-35 barrel-gap fixes), after which this task's own route.ts and
-api-weather.test.ts should need zero further changes -- rerun
-`npx vitest run apps/web/test/api-weather.test.ts` and `npm run build --workspace apps/web` (after
-temporarily removing app/api/ for acceptance test 12's own check) to confirm and flip to [x].
+All 12 acceptance tests PASS with real, freshly-measured numbers. Task genuinely done.
+
+Files touched by this task, final state: apps/web/app/api/weather/route.ts (new),
+apps/web/test/api-weather.test.ts (new). No file outside the allow-list was ever edited; both
+blockers named in this task's own HELP_REQUEST were fixed by the orchestrator outside this task's
+allow-list (packages/data/src/index.ts, apps/web/next.config.mjs), exactly per SUBAGENT RULES 1/3/6.
 ```
 
-**Completed by:** T-37 subagent (blocked, not done)  **Date:** 2026-09-17
+**Completed by:** T-37 subagent (claude-sonnet-5)  **Date:** 2026-09-18
 
 ---
 
