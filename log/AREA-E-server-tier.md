@@ -14,9 +14,9 @@
 
 ---
 
-### [!] T-36 — Next.js scaffold, the store, the unit boundary, and the layout slots
+### [x] T-36 — Next.js scaffold, the store, the unit boundary, and the layout slots
 
-**Area:** E — Server (≈ W-33) · **Status:** BLOCKED — acceptance test 3 fails due to pre-existing `toK()` calls in T-33's `apps/web/test/repo-runs.test.ts` (lines 116, 128, 148, 149), a file outside this task's allow-list (blocking task: T-33) · **Est:** 8 h
+**Area:** E — Server (≈ W-33) · **Status:** DONE · **Est:** 8 h
 **Depends on:** T-03, T-06, T-28, T-29 · **Conflicts with:** **every Area F task** — this lands first
 
 **Why this exists.** This is the file-ownership keystone. Ten UI tasks each build one component, and
@@ -77,7 +77,13 @@ consistent; one author is the point.
 2. Every store field listed above exists and is typed; **adding a component later requires zero
    edits to `store.ts`** — verify by listing the fields and comparing to the list above.
 3. **The unit boundary holds:** `grep -rn "273\.15\|toC(\|toK(" apps/web --include=*.tsx
-   --include=*.ts | grep -v "lib/units.ts"` returns **no matches**.
+   --include=*.ts | grep -v "lib/units.ts" | grep -v "^apps/web/test/"` returns **no matches**.
+   (Rescoped 2026-09-17, orchestrator decision, user-approved: `apps/web/test/**` fixture files
+   calling the engine's canonical `toK()` to build typed Kelvin request fixtures are not the
+   presentation-layer leak this rule targets — CONTRACTS.md §7.1 states the boundary is about
+   "the only place a Celsius value may exist... is inside `apps/web/lib/units.ts` and the
+   presentation code it serves"; a test fixture is not presentation code. Original wording without
+   the `test/` exclusion is preserved above via this note, not silently dropped.)
 4. Mutating `request` 20 times within 100 ms dispatches **exactly one** simulation. Paste the
    dispatch count.
 5. `formatTempC(toK(14.2))` returns `"14.2 °C"`. Paste the exact string.
@@ -159,7 +165,8 @@ TEST2_ACTIONS=["setActiveTab","setAdvancedOpen","setError","setLocale","setOnlin
 "setSelectedSurfaceId","setShareId","setStatus","setSweep"] -- one setter per field, 15/15.
 PASS.
 
-TEST 3 -- FAIL, as literally specified. Real command and real output, this session:
+TEST 3 -- originally reported FAIL by the T-36 subagent against the test's literal, unscoped
+grep. Real command and real output from that session:
 $ grep -rn "273\.15\|toC(\|toK(" apps/web --include=*.tsx --include=*.ts | grep -v "lib/units.ts"
 apps/web/test/repo-runs.test.ts:116:    T_amb[h] = toK(-8 + 6 * Math.sin(((h - 15) / 24) * 2 * Math.PI));
 apps/web/test/repo-runs.test.ts:128:      groundTempMeanAnnual: toK(6),
@@ -172,10 +179,20 @@ app/page.tsx, layout.tsx, globals.css, or lib/{store,units,i18n}.ts). It imports
 from `@shelter/engine` (the canonical source, §7.1) to build a typed request fixture -- the same
 pattern used throughout the repo's engine/data test suites -- not a UI component doing ad-hoc
 Celsius math. Every file this task actually owns (app/*, lib/store.ts, lib/units.ts, lib/i18n.ts)
-has zero matches. Per SUBAGENT RULES 1 and 3, this is reported rather than fixed across the
+has zero matches. Per SUBAGENT RULES 1 and 3, this was correctly reported rather than fixed across the
 boundary: either T-33's file needs a small edit (own by Area D) or this acceptance test's grep
 should be scoped to exclude apps/web/test/** (backend fixtures, not presentation code). FAIL as
-worded; task set [!] rather than [x] because of this single test.
+originally worded; task held at [!] pending a decision on which of those two the ledger should take.
+
+RESOLUTION (2026-09-17, orchestrator, user-approved after AskUserQuestion): scoped acceptance test
+3's grep to exclude `apps/web/test/**`, per the reasoning above and CONTRACTS.md §7.1's own text
+("the presentation code it serves"). Rerun with the corrected command:
+$ grep -rn "273\.15\|toC(\|toK(" apps/web --include=*.tsx --include=*.ts | grep -v "lib/units.ts" \
+  | grep -v "^apps/web/test/"
+(no output, exit 1 -- zero matches)
+PASS under the corrected, narrower scope. No file's content was changed to reach this; only the
+acceptance test's own grep scope was corrected, with the original wording preserved inline above
+for anyone auditing this decision.
 
 TEST 4 -- 20 `setRequest` mutations inside one JS tick (vitest run, deleted after use):
 TEST4_MUTATION_WINDOW_MS=0
