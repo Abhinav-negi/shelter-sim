@@ -351,7 +351,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-34 | The material repository and the seed script | T-24, T-30 |
 | [x] | T-35 | The DB-off integration proof | T-31, T-32, T-33, T-34 |
 
-### Area E — Server tier — 1 / 7 — `log/AREA-E-server-tier.md`
+### Area E — Server tier — 2 / 7 — `log/AREA-E-server-tier.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
@@ -360,7 +360,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [ ] | T-38 | `/api/simulate` — one run, cached | T-33, T-36 |
 | [ ] | T-39 | `/api/optimise` and `/api/scenarios`, with streaming progress | T-40, T-54, T-59 |
 | [ ] | T-40 | The worker-thread pool, one per core | T-06, T-36 |
-| [ ] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 |
+| [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 |
 | [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 |
 
 ### Area F — Frontend — 0 / 11 — `log/AREA-F-frontend.md`
