@@ -76,7 +76,7 @@ export async function saveDesign(request: SimulationRequest, label?: string): Pr
       const shareId = generateShareId();
       try {
         await db.designSnapshot.create({
-          data: { shareId, request: json as Prisma.InputJsonValue, label },
+          data: { shareId, request: json as Prisma.InputJsonValue, label: label ?? null },
         });
         return { shareId };
       } catch (err) {

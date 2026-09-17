@@ -22,6 +22,11 @@ export { PRESETS, presetById, SCHEMA_VERSION as PRESETS_SCHEMA_VERSION } from '.
 export { buildScenarios, scenarioWeather } from './scenarios.js';
 export type { Scenario } from './scenarios.js';
 
+export { normaliseWeather } from './weather/pipeline.js';
+export type { RawWeather, NormaliseOptions } from './weather/pipeline.js';
+export { nasaPowerUrl, parseNasaPower, openMeteoUrl, parseOpenMeteo } from './weather/sources.js';
+export type { WeatherQuery } from './weather/sources.js';
+
 import { EngineError } from './errors.js';
 import { SCHEMA_VERSION } from './materials.js';
 

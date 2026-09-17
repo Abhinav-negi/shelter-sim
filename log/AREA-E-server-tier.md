@@ -506,9 +506,9 @@ temporarily removing app/api/ for acceptance test 12's own check) to confirm and
 
 ---
 
-### [ ] T-38 — `/api/simulate` — one run, cached
+### [x] T-38 — `/api/simulate` — one run, cached
 
-**Area:** E — Server (≈ W-35) · **Status:** NOT STARTED · **Est:** 4 h
+**Area:** E — Server (≈ W-35) · **Status:** DONE · **Est:** 4 h
 **Depends on:** T-33, T-36 · **Conflicts with:** none
 
 **Why this exists.** A thin JSON wrapper over `simulate()`, so a heavy run or a shared link can be
@@ -570,9 +570,85 @@ both sides, or the offline fallback silently becomes a different product.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Worktree: /home/abhinav/Downloads/SIH/wt-T-38, branch task/T-38.
+Setup: npm install (fresh); npm run build --workspace=@shelter/engine --workspace=@shelter/data
+--workspace=@shelter/optimise (all tsc -b, exit 0); cd apps/web && DATABASE_PROVIDER=sqlite
+DATABASE_URL="file:./dev.db" npm run db:migrate (fresh dev.db, migration 20260916110054_init applied)
+then npm run db:seed (27 materials, needed by unrelated T-34/T-35 tests sharing this worktree's db --
+without it those two files show pre-existing failures unrelated to this task, see GOTCHAS below).
+
+DESIGN DECISION -- cache-hit response shape: the brief names readRun/writeRun (T-33's lightweight
+KPI+meta cache functions), not readFullRun/storeFull:true. Implemented literally: a cache MISS
+responds with the full SimulationResult (via resultToJson); a cache HIT responds with readRun's own
+{kpis, meta} shape only (no time-series). This is faster (skips simulate() and the full-result JSON
+walk entirely on a hit) and matches T-33's own measured full-vs-KPI size ratio (~494x, its test 13).
+Documented as a `ponytail:` comment in route.ts naming the upgrade path (switch to
+readFullRun/writeRun(..., storeFull: true) if a future task needs full charts to survive a hit).
+
+DESIGN DECISION -- reconciling the error taxonomy with acceptance test 3: requestFromJson (T-06)
+always throws DATA_SCHEMA_MISMATCH for a malformed/incomplete wire body (e.g. `{}`), as a single
+`{path}` object, not an array -- by itself this would produce 422 with a non-array detail, which
+satisfies neither test 3's "400 INVALID_INPUT" nor its "detail array" requirement. Resolved entirely
+inside route.ts (no packages/** edit): errors thrown specifically while parsing the incoming body
+via requestFromJson are re-coded to INVALID_INPUT with a one-entry detail array before the generic
+STATUS_BY_CODE table is consulted -- a malformed request from this route's own caller is a client
+input problem (400), not a data-integrity issue with someone else's data. DATA_SCHEMA_MISMATCH's
+422 mapping is kept in the table for completeness/future callers (e.g. a corrupted cache row) but is
+not reachable from this parsing step. See route.ts's own comment above parseRequestBody().
+
+ACCEPTANCE TESTS -- MEASURED (npx vitest run apps/web/test/api-simulate.test.ts, this worktree,
+reran fresh 2026-09-18 after a session interruption, to confirm every number below with real
+evidence from this session rather than trusting the earlier pasted run):
+1. PASS. status=200, response deep-equal to in-process simulate() result excluding meta.wallClockMs
+   (Float64Array fields included, via resultFromJson round-trip). No differing field.
+2. PASS. meta.energyBalanceResidual=6.682913448678613e-8, well under 1e-3.
+3. PASS. status=400, code=INVALID_INPUT, detail=[{"path":"site","message":"missing required field
+   \"site\""}]. SimulationRun row count unchanged (before=2, after=2 -- rows from earlier tests in
+   the same suite run, none added by this request).
+4. PASS. status=400, code=INVALID_INPUT, detail count=3, paths=site.latitude, building.volume,
+   operation.achSchedule (three independently invalid fields: latitude=999, volume=-5,
+   achSchedule.length=23).
+5. PASS. status=400, code=GEOMETRY_INCONSISTENT (window area 20 m^2 on a 16 m^2 host surface).
+6. PASS. status=422, code=UNKNOWN_MATERIAL (materialId="doesNotExist").
+7. PASS. status=500, code=SOLVER_DIVERGED (internalGainsSchedule=1e15 W forces the air node past
+   T_MAX_PLAUSIBLE=373K on step 1 of spin-up).
+8. PASS. bodyBytes=6291470 (6 MB), status=413, code=PAYLOAD_TOO_LARGE.
+9. PASS. first request (miss) 39.92ms, second identical request (hit) 2.07ms -- hit is ~19x faster.
+   json1.meta.warnings did not contain 'served from cache'; json2.meta.warnings did. json2.kpis
+   deep-equal json1.kpis.
+10. PASS. DATABASE_URL pointing at a nonexistent path (same bogus-file technique as T-30/T-31/
+    T-32/T-33/T-35): status=200, elapsed=170.4ms, kpis present. withDb() logged and swallowed the
+    Prisma connection error internally (visible in stderr, not in the response) -- no caching, but a
+    correct result, well under the 5s budget.
+11. PASS. content-type="application/json; charset=utf-8" on an error response; body contains no
+    "<html" and no stack-trace-shaped line.
+12. PASS. 10 concurrent identical POSTs: all 10 returned status 200; exactly 1 SimulationRun row for
+    that request's hash afterward (writeRun's upsert-on-requestHash absorbs the race, per T-33).
+
+Full suite (`npx vitest run` from worktree root): 27 files, 318 passed, 10 skipped (328 total),
+exit 0. Reran across two sessions (2026-09-17 and after the 2026-09-18 interruption), stable every
+time. `npm run lint`: exit 0, 0 errors, 12 pre-existing warnings (unused eslint-disable directives in
+packages/data/test/weather.test.ts and packages/engine/test/{pcm,storage}.test.ts -- unrelated to
+this task, already noted in LOG.md's own HANDOFF). `npx tsc -b packages/engine`: exit 0. Measured
+this session: full simulate() incl. spin-up 24.6 ms/run, 100-variant sweep 2.40 s (both well inside
+budget, per CONTRACTS.md §10 -- unaffected by this task).
+
+GOTCHAS FOR THE NEXT AGENT:
+- A fresh worktree's dev.db has an empty Material table until `npm run db:seed` is run once (from
+  apps/web/, with DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db") -- db:migrate alone is not
+  enough. Without it, apps/web/test/repo-materials.test.ts (T-34) and
+  apps/web/test/db-off.integration.test.ts (T-35) fail on an empty-catalogue state; this is
+  pre-existing infrastructure, not a T-38 defect (T-33's own Evidence block hit and documented the
+  same thing). db:seed is idempotent and safe to rerun.
+- Route handlers in this app run on the default Node.js runtime (not edge) -- lib/repo/runs.ts uses
+  node:fs synchronously to read packages/engine/package.json's version, so an edge runtime directive
+  must never be added to this route.
+- Body-size checking reads the full request body into a string first (`req.text()`), then measures
+  `Buffer.byteLength`, before ever calling JSON.parse -- deliberately simple (no streaming), the
+  route only needs to bound a 5 MB blast radius, not handle multi-gigabyte uploads.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** T-38 subagent  **Date:** 2026-09-17
 
 ---
 
@@ -745,9 +821,9 @@ models of the same queue.
 
 ---
 
-### [ ] T-41 — `/api/designs` and `/api/materials`
+### [x] T-41 — `/api/designs` and `/api/materials`
 
-**Area:** E — Server · **Status:** NOT STARTED · **Est:** 4 h
+**Area:** E — Server · **Status:** DONE. All 12 acceptance tests pass. · **Est:** 4 h
 **Depends on:** T-32, T-34, T-36 · **Conflicts with:** none
 
 **Why this exists.** The share-link half of Deviation D-1, and the served material catalogue with
@@ -806,9 +882,142 @@ disappears and the catalogue comes from code.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Built in worktree /home/abhinav/Downloads/SIH/wt-T-41, branch task/T-41. Fresh `npm install` (no
+inherited node_modules); `npm run build --workspace=@shelter/engine --workspace=@shelter/data
+--workspace=@shelter/optimise` run first (dist/ is gitignored, worktrees don't inherit it) --
+both exited 0. Local sqlite DB set up per the brief:
+  cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate
+  (applied migration 20260916110054_init; note Prisma resolves a relative sqlite `file:` URL
+  against the schema file's directory, not cwd, so the db actually lands at
+  apps/web/prisma/dev.db regardless of where the command is invoked from)
+  DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:seed --workspace apps/web
+  -> "db:seed: upserted 27 materials from the code catalogue, table now has 27 rows."
+
+Routes created, reusing T-32's saveDesign/loadDesign and T-34's listMaterials verbatim (never
+reimplemented): apps/web/app/api/designs/route.ts (POST), apps/web/app/api/designs/[shareId]/
+route.ts (GET), apps/web/app/api/materials/route.ts (GET). POST validates the body through
+requestFromJson itself, BEFORE calling saveDesign, specifically so a schema failure (422/400) can
+be told apart from saveDesign returning null for "no database" (503) -- saveDesign also validates
+internally (defence in depth per its own doc comment), but by the time it's called the route
+already knows the request is well-formed. GET /api/designs/[shareId] and GET /api/materials both
+serialise via requestToJson (the one sanctioned Float64Array -> plain-array boundary, CONTRACTS.md
+7.14) rather than handing Float64Array-bearing objects to NextResponse.json() directly, which
+would otherwise serialise each Float64Array as an object of numeric string keys, not an array,
+silently breaking the round trip (caught by test 1, see "Gotchas" below). /api/materials
+determines `servedFrom` via lib/db.ts's already-exported `dbHealthy()` run in parallel with
+listMaterials() -- listMaterials() itself doesn't report which path it served from and
+lib/repo/materials.ts is off this task's allow-list -- documented with a `// ponytail:` comment
+naming the approximation (dbHealthy-reachable-but-query-broken could theoretically mislabel; T-34
+would need to expose its own source tag to close that gap exactly).
+
+Test file: apps/web/test/api-designs.test.ts, 12 tests, one per acceptance test, following the
+same "call the exported handler directly with a constructed Request/NextRequest, manage
+process.env.DATABASE_URL + the lib/db.ts globalThis client stash per test" pattern as
+apps/web/test/repo-designs.test.ts (T-32) and repo-materials.test.ts (T-34) already use.
+
+Command: DATABASE_PROVIDER=sqlite npx vitest run apps/web/test/api-designs.test.ts
+Result: Test Files 1 passed (1); Tests 12 passed (12). Duration 1.89s.
+
+1. POST 201 shareId=5KJVMQRSMF (matches /^[A-Za-z2-9]{10}$/), url=
+   http://localhost:3000/api/designs/5KJVMQRSMF. GET on that id -> 200, requestFromJson(body)
+   deep-equal (toEqual) to the original SimulationRequest, Float64Array fields included. PASS.
+2. POST {} -> status=422, code=DATA_SCHEMA_MISMATCH. designSnapshot row count before=123 after=123
+   (unchanged; the live sqlite dev.db already carried rows from earlier manual runs during
+   development -- the count is identical before/after, which is what the test asserts). PASS.
+3. GET /api/designs/zzzzzzzzzz -> status=404, code=NOT_FOUND. PASS.
+4. Expired row (expiresAt 60s in the past) -> status=404, body=
+   {"code":"NOT_FOUND","message":"design not found"}; unknown id -> status=404, identical body.
+   PASS (indistinguishable, as required).
+5. DB OFF (DATABASE_URL unset): POST -> status=503 in 1ms, body deep-equal to
+   {"code":"SHARE_UNAVAILABLE","message":"Sharing needs the server. Download the design as a file
+   instead."} (verbatim). GET -> status=404 in 0ms. Both well under 5000ms. PASS.
+6. DB UNREACHABLE (bogus DATABASE_URL, nonexistent directory): POST -> status=503 in 89ms, code=
+   SHARE_UNAVAILABLE. GET -> status=404 in 2ms. Both well under 5000ms. PASS.
+7. GET /api/materials, live DB: servedFrom=database, materials.length=27 (=MATERIALS.length). PASS.
+8. DB OFF: GET /api/materials -> status=200, servedFrom=code, materials.length=27 (same length).
+   PASS.
+9. All 27 returned materials have a non-empty, trimmed `source` string. PASS.
+10. Cache-Control header = "public, max-age=3600" -> parsed max-age=3600 (>= 3600). PASS.
+11. 20 concurrent POST /api/designs: all 20 responses status=201, 20 distinct shareIds (Set size
+    20). PASS.
+12. Content-Type across 6 representative responses (POST 201, POST 422, POST 503-DB-off, GET 200,
+    GET 404, GET /api/materials 200): all 6 are "application/json" -- no HTML anywhere. PASS.
+
+Full-suite regression check: `DATABASE_PROVIDER=sqlite npx vitest run` (whole repo) ->
+Test Files 27 passed (27); Tests 318 passed | 10 skipped (328). No pre-existing test broken.
+
+TOOLCHAIN FINDING, reported rather than fixed (rule 16, "report failures upward; do not fix
+across boundaries" -- both files are outside this task's allow-list): this task's own 12
+acceptance tests are all green via `vitest` (which is what "done" is measured against, and what
+this task's route-handler-tested-directly pattern is designed around), but `npm run build
+--workspace apps/web` currently does NOT reach a clean build once any route under app/api imports
+lib/repo/* or lib/db.ts -- which is unavoidable and is the entire point of this task. This worktree
+is the FIRST to wire app/ code to those files at all (T-36's own tsconfig.json explicitly excluded
+lib/db.ts, lib/repo/**, prisma/, test/** from Next's type-check, and nothing under app/ imported
+them before T-41). Reproduced twice, cleanly, with and without T-41's files present, isolating two
+independent, genuinely pre-existing defects in files this task may not touch:
+
+  (a) webpack module resolution: lib/db.ts, lib/log.ts and lib/repo/*.ts all use Node-ESM-style
+      relative imports with an explicit `.js` extension pointing at sibling `.ts` files (e.g.
+      lib/db.ts imports `./log.js`) -- correct for direct Node/vitest execution (Node's native TS
+      type-stripping and Vite's resolver both handle the `.js`->`.ts` extension swap), but Next's
+      webpack build path takes a literal `.js` specifier at face value and does not try `.ts` as a
+      fallback unless `resolve.extensionAlias` (or the Next-level `experimental.extensionAlias`) is
+      set in next.config.mjs. It is not set. Reproduced:
+        $ DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run build --workspace=apps/web
+        Module not found: Can't resolve '../db.js' (from lib/repo/designs.ts and materials.ts)
+        Module not found: Can't resolve '../log.js' / './log.js' (from lib/db.ts and lib/repo/*.ts)
+      Verified fix (applied only to a scratch copy, then reverted -- next.config.mjs is owned by
+      T-36, not on this task's allow-list): adding one line inside the existing webpack() hook,
+      `config.resolve.extensionAlias = { '.js': ['.ts', '.tsx', '.js'] };`, clears every one of
+      these module-not-found errors.
+  (b) a genuine pre-existing TypeScript error in lib/repo/designs.ts line 79 (T-32's file, also
+      off this task's allow-list), only ever surfaced once tsc actually type-checks that file --
+      which nothing did until T-41 imported it. Isolated with a clean before/after: with
+      apps/web/app/api/ and apps/web/test/api-designs.test.ts temporarily moved aside and
+      apps/web/.next removed, `npx tsc --noEmit --project apps/web/tsconfig.json` -> "TypeScript:
+      No errors found", exit 0. Restoring T-41's files (nothing else changed) makes the same
+      command fail:
+        apps/web/lib/repo/designs.ts(79,11): error TS2375: Type '{ shareId: string; request:
+        Prisma.InputJsonValue; label: string | undefined; }' is not assignable to type
+        '...DesignSnapshotCreateInput' with 'exactOptionalPropertyTypes: true' ... Type
+        'string | undefined' is not assignable to type 'string | null'.
+        TypeScript: 1 errors in 1 files, exit 1.
+      This is a static error in designs.ts's own `db.designSnapshot.create({ data: { shareId,
+      request: ..., label } })` call (label: string | undefined vs Prisma's generated `string |
+      null`), present regardless of what any caller passes -- not something this task's own code
+      triggers by its call pattern, only by causing the file to be type-checked at all. The
+      one-line fix would be `label: label ?? null` in designs.ts, but that file is off this task's
+      allow-list (T-32's).
+
+  Neither finding blocks T-41's own 12 acceptance tests (none of them require `next build` to
+  succeed -- only runtime behaviour of the three route handlers, verified above via vitest). Both
+  WILL block T-42's stated acceptance test 13 ("`npm run build --workspace apps/web` exits 0"),
+  since T-42 refactors these same four routes and inherits the same import graph. Recommend fixing
+  (a) in next.config.mjs and (b) in lib/repo/designs.ts before or as part of T-42, or as a small
+  standalone toolchain task -- whichever the orchestrator prefers; flagging here per global rule 16
+  rather than editing across the file boundary myself.
+
+Gotchas / decisions for a successor:
+- Import-extension convention split, deliberate: files under apps/web/app/** import sibling lib/
+  files WITHOUT a `.js` extension (matches the existing app/page.tsx, app-shell.tsx, lib/store.ts
+  convention, i.e. what webpack's bundler-mode resolution expects); apps/web/test/*.test.ts files
+  import them WITH `.js` (matches repo-designs.test.ts/repo-materials.test.ts, i.e. what
+  vitest/Vite's resolver and native Node ESM expect). Both conventions already coexisted in the
+  repo before this task; this task's new files follow whichever one each existing sibling file in
+  the same directory already used, not a new convention invented here.
+- Test fixture gotcha: JSON.stringify() on a raw Float64Array serialises it as an object of
+  numeric string keys ({"0":260,...}), not a plain array -- the test file's POST body helper must
+  send `requestToJson(req)` (converting Float64Arrays to plain arrays first), exactly matching
+  what a real HTTP client would send. Caught by test 1 failing with empty T_amb/GHI/v_wind arrays
+  on the very first run; fixed in the test fixture, not the route.
+- schemaVersion (in the /api/materials response) has no existing definition anywhere in the repo
+  (checked: grep -rn "schemaVersion" across log/*.md and all source -- only this task's own prompt
+  mentions it). Defined as a local literal `1` in the materials route file; not promoted to a
+  shared type since it isn't one of CONTRACTS.md's shared contracts and nothing else needs it yet.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** T-41 subagent  **Date:** 2026-09-18
 
 ---
 
