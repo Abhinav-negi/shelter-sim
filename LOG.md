@@ -280,13 +280,13 @@ with an Area file again, the Area file is right — fix this table.)*
 | B | Engine | 15 / 16 | `log/AREA-B-engine.md` |
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
-| E | Server tier | 3 / 7 | `log/AREA-E-server-tier.md` |
+| E | Server tier | 4 / 7 | `log/AREA-E-server-tier.md` |
 | F | Frontend | 0 / 11 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **38 / 69** | |
+| | **TOTAL** | **39 / 69** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
@@ -351,12 +351,12 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-34 | The material repository and the seed script | T-24, T-30 |
 | [x] | T-35 | The DB-off integration proof | T-31, T-32, T-33, T-34 |
 
-### Area E — Server tier — 3 / 7 — `log/AREA-E-server-tier.md`
+### Area E — Server tier — 4 / 7 — `log/AREA-E-server-tier.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
 | [x] | T-36 | Next.js scaffold, the store, the unit boundary, and the layout slots | T-03, T-06, T-28, T-29 |
-| [~] | T-37 | `/api/weather` — the CORS proxy, cached | T-26, T-31, T-36 |
+| [x] | T-37 | `/api/weather` — the CORS proxy, cached | T-26, T-31, T-36 |
 | [x] | T-38 | `/api/simulate` — one run, cached | T-33, T-36 |
 | [ ] | T-39 | `/api/optimise` and `/api/scenarios`, with streaming progress | T-40, T-54, T-59 |
 | [ ] | T-40 | The worker-thread pool, one per core | T-06, T-36 |
