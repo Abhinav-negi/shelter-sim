@@ -378,7 +378,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [ ] | T-47 | The temperature view (PS Deliverable 1) and the 6 AM label | T-36, T-43 |
 | [ ] | T-48 | The solar capture view (PS Deliverable 2) | T-36, T-43 |
 | [ ] | T-49 | The heat-flow view and the Sankey (PS Deliverable 3) | T-22, T-36, T-43 |
-| [~] | T-50 | The survival grid | T-36, T-59 |
+| [!] | T-50 | The survival grid | T-36, T-59 |
 | [ ] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
 | [ ] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
 | [ ] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |

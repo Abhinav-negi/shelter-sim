@@ -1,0 +1,91 @@
+/* apps/web/components/grid/SurvivalGrid.module.css
+ *
+ * T-50, acceptance test 10: at 400px viewport width the table scrolls
+ * HORIZONTALLY INSIDE ITS OWN CONTAINER, never the page body. Standard CSS
+ * containment pattern -- no dependency needed (ponytail rung 4: native
+ * platform feature): `.container` clips/scrolls, `.table` is given a
+ * min-width wider than any narrow viewport so it is forced to overflow the
+ * container (not the page) once the eleven data columns don't fit.
+ */
+
+.container {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #ccc;
+}
+
+.table {
+  border-collapse: collapse;
+  min-width: 960px; /* 11 columns; forces the container (not the body) to scroll under 400px */
+  width: 100%;
+}
+
+.table th,
+.table td {
+  padding: 0.4em 0.6em;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid #ddd;
+}
+
+.row {
+  cursor: pointer;
+}
+
+.row:hover,
+.row:focus-visible {
+  outline: 2px solid #333;
+  outline-offset: -2px;
+}
+
+.rowSelected {
+  font-weight: 600;
+}
+
+/* Colours chosen for the three survival bands. Text stays dark for contrast
+ * on every band, per accessibility basics (ponytail's own "never simplify
+ * away accessibility"). */
+.green {
+  background: #d6f5d6;
+}
+
+.amber {
+  background: #fff3cd;
+}
+
+.red {
+  background: #f8d7da;
+}
+
+.errorRow {
+  background: #f0f0f0;
+  color: #900;
+  font-style: italic;
+}
+
+.key {
+  display: flex;
+  gap: 1.5em;
+  flex-wrap: wrap;
+  margin-bottom: 0.6em;
+  font-size: 0.9em;
+}
+
+.keySwatch {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.4em;
+  vertical-align: middle;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.note {
+  margin-bottom: 0.6em;
+  font-size: 0.9em;
+}
+
+.empty {
+  padding: 1em;
+  font-style: italic;
+}

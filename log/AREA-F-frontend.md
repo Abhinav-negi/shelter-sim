@@ -641,9 +641,9 @@ together.**
 
 ---
 
-### [~] T-50 — The survival grid
+### [!] T-50 — The survival grid
 
-**Area:** F — Frontend · **Status:** CLAIMED by orch-T-50 at 2026-09-18T15:41:30Z · **Est:** 5 h
+**Area:** F — Frontend · **Status:** BLOCKED — condition 4 (click-to-chart) cannot be honestly built or verified: T-47 (the temperature chart) does not exist yet and `store.ts`'s local `ScenarioResult` carries no time series for it to show even if it did (blocking task: T-47, T-60) · **Est:** 5 h
 **Depends on:** T-36, T-59 · **Conflicts with:** none
 
 **Why this exists.** *"This is the screen that answers the question a procurement officer actually
@@ -701,9 +701,174 @@ cannot** show this screen.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Built: apps/web/components/grid/{scenario-meta.ts, band.ts, rows.ts, SurvivalGrid.module.css,
+SurvivalGrid.tsx, SurvivalGrid.test.ts} (830 lines total). All logic that isn't JSX lives in
+rows.ts/band.ts/scenario-meta.ts as pure, exported functions, specifically so it is unit-testable
+without a component-rendering library -- none is on the approved dependency list (CONTRACTS.md
+§7.13: apps/web may only add next/react/react-dom/@prisma/client/prisma/d3-*).
+
+Command for all measured numbers below (tests 1,2,3,5,6,7,8,9):
+`npx vitest run apps/web/components/grid/SurvivalGrid.test.ts` -> 9 tests, all green, 636 ms.
+Tests 1, 5 and 6 run the REAL eighteen-scenario matrix through the REAL engine
+(@shelter/data's buildScenarios/scenarioWeather over tmyById('leh') + @shelter/engine's
+simulate(), a small physically-valid test building) -- these numbers are measured off real
+physics, not synthetic fixtures. This import is safe ONLY inside the vitest test file (runs in
+Node, never through webpack/Turbopack); SurvivalGrid.tsx and everything it imports (rows.ts,
+band.ts, scenario-meta.ts) never import @shelter/data, so the client bundle is never at risk --
+see scenario-meta.ts's header for the full reasoning.
+
+1. Eighteen rows render. Row count: 18. Scenario ids (buildScenarios('leh') output, real):
+   month-01..month-12, coldest-day, hottest-day, design-winter-day, sunless-streak,
+   clear-cold-night, annual-mean-day.
+   Names: January, February, March, April, May, June, July, August, September, October,
+   November, December, Coldest day on record, Hottest day on record, 1-in-100 design winter
+   day, Longest sunless streak, Clear cold night, Annual-mean day.
+   (Names/descriptions come from a static local lookup in scenario-meta.ts keyed by
+   scenarioId -- store.ts's ScenarioResult carries only {scenarioId, kpis, meta}, no name/
+   description/date; see the "contract gap" note below.)
+
+2. Banding matches exactly: bandFor(288.15 K) = green, bandFor(288.14 K) = amber,
+   bandFor(278.14 K) = red. MIN_ACCEPTABLE_K = 288.15, SURVIVAL_THRESHOLD_K = 278.15 (exact,
+   asserted toBeCloseTo(..., 10)).
+
+3. Colour key text (BAND_LABEL, rendered verbatim by <ColourKey/>, which SurvivalGrid.tsx
+   always renders at the top of the grid):
+     green: "Safe (>= 15 °C at 06:00)"
+     amber: "Survivable, uncomfortable (5-15 °C at 06:00)"
+     red:   "Below survival threshold (< 5 °C at 06:00)"
+   All three states its threshold in °C, matched by regex in the test.
+
+4. BLOCKED -- not faked. See "Condition 4" subsection below for the full account.
+
+5. Incremental fill: deriveGridState() with scenarios.slice(0, 9) (9 of the 18 real results)
+   -> rows.length = 9, showEmptyState = false, showProgress = true,
+   progressText(9) = "9 of 18 scenarios computed". Full 18 -> rows.length = 18,
+   showProgress = false. Row count observed at the halfway point: 9.
+
+6. Max energy-balance residual across all 18 real scenario runs: 4.803794613886949e-7
+   (0.0000% at the UI's 4-decimal display rule, CONTRACTS.md §7.4) -- comfortably under the
+   0.1% (0.001) bar. All 18 rows status 'ok' (none failed to compute in this fixture).
+
+7. Offline note (offlineNote(), exact text SurvivalGrid.tsx renders when store.online ===
+   false):
+     "Offline — showing only the currently loaded design, computed locally in your browser.
+     The other 17 scenarios in the eighteen-scenario matrix need the server and cannot be
+     computed here."
+   deriveGridState({online:false, scenarios: <18 real results>, offlineResult: <a real
+   SimulationResult>, presetId:'leh'}) -> rows.length = 1 (the currently-loaded design,
+   computed locally via the same simulate() call store.ts's own dispatchSimulation() already
+   makes -- the one thing that never needs the server), note present, matches /Offline/ and
+   /17/. Edge case also checked: offlineResult === null (before hydration) -> rows.length = 0,
+   showEmptyState = true, emptyText = the same note (never a blank box, never silently 0 rows
+   with no explanation).
+
+8. scenarios === null: deriveGridState({online:true, scenarios:null, ...}) -> rows = [],
+   showEmptyState = true, emptyText = EMPTY_STATE_TEXT = "No scenario run yet — run the
+   eighteen-scenario matrix to populate the survival grid." -- checked it does NOT match /NaN/.
+
+9. Malformed/failed entry ({scenarioId:'coldest-day', error:{code:'SOLVER_DIVERGED', ...}}
+   cast as ScenarioResult, since store.ts's real ScenarioResult type has no failure variant --
+   see the contract-gap note) -> buildRow() returns {status:'error', scenarioId:'coldest-day',
+   code:'SOLVER_DIVERGED', ...}. Mixed batch of 17 real good results + 1 malformed ->
+   buildRows() returns 18 rows (not 17): 17 'ok' + 1 'error'. Caveat, stated plainly: no real
+   producer sends this shape today (T-39/api-scenarios isn't built); this proves the grid's own
+   defensive rendering path, forward-compatible with whatever shape a future failure producer
+   uses (checks entry.error.code, entry.code, falls back to 'UNKNOWN_ERROR').
+
+10. 400 px containment: apps/web/components/grid/SurvivalGrid.module.css's `.container` has
+    `overflow-x: auto; max-width: 100%` and `.table` has `min-width: 960px` -- standard CSS
+    containment (no dependency, no JS). CSS Modules scope every selector in this file to a
+    hashed class name; the file defines no bare `body`/`html`/`*` selector, so it cannot ever
+    make the page body scroll. Verified with a REAL browser layout engine, not just code
+    inspection: built a standalone HTML page reproducing this exact CSS
+    (`.container`/`.table` rules, verbatim) with `html,body{width:400px}` and the real column
+    set, loaded in headless Chrome (`google-chrome --headless=new --window-size=400,600
+    --dump-dom`), and read the computed layout back:
+      documentElement.scrollWidth=500, window.innerWidth=500 (Chrome headless's own dump-dom
+      viewport, not driven by --window-size) -> bodyOverflowsHorizontally = FALSE
+      container.scrollWidth=1004, container.clientWidth=398 -> containerScrollsHorizontally
+      = TRUE
+    i.e. with the page constrained to 400 px, the BODY never overflows horizontally while the
+    CONTAINER does, and does so by exactly the amount the 960px-min-width table minus its
+    ~398px visible width predicts (1004 ~ 960 + borders/padding). This is the acceptance
+    test's exact requirement, measured, not asserted from code reading alone.
+
+11. `grep -rn "273\.15" apps/web/components/grid` -> zero matches (confirmed; band.ts's
+    threshold constants are literal 288.15/278.15 Kelvin values from CONTRACTS.md Appendix C,
+    passed through `asK()`, never computed via subtraction -- lib/units.ts remains the only
+    file that does that arithmetic, per LOG.md global rule 5).
+
+CONDITION 4 -- BLOCKED, documented per this task's brief section 5, not faked:
+"Clicking a row loads that scenario into the temperature chart. Verify by reading the chart's
+06:00 annotation afterwards and matching it to the row." Two independent, real gaps make this
+unbuildable today, both outside this task's `apps/web/components/grid/**` allow-list:
+  (a) T-47 (the temperature chart) does not exist -- app-shell.tsx still renders a
+      <Placeholder label="Temperature view (T-47)"/> for the 'temp' tab. There is no chart
+      component to load a scenario into, and app-shell.tsx is explicitly off this task's
+      allow-list, so nothing here can create or wire one in.
+  (b) Even if the chart existed, `store.ts`'s local `ScenarioResult` type (its own header
+      comment: "not yet defined anywhere shared -- Area H's T-60 owns shaping that contract")
+      carries only `{scenarioId, kpis, meta}` -- no time series (`temperatures.indoorAir`, no
+      `time` array). A chart fed from this contract has no 06:00 annotation to read, because
+      the data to compute one from was never transmitted past the single tempAt0600 KPI
+      number that already lives in the row. T-60's real ScenarioResult (packages, not built)
+      is the owning fix.
+  A client-side re-simulate-on-click was considered and rejected: reconstructing the
+  scenario's weather window needs `@shelter/data`'s `tmyById`, which reads bundled JSON via
+  `node:fs` + `new URL(literal, import.meta.url)` at module import time (packages/data/src/
+  tmy.ts's own header) -- store.ts's own header comment documents that importing ANYTHING
+  reachable from `@shelter/data` breaks the Next.js browser build the moment the import is
+  reachable from the client boundary, whether or not the function is ever called. This grid
+  is a client component (needs onClick), so it can never import that path.
+  What WAS built, as the correct forward-compatible partial step: `selectRow(scenarioId)`
+  calls `actions.setActiveTab('temp')` (a real, already-existing store action) and sets a
+  purely local `useState` (`selectedId`) for the grid's own visual highlight of the last-
+  clicked row (CSS class `.rowSelected`, see SurvivalGrid.tsx). No new store field was added
+  or repurposed to fake a "selected scenario" -- store.ts's `presetId` field exists and is
+  semantically close but means something else (the location preset id shown in the KPI
+  readout); reusing it to smuggle a scenario id through would be a second, dishonest gap
+  papering over the first, so it was deliberately NOT done, per this task's own brief ("do
+  NOT invent a selectedScenarioId store field yourself to force a PASS").
+
+DOCUMENTED CONTRACT GAP (report per rule 16, not fixed across the boundary):
+store.ts's local `ScenarioResult = {scenarioId, kpis, meta}` (its own header comment marks
+this as a placeholder pending T-60) has no `name`, `description`, `startDayOfYear` or failure
+variant. This task worked around the first three with a static local id -> display-metadata
+table (scenario-meta.ts) covering the 18 known ids T-59 produces verbatim (its own Evidence
+block lists them), and around the last with a runtime shape guard (rows.ts's isWellFormed())
+that renders anything not matching the expected shape as an error row rather than crashing or
+dropping it silently. Both are honest, forward-compatible presentation-layer choices that stay
+inside this task's own file allow-list -- neither requires nor performs any edit to
+`lib/store.ts`. T-60 remains the real, owning fix for both; when it lands, `scenario-meta.ts`'s
+static table and `rows.ts`'s isWellFormed()/extractError() guard become deletable in favour of
+the real fields.
+
+Full workspace regression: `npx vitest run` -> 31 test files, 361 passed, 10 skipped (371
+total), exit 0. Baseline recorded fresh in this worktree before writing any grid code (after
+`npm install` + `npm run build --workspace=@shelter/engine --workspace=@shelter/data` +
+`DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate` +
+`npm run db:seed` inside apps/web, per the worktree gotchas in LOG.md): 30 files, 352 passed,
+10 skipped, exit 0. This task's own test file adds exactly 1 file / 9 tests; no other file's
+test count changed; no regression.
+
+`npm run lint`: exit 0, 0 errors, same 12 pre-existing warnings as the documented baseline
+(unused eslint-disable directives in packages/engine/test/{pcm,storage}.test.ts and
+packages/data/test/weather.test.ts, unrelated to this task). Note: `eslint.config.js` (root,
+outside this task's allow-list) has no `files` block matching `apps/web/**` at all -- `apps/web`
+is not linted by `npm run lint` today, pre-existing and independent of this task; flagged here
+per rule 15/16, not fixed (eslint.config.js is a shared config file this task may not touch).
+
+`npx tsc --noEmit -p apps/web/tsconfig.json`: zero errors from any file under
+apps/web/components/grid/**. One pre-existing, unrelated error remains in apps/web/lib/pool.ts
+(T-40, exactOptionalPropertyTypes strictness on an AbortSignal field) -- confirmed pre-existing
+and untouched by this task (`git log` shows no change to that file on this branch); this also
+makes `npm run build --workspace apps/web` fail at its "Running TypeScript" step, independent
+of anything in this task's allow-list. Flagged for the orchestrator per rule 16, not fixed here.
+
+`grep -rn "273\.15" apps/web/components/grid`: zero matches (acceptance test 11, PASS).
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude (subagent, T-50)  **Date:** 2026-09-18
 
 ---
 
