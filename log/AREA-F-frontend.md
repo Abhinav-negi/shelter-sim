@@ -18,9 +18,9 @@
 
 ---
 
-### [ ] T-43 — The browser Web Worker and the offline fallback path
+### [~] T-43 — The browser Web Worker and the offline fallback path
 
-**Area:** F — Frontend (≈ W-34) · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** F — Frontend (≈ W-34) · **Status:** CLAIMED by orch-T-43 at 2026-09-18T15:41:30Z · **Est:** 6 h
 **Depends on:** T-36 · **Conflicts with:** T-40 (both speak the §7.14 protocol — settle it first)
 
 **Why this exists.** Two jobs in one file. **(a)** The main thread must never block, so a dragged
@@ -169,9 +169,9 @@ something to split.
 
 ---
 
-### [ ] T-45 — The Advanced panel
+### [~] T-45 — The Advanced panel
 
-**Area:** F — Frontend (≈ W-38) · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** F — Frontend (≈ W-38) · **Status:** CLAIMED by orch-T-45 at 2026-09-18T15:41:30Z · **Est:** 5 h
 **Depends on:** T-36 · **Conflicts with:** none
 
 **Why this exists.** Expert controls must exist — a DRDO researcher will want to set the ground
@@ -233,9 +233,9 @@ with no advanced tier and no stated defaults, which fails C-13 and serves the ex
 
 ---
 
-### [ ] T-46 — The isometric house: click a wall, scrub the day
+### [~] T-46 — The isometric house: click a wall, scrub the day
 
-**Area:** F — Frontend (≈ W-39) · **Status:** NOT STARTED · **Est:** 12 h
+**Area:** F — Frontend (≈ W-39) · **Status:** CLAIMED by orch-T-46 at 2026-09-18T15:41:30Z · **Est:** 12 h
 **Depends on:** T-36 · **Conflicts with:** T-44 (coordinate only via `store.selectedSurfaceId`)
 
 **Why this exists.** This is **the screenshot that carries the pitch** and the asset the PPT's
@@ -498,9 +498,9 @@ together.**
 
 ---
 
-### [ ] T-50 — The survival grid
+### [~] T-50 — The survival grid
 
-**Area:** F — Frontend · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** F — Frontend · **Status:** CLAIMED by orch-T-50 at 2026-09-18T15:41:30Z · **Est:** 5 h
 **Depends on:** T-36, T-59 · **Conflicts with:** none
 
 **Why this exists.** *"This is the screen that answers the question a procurement officer actually

@@ -371,14 +371,14 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 
 | | ID | Title | Depends on |
 |---|---|---|---|
-| [ ] | T-43 | The browser Web Worker and the offline fallback path | T-36 |
+| [~] | T-43 | The browser Web Worker and the offline fallback path | T-36 |
 | [ ] | T-44 | The five-control simple form | T-28, T-36, T-41 |
-| [ ] | T-45 | The Advanced panel | T-36 |
-| [ ] | T-46 | The isometric house: click a wall, scrub the day | T-36 |
+| [~] | T-45 | The Advanced panel | T-36 |
+| [~] | T-46 | The isometric house: click a wall, scrub the day | T-36 |
 | [ ] | T-47 | The temperature view (PS Deliverable 1) and the 6 AM label | T-36, T-43 |
 | [ ] | T-48 | The solar capture view (PS Deliverable 2) | T-36, T-43 |
 | [ ] | T-49 | The heat-flow view and the Sankey (PS Deliverable 3) | T-22, T-36, T-43 |
-| [ ] | T-50 | The survival grid | T-36, T-59 |
+| [~] | T-50 | The survival grid | T-36, T-59 |
 | [ ] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
 | [ ] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
 | [ ] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
