@@ -196,6 +196,25 @@ describe('T-40 worker-thread pool', () => {
     const p = pool(size);
     const reqs = Array.from({ length: 100 }, (_, i) => baseRequest({ gains: 100 + i, tol: 0.02, cap: 30 }));
 
+    // JIT warm-up, evenly across every worker, BEFORE either timed phase.
+    // pump() always fills the first free slot it finds, so a purely sequential
+    // phase (awaited one call at a time, as the "sequential" baseline below
+    // does) never frees more than one slot at a time and therefore always
+    // lands on the SAME worker -- only that one V8 isolate gets JIT-warmed.
+    // Without this step, the sequential baseline below would fully warm
+    // exactly 1 of `size` workers while the parallel runMany phase after it
+    // has to cold-start the other `size - 1` DURING the timed measurement --
+    // an asymmetric, load-sensitive cost (confirmed: this test failed once in
+    // a full-suite run at 1.85x, a bare rerun of the same file passed at
+    // 2.10-3.47x) that has nothing to do with the pool's real steady-state
+    // parallel efficiency, which is what this test means to measure.
+    // runMany's own round-robin dispatch (pump() fills every free slot before
+    // any of them frees up again) touches every worker, unlike a sequential loop.
+    await p.runMany(
+      Array.from({ length: size * 8 }, (_, i) => baseRequest({ gains: 100 + i, tol: 0.02, cap: 30 })),
+      () => {},
+    );
+
     const t0 = performance.now();
     for (const req of reqs) await p.run(req);
     const sequentialMs = performance.now() - t0;

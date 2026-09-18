@@ -795,11 +795,52 @@ NODE_ENV unset -- vitest default):
    all arrived `instanceof Float64Array`. PASS.
 
 3. pool size 4, 100 sequential pool.run() = 1543.4 ms, pool.runMany(100) = 444.2 ms,
-   ratio = 3.47x (required >= size*0.5 = 2.0x). Re-run 3x: 2.10x, 2.93x/3.16x/3.33x,
-   3.47x -- all >= 2.0x once the size-11 getPool() singleton from test 1 is torn down
-   at the end of that test (see Gotchas below); before that fix, ratios as low as 2.07x
-   were observed due to CPU oversubscription (11 + 4 = 15 threads on a 12-core box).
-   PASS.
+   ratio = 3.47x (required >= size*0.5 = 2.0x). PASS.
+
+   POST-MERGE-VERIFICATION FINDING (coordinator, ratified here): this test failed once
+   under `DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npx vitest run` (full
+   30-file repo suite, singleFork:true) at ratio 1.846 (required 2.0), while `pool.test.ts`
+   run alone repeatedly passed (2.07x-3.47x across reruns). Root cause, confirmed by
+   code inspection and reproduction, NOT a pool.ts defect:
+
+   Test 3 reused one pool for both timed phases, sequential first. `pump()` always fills
+   the first free slot in `this.slots` order; a purely sequential loop (one `run()`
+   awaited at a time) therefore never touches more than slot 0, so only ONE of the pool's
+   `size` V8 worker isolates gets JIT-warmed by the 100-call sequential phase. The
+   `runMany` phase that follows then has to cold-JIT-compile `simulate()`'s hot path on
+   the other `size - 1` workers *during* the timed parallel measurement, while worker 0
+   (already warm) finishes its share fast -- parallel wall-clock is set by the slowest
+   (coldest) worker. This makes the measured ratio a function of how much JIT-warmup cost
+   lands inside the timed window, which is genuinely load- and scheduling-sensitive (worse
+   under the heavier full-suite run, matching the observed 1.846 vs. isolated-run 2.07-
+   3.47x) -- not a race or correctness bug in pool.ts itself.
+
+   Fix (test-only, apps/web/test/pool.test.ts, not pool.ts -- production code has no
+   sequential-vs-parallel comparison to protect against this asymmetry in the first
+   place): before either timed phase, `runMany()` a `size * 8`-request warm-up batch.
+   `runMany`'s own dispatch (pump() fills every free slot, not just the first, whenever
+   multiple tasks are queued at once) spreads warm-up calls across every worker, so all
+   `size` V8 isolates are past their JIT cold-start before `t0` for the sequential phase
+   even begins. This does not touch the 2.0x floor itself (rule 15: reported, not
+   silently loosened) -- it removes a measurement artifact of the test's own two-phase,
+   same-pool structure.
+
+   Verification after the fix: isolated pool.test.ts reruns of test 3 alone, 10 trials:
+   4.06x, 2.71x, 2.10x, 3.16x, 2.26x, 3.14x, 2.35x, 2.43x, 2.09x, 3.56x -- all >= 2.0x.
+   Full repo suite (`DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npx vitest run`,
+   the exact command and DB-seeded environment that produced the original failure),
+   run 4x: all 4 runs "Test Files 30 passed (30)" / "Tests 352 passed | 10 skipped (362)",
+   zero failures. One of those 4 runs captured test 3's own number inside the full-suite
+   context: ratio = 2.63x (sequential 1334.6ms, runMany 507.6ms) -- comfortably clear of
+   the 2.0x floor in the same adversarial (heavier, more-contended) context that produced
+   the original 1.846 failure.
+
+   Before this fix, ratios as low as 2.07x (isolated) / 1.846x (full suite) were also
+   observed under CPU oversubscription from a separate, now-fixed issue: the size-11
+   getPool() singleton from test 1 was originally left alive for the rest of the file
+   (11 + 4 = 15 threads competing for 12 cores). That was fixed earlier in this task's
+   own development (test 1 now tears the singleton down) and is a distinct, smaller
+   contributor to the same symptom -- both fixes are needed together for reliability.
 
 4. pool size 3, runMany(100 variants) -> workersCreated = 3 (creation counter, not a
    guess). PASS.
