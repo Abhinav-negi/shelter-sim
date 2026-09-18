@@ -367,13 +367,13 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 |
 | [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 |
 
-### Area F — Frontend — 0 / 11 — `log/AREA-F-frontend.md`
+### Area F — Frontend — 1 / 11 — `log/AREA-F-frontend.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
 | [~] | T-43 | The browser Web Worker and the offline fallback path | T-36 |
 | [ ] | T-44 | The five-control simple form | T-28, T-36, T-41 |
-| [~] | T-45 | The Advanced panel | T-36 |
+| [x] | T-45 | The Advanced panel | T-36 |
 | [~] | T-46 | The isometric house: click a wall, scrub the day | T-36 |
 | [ ] | T-47 | The temperature view (PS Deliverable 1) and the 6 AM label | T-36, T-43 |
 | [ ] | T-48 | The solar capture view (PS Deliverable 2) | T-36, T-43 |
