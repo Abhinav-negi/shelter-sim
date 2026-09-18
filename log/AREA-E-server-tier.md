@@ -701,9 +701,9 @@ a divergent event shape between the two routes would force the client into two c
 
 ---
 
-### [~] T-40 — The worker-thread pool, one per core
+### [x] T-40 — The worker-thread pool, one per core
 
-**Area:** E — Server (≈ `plan.md` Part 2b) · **Status:** CLAIMED by orch-T-40 at 2026-09-18T14:36:38Z · **Est:** 8 h
+**Area:** E — Server (≈ `plan.md` Part 2b) · **Status:** DONE. All 12 acceptance tests pass. · **Est:** 8 h
 **Depends on:** T-06, T-36 · **Conflicts with:** T-43 (both speak the §7.14 protocol; settle it first)
 
 **Why this exists.** `plan.md` Part 2b is worth restating, because it is easy to get wrong: the
@@ -783,9 +783,118 @@ models of the same queue.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+All 12 acceptance tests pass, run in apps/web/test/pool.test.ts (repeated 3x for the
+timing-sensitive ones; numbers below are from a clean full-file run on a 12-core box,
+NODE_ENV unset -- vitest default):
+
+1. cpu count = 12, pool size = getPool().size = 11 (max(1, 12-1)). PASS.
+
+2. pool.run(req) vs in-process simulate(req): deep-equal on every field except
+   meta.wallClockMs (each call's own Date.now()-based self-timing, expected to differ,
+   excluded from the comparison -- not a physics output). time/temperatures.*/heatFlows.*
+   all arrived `instanceof Float64Array`. PASS.
+
+3. pool size 4, 100 sequential pool.run() = 1543.4 ms, pool.runMany(100) = 444.2 ms,
+   ratio = 3.47x (required >= size*0.5 = 2.0x). Re-run 3x: 2.10x, 2.93x/3.16x/3.33x,
+   3.47x -- all >= 2.0x once the size-11 getPool() singleton from test 1 is torn down
+   at the end of that test (see Gotchas below); before that fix, ratios as low as 2.07x
+   were observed due to CPU oversubscription (11 + 4 = 15 threads on a 12-core box).
+   PASS.
+
+4. pool size 3, runMany(100 variants) -> workersCreated = 3 (creation counter, not a
+   guess). PASS.
+
+5. onProgress called exactly 100 times, strictly monotonically increasing, last value
+   100. PASS.
+
+6. 100-variant runMany with a 10ms main-thread setInterval running concurrently:
+   44-54 ticks observed per run (interval throttled while backgrounded, as expected),
+   0 late (>20ms drift) every run -> 100.0% on-time (required >= 95%). PASS.
+
+7. AbortController.abort() ~15ms into a 30-variant runMany(pool size 2): active workers
+   settle to 0, elapsed 46.8-75.5 ms across runs (required < 2000 ms). PASS.
+
+8. A request referencing a nonexistent materialId rejects pool.run() with a real
+   `EngineError` instance, code = UNKNOWN_MATERIAL -- never an unhandled rejection
+   (asserted both via `.rejects.toMatchObject` and `instanceof EngineError` in a
+   try/catch). PASS.
+
+9. pool size 3: size before = 3, crash a busy worker via Worker.terminate()
+   (crashBusyWorkerForTest(), same code path a real OOM-kill takes), size during = 3
+   (size is the pool's fixed configured capacity, not a live worker count -- see
+   Design decisions below), in-flight request rejects with PoolWorkerCrashError,
+   size after = 3, next run() succeeds (288 timesteps returned). PASS.
+
+10. 1,000 requests with strictly increasing internalGainsSchedule threaded through
+    runMany(pool size 6); result order checked for auxEnergyKWhPerDay monotonicity
+    (more gains -> less aux heat, all else fixed) -- 0 mismatched adjacent pairs, i.e.
+    every response landed on the task its `id` actually belonged to. PASS.
+
+11. process._getActiveHandles().length: 3 before creating+destroying a 2-worker pool,
+    3 after destroy() + one setImmediate tick -- no growth, no dangling handles. PASS.
+    (An earlier run showed 14/14 while the size-11 getPool() singleton from test 1 was
+    still alive; after fixing test 1 to tear that singleton down, the baseline dropped
+    to 3/3, which is the correct evidence -- 14 active handles was noise from the
+    leaked singleton, not from destroy() itself.)
+
+12. 10,000 sequential pool.run() calls, pool size 4: workersCreated stayed at 4
+    (never grew), total wall-clock 89.7-150.7 s across repeated runs (machine-load
+    dependent -- these are physics-realistic runs at ~9-15 ms/call once resolved
+    through worker IPC, not synthetic no-ops). PASS.
+
+Repo-wide: `npx vitest run` before this task: 16 failed / 278 passed / 35 skipped across
+29 files (8 failing files), all pre-existing Prisma/DB-environment failures in this
+worktree (missing `prisma generate` / live sqlite db -- apps/web/test/repo-designs.test.ts,
+repo-materials.test.ts etc.), unrelated to pool.ts/sim.node.worker.mjs and outside this
+task's file allow-list. After this task: 16 failed / 290 passed / 35 skipped across 30
+files (same 8 failing files, same failures) -- the +12 passed / +1 file is exactly
+apps/web/test/pool.test.ts. No regression anywhere else.
 ```
 
-**Completed by:** ___  **Date:** ___
+Design decisions / gotchas for a successor:
+- `size` is the pool's fixed configured capacity (`Math.max(1, os.cpus().length - 1)` by
+  default), set once at construction and never mutated -- not a live count of currently-alive
+  worker threads. This is what acceptance test 1's exact-equality check requires, and it makes
+  test 9's "size before/during/after" a check that size reporting stays correct and stable
+  through a crash-and-replace cycle, not a race to observe a transient dip. `active` (busy-slot
+  count) and `workersCreated` (a monotonically increasing creation counter, exposed on the
+  `PoolWithDebug` test-only surface) are the two properties that do vary and are what the
+  crash/reuse tests actually assert on.
+- `Worker.terminate()` on a **busy** worker (mid synchronous `simulate()`) was observed on this
+  machine to fire the `exit` event with **code 0** -- the same code a clean, intentional stop
+  reports. Gating crash-replacement on `code !== 0` (the initial implementation) silently missed
+  this case and left the in-flight promise hanging forever (caught by acceptance test 9 timing
+  out at the default 5s). Fixed by treating *any* `exit` while the pool is not `destroyed` as
+  "replace it" -- `destroy()` is the only path that is allowed to let a worker exit cleanly, and
+  it already sets `this.destroyed = true` before terminating, so the exit code is not a reliable
+  signal here and dropping it entirely is correct, not a loosened check.
+- `getPool()`'s `globalThis`-memoised singleton (same pattern as `apps/web/lib/db.ts`) spawns
+  `size` real worker threads (11 on this box) the moment it is first called. Test 1 calls it to
+  check the sizing formula, then explicitly tears it down (`await singleton.destroy()` + delete
+  the `globalThis` stash) so the other 11 tests in the file are not sharing a 12-core machine
+  with 11 already-parked threads -- without that cleanup, test 3's speedup ratio (only required
+  to clear `size*0.5`) came in as low as 2.07x due to CPU oversubscription; with it, three
+  reruns landed at 2.10x-3.47x. This is a test-hygiene fix, not a pool.ts behavior change.
+- `sim.node.worker.mjs` only ever answers `{kind: 'simulate'}`; `'sweep'`/`'cancel'` are §7.14
+  protocol members with no handler here on purpose -- a sweep is just many `run()` calls
+  dispatched by `pool.ts`'s own queue, and cancellation is handled entirely on the main-thread
+  side (`AbortSignal` removes queued-but-undispatched tasks; an already-dispatched request is
+  left to finish, per the brief -- a synchronous `simulate()` call cannot be preempted mid-solve
+  anyway).
+- Every request/result crosses the `postMessage` boundary through T-06's
+  `requestToJson`/`resultFromJson` (never redefined here), even though Node's own
+  `worker_threads` structured clone can carry a `Float64Array` natively -- the brief calls this
+  out explicitly so this pool and the future browser Web Worker (T-43) share one serialisation
+  discipline instead of silently diverging.
+- Build/setup gotcha (repo-wide, not new): a fresh worktree needs `npm install` +
+  `npm run build --workspace=@shelter/engine --workspace=@shelter/data` before any test can
+  import `@shelter/engine`'s compiled `dist/`.
+- Test-suite runtime: `pool.test.ts` takes ~100-160s on its own (test 12's 10,000 real
+  `simulate()` calls dominates), so the repo-wide `npx vitest run` also grew from ~28s to
+  ~130s. No way around this without weakening acceptance test 12 as literally specified
+  (10,000 calls), which was not done.
+
+**Completed by:** T-40 subagent  **Date:** 2026-09-18
 
 ---
 
