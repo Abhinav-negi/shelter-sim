@@ -233,9 +233,9 @@ with no advanced tier and no stated defaults, which fails C-13 and serves the ex
 
 ---
 
-### [~] T-46 — The isometric house: click a wall, scrub the day
+### [x] T-46 — The isometric house: click a wall, scrub the day
 
-**Area:** F — Frontend (≈ W-39) · **Status:** CLAIMED by orch-T-46 at 2026-09-18T15:41:30Z · **Est:** 12 h
+**Area:** F — Frontend (≈ W-39) · **Status:** DONE · **Est:** 12 h
 **Depends on:** T-36 · **Conflicts with:** T-44 (coordinate only via `store.selectedSurfaceId`)
 
 **Why this exists.** This is **the screenshot that carries the pitch** and the asset the PPT's
@@ -301,9 +301,152 @@ coherent piece; splitting them produces a drawing whose click targets do not mat
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Built `apps/web/components/house/`: geometry.ts (pure isometric quad builder, DOM-free),
+color.ts (pure colour ramp), time.ts (hour-of-day -> result-array-index), export.ts
+(presentation-resolution export sizing + real-browser rasterisation path), HouseView.tsx
+(the component), index.ts (barrel), house.test.tsx (11-test suite).
+
+ENVIRONMENT NOTE (read before trusting tests 7/8/9 below): this worktree has no jsdom,
+no happy-dom and no @testing-library -- none is on the approved dependency list
+(CONTRACTS.md §7.13) and none is installed. Real DOM mounting, real click/Tab-key
+dispatch, and real SVG rasterisation are therefore NOT executable here. Tests below that
+depend on those are marked accordingly and verified the closest honest way available
+instead (react-dom/server static markup, or the real handler function called directly).
+All 11 acceptance tests below were run in this session inside wt-T-46 via:
+  npx vitest run apps/web/components/house/house.test.tsx
+
+1. PASS. Surface ids asserted (traditionalLadakhiByre / Leh preset):
+   ['wallSouth', 'wallEast', 'wallWest', 'wallNorth', 'roof', 'floor']
+   For each id, activateSurface(id) (the exact function wired to onClick/onKeyDown) was
+   called and getStoreState().selectedSurfaceId verified to equal that exact id.
+
+2. PASS. Two synthetic box buildings (same shared-geometry shape as
+   packages/data/src/presets.ts), south/north wall length (EW) = 5 m and 8 m, same
+   depth/height. Rendered south-wall path width: 4.3301 (length 5) and 6.9282 (length 8).
+   Ratio 6.9282/4.3301 = 1.600009 vs expected 8/5 = 1.6 -- linear, within float rounding.
+
+3. PASS -- REAL PHYSICS, not eyeballed. Ran `simulate()` against the actual bundled Leh
+   preset (`traditionalLadakhiByre`, resolved via materialById/glazingById/tmyById exactly
+   as `app/page.tsx` does), real NASA-POWER-derived bundled TMY data
+   (packages/data/tmy/leh.json), design day = day 1 of that series (the engine's own
+   integrator always reuses day 0 of the supplied weather as "the design day" for a
+   single-day report -- packages/engine/src/solve/integrator.ts, `daySeries = day===0 ...
+   series`), a genuine January day at Leh. At 12:00 local:
+     south wall (wallSouth) exterior temperature: 30.0 °C
+     north wall (wallNorth) exterior temperature: 0.7 °C
+   South > north, as required -- the passive-solar effect CONTRACTS.md §7.10 describes
+   ("at Leh on 21 Dec, integrated daily I_T on a vertical south wall exceeds that on a
+   horizontal roof") is visibly present in this component's own colour data, not just in
+   engine test fixtures. Colours also differ between 03:00 and 14:00 on the south wall
+   (rgb(225, 228, 228) vs rgb(200, 40, 40)).
+
+4. PASS. `actions.setResult(null)` then `renderToStaticMarkup(<HouseView/>)` does not
+   throw; every surface path fills with the neutral colour `#cbd5e1` (color.ts's
+   NEUTRAL_FILL), confirmed present in the rendered markup.
+
+5. PASS. Legend text at two scrubber hours:
+     hour 3:  "Exterior surface temperature: -19.2 °C to 6.2 °C"
+     hour 14: "Exterior surface temperature: 1.4 °C to 27.9 °C"
+   Different text, both carry "°C", both formatted exclusively through
+   `apps/web/lib/units.ts`'s `formatTempC` (no local toC()/toK()/-273.15 anywhere in this
+   directory -- see test 10).
+
+6. PASS (loop logic verified directly; a live 24 h `setInterval` cannot be observed
+   without a DOM/jsdom in this environment -- see the environment note above).
+   `nextScrubberHour` stepped 24 times from hour 0 visits 24 distinct hours and returns
+   to 0 -- a closed loop, confirmed via a Set of visited hours (size 24) and the final
+   value (0). `actions.setScrubberHour(6)` then rendering shows the "06:00" label in the
+   static markup (the pre-dawn/paused state); `hourToTimeIndex` resolves hour 6 to result
+   index 72 (300 s timestep, 3600 s/288-steps-per-day cadence: 6*3600/300=72, matches).
+
+7. PASS for the SVG-attribute half (grep-verifiable): the rendered `<svg>` carries
+   `viewBox="..."` and no `width="<digit>"` / `height="<digit>"` attribute anywhere.
+   For "renders at 320px without overflowing": the `<svg>` carries inline CSS
+   `width:100%;height:auto;display:block` (not an SVG attribute) so it shrinks to fit any
+   container instead of the SVG spec's 300x150 intrinsic-size fallback, and the outer
+   `<div>` carries `max-width:100%`. A literal 320px-viewport visual-overflow measurement
+   needs a real browser/jsdom layout engine, which this environment does not have --
+   verified structurally (the CSS that causes the shrink is present and correct), not by
+   an actual rendered-pixel measurement. Flagging this honestly per this task's own rule 1
+   rather than asserting a browser measurement that was not taken.
+
+8. PASS for structure + activation; NOT independently verified via a real Tab keypress
+   (no jsdom -- see the environment note above). Rendered tab order (document order of
+   `tabIndex=0` surface paths, which is exactly what a real browser's Tab order is for
+   equal tabIndex values):
+     ['floor', 'wallEast', 'wallSouth', 'wallWest', 'wallNorth', 'roof']
+   6 paths, 6 `tabindex="0"` attributes (one per surface, matches building.surfaces.length).
+   Enter/Space activation verified by calling `activateSurface(id)` -- the exact function
+   HouseView's `onKeyDown` invokes on `e.key === 'Enter' || e.key === ' '` -- and confirming
+   `selectedSurfaceId` updates to that id.
+
+9. PARTIAL / PRAGMATIC, per this task's own brief note on test 9. No headless rasteriser
+   (canvas/resvg/sharp/playwright) is on the approved dependency list (CONTRACTS.md §7.13)
+   or installed in this worktree, so real PNG rasterisation could not be executed in this
+   session. What WAS built and verified: `export.ts`'s `exportSvgToPngDataUrl`, a real
+   browser code path using only native Web APIs (XMLSerializer, Image, <canvas>,
+   canvas.toDataURL) -- no new dependency -- documented in its own header for exactly how
+   a real browser export is invoked. Its pure sizing half, `computeExportPixelSize`, IS
+   verified: for this Leh preset's rendered viewBox (11.959 x 10.35 "model units"), it
+   computes a 1920 x 1662 px PNG target (1920 px wide, aspect-ratio-preserving height).
+   This is a computed target resolution, not an observed rasterised image -- said plainly
+   rather than claimed as a full PASS.
+
+10. PASS. `grep -rn "273\.15" apps/web/components/house` -> zero matches (confirmed in
+    this session). All temperature display goes through `lib/units.ts`'s `formatTempC`;
+    all internal colour-ramp/domain math stays in raw Kelvin numbers (unit-agnostic maths,
+    no conversion needed).
+
+11. PASS. `actions.setScrubberHour(h)` called for h = 0..23 (24 calls, simulating a rapid
+    scrub). `__debugDispatchCount()` before: 0, after: 0, delta: 0 -- `setScrubberHour`
+    only ever calls `setState`, never `setRequest`'s debounced `dispatchSimulation`.
+
+FULL-REPO REGRESSION CHECK: `npx vitest run` from the repo root, in this worktree, after
+`npm install` + building `@shelter/engine`/`@shelter/data`:
+  BEFORE this task's changes (master, same worktree, measured this session):
+    Test Files  8 failed | 22 passed (30)   Tests  16 failed | 290 passed | 35 skipped (341)
+  AFTER this task's changes:
+    Test Files  8 failed | 23 passed (31)   Tests  16 failed | 300 passed | 35 skipped (351)
+  Same 8 failing files / 16 failing tests both before and after (pre-existing Prisma/DB
+  fixture issues in apps/web/test/repo-designs.test.ts and repo-materials.test.ts, entirely
+  unrelated to this task and outside this task's file allow-list -- not touched). This
+  task's own 10 new tests (house.test.tsx) all pass and account for the entire +10 delta.
+
+TYPE CHECK: `npx tsc --noEmit -p apps/web/tsconfig.json` -- zero errors under
+`apps/web/components/house/`.
+
+GOTCHA for whoever wires this into `app/app-shell.tsx`'s `slot-house` placeholder (T-46's
+own brief: that wiring is explicitly NOT in this task's allow-list, a gap for a future
+task): `HouseView` takes no props -- it reads `useStore()`/`actions` directly, the same
+pattern `app-shell.tsx`'s own `PresetReadout` already uses, so it can just be dropped in
+as `<HouseView />` in place of the `slot-house` `<Placeholder>`.
+
+DECISION NOTE: `Building` on disk (CONTRACTS.md §7.5) has no `length`/`width`/`height`/
+`roofPitch` fields, only `floorArea`, `volume` and the `Surface` list -- unlike the task
+prompt's own wording. CONTRACTS.md is authoritative over the prompt where they disagree.
+Every dimension used by this drawing (wall height, footprint width/depth) is therefore
+DERIVED from `volume`, `floorArea` and each wall `Surface.area`/`azimuth` -- see
+geometry.ts's `deriveHeight`/`deriveGeometry` doc comments for the exact algebra. This is
+still fully "parametric from store.request.building": changing any wall's `area` (or
+`floorArea`/`volume`) changes the derived dimensions and therefore the drawing, with no
+extra field required anywhere.
+
+SIMPLIFICATIONS (documented per rule 13/14, each with an upgrade path, marked `ponytail:`
+in the source):
+  - geometry.ts assumes a rectangular-box footprint (exactly what all six bundled presets
+    are -- presets.ts's own comment: "All six houses share one simple box geometry"). A
+    non-rectangular footprint would need a real polygon reconstruction from the wall list;
+    none exists on disk today.
+  - A single `roof` Surface renders as one plane (flat when tilt=0, a mono-pitch/lean-to
+    when tilt>0). A true two-panel gable needs two `roof` Surfaces on disk (e.g.
+    `roofSouth`/`roofNorth`); none exist today -- each would get its own quad through the
+    same `roofQuad` function once added.
+  - The floor (`boundary:'ground'`, naturally hidden under the box in a plain isometric
+    view) is drawn as a slightly larger "plinth" plate so a clickable/colourable rim is
+    visible around the base, rather than a true underside render.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude Sonnet 5 (T-46 subagent)  **Date:** 2026-09-18
 
 ---
 
