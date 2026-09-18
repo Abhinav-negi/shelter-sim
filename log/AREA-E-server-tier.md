@@ -701,9 +701,9 @@ a divergent event shape between the two routes would force the client into two c
 
 ---
 
-### [ ] T-40 — The worker-thread pool, one per core
+### [~] T-40 — The worker-thread pool, one per core
 
-**Area:** E — Server (≈ `plan.md` Part 2b) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** E — Server (≈ `plan.md` Part 2b) · **Status:** CLAIMED by orch-T-40 at 2026-09-18T14:36:38Z · **Est:** 8 h
 **Depends on:** T-06, T-36 · **Conflicts with:** T-43 (both speak the §7.14 protocol; settle it first)
 
 **Why this exists.** `plan.md` Part 2b is worth restating, because it is easy to get wrong: the
