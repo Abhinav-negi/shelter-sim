@@ -1,0 +1,90 @@
+/* apps/web/components/charts/heatflow/HeatFlowPanel.module.css
+ *
+ * T-49, acceptance test 11: at 400px width all three views stay legible.
+ * Each view sits in its own `.scrollBox` (overflow-x: auto) with a
+ * `min-width` on the SVG wider than a narrow phone viewport, so THAT box
+ * scrolls horizontally, never the page body -- the identical containment
+ * pattern `SurvivalGrid.module.css` (T-50) already uses for its table.
+ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5em;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .grid > div:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.scrollBox {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  min-width: 420px;
+  height: auto;
+}
+
+.zeroLine {
+  stroke: #333;
+  stroke-width: 1;
+}
+
+.axisLabel {
+  font-size: 10px;
+  fill: #555;
+}
+
+.sankeyLabel {
+  font-size: 11px;
+  fill: #222;
+}
+
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em 1.2em;
+  padding: 0;
+  margin: 0.5em 0 0;
+  font-size: 0.85em;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.caption {
+  font-size: 0.85em;
+  color: #555;
+  margin: 0.4em 0 0;
+}
+
+.empty {
+  padding: 1em;
+  font-style: italic;
+}
