@@ -253,6 +253,16 @@ export interface SimOptions {
    * is a product feature. Every run that uses it emits a warning.
    */
   allowUnsafeVentilation: boolean;
+  /**
+   * Optional warm start. When supplied, integrate() seeds the spin-up loop from THIS
+   * state instead of fill(mean(T_amb)), then keeps iterating to convergence exactly as
+   * before -- a SPEED optimisation only, never an accuracy shortcut. Length must equal
+   * the built model's node count; a mismatch throws EngineError('INVALID_INPUT').
+   * Added for @shelter/optimise's spin-up-sharing cache (T-54 HELP_REQUEST, see
+   * log/AREA-G-decision-support.md T-54 acceptance test 4) -- packages/optimise/** is
+   * outside this task's own allow-list, so this task proves the hook in isolation only.
+   */
+  initialTemperatureK?: Float64Array;
 }
 
 export interface SimulationRequest {
