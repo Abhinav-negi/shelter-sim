@@ -190,9 +190,12 @@ follow-on) should know a server "success" response is not always a full Simulati
 
 ---
 
-### [~] T-44 — The five-control simple form
+### [!] T-44 — The five-control simple form
 
-**Area:** F — Frontend (≈ W-37) · **Status:** CLAIMED by orchestrator-subagent-T44 at 2026-09-19T02:25:57Z · **Est:** 8 h
+**Area:** F — Frontend (≈ W-37) · **Status:** BLOCKED — acceptance test 1 needs a real recruited
+human test subject (a named human owner, same class of gap as T-65), and the fully-integrated C-13
+experience additionally needs the `app-shell.tsx` wiring that no task in the ledger yet owns (see
+`LOG.md` HANDOFF). Tests 2–12 all pass with real, pasted evidence below. **Est:** 8 h
 **Depends on:** T-28, T-36, T-41 · **Conflicts with:** T-46 (coordinate only via `selectedSurfaceId`)
 
 **Why this exists.** *"A tool that opens onto forty numeric input boxes is a tool nobody finishes
@@ -256,9 +259,179 @@ something to split.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Built: apps/web/components/inputs/{catalog.ts, materialsApi.ts, requestOps.ts, csv.ts,
+SimpleForm.tsx, MaterialStackEditor.tsx, CsvUpload.tsx, index.ts, inputs.test.ts}.
+Test command: `npx vitest run apps/web/components/inputs/inputs.test.ts` -> "Test Files 1 passed
+(1), Tests 17 passed (17)", 2.3-3.8s wall time across 3 separate runs, no flakiness observed.
+`npx tsc --noEmit -p apps/web/tsconfig.json` -> 0 errors. `npm run build --workspace apps/web` ->
+exits 0 (pre-existing "topLevelAwait" webpack warning only, unrelated to this task's files).
+Whole-repo `npx vitest run` after this task's files existed: 35 test files passed, 413 tests
+passed | 10 skipped (423 total), exit 0 -- zero regressions vs. the session baseline (34 files /
+396 passed / 10 skipped before this task).
+
+TEST 1 (the C-13 human test) -- NOT PASSABLE BY THIS SESSION, reported honestly rather than
+fabricated. Two independent, real (not simulated) pieces of evidence were gathered instead:
+  (a) A REAL two-material comparison was run end to end through the actual component + the real
+      store + the real engine (esbuild-bundled SimpleForm.tsx, mounted via react-dom/client in
+      real headless Chrome, google-chrome --headless=new, store hydrated with the real bundled
+      Leh "traditional" preset): starting wall material rammedEarth -> tempAt0600 = 279.9245657703961 K
+      (6.775 degC); after using ONLY the "Wall material" dropdown to switch to eps (no other field
+      touched) -> tempAt0600 = 281.1423351200521 K (7.992 degC), a real, non-zero, physically
+      sensible change (auxEnergyKWhPerDay stayed 0 in both cases -- this preset has no auxiliary
+      heater). This proves the mechanism works: picking a different named material from the basic
+      panel does change the simulated outcome, with no crash, through the real debounce+dispatch
+      path (dispatch count 0 -> 1, confirmed via store.__debugDispatchCount()).
+      (Process note: the first two attempts at this measurement produced spurious SOLVER_DIVERGED /
+      "weather series is empty" errors -- root-caused to the test harness's own fixture generator
+      using a bare JSON.stringify on a WeatherSeries containing nested Float64Array fields, which
+      JSON.stringify serialises as a plain object with numeric-string keys, not a real array,
+      silently losing .length. Fixed in the harness by flattening with Array.from() before writing
+      and Float64Array.from() after reading. This is a defect in this task's OWN one-off browser
+      test harness, not in SimpleForm.tsx, requestOps.ts, or lib/store.ts -- the real app's
+      server-to-client boundary (Next's React Server Components "Flight" protocol) is a different,
+      typed-array-aware serialisation path, already exercised successfully by T-36's own passing
+      acceptance tests, and is not touched by this finding.)
+  (b) A blind comprehension review: a FRESH general-purpose subagent with zero knowledge of this
+      session, this component's source code, or its design rationale, was given ONLY the rendered
+      static HTML of the panel (react-dom/server renderToStaticMarkup output) and asked to roleplay
+      a person who cannot define thermal conductivity, and to describe step-by-step how it would
+      compare two wall materials using only the on-screen text. Its verbatim, most important
+      finding: "There is none anywhere in this form. No submit button, no output panel, no number
+      that changes... the form gives no visible way to see which material wins." This is CORRECT
+      and not a defect in this task: T-44's own allow-list is `apps/web/components/inputs/** only`
+      and its prompt forbids it from rendering any KPI/result -- the temperature/KPI readout that
+      would let a user see a comparison's outcome belongs to T-47 (temperature view) and T-51 (KPI
+      cards), neither of which is wired into `app-shell.tsx` next to this form yet (the same
+      "nothing owns the app-shell wiring" gap `LOG.md`'s own HANDOFF already flags, discovered
+      independently again here). This means the literal C-13 experience ("compare two materials and
+      SEE who wins, unaided, in under 5 minutes") is not fully testable from T-44's files alone,
+      structurally, regardless of who the test subject is -- it needs T-44+T-47/T-51 integrated.
+      Secondary findings from the same review, real and worth carrying forward but NOT this task's
+      to fix (materials.ts/glazing.ts content is outside this task's allow-list): several catalogue
+      material names carry unexplained jargon in the option text itself ("AAC block", "XPS", "PUF /
+      PIR", "PCM paraffin (RT25)", "argon + low-E") -- the plain-language `blurb` shown below the
+      select is fine, but a native <select>'s <option> text cannot itself carry a second, longer
+      explanation. Reported upward per LOG.md rule 16 rather than redesigning the material picker
+      into a non-native custom widget to fix it (that would be a real UI rewrite, out of proportion
+      to this task, and native <select> is the correct choice per every other consideration: full
+      keyboard support, no new dependency, works at 400px).
+  CONCLUSION: this task cannot be marked DONE on its own honesty rules (LOG.md §3: "never tick a
+  box for a test you did not personally run"; SUBAGENT RULES: "mark done only if all conditions
+  pass"). Marked BLOCKED. Needs: (1) a human owner to actually run the C-13 study once (2) a
+  follow-up Area E/F task wires T-44 next to a KPI/temperature display in `app-shell.tsx` -- both
+  outside this task's own remit to create.
+
+TEST 2 (>=10 controls at first paint). `renderToStaticMarkup`, count of unique
+`data-testid="control-*"` markers:
+  count = 10, list = ['location','date','size','shelterType','wallMaterial','roofMaterial',
+  'floorMaterial','windows','glazing','occupancy']
+  Grouping choices made to stay at exactly 10 against the prompt's 11 named concepts (documented in
+  SimpleForm.tsx's own header comment too): "night shutters" is a checkbox INSIDE `control-glazing`
+  (a shutter is a glazing-related choice); "window amount ... per orientation" is ONE control
+  (`control-windows`) holding four small per-orientation sliders, not four controls.
+
+TEST 3 (no standalone physics symbol in any rendered label). Full rendered markup's text content
+(tags stripped) checked against a word-boundary regex for each of k, rho, c, alpha, epsilon, U,
+SHGC, ACH, theta -- zero hits. PASS.
+
+TEST 4 (loading any of the six presets populates every control, no empty required field). For all
+6 preset ids (traditionalLadakhiByre, armyBroBarrack, modernRccNoInsulation, geresTrombeRetrofit,
+optimisedPassivePlaceholder, jaisalmerHotDryContrast): every wall/roof/floor surface's construction
+is non-empty, `building.windows.length > 0`, `operation.internalGainsSchedule`/`achSchedule` both
+have exactly 24 entries, every materialId/glazingId actually referenced resolves in the rebuilt
+`request.materials`/`request.glazings` records, and `simulate(next)` does not throw for any of the
+6. PASS for all 6.
+
+TEST 5 (exactly one re-simulation after the 150ms debounce). Through the real store dispatch path
+(`actions.setRequest` -> `setWallMaterial` -> the store's own 150ms debounce -> `simulate()`),
+measured via `store.__debugDispatchCount()`: dispatch count delta = 1 (exactly one), and
+`currentWallMaterialId` reflects the new material afterwards. PASS.
+
+TEST 6 (material dropdown shows name, citation reachable in one click; rammed earth citation
+pasted). Rendered markup contains a `<summary>`/citation block
+(`data-testid="citation-input-wall-material"`) for the selected material. Citation text shown for
+rammed earth: "IS 3792:1978 Table 1 (rammed earth); ASHRAE Handbook of Fundamentals Ch. 26 Table 4
+(earthen materials); solar absorptance/emissivity: BLUEPRINT.md Appendix B surface finish table".
+
+TEST 7 (clicking a wall opens the stack editor -- T-46 integration). With
+`store.selectedSurfaceId` set to 'wallSouth' (exactly what T-46's `activateSurface('wallSouth')`
+does), the rendered markup contains `data-testid="stack-editor"` and the surface id 'wallSouth';
+with `selectedSurfaceId` cleared back to null, that markup is absent. PASS both directions.
+
+TEST 8 (malformed CSV -> row-level error, previous weather untouched). A 3-row CSV with a
+non-numeric GHI cell (row 2) and a missing v_wind cell (row 3): `parseWeatherCsv` returns
+`series: undefined` (never partially applied) and `rowErrors` naming both problems by row and
+column: row 2 col "GHI" -> "'not-a-number' is not a number"; row 3 col "v_wind" -> "missing value".
+Since `outcome.series` is `undefined` whenever `rowErrors.length > 0`, `CsvUpload.tsx`'s own
+`handleFile` never calls `onWeatherParsed`, so the caller's (store's) previous weather is left
+exactly as it was -- structurally guaranteed, not just observed once.
+
+TEST 9 (no literal Kelvin-Celsius offset constant in this directory). `grep -rn` for the literal
+digits (built by string concatenation inside the test itself, so the test file's own source text
+never contains the literal substring either) over `apps/web/components/inputs` -> empty output, 0
+matches.
+
+TEST 10 (400px width, no horizontal scroll). Real measurement, not a CSS assumption: the actual
+`SimpleForm.tsx` (plus the material-stack editor, opened) was esbuild-bundled (esbuild is already a
+transitive devDependency, used only as a one-off build tool here, never added to any package.json),
+mounted via `react-dom/client` inside a 400px-wide container, served over a local `node:http` static
+server (headless Chrome blocks `type="module"` script fetches from `file://` origins), and measured
+with `google-chrome --headless=new --dump-dom`:
+  containerWidthPx = 402 (400 content + 1px border each side), clientWidth = 400,
+  scrollWidth = 400, hasHorizontalOverflow = false.
+PASS -- every control fits with zero horizontal overflow at 400px, with the stack editor open too.
+
+TEST 11 (every input/select has an associated label; keyboard reachability). Rendered markup: 16
+`<input>`/`<select>` elements with an `id`, all 16 have a matching `<label for="...">` -- 0 missing.
+Every control is a native `<input>`/`<select>`/`<button>` with no explicit `tabIndex` override, so
+each is keyboard-reachable via the browser's normal native tab order (no custom widget defeats it).
+
+TEST 12 (database off, material dropdown still lists the full catalogue). `GET /api/materials`'s
+own route handler (T-41/T-34, unmodified, called directly with `DATABASE_URL` deleted and the
+Prisma globalThis stash disconnected+cleared first, mirroring `db-off.integration.test.ts`'s own
+module-reset pattern, then restored afterwards): status 200, `servedFrom: 'code'`,
+`materials.length = 27` (the full code catalogue, `@shelter/data`'s `MATERIALS.length`).
+
+Known, pre-existing, unrelated-to-this-task gap reconfirmed while checking lint: `npx eslint
+apps/web/components/inputs` -> "all of the files matching the glob pattern... are ignored" --
+this is the SAME `eslint.config.js` gap the previous session's HANDOFF already found and flagged
+("no `files` block covering `apps/web/**`" -- `npm run lint` has been a no-op for the whole
+frontend since T-36). Not fixed here (`eslint.config.js` is outside this task's allow-list);
+`npx tsc --noEmit` was used instead as the real static check, per the same HANDOFF's own advice.
+
+Design notes for a zero-context successor:
+- `catalog.ts`/`csv.ts` deliberately duplicate small, stable, non-physics slices of
+  `packages/data/src/{presets,glazing,tmy}.ts` and (for CSV normalisation) call the SAME public
+  `@shelter/engine` correlations `packages/data/src/weather/pipeline.ts` uses (`decompose`,
+  `skyTemperature`, `sunPosition`, `pressureAtAltitude`) rather than reimplementing any physics.
+  This is forced by a real, confirmed constraint, not a shortcut of convenience:
+  `@shelter/data`'s package.json restricts `"exports"` to `"."` only, and that one barrel
+  (`packages/data/src/index.ts`) imports `tmy.ts`, which reads bundled JSON off disk via
+  `new URL(literal, import.meta.url)` -- Next's bundler statically intercepts that exact syntax the
+  moment ANY module reachable from the browser bundle imports `@shelter/data` at all (confirmed
+  directly against `next.config.mjs`'s own header comment and `lib/store.ts`'s file-header gotcha,
+  both already documented by earlier sessions). `apps/web/components/inputs/**` is a client
+  component tree with no server-only escape hatch available to it. Upgrade path for whoever picks
+  this up: add small `/api/glazings` and `/api/presets` routes (mirroring `/api/materials`, T-41)
+  and fetch from them instead of the static arrays -- outside this task's own allow-list to build.
+- The "location" control can display and select among the 5 bundled TMY towns, but can only ever
+  apply a location whose weather is ALREADY the one loaded in the store (the same constraint as
+  above -- no browser-safe way to fetch a different location's bundled TMY series exists yet).
+  Selecting a different one shows an honest `data-testid="location-notice"` message rather than
+  silently mismatching `site` metadata against stale weather data. The "date" control has NO such
+  limitation: it re-slices a fresh day out of the FULL, already-hydrated year-long series captured
+  once on mount (`fullYearWeatherRef`), which is genuine, working, real data manipulation, not a
+  stub.
+- `applyPresetSummary` (the shelter-type picker) changes ONLY construction/absorptivity/emissivity/
+  windows/operation; it deliberately leaves every surface's `area`/`tilt`/`azimuth`/`boundary`/`id`
+  untouched, so loading a shelter-type card never silently resets a size the user already dialled
+  in via the Size control.
+- Half-finished/left for later: none of the 12 conditions besides test 1 are half-finished; test 1
+  is the one honestly incomplete piece, for the structural reasons above.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** subagent (session claude-sonnet-5, resumed twice after session-wide rate limits)
+**Date:** 2026-09-20
 
 ---
 
