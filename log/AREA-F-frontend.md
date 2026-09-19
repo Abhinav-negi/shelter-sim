@@ -1235,9 +1235,9 @@ of anything in this task's allow-list. Flagged for the orchestrator per rule 16,
 
 ---
 
-### [~] T-51 — KPI cards, the integrity badge and the safety warning
+### [x] T-51 — KPI cards, the integrity badge and the safety warning
 
-**Area:** F — Frontend (≈ W-43) · **Status:** CLAIMED by orchestrator-subagent-T51 at 2026-09-19T02:25:57Z · **Est:** 5 h
+**Area:** F — Frontend (≈ W-43) · **Status:** DONE · **Est:** 5 h
 **Depends on:** T-36, T-43 · **Conflicts with:** none
 
 **Why this exists.** The numbers a decision rests on, plus the two signals that make the tool
@@ -1294,9 +1294,163 @@ becomes visible.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Files added (all under the allow-list `apps/web/components/kpis/**`):
+  KpiColumn.tsx, KpiColumn.module.css, badge.ts, cards.ts, KpiColumn.test.tsx
+No file outside the allow-list was edited (git status confirms this -- see below).
+
+Environment: fresh worktree wt-t-51 (branch task/t-51). `npm install` at root, then
+`npm run build --workspace packages/engine` and `--workspace packages/data` (both
+exit 0, tsc -b). dev.db created via
+  cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate
+  DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:seed
+(seed: "upserted 27 materials from the code catalogue, table now has 27 rows").
+Not required by this task's own logic (no DB reads/writes in components/kpis/**) but
+run per the standard setup instructions; T-30's db.test.ts (part of the full suite
+below) exercises it independently.
+
+Design decisions / assumptions for the zero-context successor:
+- Component reads `useStore()` directly (same pattern as SurvivalGrid/T-50 and
+  HouseView/T-46), not props -- wiring `<KpiColumn/>` into app-shell.tsx's
+  "KPI cards (T-51)" placeholder is left to whichever future task owns app-shell.tsx,
+  since that file is off this task's allow-list.
+- "delta versus the baseline" (the prompt's own wording for the 06:00 card) is read as
+  "how many Kelvin-degrees warmer than outdoor ambient the shelter is at 06:00" -- no
+  other "baseline" concept exists anywhere in CONTRACTS.md, LOG.md, store.ts or any
+  other Area F task. Implemented with ZERO new arithmetic beyond an index lookup:
+  `result.heatFlows.deltaT` (indoorAir - ambient, already assembled by the engine,
+  T-22) is read at the same sample `kpis.tempAt0600` came from (cards.ts,
+  `deltaVsAmbientAt0600`). The sample index is found by an exact-value match against
+  `temperatures.indoorAir` (documented ceiling in cards.ts: could match an earlier
+  day's identical sample in a perfectly periodic multi-day run; upgrade path noted --
+  expose `kpis.idx0600` from the engine if that ever needs to be exact).
+- All 14 CONTRACTS.md §7.7 scalar kpis fields get a card (tempAt0600, hoursInComfort,
+  hoursBelow5C, hoursBelowFreezing, peakToPeakSwing, decrementFactor, timeLagHours,
+  auxEnergyKWhPerDay, keroseneEquivalentLitresPerYear, co2EquivalentKgPerYear,
+  costPerYearINR, condensationRiskHours, minIndoorTemp, maxIndoorTemp, meanIndoorTemp).
+  `tempAt0600PerDay` is NOT rendered as a card: it is on disk (T-61) but absent from
+  CONTRACTS.md's own §7.7 listing (which is authoritative) and is a per-day array, not
+  a single KPI value.
+- Every temperature/energy/percent/hours string goes through `lib/units.ts`'s existing
+  formatters (formatTempC, formatDeltaT, formatEnergy, formatINR, formatPercent,
+  formatHours) -- no new Celsius or percent arithmetic was written; `formatPercent`
+  already implemented CONTRACTS.md §7.4's exact display rule before this task started.
+- No dismiss/collapse control exists anywhere in the file, by design -- satisfies
+  acceptance test 5 structurally (there is nothing to exercise).
+- No jsdom/@testing-library in this worktree (not on the approved dependency list,
+  CONTRACTS.md §7.13) -- tests use `react-dom/server`'s `renderToStaticMarkup`
+  (Node-only, no real DOM), the same pattern `components/house/house.test.tsx` (T-46)
+  established. The 400px layout test (11) is verified by reading the CSS module's own
+  source for the breakpoint rule, since no headless browser is available to actually
+  resize a viewport in this environment.
+
+ACCEPTANCE TESTS -- results (`npx vitest run apps/web/components/kpis/KpiColumn.test.tsx`,
+13/13 passed):
+
+1. Every §7.7 kpis field appears on a card, unit included. Rendered (real bundled Leh
+   preset via simulate()):
+     06:00 temperature        6.8 °C
+     Hours in comfort         0.0 h
+     Auxiliary heating        0.00 kWh/day
+     Fuel (kerosene-equiv.)   0.0 L/yr
+     Running cost             ₹0/yr
+     CO2 emitted              0.0 kg/yr
+     Min indoor temperature   5.6 °C
+     Max indoor temperature   14.6 °C
+     Mean indoor temperature  9.3 °C
+     Daily swing (p2p)        9.1 K
+     Decrement factor         0.642 (dimensionless)
+     Time lag                 6.8 h
+     Hours below 5 °C         0.0 h
+     Hours below freezing     0.0 h
+     Condensation risk        23.2 h
+   Diffed 1:1 against CONTRACTS.md §7.7's 14 scalar fields -- nothing missing, nothing
+   extra (tempAt0600PerDay correctly excluded, see decisions above). PASS.
+
+2. Stored `meta.energyBalanceResidual = 0.0002` (deliberately set on a cloned real
+   result) -> rendered badge text `"0.020%"`, `data-status="ok"`. PASS.
+
+3. Stored `meta.energyBalanceResidual = 0.001` (deliberately broken fixture) ->
+   rendered text `"0.100%"`, `data-status="bad"` (red). `badgeFor(0.001).ok === false`
+   confirms the `< 0.001` boundary is exclusive per CONTRACTS.md §7.4. PASS.
+
+4. Real Leh request with `achSchedule` forced to `0.05` on every hour (below
+   `ACH_MIN = 0.35`) run through the REAL engine -> `meta.warnings` contains, verbatim:
+   "Ventilation was raised to the safety floor for at least one hour: the requested
+   design was sealed tighter than is safe. This prevents a carbon monoxide build-up
+   from any unvented combustion appliance (a bukhari stove); do not seal this shelter
+   any tighter than shown." -- rendered unmodified inside `data-testid="kpi-warning"`.
+   Contains "carbon monoxide" verbatim. PASS.
+
+5. No `<button>` and no "dismiss"/"close" text anywhere in the rendered markup --
+   there is no dismiss affordance in this component to exercise, so the warning is
+   structurally permanent. PASS.
+
+6. Weather series with `RH` destructured out entirely -> `kpis.condensationRiskHours
+   === null` (confirmed) -> rendered card value: "not available — no humidity data".
+   Does not contain "0 hours". PASS.
+
+7. Same clamped-ACH fixture as test 4: `meta.warnings.length === 1`, rendered
+   `data-testid="kpi-warning"` count === 1. Every string in `meta.warnings` is found
+   verbatim in the rendered HTML. PASS.
+
+8. T-47 (log/AREA-F-frontend.md) is still `[~]` CLAIMED and not merged into this
+   worktree -- there is no chart component to literally diff against (reported per
+   rule 16, not fabricated). Verified instead: the 06:00 card renders
+   `formatTempC(kpis.tempAt0600)` = "6.8 °C", and CONTRACTS.md §7.1 makes
+   `lib/units.ts` the ONLY file in the repo permitted to do a Kelvin->Celsius
+   conversion, so a correctly-built T-47 annotation is required to call the same
+   `formatTempC` -- there is no second, independently-invented rounding rule
+   available to it. Precision equality follows from the shared contract; a literal
+   pixel-for-pixel diff against T-47's own chart is NOT CHECKED pending that task's
+   merge, and should be re-verified once T-47 lands.
+
+9. `actions.setResult(null)` -> rendered:
+   `<div class="..." data-testid="kpi-column-empty">No result yet.</div>` -- no
+   "NaN" anywhere in the output. PASS.
+
+10. `grep -rn "273\.15" apps/web/components/kpis` -> exit code 1, zero matches
+    (confirmed both before and after adding the self-check test, which builds its
+    forbidden string at runtime from the engine's own `T0` constant rather than
+    spelling it out as source text -- see cards.ts/KpiColumn.test.tsx comments).
+    PASS.
+
+11. `KpiColumn.module.css` has `@media (max-width: 480px) { .grid { grid-template-
+    columns: 1fr; } }`, which covers the 400px test point and forces exactly one
+    column (not left to `auto-fill`/`minmax` arithmetic). Verified by reading the
+    CSS module's own source (no headless browser available in this environment to
+    literally resize a viewport, same constraint T-46/T-50 document). PASS, with that
+    caveat noted for a successor with browser access to confirm visually.
+
+12. Units present in rendered markup: °C, " h" (hours), kWh, L/yr, kg/yr, ₹,
+    "dimensionless" -- all found via substring match on the real rendered card list
+    above. PASS.
+
+Type/lint/regression checks:
+- `npx tsc --noEmit -p apps/web/tsconfig.json`: "TypeScript: No errors found", exit 0
+  (includes `exactOptionalPropertyTypes` -- two issues found and fixed during this
+  task: `Card`'s `sub` prop needed `sub?: string | undefined` explicitly, and the
+  test's no-RH fixture needed to destructure `RH` out of the object rather than set
+  it to `undefined`).
+- `npx eslint apps/web/components/kpis/**`: not applicable -- `eslint.config.js`'s
+  only `files` pattern is `packages/**/*.ts`; apps/web is not linted by any rule in
+  this repo today (verified by inspecting the config, not assumed).
+- Full repo suite, `npx vitest run` (root `vitest.config.ts`, single-fork/serialised
+  per its own header comment): 35 test files passed, 409 passed | 10 skipped (419
+  total), exit code 0. Zero regressions from this task's addition (13 new tests in
+  KpiColumn.test.tsx are part of that 409). Duration 340.8 s.
+- `packages/engine/test/output/validation-numbers.csv` picked up 19 appended rows as
+  a side effect of running the full suite (that file's own test writes to it on every
+  run, per its header comment) -- reverted with `git checkout --` before committing,
+  since it is outside this task's allow-list and not a deliberate change.
+
+Not independently re-verified: the T-40/pool.ts `exactOptionalPropertyTypes` issue
+this ledger's other entries flag as pre-existing was NOT observed by
+`npx tsc --noEmit -p apps/web/tsconfig.json` in this worktree (clean, zero errors) --
+noted here in case a successor's `next build` step (webpack-driven typecheck) still
+surfaces it; not this task's file, not touched.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude (subagent, T-51)  **Date:** 2026-09-19
 
 ---
 
