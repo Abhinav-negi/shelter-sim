@@ -16,9 +16,9 @@
 
 ---
 
-### [!] T-54 — The sweep engine: expand, dispatch, collect
+### [~] T-54 — The sweep engine: expand, dispatch, collect
 
-**Area:** G — Decision support (≈ W-30) · **Status:** BLOCKED on acceptance test 4 only (see Evidence) — 12/12 tests pass except test 4 (test 12's lint sub-check fixed by the orchestrator 2026-09-16) · **Est:** 8 h
+**Area:** G — Decision support (≈ W-30) · **Status:** CLAIMED by orchestrator-subagent-T54-continuation at 2026-09-19T12:09:48Z — resuming after T-70 (packages/engine warm-start hook) landed; was BLOCKED on acceptance test 4 only, 12/12 tests pass except test 4 (test 12's lint sub-check fixed by the orchestrator 2026-09-16) · **Est:** 8 h
 **Depends on:** T-06, T-24, T-28 · **Conflicts with:** T-55 (same package, sequential)
 
 **Why this exists.** *"Because one simulation takes about 50 milliseconds, we do not ask 'how does
