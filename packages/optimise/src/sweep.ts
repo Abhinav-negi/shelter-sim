@@ -360,26 +360,67 @@ function massAffectingHash(request: SimulationRequest): string {
 }
 
 /**
- * Extra days added on top of a mass-group's first observed
- * `spinUpDaysUsed` before it is reused as that group's `maxSpinUpDays` cap
- * for every later variant sharing the same hash.
- *
- * ponytail / LOG.md rule 13: `@shelter/engine`'s `simulate()` (CONTRACTS.md
- * §7.5) has no way to hand it a warm initial-condition array -- its spin-up
- * always starts every call from the weather's mean ambient temperature and
- * iterates to its OWN tolerance-based convergence (packages/engine/src/
- * solve/integrator.ts). Without that hook, "sharing a converged state" can
- * only mean capping `maxSpinUpDays` from a representative variant's
- * measurement, which changes speed ONLY when a later variant would have
- * needed strictly more days than the cap -- and measurement (see this
- * task's Evidence block) shows that within a real mass-group the day-count
- * variance across non-mass parameters is small, so a margin safe enough to
- * respect the 0.05 K accuracy budget yields a small, not a 2x, saving.
- * Upgrade path: add an initial-temperature-array field to `SimulationRequest`
- * / `SimOptions` in `@shelter/engine` (owned by that package, not this one)
- * so a real warm start becomes possible.
+ * The state cached per mass-hash group: enough to build a same-length,
+ * same-ballpark `options.initialTemperatureK` for every later variant that
+ * shares this hash.
  */
-export const SPIN_UP_SHARE_MARGIN_DAYS = 1;
+interface SpinUpCacheEntry {
+  /** `SimulationResult.meta.nodeCount` of the first-computed variant in this group. */
+  nodeCount: number;
+  /** The uniform warm-start fill value, K -- see `warmStartFillK` below. */
+  fillK: number;
+}
+
+/**
+ * T-70 (`packages/engine`, merged on master) added `SimOptions.initialTemperatureK`:
+ * an optional per-node seed for `integrate()`'s spin-up loop, validated against the
+ * built model's node count. This is what `@shelter/optimise` was missing when this
+ * task was first attempted (see this task's Evidence block, "NOT MET" sub-section) --
+ * the day-count-only cap that used to live here (`SPIN_UP_SHARE_MARGIN_DAYS`) is
+ * gone, replaced by an actual warm state.
+ *
+ * `initialTemperatureK` must be a `Float64Array` of length `n`, one entry per
+ * INTERNAL solver node (each wall's mesh chain, the air node, the star node, every
+ * storage node), in `packages/engine`'s own internal order. That order (and even
+ * which index is which) is not part of the public contract -- `buildModel`, `Model`,
+ * `AIR_NODE`, `STAR_NODE` are not exported from `@shelter/engine`'s index (CONTRACTS.md
+ * §7.7 lists exactly what `SimulationResult` exposes, and it is per-channel series,
+ * not the raw node vector). `@shelter/optimise`'s only approved dependency is
+ * `@shelter/engine` (CONTRACTS.md §7.13), so this package cannot assume, guess at, or
+ * hard-code that internal layout -- doing so would silently feed the wrong value into
+ * the wrong node the moment `packages/engine` ever reordered its own nodes, and no
+ * contract or test here would catch it.
+ *
+ * The one construction that is correct **regardless of internal node order** is a
+ * UNIFORM fill: `new Float64Array(n).fill(v)` puts the same value `v` at every
+ * index, so it cannot be "wrong node, right value" no matter how `n` is laid out
+ * internally. `v` is chosen to be a much better guess than the engine's own cold
+ * start (`fill(mean(T_amb))`, packages/engine/src/solve/integrator.ts): the plain
+ * average, over every reported timestep, of every solved-node channel this
+ * package's public contract actually exposes (`temperatures.indoorAir`, `.ground`,
+ * `.meanRadiant`, and every surface's `.exterior`/`.interior`) -- see
+ * `warmStartFillK` below. This is a SPEED lever only: T-70's own acceptance test 3
+ * proved a warm start that is flatly wrong still converges to the same fixed point
+ * within `spinUpToleranceK`, just possibly in more days than a good guess.
+ */
+function warmStartFillK(result: SimulationResult): number {
+  let sum = 0;
+  let count = 0;
+  const add = (arr: Float64Array): void => {
+    for (let i = 0; i < arr.length; i++) {
+      sum += arr[i]!;
+      count++;
+    }
+  };
+  add(result.temperatures.indoorAir);
+  add(result.temperatures.ground);
+  add(result.temperatures.meanRadiant);
+  for (const s of Object.values(result.temperatures.surfaces)) {
+    add(s.exterior);
+    add(s.interior);
+  }
+  return count > 0 ? sum / count : result.kpis.meanIndoorTemp;
+}
 
 function computeAchFloor(req: SweepRequest, request: SimulationRequest): number {
   const floor = Math.max(req.constraints.achMin, ACH_MIN);
@@ -442,7 +483,7 @@ export async function runSweep(
   const startedAt = performance.now();
   const expanded = expandVariants(req);
   const total = expanded.length;
-  const spinUpCache = new Map<string, number>();
+  const spinUpCache = new Map<string, SpinUpCacheEntry>();
   let spinUpShared = false;
 
   const variants: SweepVariant[] = [];
@@ -454,17 +495,17 @@ export async function runSweep(
     }
 
     const hash = massAffectingHash(ev.request);
-    const cachedDays = spinUpCache.get(hash);
-    if (cachedDays !== undefined) {
-      const cap = cachedDays + SPIN_UP_SHARE_MARGIN_DAYS;
-      if (cap < ev.request.options.maxSpinUpDays) {
-        ev.request = { ...ev.request, options: { ...ev.request.options, maxSpinUpDays: cap } };
-        spinUpShared = true;
-      }
+    const cached = spinUpCache.get(hash);
+    if (cached !== undefined) {
+      ev.request = {
+        ...ev.request,
+        options: { ...ev.request.options, initialTemperatureK: new Float64Array(cached.nodeCount).fill(cached.fillK) },
+      };
+      spinUpShared = true;
     }
 
     const result = await runner(ev.request);
-    if (!spinUpCache.has(hash)) spinUpCache.set(hash, result.meta.spinUpDaysUsed);
+    if (!spinUpCache.has(hash)) spinUpCache.set(hash, { nodeCount: result.meta.nodeCount, fillK: warmStartFillK(result) });
 
     const achFloor = computeAchFloor(req, ev.request);
     const minAch = Math.min(...ev.request.operation.achSchedule);

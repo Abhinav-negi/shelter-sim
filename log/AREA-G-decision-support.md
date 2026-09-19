@@ -16,9 +16,9 @@
 
 ---
 
-### [~] T-54 — The sweep engine: expand, dispatch, collect
+### [!] T-54 — The sweep engine: expand, dispatch, collect
 
-**Area:** G — Decision support (≈ W-30) · **Status:** CLAIMED by orchestrator-subagent-T54-continuation at 2026-09-19T12:09:48Z — resuming after T-70 (packages/engine warm-start hook) landed; was BLOCKED on acceptance test 4 only, 12/12 tests pass except test 4 (test 12's lint sub-check fixed by the orchestrator 2026-09-16) · **Est:** 8 h
+**Area:** G — Decision support (≈ W-30) · **Status:** BLOCKED — acceptance test 4's ≥2x speedup is still not met, now with a genuine warm start wired to T-70's `initialTemperatureK` hook: measured ~1.08-1.20x, not 2x, because `SimulationResult`'s public contract exposes no per-node state, only per-channel series, so the only boundary-safe warm start is a uniform (shapeless) fill (see Evidence, 2026-09-19 continuation, for the precise reasoning and numbers). All 11 other acceptance tests still pass unchanged. · **Est:** 8 h
 **Depends on:** T-06, T-24, T-28 · **Conflicts with:** T-55 (same package, sequential)
 
 **Why this exists.** *"Because one simulation takes about 50 milliseconds, we do not ask 'how does
@@ -170,6 +170,108 @@ x 5 buildingAzimuth values (0/45/90/135/180).
        trades accuracy for a speed win the caller didn't ask for. Recommend a new task, owned by
        whoever owns packages/engine/**, to add the warm-start field; T-54 cannot add it itself.
 
+--- 2026-09-19 CONTINUATION (after T-70's `SimOptions.initialTemperatureK` merged to master) ---
+
+   T-70 (log/AREA-B-engine.md) landed the requested hook: `integrate()` now seeds its spin-up loop
+   from `options.initialTemperatureK` (a `Float64Array` of length `n`, one entry per internal
+   solver node) when supplied, instead of always starting from `fill(mean(T_amb))`, then converges
+   exactly as before. This continuation wires it into `sweep.ts`'s spin-up-sharing cache and
+   re-measures honestly, per this session's brief.
+
+   IMPLEMENTATION. `packages/optimise/src/sweep.ts`: the old day-count-cap mechanism
+   (`SPIN_UP_SHARE_MARGIN_DAYS`, `maxSpinUpDays` capping) is REMOVED and replaced by an actual
+   warm state. New `SpinUpCacheEntry { nodeCount, fillK }` cached per mass-hash group
+   (`massAffectingHash`, unchanged). After the FIRST variant of a group is run,
+   `warmStartFillK(result)` computes a single scalar: the plain average, over every reported
+   timestep, of every solved-node channel `SimulationResult` actually exposes --
+   `temperatures.indoorAir`, `.ground`, `.meanRadiant`, and every surface's `.exterior`/
+   `.interior`. Every LATER variant sharing that hash gets `options.initialTemperatureK =
+   new Float64Array(cached.nodeCount).fill(cached.fillK)`.
+
+   WHY A UNIFORM FILL, NOT A REAL PER-NODE STATE. `initialTemperatureK` must be length `n`, one
+   entry per INTERNAL node (each wall's mesh chain, air node, star node, storage nodes), in
+   `packages/engine`'s own internal order. That order/layout is deliberately NOT part of the
+   public contract: `SimulationResult` (CONTRACTS.md §7.7) exposes only named per-channel series,
+   never the raw solved node vector (`finalT`/`initialT` in
+   `packages/engine/src/solve/integrator.ts`'s `RunOutput`, which is not exported), and
+   `buildModel`/`Model`/`AIR_NODE`/`STAR_NODE` are not exported from `@shelter/engine`'s index
+   either. `@shelter/optimise`'s only approved dependency is `@shelter/engine`'s public surface
+   (CONTRACTS.md §7.13), and `packages/engine/**` is outside this task's file allow-list (read-only
+   for understanding, same as the 2026-09-16 finding did, never as a design dependency). A per-node
+   array built by guessing at the internal layout could silently write the wrong value to the
+   wrong node the moment the engine's own ordering ever changed, with no contract or test able to
+   catch it. A UNIFORM fill (`new Float64Array(n).fill(v)`) is the only construction that is
+   correct regardless of internal node order, because every index holds the same value.
+
+   MEASUREMENT. Command: `npx tsc -b packages/engine && npx tsc -b packages/optimise`, then a
+   standalone Node script run directly against the built dist of both packages (same convention
+   as the original 2026-09-16 Evidence: avoids the no-console ESLint rule on
+   `packages/optimise/test/**`; scratch script, not committed) reproducing the exact
+   `packages/optimise/test/fixtures.ts` fixture and `THE_100_VARIANT_SPEC` (5 wallConstruction x 4
+   wwr:S x 5 buildingAzimuth = 100 variants), with one throwaway warm-up sweep discarded first
+   (JIT), then two interleaved unshared/shared pairs, per the prior subagent's own documented
+   methodology for controlling that confound:
+
+     unsharedMs u1=2356.7 u2=2171.3   (also re-run twice more: 2541.4/3055.2, 1975.4/2751.2)
+     sharedMs   s1=2480.3 s2=1719.5   (also: 2561.9/2473.2, 2157.5/2613.8)
+     speedup(u1/s1)=0.950 speedup(u2/s2)=1.263 speedup(u1/s2)=1.371 speedup(u2/s1)=0.875
+     (3 repeated runs, 12 ratios total: mean speedup = 1.076x; range 0.756x-1.371x)
+     spinUpShared flags: true on every shared run (genuine -- warm start was actually applied)
+     maxDevK(u vs s) = 0.009530226187905555 K, IDENTICAL across every repeat (deterministic
+       simulate()) -- well inside the 0.05 K budget, in fact tighter than the original day-cap
+       mechanism's 0.0187 K
+
+     Deterministic (non-noisy) mechanism check -- mean `spinUpDaysUsed` per variant:
+       unshared (all 100 cold): min=11 max=16 mean=12.29
+       shared   (5 cold "first of group" + 95 warm-started): min=6 max=13 mean=10.05
+     Day-equivalent speedup estimate (spin-up days + 1 reported day, per call):
+       (12.29+1) / (10.05+1) = 13.29/11.05 = 1.203x
+
+   CONCLUSION: acceptance test 4 is NOT MET, honestly, again -- but for a more specific, now
+   architectural reason than the 2026-09-16 attempt. The warm start is REAL (spinUpDaysUsed
+   genuinely drops, `spinUpShared` is genuinely true, not a placebo) and is SAFER than before
+   (0.0095 K max deviation vs the old mechanism's 0.0187 K, both far inside the 0.05 K budget). It
+   gives a repeatable, mechanistic ~1.08-1.20x speedup -- real, but not the required 2x. The
+   reason this ceiling exists even with T-70's hook: a uniform (shapeless) warm start only
+   corrects the OVERALL LEVEL, not the SPATIAL GRADIENT through a wall's thickness, and per T-70's
+   own Evidence (log/AREA-B-engine.md, test 3), it is precisely the gradient SHAPE that matters
+   most for spin-up convergence speed -- their test 3, seeded with the real converged per-node
+   profile merely OFFSET +20 K uniformly (i.e. correct shape, wrong level), converged in 4 days vs
+   cold's 7 (a 1.75x day-count reduction from one dimension of error alone), while this task's
+   shapeless average achieves a smaller ~18% day-count reduction. To close the remaining gap,
+   `@shelter/engine` would need to expose the real per-node state to a caller that only ever
+   treats it as an opaque pass-through (e.g. `SimulationResult` returning an opaque `warmState`
+   alongside `kpis`, which `@shelter/optimise` stores and later hands straight back as
+   `options.initialTemperatureK`, never inspecting or reordering it) -- a second, small,
+   engine-owned addition, beyond both T-70's and this task's scope, and beyond
+   `packages/optimise/**`'s file allow-list (LOG.md rule 3/16: report across the boundary, do not
+   fix across it).
+
+   Files touched this continuation: `packages/optimise/src/sweep.ts` (cache mechanism replaced),
+   `packages/optimise/test/sweep.test.ts` (stale `SPIN_UP_SHARE_MARGIN_DAYS` import removed, test
+   4's comments updated to match; its assertions -- `maxDevK < 0.05`, both wall-clock numbers
+   positive -- are unchanged and still pass; no `>= 2x` assertion was added, because it would flap
+   against a true effect that is honestly ~1.1-1.2x, not 2x).
+
+   RE-VERIFICATION OF THE OTHER 11 ACCEPTANCE TESTS. `npm install` (root, clean), `npx tsc -b
+   packages/engine` (clean, 0 errors -- confirms T-70's merged hook builds), `npx tsc -b
+   packages/optimise` (clean, 0 errors), `npm run test -w packages/optimise`:
+     Test Files  1 passed (1)
+          Tests  11 passed (11)
+       Duration  ~18-20s (three repeat runs, all green: 19.96s / 19.23s tests, 18.80s / 18.15s tests)
+   All of tests 1, 2, 3, 5, 6, 7, 8, 9, 10, 11 pass exactly as originally measured in the
+   2026-09-16 Evidence above -- none of their code paths (expandVariants, feasibility,
+   cancellation, progress, runner-agnosticism, aspectRatio, package.json) were touched by this
+   continuation, only the spin-up cache internals inside `runSweep`'s dispatch loop were replaced.
+   `npm run lint` (root): 0 errors, 12 warnings, identical pre-existing set
+   (`packages/data/test/weather.test.ts`, `packages/engine/test/pcm.test.ts`,
+   `packages/engine/test/storage.test.ts` -- unused eslint-disable directives, untouched by this
+   task) -- test 12 still passes.
+   `git status` after this continuation's changes: only `packages/optimise/src/sweep.ts` and
+   `packages/optimise/test/sweep.test.ts` modified; no `validation-numbers.csv` diff appeared
+   (engine tests were not run as part of this package-scoped work, and `packages/engine/**` was
+   not touched).
+
 5. PASS. 100 variants via `runSweep(..., syncRunner)`: elapsedS=2.046-2.111 (repeat runs),
    meta.evaluated=100. Comfortably under the 10 s budget -- consistent with CONTRACTS.md §7.15's own
    note that the engine alone already clears this without any sharing optimisation.
@@ -223,7 +325,9 @@ file, not T-55's per the Files-you-may-touch split) and belongs in a report back
 ledger, not a fork of this loop inside pool.ts.
 ```
 
-**Completed by:** claude (T-54 subagent, session 2026-09-16)  **Date:** 2026-09-16
+**Completed by:** N/A -- BLOCKED (11/12 acceptance tests pass; test 4's original attempt: claude,
+T-54 subagent, session 2026-09-16; this continuation, after T-70's warm-start hook: claude, T-54
+subagent, session 2026-09-19)  **Date:** 2026-09-19
 
 ---
 

@@ -12,7 +12,7 @@ import {
   type SweepRequest,
   type VariableSpec,
 } from '@shelter/engine';
-import { expandVariants, runSweep, SPIN_UP_SHARE_MARGIN_DAYS } from '../src/sweep.js';
+import { expandVariants, runSweep } from '../src/sweep.js';
 import { baseRequest, MAT } from './fixtures.js';
 
 /** A synchronous-style runner: wraps the pure `simulate()` in a resolved Promise. */
@@ -212,14 +212,15 @@ describe('acceptance test 4 -- spin-up sharing changes speed, not answers', () =
   it('agrees with the unshared baseline to within 0.05 K on every variant', async () => {
     const req = the100VariantRequest();
 
-    // "sharing disabled": expand once, dispatch with no day-cap sharing at all.
+    // "sharing disabled": expand once, dispatch with no warm start at all.
     const unshared = expandVariants(req);
     const t0 = performance.now();
     const unsharedResults = [];
     for (const v of unshared) unsharedResults.push(await syncRunner(v.request));
     const unsharedMs = performance.now() - t0;
 
-    // "sharing enabled": the shipped runSweep, which applies the mass-hash day cache.
+    // "sharing enabled": the shipped runSweep, which seeds `options.initialTemperatureK`
+    // (T-70) from a uniform warm-start value cached per mass-hash group.
     const t1 = performance.now();
     const shared = await runSweep(req, syncRunner);
     const sharedMs = performance.now() - t1;
@@ -232,11 +233,13 @@ describe('acceptance test 4 -- spin-up sharing changes speed, not answers', () =
       maxDevK = Math.max(maxDevK, Math.abs(withSharing.kpis.tempAt0600 - unsharedResults[i]!.kpis.tempAt0600));
     }
 
-    // See sweep.ts's SPIN_UP_SHARE_MARGIN_DAYS doc and this task's LOG.md Evidence
-    // block: without a warm-start hook in @shelter/engine, a margin safe enough to
-    // hold this 0.05 K budget does not reliably clear a 2x wall-clock speedup for
-    // realistic mass groups -- that is measured and reported there, not asserted
-    // here as if it always holds.
+    // See sweep.ts's `warmStartFillK` doc and this task's Evidence block (2026-09-19
+    // continuation): the uniform warm start is the only construction that is safe
+    // without knowing @shelter/engine's internal node order, and it measurably cuts
+    // spin-up days (mean 12.29 -> 10.05 on this fixture) while keeping the deviation
+    // far inside budget -- but it does not reliably clear a 2x wall-clock speedup,
+    // because it carries no per-node spatial gradient. Measured, not asserted >= 2x
+    // here, because it would flap: honest numbers live in the Evidence block.
     expect(maxDevK).toBeLessThan(0.05);
     expect(unsharedMs).toBeGreaterThan(0);
     expect(sharedMs).toBeGreaterThan(0);
