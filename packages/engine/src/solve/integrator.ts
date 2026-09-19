@@ -185,7 +185,25 @@ export function integrate(req: SimulationRequest, model: Model): RunOutput {
   for (let i = 0; i < weather.T_amb.length; i++) meanAmb += weather.T_amb[i]!;
   meanAmb /= Math.max(1, weather.T_amb.length);
 
-  let T: Float64Array = new Float64Array(n).fill(meanAmb);
+  // T-70: warm start. When the caller supplies a converged (or otherwise known)
+  // state, seed spin-up from it instead of cold mean-ambient -- purely a speed
+  // lever for @shelter/optimise's spin-up-sharing cache. The convergence loop
+  // below is completely unchanged: a good seed just exits in fewer days, a bad
+  // one converges to the same fixed point in more. validateRequest() runs before
+  // the model exists and cannot know the node count, so the length check lives
+  // here, against the one number that defines it.
+  let T: Float64Array;
+  if (options.initialTemperatureK) {
+    if (options.initialTemperatureK.length !== n) {
+      throw new EngineError(
+        'INVALID_INPUT',
+        `options.initialTemperatureK has length ${options.initialTemperatureK.length}, but the model has ${n} nodes -- expected length ${n}.`,
+      );
+    }
+    T = Float64Array.from(options.initialTemperatureK);
+  } else {
+    T = new Float64Array(n).fill(meanAmb);
+  }
   const Tprev = new Float64Array(n);
   const series = precomputeEnvironment(req, model, stepsPerDay, 0);
 

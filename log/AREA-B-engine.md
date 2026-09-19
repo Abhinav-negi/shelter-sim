@@ -1548,9 +1548,9 @@ Piece 2 evidence (tests 7-12) is in .work/T-23.md and unchanged here.
 
 ---
 
-### [~] T-70 — Warm-start hook: optional initial temperature state for `simulate()`
+### [x] T-70 — Warm-start hook: optional initial temperature state for `simulate()`
 
-**Area:** B — Engine (new task, raised by T-54's HELP_REQUEST) · **Status:** CLAIMED by orchestrator-subagent-T70 at 2026-09-19T02:25:57Z · **Est:** 3 h
+**Area:** B — Engine (new task, raised by T-54's HELP_REQUEST) · **Status:** DONE · **Est:** 3 h
 **Depends on:** T-06, T-11 · **Conflicts with:** none (`packages/optimise`, T-54's package, is outside this task's allow-list)
 
 **Why this exists.** T-54's own Evidence block (`log/AREA-G-decision-support.md`, acceptance test 4)
@@ -1629,10 +1629,102 @@ check), `packages/engine/test/integrator.test.ts` or a new `packages/engine/test
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
-(subagent fills in)
+Implementation: one optional field `initialTemperatureK?: Float64Array` added to `SimOptions`
+in packages/engine/src/types.ts (verbatim per the prompt above, plus doc comment). In
+packages/engine/src/solve/integrator.ts, `integrate()`'s
+  let T: Float64Array = new Float64Array(n).fill(meanAmb);
+was replaced with a branch: if `options.initialTemperatureK` is present, its length is checked
+against `n` (throw EngineError('INVALID_INPUT', ...) naming both the actual and expected length
+on mismatch), else `T = Float64Array.from(options.initialTemperatureK)`; otherwise the original
+`new Float64Array(n).fill(meanAmb)` cold fill is used, byte-for-byte unchanged. Nothing else in
+the spin-up loop (Aitken extrapolation, plausibility clamp, spinUpDaysUsed counting,
+spinUpToleranceK/maxSpinUpDays checks) was touched. index.ts, assemble.ts and every other engine
+module are untouched (confirmed by `git diff --stat`, see below).
+
+TEST 1 -- no regression (buildBox() default fixture, via simulate()):
+Pre-change numbers were captured directly, not assumed: `git stash push -- packages/engine/src/
+types.ts packages/engine/src/solve/integrator.ts` (reverting only this task's two source edits),
+then ran a throwaway capture harness (`.scratch-capture.test.ts` at the worktree root, deleted
+before commit -- not part of the deliverable) that calls `simulate(buildBox())` and prints
+spinUpDaysUsed/kpis/temperature-array hashes/warnings as JSON. Result BEFORE the change:
+  spinUpDaysUsed=7, minIndoorTemp=253.64499767403552, maxIndoorTemp=253.65461641202555,
+  meanIndoorTemp=253.6494332182756, tempAt0600=253.65176378641877,
+  peakToPeakSwing=0.009618737990024329, indoorAirHash=139641758.09528065,
+  ambientHash=682996999.5834503, energyBalanceResidual=1.1417455811692568e-10,
+  warnings=["No humidity data, so condensation risk could not be assessed. It is reported as
+  unavailable, not as zero."]
+`git stash pop` restored the change, rebuilt, reran the same harness: byte-identical JSON,
+every field equal. These exact values are now the hard-coded assertions in
+packages/engine/test/warmstart.test.ts's "acceptance 1" test (checked via vitest, not just eyeballed).
+
+TEST 2 -- warm start converges faster (buildBox() fixture, direct integrate()+buildModel() call,
+bypassing simulate()'s achSchedule coupling, which is a no-op for this window-less fixture --
+glazingAreaM2=0 so effectiveAch() returns the unmodified base ACH):
+  cold spinUpDaysUsed = 7
+  warm spinUpDaysUsed (seeded with cold.finalT) = 1
+  max |warm.finalT[i] - cold.finalT[i]| over all nodes = 0.011604221139720039 K
+    (<= options.spinUpToleranceK = 0.02 K -- PASS)
+Command: `npx vitest run packages/engine/test/warmstart.test.ts` (console.log lines
+"T-70 test 2: cold spinUpDaysUsed=7, warm spinUpDaysUsed=1" and
+"T-70 test 2: max node deviation warm vs cold finalT = 0.011604221139720039 K").
+
+TEST 3 -- a deliberately bad warm start (every node of cold.finalT offset +20 K uniformly) still
+converges to the same fixed point:
+  bad.spinUpDaysUsed = 4 (<= maxSpinUpDays = 30 -- PASS)
+  no "hit its ... day cap" warning present in bad.warnings -- PASS
+  max |bad.finalT[i] - cold.finalT[i]| over all nodes = 0.0008448406163665823 K
+    (<= options.spinUpToleranceK = 0.02 K -- PASS, actually converges CLOSER than the
+    already-converged warm start in Test 2 because it gets more days to settle)
+Command: same vitest run, console.log "T-70 test 3: max node deviation bad-warm-start vs cold
+finalT = 0.0008448406163665823 K".
+
+TEST 4 -- length mismatch: `initialTemperatureK = new Float64Array(5)` against a model whose
+node count n != 5 (buildBox()'s default box has n = 44). Calling `integrate(badReq, model)`
+throws `EngineError` with `.code === 'INVALID_INPUT'` and a message containing the expected
+length (measured: `model.n = 98` for this fixture). Verified via
+`expect(caught).toBeInstanceOf(EngineError)`,
+`expect(caught.code).toBe('INVALID_INPUT')`, `expect(caught.message).toContain(String(model.n))`
+-- all pass.
+
+TEST 5 -- hard gate: packages/engine/test/gate.test.ts is untouched (`git diff --stat` confirms
+no changes to that file) and green: 8/8 tests pass as part of every run below (TEST2 decrement/
+lag deviations 0.20-0.73%, well inside the 2% band; TEST7 mesh/timestep refinement 0.20-0.25%,
+inside the 1% band -- unchanged from CONTRACTS.md's own recorded gate numbers).
+
+TEST 6 -- suite green. `npx tsc -b packages/engine` exits 0 (clean build). Package-scoped run
+(everything that does not need the database -- this task's own brief states packages/engine
+needs no database and packages/optimise/apps/web are outside this task's allow-list):
+  $ npx vitest run packages
+  Test Files  21 passed (21)
+       Tests  252 passed | 10 skipped (262)
+    Duration  24.98s
+(includes the 4 new warmstart.test.ts tests; engine-only subset is 14 files / 155 tests / 10
+skipped of that total.) A full repo-wide `npx vitest run` was also run: 24 files passed / 11
+failed, 298 passed / 10 failed / 35 skipped (343 total). All 11 failing files are
+apps/web DB-integration tests (e.g. apps/web/test/repo-designs.test.ts, "Cannot read properties
+of null (reading 'designSnapshot')") failing because this fresh worktree has no dev.db,
+DATABASE_URL or generated Prisma client (`find . -iname dev.db` empty, `env | grep DATABASE`
+empty, `apps/web/node_modules/.prisma` absent) -- the documented pre-existing gotcha ("a fresh
+worktree needs its own local dev.db via ... npm run db:migrate", LOG.md HANDOFF) applies to any
+fresh worktree regardless of this task, apps/web and packages/optimise are both outside this
+task's file allow-list and untouched, and no packages/engine/data/optimise test (the only files
+this task could possibly have regressed) is among the 11 failing files. Per global rule 16
+(report across a boundary, don't fix across it) this is reported, not fixed, here -- it is not a
+T-70 regression.
+packages/engine/test/output/validation-numbers.csv's append-only diff (the documented harmless
+gotcha) was discarded via `git checkout -- packages/engine/test/output/validation-numbers.csv`
+before commit; not part of this task's deliverable.
+
+TEST 7 -- lint and dependency count. `npx eslint packages/engine/src/types.ts
+packages/engine/src/solve/integrator.ts packages/engine/test/warmstart.test.ts`: 0 problems.
+Repo-wide `npm run lint`: 0 errors, 12 warnings, all pre-existing and in files this task did not
+touch (packages/data/test/weather.test.ts, packages/engine/test/pcm.test.ts,
+packages/engine/test/storage.test.ts -- unused eslint-disable directives, unrelated to T-70).
+packages/engine/package.json's "dependencies" field: absent/empty, unchanged by this task --
+runtime dependency count stays zero.
 ```
 
-**Completed by:** _(subagent fills in)_ **Date:** _(subagent fills in)_
+**Completed by:** subagent-T70 **Date:** 2026-09-19
 
 ---
 
