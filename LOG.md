@@ -435,7 +435,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 
 | | ID | Title | Depends on |
 |---|---|---|---|
-| [~] | T-54 | The sweep engine: expand, dispatch, collect | T-06, T-24, T-28 |
+| [!] | T-54 | The sweep engine: expand, dispatch, collect | T-06, T-24, T-28 |
 | [ ] | T-55 | The browser worker pool and the shared spin-up cache | T-43, T-54 |
 | [ ] | T-56 | Ranking, the Pareto front, and the perturbation-stability check | T-54 |
 | [ ] | T-57 | The buildable recommendation, and the non-AI template fallback | T-24, T-56 |
