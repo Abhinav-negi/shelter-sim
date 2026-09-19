@@ -1,0 +1,70 @@
+/* apps/web/components/charts/temp/TempChart.module.css
+ *
+ * T-47, acceptance test 10: legible at 400px and no horizontal overflow.
+ * The SVG's own viewBox is sized to 400 (TempChart.tsx), so `.svg` scaling
+ * to 100% width never has to shrink anything below its native size -- this
+ * file only has to make sure NOTHING ELSE (the legend, the tooltip) forces
+ * the page wider than its container. Native CSS flex-wrap does that; no
+ * layout library needed (CONTRACTS.md §7.13).
+ */
+
+.container {
+  max-width: 100%;
+  position: relative;
+}
+
+.svgWrap {
+  position: relative;
+  width: 100%;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75em 1em;
+  list-style: none;
+  padding: 0;
+  margin: 0.5em 0;
+  font-size: 0.85em;
+}
+
+.legend label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  cursor: pointer;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 2px;
+}
+
+.swatchDashed {
+  display: inline-block;
+  width: 0.9em;
+  height: 0;
+  border-top: 2px dashed;
+}
+
+.tooltip {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.3em 0.5em;
+  font-size: 0.75em;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}

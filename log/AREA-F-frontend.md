@@ -678,9 +678,9 @@ in the source):
 
 ---
 
-### [~] T-47 — The temperature view (PS Deliverable 1) and the 6 AM label
+### [x] T-47 — The temperature view (PS Deliverable 1) and the 6 AM label
 
-**Area:** F — Frontend (≈ W-40) · **Status:** CLAIMED by orchestrator-subagent-T47 at 2026-09-19T02:25:57Z · **Est:** 6 h
+**Area:** F — Frontend (≈ W-40) · **Status:** DONE · **Est:** 6 h
 **Depends on:** T-36, T-43 · **Conflicts with:** none
 
 **Why this exists.** The chart the whole problem statement is about. **The single number to look at
@@ -734,9 +734,144 @@ directories.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Built `apps/web/components/charts/temp/`: series.ts (pure day-slice + Celsius extraction,
+DOM-free), scales.ts (d3-scale wrappers), interaction.ts (tooltip lookup + toggle-set,
+DOM-free), colors.ts (dataviz-skill validated categorical palette + fixed roles),
+format.ts (hour label), TempChart.tsx (the component), TempChart.module.css,
+TempChart.test.tsx (10-block / 11-condition suite).
+
+SETUP done this session (fresh worktree, per brief): `npm install` at root; `npm run
+build --workspace packages/engine` and `--workspace packages/data` (both were unbuilt,
+now `tsc -b` clean); `DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run
+db:migrate` + `npm run db:seed --workspace apps/web` (lands at
+apps/web/prisma/dev.db, resolved relative to the schema file, not cwd -- not itself
+needed by this task's own component code, done per the standing session setup brief).
+Typecheck: `npx tsc -p apps/web/tsconfig.json --noEmit` -- clean, 0 errors.
+
+ENVIRONMENT NOTE (read before trusting tests 7/10/11 below): this worktree has no
+jsdom/happy-dom/@testing-library (none on the approved dependency list, CONTRACTS.md
+§7.13). Real DOM mounting, real mouse events and a real browser layout/viewport are
+therefore not executable here -- same constraint components/house/house.test.tsx
+documents for T-46. Verified the closest honest way available instead: `react-dom/
+server`'s `renderToStaticMarkup` for structure, and the exact pure functions the real
+`onMouseMove`/`onChange` handlers call, invoked directly (the same workaround
+`HouseView.tsx`'s `activateSurface` established).
+
+DECISION FLAGGED, not hidden (SUBAGENT RULES #1 -- reporting a conflict rather than
+silently picking a side): this task's own prompt says "every temperature is converted
+ONLY through lib/units.ts", but `lib/units.ts` is outside this task's allow-list
+(`apps/web/components/charts/temp/** only`) and exports ONLY string formatters
+(`formatTempC` etc.), not a raw numeric Kelvin->Celsius converter -- and a line chart
+needs numeric Celsius values to compute point/axis positions, not just display strings.
+Literal compliance is impossible without either editing `lib/units.ts` (outside the
+allow-list) or hand-rolling a second, competing `-273.15` arithmetic conversion inside
+this directory (which is the actual defect LOG.md rule 5 exists to prevent). Resolved by
+importing the branded `toC`/`toK` functions directly from `@shelter/engine` -- the exact
+same pattern already committed and merged in `apps/web/components/advanced/
+fieldDefs.ts` (lines importing `toC`/`toK` outside `lib/units.ts`), so this is not a
+novel deviation. `formatTempC`/`lib/units.ts` IS used for every user-visible display
+string (tooltip, annotations, comfort-band label, 06:00 label) -- only the internal
+scale-domain arithmetic in `series.ts`/`scales.ts` uses `toC` directly. Acceptance test
+1's own mechanical check (the grep) passes; see its evidence below.
+
+All test numbers below from this session, via:
+  npx tsc -p apps/web/tsconfig.json --noEmit
+  npx vitest run apps/web/components/charts/temp/TempChart.test.tsx
+  npx vitest run apps/web/components          (regression check: house/grid/temp together)
+  grep -rn "273\.15" apps/web/components/charts/temp
+
+1. PASS. `grep -rn "273\.15" apps/web/components/charts/temp` -> 0 matches (exit code 1).
+   Sample extracted point (real bundled Leh preset, `dayPoints`):
+     { hour: 0, indoorC: 8.0953..., ambientC: -14.298..., meanRadiantC: 4.3976... }
+   Legend (`temp-legend`), y-axis "°C" title and x-axis "HH:MM" ticks are all present in
+   the rendered markup; every displayed number goes through `formatTempC` or the
+   `toC`-only internal path documented above -- see the flagged decision note.
+
+2. PASS. Real Leh preset (`PRESETS.find(p => p.locationId === 'leh')`), rendered comfort-
+   band label: "Comfort band: 15.0 °C – 24.0 °C". Markup does NOT contain "18.0 °C".
+
+3. PASS -- exact match by construction, not coincidence. `series.ts`'s `indoorAt0600`
+   resolves 06:00 through the identical `hourToTimeIndex` arithmetic
+   `packages/engine/src/index.ts` uses for `kpis.tempAt0600` (reused from
+   `components/house/time.ts`, not reimplemented). Real Leh preset:
+     chart 06:00 annotation: 6.8 °C
+     result.kpis.tempAt0600 (formatTempC): 6.8 °C
+   Rendered markup contains the literal string "06:00: 6.8 °C".
+
+4. PASS. 4 variants rendered with the dataviz-skill categorical palette slots 1-4, one
+   colour each, fixed order, never cycled: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100'].
+   Markup contains one `data-testid="temp-variant-toggle-{id}"` checkbox and one
+   `data-testid="temp-variant-lines-{id}"` group per variant, all 4 present.
+   `toggleVariantVisibility` (the exact function the checkbox's onChange calls): toggling
+   'v2' off shrinks the visible set from 4 to 3 and excludes exactly 'v2'; toggling it
+   again restores it to 4 -- individually toggleable, confirmed on the real handler logic.
+
+5. PASS -- K-03 shape check, REAL `simulate()` runs, two fixtures identical except wall
+   construction (dense concrete 300 mm vs 1 mm steel CGI + 50 mm PUF, both from
+   CONTRACTS.md §7.10/7.11's own material table), same synthetic Leh-January weather
+   (T_amb sinusoidal -8 ± 9 °C, matching CONTRACTS.md Appendix C's stated range) and same
+   operation/window/site inputs otherwise:
+     heavy-mass (dense concrete) @ 21:00, 00:00, 03:00, 06:00 (°C):
+       -5.165, -5.103, -5.399, -6.020
+     steel + PUF               @ 21:00, 00:00, 03:00, 06:00 (°C):
+       -2.664, -3.917, -10.791, -17.317
+   Shape check (not just offset): each fixture's three hour-to-hour drops normalised as a
+   share of its total 21:00->06:00 drop:
+     heavy-mass legs: [-0.072, 0.345, 0.727]   (drops MOST late, 03:00-06:00 -- delayed
+                                                 inflection, stored wall heat still giving
+                                                 back energy in the early legs)
+     steel+PUF legs:  [ 0.086, 0.469, 0.445]   (drops fastest early/mid-night, only
+                                                 mildly biased late -- no delayed plateau)
+   Max normalised-leg difference: 0.282 (>> the 0.05 threshold asserted in the test) --
+   the two curves differ in SHAPE, not merely by a vertical offset; not a chart-restyle
+   finding, no defect referred to T-11.
+
+6. PASS. Rendered markup contains the literal string "PS Deliverable 1" (panel title:
+   "PS Deliverable 1 — Predicted inside temperature").
+
+7. PASS (logic + structure; a real pointer event needs a browser -- see the environment
+   note above). `tooltipDataAt` at hour 6 on the real Leh preset series returns
+   { hourLabel: "06:00", ambientC: -17.058, indoorC: 6.775 } -- both temperatures and the
+   time, exactly what the tooltip box renders. Markup contains
+   `data-testid="temp-hover-layer"`, the exact element `TempChart.tsx` wires
+   `onMouseMove`/`onMouseLeave` to, sitting on top of the plot (drawn last in the SVG).
+
+8. PASS. Hand-built single-timestep `SimulationResult` (`time.length === 1`) rendered via
+   `renderToStaticMarkup` without throwing; `dayPoints` returns exactly one point
+   ({ hour: 0, indoorC: 10, ambientC: -5, meanRadiantC: 9 }); rendered markup contains
+   neither "NaN" nor "Infinity" (the `buildYScale` degenerate-domain guard pads a
+   zero-span min===max domain by 1 K rather than dividing by a zero span).
+
+9. PASS. `<TempChart variants={[]} .../>` renders `data-testid="temp-chart-empty"` with
+   "No simulation result yet." and does not reach any scale/path code at all (short-
+   circuited before any arithmetic) -- markup contains no "NaN".
+
+10. PASS. Rendered `<svg>` carries `viewBox="0 0 400 220"` and no `width="<digit>"` /
+    `height="<digit>"` attribute; CSS (`TempChart.module.css`) sets `width:100%;
+    height:auto` on the svg and `max-width:100%` on the container, so nothing forces
+    horizontal overflow at a 400px container width. The viewBox's own coordinate system
+    is sized to exactly 400 units wide -- at a 400px CSS width this is native 1:1 pixel
+    scale, not something shrunk down from a wider design and hoped to still read; wider
+    containers only scale everything up together. (Literal rendered-pixel visual
+    inspection needs a real browser/jsdom, which this environment lacks -- see the
+    environment note; verified structurally instead, same honesty flag T-46 used for its
+    own equivalent test.)
+
+11. PASS (computed against the real scale functions, same environment-note caveat as 10
+    for actual on-screen collision). x-tick pixel positions at hours [0,6,12,18,24] in the
+    400-wide viewBox (36 px left margin, 10 px right): [0, 89, 178, 267, 356] -- 89 px
+    between adjacent ticks, far wider than an 8px-font "HH:MM" label. y-tick pixel
+    positions (a representative -20..10 °C domain, 220-high viewBox minus margins):
+    [15.2, 65.7, 116.3, 166.8] -- ~50-51 px apart, far wider than an 8px-font numeric
+    label's height.
+
+REGRESSION CHECK: `npx vitest run apps/web/components` -> 3 test files (house, grid,
+temp), 29 tests, all PASS -- this task's new files do not disturb T-46/T-50's existing
+suites (nothing outside `apps/web/components/charts/temp/**` was touched; confirmed via
+`git status --porcelain` showing only that one new directory).
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude Sonnet 5 (T-47 subagent)  **Date:** 2026-09-19
 
 ---
 
