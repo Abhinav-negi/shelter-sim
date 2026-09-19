@@ -1548,3 +1548,91 @@ Piece 2 evidence (tests 7-12) is in .work/T-23.md and unchanged here.
 
 ---
 
+### [ ] T-70 — Warm-start hook: optional initial temperature state for `simulate()`
+
+**Area:** B — Engine (new task, raised by T-54's HELP_REQUEST) · **Status:** NOT STARTED · **Est:** 3 h
+**Depends on:** T-06, T-11 · **Conflicts with:** none (`packages/optimise`, T-54's package, is outside this task's allow-list)
+
+**Why this exists.** T-54's own Evidence block (`log/AREA-G-decision-support.md`, acceptance test 4)
+found, root-caused and reported this gap rather than working around its own file boundary:
+`@shelter/optimise`'s spin-up-sharing cache has nowhere to hand a warm initial state to
+`simulate()` — every call starts spin-up cold, from `T = fill(mean(weather.T_amb))`
+(`packages/engine/src/solve/integrator.ts`), and iterates its own Aitken-accelerated day-loop from
+scratch. T-54 measured the honest tradeoff of every workaround available to it from outside
+`packages/engine/**` (capping `maxSpinUpDays` per mass-group) and found no setting that clears the
+required 2x speedup without blowing the 0.05 K accuracy budget by 5-15x. The fix requires one hook
+inside the engine itself — global rule 16 (report across a boundary, do not fix across it) is why
+T-54 could not add this itself.
+
+**PROMPT — paste this to start the task:**
+> Add one optional field to `SimOptions` in `packages/engine/src/types.ts`, next to
+> `spinUpToleranceK`/`maxSpinUpDays`:
+> ```ts
+> /**
+>  * Optional warm start. When supplied, integrate() seeds the spin-up loop from THIS
+>  * state instead of fill(mean(T_amb)), then keeps iterating to convergence exactly as
+>  * before -- a SPEED optimisation only, never an accuracy shortcut. Length must equal
+>  * the built model's node count; a mismatch throws EngineError('INVALID_INPUT').
+>  * Added for @shelter/optimise's spin-up-sharing cache (T-54 HELP_REQUEST, see
+>  * log/AREA-G-decision-support.md T-54 acceptance test 4) -- packages/optimise/** is
+>  * outside this task's own allow-list, so this task proves the hook in isolation only.
+>  */
+> initialTemperatureK?: Float64Array;
+> ```
+> In `packages/engine/src/solve/integrator.ts`'s `integrate()`, replace the unconditional
+> `let T: Float64Array = new Float64Array(n).fill(meanAmb);` with: use
+> `req.options.initialTemperatureK` when present (after validating its length equals `n`,
+> throwing `EngineError('INVALID_INPUT')` on mismatch — `validateRequest()` runs before the
+> model is built and cannot check this itself, so the check belongs here), else keep the existing
+> mean-ambient fill unchanged. **Do not change anything else about the spin-up loop.** It must
+> keep iterating to `options.spinUpToleranceK`/`options.maxSpinUpDays` exactly as before, so a warm
+> start that is already converged simply exits in fewer days, and a warm start that is a bad guess
+> still converges to the same fixed point, just slower. The Aitken extrapolation, the plausibility
+> band, and `spinUpDaysUsed`'s counting are untouched.
+>
+> **Do not touch `packages/optimise/**` or wire this into `sweep.ts` yourself** — that
+> continuation belongs to T-54 (a different task, a different allow-list) once this hook exists
+> and is proven here.
+
+**Files you may touch.** `packages/engine/src/types.ts` (the one field),
+`packages/engine/src/solve/integrator.ts` (the initial-fill line and the one length-validation
+check), `packages/engine/test/integrator.test.ts` or a new `packages/engine/test/warmstart.test.ts`
+(create).
+**Files you may NOT touch.** `packages/optimise/**`, `apps/web/**`, and everything else in
+`packages/engine/src/` (`loads/`, `surfaces/`, `solar/`, `envelope/`, `post/`,
+`solve/assemble.ts`, `index.ts`).
+
+**Subagent guidance.** Single agent. Small, surgical — one field, one branch in one loop.
+
+**ACCEPTANCE TESTS — the task is NOT done until every one passes:**
+1. **No regression:** omitting `initialTemperatureK` (every existing caller) produces results
+   identical to before this change on an existing fixture — assert exact field-by-field equality
+   of `records`, `kpis`, and `spinUpDaysUsed` between a pre-change and post-change run (or, if the
+   pre-change binary is unavailable, assert equality against the fixture's already-committed
+   expected values). Paste the fixture and the comparison.
+2. **Warm start converges faster:** run a fixture twice — once cold, once seeded with the first
+   run's own converged `finalT`/`initialT` — and show `spinUpDaysUsed` drops substantially (e.g. to
+   1–2) on the warm run, with the reported temperature series matching the cold run to within
+   `options.spinUpToleranceK` (0.02 K). Paste both `spinUpDaysUsed` values and the max deviation.
+3. **A bad warm start still converges correctly:** seed with a deliberately wrong uniform state
+   (e.g. every node offset 20 K from the correct fixed point) and show the run still converges
+   (`spinUpDaysUsed <= maxSpinUpDays`, no unconverged warning) to the same result as the cold-start
+   run, within the same 0.02 K tolerance — proving this is a speed lever, not an accuracy
+   shortcut. Paste the deviation.
+4. **Length mismatch throws:** `initialTemperatureK` of the wrong length throws
+   `EngineError('INVALID_INPUT')` with a message naming the expected length.
+5. **Hard gate unaffected:** `packages/engine/test/gate.test.ts` stays green, unmodified.
+6. **Full suite green:** `npx vitest run` — no regressions anywhere else. Paste files/tests/pass
+   counts.
+7. `npm run lint` passes; `packages/engine/package.json`'s runtime dependency count stays **zero**
+   (rule 4).
+
+**Evidence (fill this in when done — numbers, not adjectives):**
+```
+(subagent fills in)
+```
+
+**Completed by:** _(subagent fills in)_ **Date:** _(subagent fills in)_
+
+---
+

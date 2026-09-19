@@ -328,7 +328,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | Area | Name | Done / Total | File |
 |---|---|---|---|
 | A | Foundation & contracts | 7 / 7 | `log/AREA-A-foundation-contracts.md` |
-| B | Engine | 15 / 16 | `log/AREA-B-engine.md` |
+| B | Engine | 15 / 17 | `log/AREA-B-engine.md` |
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 5 / 7 | `log/AREA-E-server-tier.md` |
@@ -337,7 +337,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **43 / 69** | |
+| | **TOTAL** | **43 / 70** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
@@ -375,6 +375,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | [x] | T-21 | Couple infiltration to opening area (closes AUDIT F-6) | T-06 |
 | [x] | T-22 | Split out `post/heatFlows.ts` and add the ΔT and ground series | T-06 |
 | [!] | T-23 | Validation Test 5 against NOAA, and print every measured pair | T-07 |
+| [ ] | T-70 | Warm-start hook: optional initial temperature state for `simulate()` | T-06, T-11 |
 
 ### Area C — Data layer — 5 / 5 — `log/AREA-C-data-layer.md`
 
