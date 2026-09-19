@@ -740,9 +740,9 @@ directories.
 
 ---
 
-### [~] T-48 — The solar capture view (PS Deliverable 2)
+### [x] T-48 — The solar capture view (PS Deliverable 2)
 
-**Area:** F — Frontend (≈ W-41) · **Status:** CLAIMED by orchestrator-subagent-T48 at 2026-09-19T02:25:57Z · **Est:** 5 h
+**Area:** F — Frontend (≈ W-41) · **Status:** DONE · **Est:** 5 h
 **Depends on:** T-36, T-43 · **Conflicts with:** none
 
 **Why this exists.** *"This is where orientation stops being an abstraction. You watch the
@@ -789,9 +789,161 @@ principle by itself."* (`plan.md` §6.) Orientation is a word the problem statem
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Files added (all inside the allow-list, apps/web/components/charts/solar/**):
+  orientation.ts        -- classifySurface/surfaceCaptures/byOrientation, pure, no JSX
+  groundAlbedo.ts        -- isolated ground-reflected component via the exported skyViewFactor()
+  DailyTotalSplit.tsx    -- View 1
+  OrientationBars.tsx    -- View 2 (the important one)
+  CaptureCurve.tsx       -- View 3
+  AlbedoComparison.tsx   -- View 4
+  SolarPanel.tsx         -- top-level, no props, reads useStore() (same convention as HouseView.tsx/T-46)
+  solar.test.ts          -- all 11 acceptance tests
+
+Test command: `npx vitest run apps/web/components/charts/solar/solar.test.ts` ->
+"Test Files 1 passed (1), Tests 11 passed (11)", ~0.3-0.6s. Also `npx tsc --noEmit -p apps/web/tsconfig.json`
+-> clean, no errors. All fixtures are the REAL bundled Leh preset (`traditionalLadakhiByre`) run through
+the real `simulate()`, the same resolution path `app/page.tsx` uses (per house.test.tsx's own precedent;
+no jsdom/@testing-library in this worktree, so DOM structure is checked via `react-dom/server`'s
+`renderToStaticMarkup`, same as T-46).
+
+KEY DESIGN DECISION (read this before touching orientation.ts): `SimulationResult.solar.dailyTotalKWh
+.bySurface` (packages/engine/src/index.ts) is OPAQUE ABSORPTION ONLY -- verified directly (test 1's own
+numbers): sum(bySurface) = 223.657 kWh = dailyTotalKWh.opaque EXACTLY, not opaque+glazed (228.277 kWh).
+The engine has no per-window/per-host-surface breakdown of `transmittedGlazed` (one aggregate series,
+CONTRACTS.md 7.7) -- an engine-contract gap, out of this task's `packages/engine/**`-excluded scope.
+Rather than reimplement the SHGC/IAM transmission formula here (the prompt's explicit "recompute
+nothing", and a second implementation that could drift, LOG.md rule 16), `surfaceCaptures()` splits the
+aggregate `glazed` total across host surfaces IN PROPORTION to each surface's own `incidentBySurface`
+integral times its hosted window area -- both already-computed/already-given values, no new solar
+correlation. EXACT whenever a building has windows on one surface only (3 of 6 bundled presets); an
+irradiance-weighted estimate otherwise. Full reasoning and upgrade path is in orientation.ts's own
+header comment.
+
+SECOND KEY DECISION: bars are labelled by each surface's OWN nominal `azimuth` (CONTRACTS.md 7.5:
+"deg from south, BEFORE building rotation"), not by `azimuth + building.azimuth`. This was gotten wrong
+on the first pass (labelling by the rotated/compass-true azimuth) and caught by acceptance test 7 itself:
+under compass-true labelling, "the south bar" always means "whichever wall truly faces south", so it
+stays large no matter how the building is rotated -- test 7 ("rotating the building 180 degrees visibly
+redistributes the bars") failed outright (after.S came back close to before.S, not before.N). Confirmed
+against CHALLENGE.md C-04's own framing ("one shelter with substantial glazing on a single wall...
+rotate the entire building 180 degrees") which is precisely about a NAMED wall's performance collapsing,
+not a compass-direction bucket staying populated. Switched `classifySurface` to nominal-azimuth-only;
+test 7 passed after that (see test 7 below). See orientation.ts's file header for the full comparison.
+
+1. PASS. `surfaceCaptures(janResult, janRequest)` summed over all 6 surfaces (S/E/W/N/Roof/Floor,
+   Floor's own contribution is 0 for every bundled preset) = 228.2770531033642 kWh.
+   `janResult.solar.dailyTotalKWh.opaque + .glazed` = 228.2770531033641 kWh.
+   |sum - total| / total = 4.4e-13, i.e. floating-point-exact, well inside the 0.1% tolerance.
+   (Leh, traditionalLadakhiByre preset, 15 Jan design day.)
+
+2. PARTIAL PASS -- paste first, then the finding. All five bars (Leh, 15 Jan, traditionalLadakhiByre,
+   via `npx vitest run apps/web/components/charts/solar/solar.test.ts`):
+     S = 62.988 kWh   E = 42.900 kWh   W = 29.016 kWh   N = 21.110 kWh   Roof = 72.263 kWh
+   South IS the largest of the four walls and north IS the smallest (both asserted programmatically),
+   and south is 2.98x north -- the qualitative "south towers over north" story this deliverable exists
+   for comes through clearly. It is NOT "effectively zero": north is ~33.5% of south.
+   FINDING (root-caused, not a chart defect -- reporting per this task's own parenthetical, which
+   already anticipated a non-zero north bar and named it "a finding for T-14, not a chart fix"):
+   isolated the exact cause with the engine's own exported `sunPosition`/`decompose`/`transpose`
+   functions (canonical, not reimplemented) on wallNorth vs wallSouth, 15 Jan, Leh:
+     north: beam = 0.0000 kWh/m2   diffuse = 0.5227 kWh/m2   ground-reflected = 1.4907 kWh/m2
+     south: beam = 5.1808 kWh/m2   diffuse = 0.5227 kWh/m2   ground-reflected = 1.4907 kWh/m2
+   Beam truly IS zero on the north wall (Leh's 34.15N winter sun never gets far enough around to strike
+   it) -- so this is NOT "beam leaking onto a north wall" as the task's own parenthetical guessed. It is
+   that diffuse and ground-reflected are IDENTICAL on every vertical wall regardless of compass
+   direction here, because every bundled Leh preset is forced onto `skyModel: 'isotropic'`
+   (packages/data/src/presets.ts's own documented, already-reported HDKR-divergence workaround for Leh
+   in January) and isotropic's diffuse/ground-reflected terms (`solar/transposition.ts`) have no azimuth
+   dependence at all -- only `skyViewFactor(tilt)`, same for every vertical wall. A north wall
+   legitimately does see half the sky dome and its share of ground-reflected light in real life too;
+   this is a real physical floor under isotropic diffuse modelling, not a bug to fix in a chart.
+   Reported here per LOG.md rule 16 (report upward, don't fix across a file-scope boundary) for
+   whoever owns T-14 / the HDKR-divergence fix: switching back to (a fixed) HDKR would not zero this
+   out either -- HDKR's own isotropic-diffuse term (`(1-Ai)*skyViewFactor*horizonBrightening`) is
+   still azimuth-blind; only the anisotropic circumsolar/horizon-brightening term is orientation-
+   sensitive, and it typically REDUCES a north wall's share further, it does not remove the isotropic
+   floor. This task's chart renders whatever `bySurface`/`incidentBySurface` the engine returns,
+   correctly, and does not fabricate a smaller number to make the literal wording pass.
+
+3. PASS (both facts true, on different bases -- pasting both because they disagree for this shared
+   building geometry and I will not silently pick the one that reads as a tidier headline).
+   21 Dec, Leh, traditionalLadakhiByre, via the same test file:
+     south wall kWh (bar value, area-weighted)  = 65.751 kWh   roof kWh (bar value) = 64.647 kWh
+     south wall kWh/m^2/day (intensity)         = 7.133        roof kWh/m^2/day     = 3.694
+   Per-m^2 intensity: south EXCEEDS roof by 1.93x, matching CONTRACTS.md 7.10's own anchor verbatim
+   ("at Leh on 21 Dec, integrated daily I_T on a vertical south wall exceeds that on a horizontal
+   roof"). Raw kWh bars: south (65.751) also exceeds roof (64.647) on 21 Dec specifically (close,
+   ~1.7% apart) -- NOTE this is closer than the 15 Jan snapshot (test 2's run), where roof (72.263)
+   exceeds south (62.988) in raw kWh, because the shared preset geometry gives the flat roof (25 m^2)
+   ~1.9x a wall's face area (13 m^2), which can outweigh the per-m^2 intensity gap depending on exact
+   date/sun angle. OrientationBars.tsx shows BOTH numbers per bar (kWh and kWh/m^2) specifically so
+   this distinction is visible rather than hidden behind one metric.
+
+4. PASS. `groundReflectedKWhPerM2` (own file, calls only the exported `skyViewFactor`, no reimplemented
+   formula) on the south wall (tilt 90), 15 Jan, Leh:
+     bare ground (albedo 0.20, ALBEDO.genericGround) = 0.3975 kWh/m^2
+     fresh snow  (albedo 0.80, ALBEDO.freshSnow)      = 1.5901 kWh/m^2
+     ratio = 4.0000 (exact, asserted to 6 decimal places -- linear in albedo by construction)
+   Live south-wall TOTAL (re-simulated with only site.groundAlbedo changed, same building/day):
+     bare = 52.913 kWh   snow = 63.904 kWh  -- a real, visible increase (+20.8%), NOT 4x (expected:
+     beam and diffuse do not scale with albedo at all, only the ground-reflected term does -- asserting
+     4x against the TOTAL would be exactly the "plausible-looking wrong number" CONTRACTS.md 7.8 warns
+     against, which is why the isolated component above is the one checked against the literal x4 claim).
+
+5. PASS. `SolarPanel`'s rendered markup contains the literal string "PS Deliverable 2" (checked via
+   `renderToStaticMarkup`).
+
+6. PASS. Rendered markup contains "kWh" (Views 1/2/4), matches /\bW\b/ (View 3's watt axis) and
+   contains "kWh/m" (View 2's intensity figures, View 4's isolated component).
+
+7. PASS (after the classifySurface fix above). 15 Jan, Leh, before vs after `building.azimuth += 180`:
+     before: S = 62.988 kWh   N = 21.110 kWh
+     after:  S = 19.811 kWh   N = 62.196 kWh
+   after.S is within 6.2% of before.N and after.N within 6.2% of before.S (not floating-point-exact:
+   the traditional preset's one window, 0.8 m^2, is a fixed carve-out of wallSouth's own opaque area --
+   `opaqueArea = surface.area - windowArea`, solve/assemble.ts -- so after rotation wallSouth, now
+   facing north, still carries that carve-out (12.2 m^2 opaque) while wallNorth's original blank wall
+   was the full 13 m^2; a real ~6% geometry effect, not a symmetry bug). South collapsed to 31% of its
+   original value and north rose to 2.95x its original value -- a strong, visible redistribution.
+
+8. PASS. A windowless copy of the traditional preset (`building.windows: []`) re-simulated with the
+   real engine: `dailyTotalKWh.glazed === 0` confirmed, then `DailyTotalSplit`/`OrientationBars`/
+   `AlbedoComparison` all rendered via `renderToStaticMarkup` with consistent windowless
+   request/result props -- no "NaN" anywhere in the combined markup.
+
+9. PASS. `SolarPanel` with the store's `result` set to `null` renders `data-testid="solar-empty-state"`
+   and still contains the panel title "PS Deliverable 2" (title renders unconditionally, before the
+   null check).
+
+10. PASS (structural check; no jsdom/@testing-library in this worktree, same limitation
+    house.test.tsx/T-46 documents for itself, so no real viewport can be rasterised). Every bar's FILL
+    width in `OrientationBars` is a CSS percentage (5 percentage-width matches found, one per bar);
+    the only literal-pixel width anywhere in the markup is `min-width:2px` (a floor so a near-zero bar
+    stays visible/clickable, not the bar's actual width) -- checked with a negative-lookbehind regex
+    that specifically excludes that case. Labels/values use `rem` and flex `min-width:0` so they wrap
+    inside a narrow flex row rather than forcing horizontal overflow. Visual confirmation at an actual
+    400px viewport was not possible in this environment; flagged as an assumption, not asserted as
+    pixel-verified.
+
+11. PASS. `grep -rn "273\.15" apps/web/components/charts/solar` -> no output (verified directly,
+    exit code 1 / no matches). No temperature is ever displayed by this deliverable (kWh, W, W/m^2
+    only), so no Kelvin/Celsius conversion is needed anywhere in this directory.
+
+Setup performed in this worktree (fresh worktree, T-43's worker plumbing already merged, no
+packages/engine or packages/data dist/ present beforehand): `npm install` at root; `npm run build
+--workspace packages/engine`; `npm run build --workspace packages/data`; then, in apps/web,
+`DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate` followed by
+`DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:seed` (run from inside apps/web --
+running db:seed from the repo root with a relative DATABASE_URL resolves against the wrong cwd and
+fails with "Unable to open the database file"; cd into apps/web first). Neither the database nor any
+`app/api/**` route is used by this task's own files or tests -- the setup was done per this session's
+standard checklist, not because this deliverable depends on it.
+
+No cross-task regression risk: only new files were added under `apps/web/components/charts/solar/**`;
+no existing file was edited. `npx tsc --noEmit -p apps/web/tsconfig.json` is clean project-wide.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** subagent (session claude-sonnet-5, orch-T48)  **Date:** 2026-09-19
 
 ---
 
