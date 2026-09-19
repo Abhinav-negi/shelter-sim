@@ -332,12 +332,12 @@ with an Area file again, the Area file is right — fix this table.)*
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 5 / 7 | `log/AREA-E-server-tier.md` |
-| F | Frontend | 6 / 11 | `log/AREA-F-frontend.md` |
+| F | Frontend | 7 / 11 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **47 / 70** | |
+| | **TOTAL** | **48 / 70** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
@@ -424,7 +424,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-45 | The Advanced panel | T-36 |
 | [x] | T-46 | The isometric house: click a wall, scrub the day | T-36 |
 | [x] | T-47 | The temperature view (PS Deliverable 1) and the 6 AM label | T-36, T-43 |
-| [~] | T-48 | The solar capture view (PS Deliverable 2) | T-36, T-43 |
+| [x] | T-48 | The solar capture view (PS Deliverable 2) | T-36, T-43 |
 | [x] | T-49 | The heat-flow view and the Sankey (PS Deliverable 3) | T-22, T-36, T-43 |
 | [!] | T-50 | The survival grid | T-36, T-59 |
 | [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
