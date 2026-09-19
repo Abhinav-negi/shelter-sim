@@ -190,9 +190,9 @@ follow-on) should know a server "success" response is not always a full Simulati
 
 ---
 
-### [ ] T-44 — The five-control simple form
+### [~] T-44 — The five-control simple form
 
-**Area:** F — Frontend (≈ W-37) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** F — Frontend (≈ W-37) · **Status:** CLAIMED by orchestrator-subagent-T44 at 2026-09-19T02:25:57Z · **Est:** 8 h
 **Depends on:** T-28, T-36, T-41 · **Conflicts with:** T-46 (coordinate only via `selectedSurfaceId`)
 
 **Why this exists.** *"A tool that opens onto forty numeric input boxes is a tool nobody finishes
@@ -678,9 +678,9 @@ in the source):
 
 ---
 
-### [ ] T-47 — The temperature view (PS Deliverable 1) and the 6 AM label
+### [~] T-47 — The temperature view (PS Deliverable 1) and the 6 AM label
 
-**Area:** F — Frontend (≈ W-40) · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** F — Frontend (≈ W-40) · **Status:** CLAIMED by orchestrator-subagent-T47 at 2026-09-19T02:25:57Z · **Est:** 6 h
 **Depends on:** T-36, T-43 · **Conflicts with:** none
 
 **Why this exists.** The chart the whole problem statement is about. **The single number to look at
@@ -740,9 +740,9 @@ directories.
 
 ---
 
-### [ ] T-48 — The solar capture view (PS Deliverable 2)
+### [~] T-48 — The solar capture view (PS Deliverable 2)
 
-**Area:** F — Frontend (≈ W-41) · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** F — Frontend (≈ W-41) · **Status:** CLAIMED by orchestrator-subagent-T48 at 2026-09-19T02:25:57Z · **Est:** 5 h
 **Depends on:** T-36, T-43 · **Conflicts with:** none
 
 **Why this exists.** *"This is where orientation stops being an abstraction. You watch the
@@ -795,9 +795,9 @@ principle by itself."* (`plan.md` §6.) Orientation is a word the problem statem
 
 ---
 
-### [ ] T-49 — The heat-flow view and the Sankey (PS Deliverable 3)
+### [~] T-49 — The heat-flow view and the Sankey (PS Deliverable 3)
 
-**Area:** F — Frontend (≈ W-42) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** F — Frontend (≈ W-42) · **Status:** CLAIMED by orchestrator-subagent-T49 at 2026-09-19T02:25:57Z · **Est:** 8 h
 **Depends on:** T-22, T-36, T-43 · **Conflicts with:** none
 
 **Why this exists.** *"The Sankey is the most persuasive single image in the app. It answers 'where
@@ -1100,9 +1100,9 @@ of anything in this task's allow-list. Flagged for the orchestrator per rule 16,
 
 ---
 
-### [ ] T-51 — KPI cards, the integrity badge and the safety warning
+### [~] T-51 — KPI cards, the integrity badge and the safety warning
 
-**Area:** F — Frontend (≈ W-43) · **Status:** NOT STARTED · **Est:** 5 h
+**Area:** F — Frontend (≈ W-43) · **Status:** CLAIMED by orchestrator-subagent-T51 at 2026-09-19T02:25:57Z · **Est:** 5 h
 **Depends on:** T-36, T-43 · **Conflicts with:** none
 
 **Why this exists.** The numbers a decision rests on, plus the two signals that make the tool

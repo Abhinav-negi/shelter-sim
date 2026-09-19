@@ -1548,9 +1548,9 @@ Piece 2 evidence (tests 7-12) is in .work/T-23.md and unchanged here.
 
 ---
 
-### [ ] T-70 — Warm-start hook: optional initial temperature state for `simulate()`
+### [~] T-70 — Warm-start hook: optional initial temperature state for `simulate()`
 
-**Area:** B — Engine (new task, raised by T-54's HELP_REQUEST) · **Status:** NOT STARTED · **Est:** 3 h
+**Area:** B — Engine (new task, raised by T-54's HELP_REQUEST) · **Status:** CLAIMED by orchestrator-subagent-T70 at 2026-09-19T02:25:57Z · **Est:** 3 h
 **Depends on:** T-06, T-11 · **Conflicts with:** none (`packages/optimise`, T-54's package, is outside this task's allow-list)
 
 **Why this exists.** T-54's own Evidence block (`log/AREA-G-decision-support.md`, acceptance test 4)
