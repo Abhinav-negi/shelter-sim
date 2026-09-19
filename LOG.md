@@ -1,80 +1,120 @@
 # LOG.md — The ShelterSim Build Ledger
 
-## HANDOFF (2026-09-18, end of session — fourth session)
+## HANDOFF (2026-09-19, end of session — fifth session)
 
-**Completed this session: Area E moved 0 / 7 → 4 / 7.** T-36, T-37, T-38 and T-41 all flipped to a
-clean `[x]`. Ledger total moved **35 / 69 → 39 / 69**. Full suite green: **29 files, 340 passed, 10
-skipped (350 total), exit 0**. `npm run build --workspace apps/web` exits 0 with all five routes
-(`/api/weather`, `/api/simulate`, `/api/designs`, `/api/designs/[shareId]`, `/api/materials`) wired
-in, and independently reverified to still exit 0 with `apps/web/app/api/` moved aside entirely
-(the static-export check). `npm run lint`: exit 0, 0 errors, same 12 pre-existing warnings as every
-prior session (unused `eslint-disable` in `packages/data/test/weather.test.ts` and
-`packages/engine/test/{pcm,storage}.test.ts`, unrelated to this session). Every merge to master was
-independently reverified by the orchestrator (rebuilt workspace dists fresh in each worktree, reran
-that worktree's own test file plus the whole suite plus lint, did not just trust a subagent's pasted
-numbers).
+**Completed this session: Area E moved 4 / 7 → 5 / 7, Area F moved 0 / 11 → 3 / 11.** T-40, T-43,
+T-45, T-46 all flipped to a clean `[x]`. T-50 is built and honestly `[!]` BLOCKED (not a failure —
+see below). Ledger total moved **39 / 69 → 43 / 69**. Full suite green: **34 files, 396 passed, 10
+skipped (406 total), exit 0**, measured fresh after every merge this session, DB migrated+seeded
+each time with the standard non-destructive commands. `npm run build --workspace apps/web` exits 0.
+`npx tsc --noEmit -p apps/web/tsconfig.json`: **0 errors** (was silently broken before this
+session's last commit — see the `pool.ts` fix below; nobody had run this command directly before).
+Every merge to master was independently reverified by the orchestrator: fresh `npm install` +
+workspace `dist` rebuild in each worktree, that worktree's own test file, the whole suite on a
+freshly migrated+seeded DB, not just a subagent's pasted numbers.
 
-**T-36 (Next.js scaffold, store, unit boundary, layout slots) — `[x]`:** built by a subagent,
-10/11 acceptance tests passed on the first verified run. The one failure (acceptance test 3, the
-unit-boundary grep) was a false positive: it also caught T-33's pre-existing test fixture file
-(`apps/web/test/repo-runs.test.ts`) legitimately calling the engine's canonical `toK()` to build
-Kelvin request fixtures, not a UI Celsius leak. Per the ledger's own rule against silently loosening
-a test, this was surfaced to the user rather than resolved unilaterally; the user chose to rescope
-the acceptance test's grep to exclude `apps/web/test/**`, citing `CONTRACTS.md` §7.1's own wording
-("the presentation code it serves"). Done with the user's explicit sign-off, original wording kept
-inline in the Evidence block for audit. `apps/web/lib/store.ts` (15-field state, one setter each,
-150ms debounce), `lib/units.ts` (the sole `toC`/`toK` boundary) and `lib/i18n.ts` are now the
-foundation every later Area E/F task builds on.
+**T-40 (the worker-thread pool, one per core) — `[x]`:** single subagent, `worker_threads` pool
+matching the §7.14 protocol already shared with the not-yet-built browser worker. First verified
+run found a real, reproducible failure the subagent's own evidence hadn't caught: acceptance test 3
+(the speedup-ratio floor, `size*0.5`) measured **1.846x, below the 2.0x requirement**, in a full
+30-file repo-suite run, even though the subagent's own isolated reruns of `pool.test.ts` alone had
+passed repeatedly (2.07x–3.47x). Sent back with a specific hypothesis (JIT-warmup asymmetry: the
+test's sequential baseline phase hammers one worker's V8 isolate via `pump()`'s first-free-slot
+selection, leaving the other workers cold when the timed parallel phase starts). Root-caused
+correctly and fixed test-only (a warm-up `runMany` batch before either timed phase; the 2.0x floor
+itself was never touched) — reverified by the orchestrator with 5 independent full-suite runs after
+the fix, all green. **This is the same category of miss T-45's `AdvancedPanel` test 10 and T-50's
+horizontal-scroll test avoided by using real headless-Chrome/real-timer measurement instead of a
+first-guess number — trust but verify a subagent's own timing evidence, especially under full-suite
+load, not just its own file in isolation.**
 
-**T-37 (`/api/weather`), T-38 (`/api/simulate`), T-41 (`/api/designs` + `/api/materials`) — all
-`[x]`, built in parallel** (three subagents, three worktrees, disjoint file allow-lists, dispatched
-together since T-36 unblocked all three and none needed another's output). All three subagents hit
-a session-wide rate limit mid-task (unrelated to the repo; the plan's usage limit reset overnight)
-and were resumed cleanly from their uncommitted worktree state — re-verify uncommitted state against
-the task spec before trusting it as complete is the right move after any interruption, not just a
-crash. T-37 additionally filed a real `HELP_REQUEST`; see below. Three real cross-cutting bugs
-surfaced during T-37's and T-41's work, all fixed by the orchestrator in one commit (outside every
-task's own allow-list, so no subagent could have closed them):
-- **`packages/data/src/index.ts`'s barrel never re-exported T-25's `normaliseWeather` or T-26's
-  `nasaPowerUrl`/`parseNasaPower`/`openMeteoUrl`/`parseOpenMeteo`.** Same class of defect as last
-  session's two barrel gaps (those functions existed since T-25/T-26, the barrel just never grew
-  the re-export lines). T-37 filed a `HELP_REQUEST` for this; fixed once.
-- **`apps/web/lib/db.ts`, `lib/log.ts` and `lib/repo/*.ts` (T-29/T-30/T-31, Area D, already closed)
-  write NodeNext-style `.js`-suffixed relative imports on `.ts` files**, required by the repo's root
-  `tsconfig.base.json` (`moduleResolution: "NodeNext"`) at the time they were written -- before T-36
-  gave `apps/web` its own Next-specific `tsconfig.json` (`moduleResolution: "bundler"`). TypeScript's
-  `bundler` mode tolerates it at type-check time; webpack's actual module resolution does not, and
-  fails with `Module not found: Can't resolve './log.js'` the moment any route pulls `lib/db.ts` or
-  `lib/repo/*` into the real bundle -- T-37 was the first task to do so, and hit it as part of the
-  same `HELP_REQUEST`; T-41 independently found and reported the identical thing. **Fixed** with
-  `resolve.extensionAlias = { '.js': ['.ts', '.tsx', '.js'] }` in `next.config.mjs`'s webpack hook --
-  webpack 5's own documented answer to exactly this NodeNext/bundler mismatch. Full reasoning is in
-  that file's header comment, alongside the two pre-existing TMY-loader gotchas from T-36.
-- **A genuine pre-existing type error in `apps/web/lib/repo/designs.ts` (T-32, Area D, already
-  closed):** `data: { shareId, request: ..., label }` where `label: string | undefined` doesn't
-  satisfy Prisma's generated `label?: string | null` under `exactOptionalPropertyTypes: true` -- only
-  surfaced now because T-41 is the first task to actually import this file into the Next build;
-  `exclude` in `tsconfig.json` stops a file being an initial root but does not stop transitive
-  type-checking once something imported pulls it in, which T-36's exclusion of `lib/repo/**` did not
-  anticipate. **Fixed** with `label: label ?? null`. T-41 found and correctly reported this rather
-  than fixing across its own file boundary.
-  All three fixes verified together: `npm run build --workspace apps/web` succeeds with every one of
-  T-37/T-38/T-41's routes wired in, both with and without `apps/web/app/api/` present.
+**T-43, T-45, T-46, T-50 — dispatched as one parallel batch** (four subagents, four worktrees,
+disjoint file allow-lists under `apps/web/components/{advanced,house,grid}/**` +
+`apps/web/{workers/sim.worker.ts,lib/workerClient.ts}`, since T-40 landing unblocked T-43 and T-36
+already unblocked the other three, and T-44/T-46's only real conflict — coordinate via
+`store.selectedSurfaceId` — meant leaving T-44 out of this round rather than running both). **All
+four hit the same session-wide rate limit mid-task** (unrelated to the repo) and were resumed
+cleanly via `SendMessage`, told to verify their own uncommitted worktree state against the task spec
+rather than trust their pre-interruption plan — the same recovery pattern from last session's
+HANDOFF, now confirmed working a second time, four more times, zero lost work.
 
-**Prisma's CLI AI-agent safety gate -- standing rule, reconfirmed working as intended again this
-session:** every Area E subagent correctly avoided `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` and
-only ever ran the pre-approved, non-destructive `db:migrate` (+ `db:seed` where needed) -- never
-`db:reset` -- to set up a fresh local `dev.db` in its own worktree. No incidents. Keep briefing this
-rule explicitly into any future Area D/E (or Area J deployment) subagent brief.
+- **T-43 (browser Web Worker + offline fallback) — `[x]`:** all 11 tests pass, using a *real*
+  `node:worker_threads.Worker` running `sim.worker.ts` unmodified (Node 24 TS type-stripping, no new
+  dependency) so the timing-sensitive tests exercise genuine off-thread execution, not a stand-in.
+  **Real finding reported upward, not fixed:** T-38's `POST /api/simulate` returns only
+  `{kpis, meta}` on a cache hit, which fails `resultFromJson`'s required-field check — the new
+  routing logic currently treats that as "server failed" and silently falls back to local compute,
+  so **a cache hit is effectively wasted today**. Needs a fix in T-38's route (already closed,
+  outside this task's allow-list) before whoever wires `workerClient.ts` into the real UI.
+- **T-45 (the Advanced panel) — `[x]`:** all 11 tests pass. Two things worth carrying forward: (1)
+  `apps/web/lib/units.ts` exports no Celsius→Kelvin parser (only `formatTempC`, Kelvin→string), so
+  the one round-tripping field imports `toC`/`toK` straight from `@shelter/engine` instead — staying
+  inside `units.ts`'s own stated boundary without editing that read-only file; a follow-up task
+  should add a `parseCelsius`/`toKelvin` export to `units.ts` for the next component that needs it.
+  (2) **Process note, not a rule violation:** this subagent's `prisma migrate dev` was blocked by
+  the session's own destructive-action permission guard, and it worked around that by hand-applying
+  the migration SQL via `node:sqlite` instead of falling back to the documented, pre-approved
+  `npm run db:migrate` command every other task this session used successfully. No data was harmed
+  (additive migration, unpopulated fresh `dev.db`), but the orchestrator discarded that worktree's
+  `dev.db` and rebuilt it with the standard command before trusting the verification run. **Brief
+  future subagents even more explicitly: use `npm run db:migrate` (never `prisma migrate dev`
+  directly) — it already exists precisely to avoid this class of workaround.**
+- **T-46 (isometric house, click-a-wall/scrub-the-day) — `[x]`:** all 11 tests pass (10 verified via
+  vitest, the grep check verified directly). **Real interpretive finding, correctly resolved from
+  the authoritative source:** the task prompt's wording assumed `Building` has `length`/`width`/
+  `height`/`roofPitch` fields; `CONTRACTS.md` §7.5's actual type has none of those, only `floorArea`/
+  `volume`/`surfaces` — the subagent correctly treated CONTRACTS as authoritative over the prompt's
+  paraphrase and derived all geometry from the real fields (wall height = volume/floorArea, etc.),
+  documented inline. Tests 6–9 (live timer loop, real Tab-key order, real 320px layout, real PNG
+  rasterisation) are honestly flagged as structurally-verified rather than browser-measured, since no
+  jsdom/testing-library is installed or on the approved dependency list — not faked.
+- **T-50 (the survival grid) — `[!]` BLOCKED, correctly, not a defect:** 10 of 11 tests pass with
+  real evidence, including a genuine headless-Chrome layout measurement for the 400px scroll-
+  containment test (`google-chrome --headless=new`, no new dependency, a standalone reproduction of
+  the component's own CSS). **Acceptance test 4 is a real forward-dependency gap the orchestrator
+  identified before delegating**, not a subagent failure: it requires the temperature chart (T-47,
+  not built) and `store.ts`'s placeholder `ScenarioResult` only carries `{scenarioId, kpis, meta}` —
+  no time series — because T-60 (which "owns shaping" the real contract, per `store.ts`'s own doc
+  comment) is not done either, transitively blocked by T-54. The subagent implemented the honest
+  partial step (`actions.setActiveTab('temp')`) and correctly refused to invent a new `store.ts`
+  field or fabricate a chart-annotation reading. **T-50's own dependency line should really include
+  T-47 and T-60 — a ledger accuracy gap, not fixed this session (outside this HANDOFF's own remit to
+  rewrite other tasks' dependency lines without re-verifying the whole chain).** Also **found two
+  real bugs, reported not fixed:** `eslint.config.js` has no config block matching `apps/web/**` at
+  all — confirmed independently by the orchestrator (`npx eslint apps/web/lib/pool.ts` → "File
+  ignored, no matching configuration", exit 0) — so **`npm run lint` has been silently skipping the
+  entire `apps/web` tree since T-36**, every "0 errors" claim in every prior session's HANDOFF for
+  Area E/F work was accurate only for the files it happened to check, never a real lint pass over
+  `apps/web`. **Needs a new Area A/E task:** decide what ESLint rules apply to `apps/web/**` (React
+  rules? the same boundary rules?) and add a matching `files` block. And: a real, confirmed
+  `exactOptionalPropertyTypes` type error in T-40's already-merged `pool.ts` — **fixed this session**,
+  see below.
 
-**Two literal NUL bytes, pre-existing in this file (`LOG.md`) since the previous session's own
-HANDOFF prose** (ironically, inside the paragraph describing an earlier NUL-byte incident -- a
-marker string got embedded as a raw control character instead of its escape-sequence text when that
-paragraph was originally written) -- found and fixed this session while investigating why `git diff`
-reported `LOG.md` as a binary file during a routine merge. Same fix pattern as before: rebuild the
-string with the intended escape-sequence text rather than the literal byte. If this keeps recurring,
-it is worth a standing note in a future session about never passing a literal control character
-through a tool-call string parameter.
+**Cross-cutting fix, found via T-50's report, outside every task's own allow-list (T-40, already
+closed):** `apps/web/lib/pool.ts`'s `Task.signal?: AbortSignal` (optional) failed
+`npx tsc --noEmit -p apps/web/tsconfig.json` under `exactOptionalPropertyTypes: true`, because
+`run()`'s `queue.push({..., signal})` always sets the key even when `signal` is `undefined`, which
+that strict flag treats as incompatible with an optional property's "key absent" promise. **Nobody
+had run a direct `tsc --noEmit` against `apps/web/tsconfig.json` before this session** —
+`npx vitest run` type-strips via esbuild and never catches this, and `next build`'s own TypeScript
+step would have failed on it the moment `pool.ts` was ever imported into a route. **Fixed** by
+widening the field to `signal: AbortSignal | undefined` (not optional) — no behavioural change,
+every reader of `task.signal` already saw that same union type either way. Reverified: `tsc` clean,
+`pool.test.ts`'s all 12 tests still pass (test 12: 139.7s, `workersCreated` stayed at `size`),
+`next build` succeeds end to end. **Standing lesson for future sessions: `npx vitest run` passing is
+not proof `next build`'s TypeScript step will pass — run `npx tsc --noEmit -p apps/web/tsconfig.json`
+directly, at least once per session, not only transitively through whichever route a task happens to
+touch.**
+
+**A real gap discovered this session, affecting every future Area F task, not yet owned by any task
+in the ledger:** `apps/web/app/app-shell.tsx` (T-36) pre-wires a labelled `<Placeholder>` slot for
+every Area F component (T-44 through T-53), and every one of those tasks' own file allow-lists is
+scoped to `components/<name>/** only` — none of them are permitted to touch `app-shell.tsx` to swap
+their placeholder for the real component. T-43/T-45/T-46/T-50 all hit this and correctly built and
+tested their components standalone, documenting the gap rather than trying to route around their own
+allow-list. **Nothing in the ledger currently owns the actual wiring.** This needs a new task
+(Area E or F) once enough of Area F has landed to make the wiring worthwhile — likely after T-44,
+T-47–T-49, T-51 land, so it happens once rather than per-component.
 
 **Carried forward from prior sessions, still unaddressed (not touched this session):**
 - **T-54 (the sweep engine, Area G) stays `[!]`** — 11/12 tests, blocked on acceptance test 4
@@ -82,7 +122,9 @@ through a tool-call string parameter.
   blocker: `@shelter/engine`'s `simulate()` has no warm-start hook. **HELP_REQUEST still open,
   unclaimed:** add an optional initial-temperature field to `SimulationRequest`/`SimOptions` — needs
   a new Area B task; `packages/optimise/src/sweep.ts`'s `runSweep` is the only consumer that would
-  need updating, test harness already written in `packages/optimise/test/sweep.test.ts`.
+  need updating, test harness already written in `packages/optimise/test/sweep.test.ts`. **This is
+  also now what's blocking T-60, which is what's blocking T-50's acceptance test 4 above — the
+  highest-leverage single task to pick up next isn't on the strict ledger-scan path.**
 - **T-61 (multi-day runs, Area B/H) stays `[!]`** — acceptance test 9's literal 8×-10× wall-clock
   figure is mathematically unreachable given the shared spin-up cost (measured ceiling ≈2.3×,
   committed test measures 3.10×, asserts a wide bound `(1.2×, 20×)` instead). Needs a human decision:
@@ -98,36 +140,41 @@ through a tool-call string parameter.
   closed task T-14, not fixable from a test file.
 - T-22's finding that `Q7_interiorLongwave` in `solve/integrator.ts`'s `record()` is solver float
   noise (~1e-11 W), not real wattage — flagged for T-49 (Sankey) or T-11's owner.
+- **New this session:** `eslint.config.js` has no `files` block covering `apps/web/**` — see T-50's
+  entry above. `npm run lint` has been a no-op for the entire frontend since T-36.
+- **New this session:** no task owns wiring Area F components into `app-shell.tsx`'s placeholders —
+  see above.
 
-**Gotchas reconfirmed this session (all previously documented, still true), plus one new one:**
-worktrees need a fresh `npm install` (no inherited `node_modules`) **and a fresh build of every
-workspace dependency they touch** (`npm run build --workspace=@shelter/engine` /
-`@shelter/data` -- `dist/` is gitignored); a fresh worktree also needs its own local `dev.db` for
-any DB-backed acceptance test -- the pre-approved, non-destructive command is
-`cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate`, and
-`npm run db:seed --workspace apps/web` on top of that if the task needs real material rows. **New
-this session:** a subagent interrupted by a transient error (a DNS/API outage, or a session-wide
-rate limit) is not a failed task -- resume it with `SendMessage` to its agent id, pointing it at its
-own uncommitted worktree state and telling it to verify that state against the task spec (not trust
-it blindly) before finishing. This worked cleanly four separate times this session with zero lost
-work. Also: `apps/web`'s own `tsconfig.json` (`moduleResolution: "bundler"`, T-36) type-checks
-`.js`-suffixed imports into `.ts` files as fine, but webpack's real bundler does not -- see the
-`resolve.extensionAlias` fix above; and `tsconfig.json`'s `exclude` only stops a file from being an
-initial root, not from being transitively type-checked once an included file imports it -- see the
-`designs.ts` fix above. Both are now standing constraints for any future task that wires a new
-consumer into `lib/repo/*` for the first time.
+**Gotchas reconfirmed this session (all previously documented, still true):** worktrees need a fresh
+`npm install` + a fresh build of every workspace dependency they touch (`dist/` is gitignored); a
+fresh worktree needs its own local `dev.db` via `cd apps/web && DATABASE_PROVIDER=sqlite
+DATABASE_URL="file:./dev.db" npm run db:migrate` (never `prisma migrate dev` directly — see T-45's
+process note above), plus `npm run db:seed --workspace apps/web` for real material rows; a subagent
+interrupted by a session-wide rate limit is not a failed task, resume with `SendMessage` and tell it
+to re-verify its own uncommitted state, not trust its pre-interruption plan (five clean recoveries
+across this session and last, zero lost work); `packages/engine/test/output/validation-numbers.csv`
+picks up a harmless appended-rows diff on every `vitest run` that touches the engine's own validation
+suite — discard it before every commit/merge, it is not part of any task's actual deliverable.
+**New this session:** merging multiple same-base parallel-batch branches back to back produces
+predictable `LOG.md` §5 conflicts on the dashboard done/total counts and per-Area section headers
+(each branch's own count is stale relative to master the moment a sibling branch merges first) —
+resolve by taking the union of completions, not either side verbatim, and recompute the header/
+dashboard counts by hand each time; don't trust either branch's own arithmetic.
 
 **In progress:** nothing. No open worktrees or branches (`git worktree list` / `git branch -a` both
 clean, everything lives on `master`).
 
 **Recommended next step:** In strict ledger-scan order, the first `[ ]` task whose every dependency
-is `[x]` is now **T-40** (the worker-thread pool, one per core), which depends on T-06/T-36, both
-done -- but its own `Conflicts with` line names T-43 (Area F, not started), so confirm T-43 is not
-`[~]` before claiming it. T-39 and T-42 are not yet reachable (T-39 needs T-40, T-54, T-59; T-54 is
-still `[!]`. T-42 needs T-37/T-38/T-39/T-41; T-39 isn't done yet). Area F is now unblocked by T-36
-landing and has eleven tasks, most only depending on T-36 -- a good candidate for a future session's
-first pick, likely needs splitting given its size. Separately, **T-54's and T-61's still-open items
-above are smaller, independent, and could be picked up any time** without waiting on Area E/F.
+is `[x]` is now **T-44** (the five-control simple form; deps T-28/T-36/T-41 all done) — but it
+conflicts with T-46 (now `[x]`, so just coordinate via `store.selectedSurfaceId`, not a lock issue).
+T-47/T-48/T-49/T-51 are now reachable too (all need only T-36 + T-43, both done) and could run in a
+parallel batch similar to this session's, though T-49 also needs T-22 (already done) and T-52 needs
+T-51 first. **Higher-leverage than the strict scan order:** T-54's still-open `HELP_REQUEST` (the
+`simulate()` warm-start hook) is a small, self-contained Area B task that unblocks both T-54 itself
+and, transitively, T-60 and T-50's stuck acceptance test 4 — worth picking up before another Area F
+batch. Separately: the `eslint.config.js` gap and the `app-shell.tsx` wiring gap (both above) are new
+findings that need their own tasks added to the ledger, not yet claimable because they don't exist
+as task ids yet.
 
 ---
 
