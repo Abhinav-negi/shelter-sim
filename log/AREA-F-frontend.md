@@ -18,9 +18,9 @@
 
 ---
 
-### [~] T-43 — The browser Web Worker and the offline fallback path
+### [x] T-43 — The browser Web Worker and the offline fallback path
 
-**Area:** F — Frontend (≈ W-34) · **Status:** CLAIMED by orch-T-43 at 2026-09-18T15:41:30Z · **Est:** 6 h
+**Area:** F — Frontend (≈ W-34) · **Status:** DONE · **Est:** 6 h
 **Depends on:** T-36 · **Conflicts with:** T-40 (both speak the §7.14 protocol — settle it first)
 
 **Why this exists.** Two jobs in one file. **(a)** The main thread must never block, so a dragged
@@ -91,9 +91,102 @@ plan.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+All 11 acceptance tests + 2 bonus tests (runScenarios, isServerReachable) pass together in one
+unfiltered run: `npx vitest run apps/web/test/worker.test.ts` -> "Test Files 1 passed (1), Tests 13
+passed (13), Duration 152.89s". Timing-sensitive tests 1 and 11 were each run 3 separate times
+(isolated, combined-without-test-4, and the final full-file run) with no flakiness observed -- see
+below.
+
+1. Main thread responsiveness (real off-main-thread run via a genuine node:worker_threads.Worker
+   bridging apps/web/workers/sim.worker.ts unmodified -- see "worker bridge" note below). A 5ms
+   setInterval timer measured tick lateness across the whole run (mirrors pool.test.ts's own test-6
+   technique for the identical claim on the server side):
+     run 1 (isolated):            ticks=40, late(>16ms)=0, on-time=100.0%, longest gap=6.24 ms
+     run 2 (combined w/o test 4): ticks=26, late(>16ms)=0, on-time=100.0%, longest gap=6.70 ms
+     run 3 (full-file run):       ticks=32, late(>16ms)=0, on-time=100.0%, longest gap=5.70 ms
+   Longest main-thread task duration observed across all 3 runs: 6.70 ms (< 16 ms every time).
+
+2. Firing 3 requests in quick succession: settled = [rejected, rejected, fulfilled].
+   Store-write counter = 1 (exactly 1, as required).
+
+3. EngineError('INVALID_INPUT') (negative building.volume, fails validateRequest()'s own basic
+   checks) arrives as a typed rejection carrying `.code === 'INVALID_INPUT'`, `instanceof
+   EngineError`, never an unhandled rejection. Also spot-checked the sibling UNKNOWN_MATERIAL code
+   (thrown later than validateRequest()'s pass) through the same path to confirm this isn't
+   special-cased to one code.
+
+4. 1,000 sequential requests through the real worker bridge, strictly increasing internal gains
+   (monotonic aux-energy correlation, same technique as pool.test.ts's own test 10): 0 non-monotonic
+   (mismatched) adjacent pairs across 1,000 requests. Total wall time 24.5 s (in the full-file run) /
+   15.3 s (separate solo run) -- variance is IPC/OS scheduling noise, not correctness.
+
+5. viaWorker result deep-equal (minus each side's own self-reported wallClockMs) to in-process
+   simulate() on the same request. `viaWorker.time`, `.temperatures.indoorAir`, `.temperatures.ambient`,
+   `.heatFlows.Q1_solarOpaque` all `instanceof Float64Array` -- confirmed true.
+
+6. Synchronous fallback (workerFactory reset to default, no DOM Worker global under vitest) result
+   deep-equal (minus wallClockMs) to the worker-path result on the same request.
+
+7. OFFLINE / C-12 (global.fetch mocked to always reject -- network fully blocked): elapsed = 112.5 ms
+   (well under the 5000 ms budget), tempAt0600 = -6.1 degC (via lib/units.ts's own formatTempC, no
+   raw -273.15 anywhere in this task's files), store.online = false.
+
+8. Server 500 (global.fetch mocked to resolve `new Response('server error', {status:500})`): a valid
+   result is still returned, store.online = false.
+
+9. Server timeout / no response (fetch's HEAD leg resolves immediately so isServerReachable() sees a
+   reachable server; the POST leg hangs until workerClient.ts's own AbortController fires): elapsed =
+   5167.3 ms / 5194.6 ms / 5149.1 ms across 3 separate runs -- consistently ~5.15-5.2s, i.e. the real
+   SERVER_TIMEOUT_MS=5000 budget plus a small local-compute tail, and nowhere near a naive 30s.
+
+10. Terminating the (real, bridged) worker ~5ms into an in-flight run: the pending promise rejects
+    immediately (`instanceof Error`) instead of hanging -- verified via `await expect(promise)....`
+    resolving before the test's own 10s timeout.
+
+11. 10,000 sequential requests through the real worker bridge: `__workersCreatedForTest()` stayed at
+    exactly 1 in all 3 separate runs (139.9s, 144.1s, 121.2s wall time respectively) -- one always-on
+    worker, never spawned per request.
+
+Full-repo regression check (`npx vitest run`, whole monorepo):
+  BEFORE this task (baseline, measured after `npm install` + engine/data build, before any T-43
+  file existed): Test Files 8 failed | 22 passed (30); Tests 16 failed | 290 passed | 35 skipped
+  (341); Duration 267.32s. All 16 pre-existing failures are in apps/web/test/repo-designs.test.ts
+  and apps/web/test/repo-materials.test.ts -- Prisma/DB-tier tests failing because this worktree has
+  no live database configured (`@prisma/client did not initialize yet` / DB connection errors),
+  entirely unrelated to T-43's files.
+  AFTER this task (clean run): Test Files 8 failed | 23 passed (31); Tests 16 failed | 303 passed |
+  35 skipped (354); Duration 384.33s. Same 16 pre-existing DB-tier failures (identical test names to
+  the baseline list above), zero new failures; +1 test file (worker.test.ts, 13/13 passing, 193.4s)
+  and +13 passing tests overall (290 -> 303). One earlier intermediate rerun (between the baseline
+  and this clean run, while worker.test.ts's fixture was still being adjusted) showed 17 failed
+  instead of 16 -- one extra apps/web/test/repo-designs.test.ts case flipped pass/fail. Re-run
+  cleanly and it returned to exactly the baseline's 16; vitest.config.ts's own header comment
+  documents this exact class of pre-existing cross-file DB-tier races (shared process-wide
+  process.env.DATABASE_URL / Prisma-client-stash state), which this task's files never touch --
+  workerClient.ts and sim.worker.ts have no relationship to the database tier. Reported here per
+  rule 15/16 rather than silently discarded.
+
+Worker bridge note (why tests 1/4/5/10/11 are genuine, not simulated): vitest's default environment
+is plain Node, which has no DOM `Worker` global, so apps/web/test/worker.test.ts bridges a real
+`node:worker_threads.Worker` -- running apps/web/workers/sim.worker.ts completely unmodified -- to
+the `WorkerLike` interface workerClient.ts expects, via the test-only `__setWorkerFactoryForTest`
+hook. The bridge's only job is polyfilling the 3 DOM globals sim.worker.ts actually uses (`self`,
+`postMessage`, `addEventListener('message', ...)`) on top of `parentPort`; it never modifies
+sim.worker.ts itself. Node >=22.18/23.6's default TypeScript type-stripping loads the .ts worker
+file directly, no build step or extra dependency required. This means test 1's/11's timing numbers
+above reflect a genuine second OS thread, not a deferred-callback stand-in.
+
+Gotcha for a future task (not fixed here -- app/api/* is off this task's allow-list): T-38's
+POST /api/simulate (apps/web/app/api/simulate/route.ts) responds to a cache HIT with only
+`{kpis, meta}`, omitting `time`/`temperatures`/`solar`/`heatFlows`. workerClient.ts's `resultFromJson`
+call on that response throws EngineError('DATA_SCHEMA_MISMATCH') (missing required fields per
+CONTRACTS.md sec 7.7), which this task's routing logic silently treats as "server failed" and falls
+back to the local worker -- never crashes, but it means a cache hit is effectively wasted from this
+client's point of view instead of being used. Whoever wires the store up to workerClient.ts (a T-44+
+follow-on) should know a server "success" response is not always a full SimulationResult today.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** subagent (session claude-sonnet-5, orch-T-43)  **Date:** 2026-09-18
 
 ---
 
