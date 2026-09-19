@@ -1,0 +1,83 @@
+/* apps/web/components/kpis/KpiColumn.module.css
+ *
+ * T-51, acceptance test 11: at 400px viewport width the cards stack to ONE
+ * column and remain legible -- native CSS Grid + a single breakpoint
+ * (ponytail rung 4: native platform feature, no layout library). `.grid`'s
+ * `auto-fill`/`minmax` already reflows on its own, but the explicit
+ * `max-width: 480px` rule (which covers the 400px test point) forces exactly
+ * one column instead of leaving it to arithmetic, so the pass/fail is not a
+ * near-miss on a particular card width.
+ */
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
+}
+
+.badge {
+  width: fit-content;
+  padding: 0.4em 0.8em;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.badgeOk {
+  background: #d6f5d6;
+  color: #14532d;
+}
+
+.badgeBad {
+  background: #f8d7da;
+  color: #7f1d1d;
+}
+
+/* Rule 10: styled as a warning, never a quiet grey box. */
+.warnings {
+  margin: 0;
+  padding: 0.6em 1em 0.6em 2em;
+  background: #fff3cd;
+  border: 2px solid #b45309;
+  border-radius: 4px;
+  color: #7c2d12;
+  font-weight: 600;
+}
+
+.warnings li {
+  margin: 0.2em 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6em;
+}
+
+.card {
+  min-width: 0; /* let long values wrap inside the cell instead of overflowing it */
+  padding: 0.5em 0.7em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.cardLabel {
+  font-size: 0.78em;
+  color: #555;
+}
+
+.cardValue {
+  font-size: 1.15em;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.cardSub {
+  font-size: 0.78em;
+  color: #666;
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
