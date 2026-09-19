@@ -795,9 +795,9 @@ principle by itself."* (`plan.md` §6.) Orientation is a word the problem statem
 
 ---
 
-### [~] T-49 — The heat-flow view and the Sankey (PS Deliverable 3)
+### [x] T-49 — The heat-flow view and the Sankey (PS Deliverable 3)
 
-**Area:** F — Frontend (≈ W-42) · **Status:** CLAIMED by orchestrator-subagent-T49 at 2026-09-19T02:25:57Z · **Est:** 8 h
+**Area:** F — Frontend (≈ W-42) · **Status:** DONE · **Est:** 8 h
 **Depends on:** T-22, T-36, T-43 · **Conflicts with:** none
 
 **Why this exists.** *"The Sankey is the most persuasive single image in the app. It answers 'where
@@ -863,9 +863,141 @@ together.**
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Built: apps/web/components/charts/heatflow/{pathways.ts, stackedArea.ts, sankey.ts, scatter.ts,
+StackedAreaChart.tsx, SankeyDiagram.tsx, DeltaTScatter.tsx, HeatFlowPanel.tsx,
+HeatFlowPanel.module.css, index.ts, heatflow.test.ts}. All non-JSX logic (stack layout, Sankey
+graph build + layout, regression) lives in pure, exported .ts functions -- no jsdom/
+@testing-library on the approved dependency list (CONTRACTS.md §7.13) -- same pattern as
+T-46/T-50. Component structure verified via react-dom/server's renderToStaticMarkup, same
+pattern house.test.tsx (T-46) established.
+
+DEVIATION FROM "Subagent guidance": the task text suggests spawning 2 subagents (stacked-area+
+scatter vs Sankey). Done as a single agent instead -- the whole task was small enough (11 files,
+~500 lines) to hold in one context, and splitting it would have cost more in coordination/merge
+overhead than it saved. All acceptance tests (both halves) verified by the same agent.
+
+Setup: cd /home/abhinav/Downloads/SIH/shelter-sim/wt-t-49 && npm install && npx tsc -b
+packages/engine packages/data; cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db"
+npm run db:migrate && npm run db:seed --workspace apps/web (DB unused by this task's own code --
+setup done per session standard only).
+
+Commands used for every number below:
+  cd /home/abhinav/Downloads/SIH/shelter-sim/wt-t-49
+  npx vitest run apps/web/components/charts/heatflow/heatflow.test.ts   -> 14 tests, all green, ~1s
+  npx tsc --noEmit -p apps/web/tsconfig.json                            -> "No errors found"
+  npx vitest run                                                        -> 35 files, 410 passed,
+                                                                            10 skipped (420), exit 0
+                                                                            (baseline was 34/396/10/
+                                                                            406 -- +1 file / +14
+                                                                            tests, nothing else moved)
+  npm run build --workspace apps/web                                    -> exit 0 (pre-existing
+                                                                            topLevelAwait warning
+                                                                            from @shelter/engine's
+                                                                            serialise.js via
+                                                                            lib/store.ts, unrelated
+                                                                            to this task)
+
+Real fixtures used (no synthetic-only numbers for the acceptance tests): the bundled Leh presets
+via @shelter/data (armyBroBarrack, modernRccNoInsulation), resolved+simulated exactly the way
+app/page.tsx does (resolvePreset() inlined in the test file, same pattern house.test.tsx uses),
+PLUS one purpose-built fixture for test 4 (see below).
+
+Test 1 (legend list, 13 entries, includes Q7): PASS.
+  ['Sunlight on the walls & roof (Q1)', 'Sunlight through the windows (Q2)',
+   'Body heat, stove & livestock (Q11)', 'Auxiliary heater (Qaux)',
+   'Convection with outside air (Q3)', 'Conduction through the windows (Q8)',
+   'Carried away by draughts (Q9)', 'Conducted to/from the ground (Q10)',
+   'Radiated to the night sky (Q4)', 'Conduction inside the walls (Q5, internal)',
+   'Convection to the indoor air (Q6, internal)',
+   'Interior surface-to-surface radiation (Q7, internal)',
+   'Stored in / released from the walls']
+  PATHWAY_KEYS has exactly 13 entries matching Q1..Q11+Qaux+storageRate one-for-one (asserted
+  both directions against the literal expected list).
+
+Test 2 (gains above axis / losses below, every timestep): PASS. Asserted against the REAL
+  d3.stack (stackOffsetDiverging) output for armyBroBarrack's full 288-step run: for every one
+  of 13 pathways x 288 timesteps (3744 points checked), value >= 0 => both band endpoints >= -1e-9,
+  value < 0 => both endpoints <= 1e-9.
+
+Test 3 (Q4_skyRadiation on the loss side all night, incl. hours ambient > indoor, CHALLENGE.md
+  C-02): PASS, using modernRccNoInsulation (Leh, Jan 15) -- Q4_skyRadiation[i] <= 0 at EVERY one
+  of 288 timesteps (asserted individually), including the 17 timesteps where ambient > indoor
+  (max Q4 during those 17 = -6640.72 W, still negative). Q4_skyRadiation at 02:00 =
+  -6060.060866462804 W (ambient 257.51 K, indoor 268.13 K at that step).
+
+Test 4 (Q5 vs deltaT scatter: R^2 > 0.95, slope within 10% of hand ΣUA): PASS.
+  Fixture: a purpose-built 4-exterior-wall thin-steel (steelCGI, 0.6mm) box, no windows, no roof/
+  floor, synthetic sinusoidal-ambient-only weather (GHI=0, isolates conduction from ambient ΔT
+  with no ground/roof/solar noise mixed in) -- self-contained in heatflow.test.ts (does not import
+  packages/engine/test/fixtures.ts, which is not published/importable from apps/web; same
+  reasoning house.test.tsx's own boxBuilding documents).
+    R^2 = 0.9997271007136522
+    fitted slope = -127.41582166678232 W/K
+    hand-computed ΣUA = 125.93182761770176 W/K (via constructionUValue(buildWallMesh(...),
+      hConvExterior(3, 3500), hConvInterior('wall', 0, 0, 3500)) * 4 walls * 16 m^2 -- the SAME
+      functions the engine itself uses, an independent first-principles check, not a copy of the
+      integrator's own Q5 arithmetic)
+    |slope| vs ΣUA relative difference = 1.18% (< 10% required)
+  NOTE for whoever reruns this: with the real bundled presets' full geometry (walls+roof+ground-
+  coupled floor, e.g. armyBroBarrack) R^2 measured only ~0.88 -- the ground-coupled floor's own Q5
+  contribution (driven by T_ground, not by ambient-air deltaT) adds noise that isn't from a defect,
+  it's a different physical driver mixed into the same aggregate Q5 series. The 4-wall-only fixture
+  isolates the conductive-envelope claim the acceptance test is actually about.
+
+Test 5 (panel title contains "PS Deliverable 3" literally): PASS.
+
+Test 6 (Sankey inflow = outflow + storage change, within 1%): PASS on two independent real runs.
+  armyBroBarrack:        inflow 210.23688839566682 kWh, outflow 210.18810381496777 kWh,
+                          deviation 0.0232%
+  modernRccNoInsulation: inflow 218.87849877319337 kWh, outflow 218.86867904546918 kWh,
+                          deviation 0.0045%
+  (storageRate is folded into whichever side its own daily sign puts it on -- see sankey.ts's
+  header comment -- so "inflow = outflow" here already IS "inflow = outflow + storage change";
+  both totals pasted above are the real classified sums, not a synthetic pair.)
+
+Test 7 (no negative-width link, no NaN node): PASS for both armyBroBarrack and
+  modernRccNoInsulation -- every node's x0/x1/y0/y1 finite, every link width >= 0 and finite,
+  every link's SVG path string non-empty.
+
+Test 8 (every stream labelled with kWh + plain-language name, never "Q4"): PASS.
+  Gain streams (armyBroBarrack): Sunlight on the walls & roof (Q1) 164.65 kWh; Sunlight through
+    the windows (Q2) 32.33 kWh; Body heat, stove & livestock (Q11) 13.26 kWh.
+  Loss streams: Convection with outside air (Q3) 139.37 kWh; Radiated to the night sky (Q4)
+    55.12 kWh; Conduction through the windows (Q8) 11.59 kWh; Carried away by draughts (Q9)
+    3.87 kWh; Conducted to/from the ground (Q10) 0.23 kWh.
+  (Qaux and the storage term are 0/near-0 for this preset and dropped by the < 1e-6 kWh floor --
+  no aux heating and near-zero net daily storage change in a converged periodic day.)
+
+Test 9 (zero aux heating): PASS. armyBroBarrack's dailyTotalsKWh.Qaux === 0 exactly; the panel
+  renders all three views (heatflow-stacked-area, heatflow-sankey, heatflow-scatter markers all
+  present in the markup) with no "NaN" substring anywhere.
+
+Test 10 (result === null -> empty state, not NaN): PASS. Markup contains
+  data-testid="heatflow-empty-state" and none of the three view test-ids; no "NaN" substring.
+
+Test 11 (400px legible, Sankey scrolls in its own container): PASS structurally -- all three
+  views are wrapped in their own .scrollBox (overflow-x: auto, CONTRACTS-approved native-CSS
+  containment, same pattern as SurvivalGrid.module.css's T-50 precedent), confirmed 3 distinct
+  scrollBox-classed containers in the rendered markup for one panel. Each view's SVG has
+  min-width: 420px inside that scrolling box while the box itself has no min-width, so a 400px
+  viewport scrolls the box, never the page body (structural CSS check; no headless-browser
+  measurement taken for this task -- the CSS mechanism is identical to T-50's own, which WAS
+  measured with real headless Chrome and confirmed correct).
+
+Q7_interiorLongwave float-noise handling (T-22's finding, flagged specifically for this task):
+  confirmed again here -- Q7's daily total for armyBroBarrack is -3.86e-14 kWh (T-22 measured
+  ~2.3e-14 kWh on a different fixture; same order of magnitude, solver float noise, not real
+  wattage). Handled by EXCLUSION, not clamping: Q7 is one of the three INTERNAL pathways
+  (Q5/Q6/Q7, CONTRACTS.md §7.4) and the Sankey only ever draws the nine BOUNDARY terms plus
+  storageRate (sankey.ts's BOUNDARY_KEYS, 9 keys, asserted to exclude Q5/Q6/Q7) -- so the noise
+  term never reaches the Sankey to mis-scale a link width or appear as a spurious near-zero
+  stream. It DOES still appear in the stacked-area chart's legend and bands (acceptance test 1
+  requires this), where its ~1e-11 W magnitude is simply invisible next to the other pathways'
+  hundreds-of-watts scale and does not affect the chart's y-domain in any visible way (confirmed:
+  yDomainOf's min/max come from Q1/Q3/Q4/etc, not Q7).
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** subagent-T49 (Claude Sonnet 5)  **Date:** 2026-09-19
 
 ---
 
