@@ -332,12 +332,12 @@ with an Area file again, the Area file is right — fix this table.)*
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 5 / 7 | `log/AREA-E-server-tier.md` |
-| F | Frontend | 4 / 11 | `log/AREA-F-frontend.md` |
+| F | Frontend | 5 / 11 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **45 / 70** | |
+| | **TOTAL** | **46 / 70** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
@@ -427,7 +427,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [~] | T-48 | The solar capture view (PS Deliverable 2) | T-36, T-43 |
 | [~] | T-49 | The heat-flow view and the Sankey (PS Deliverable 3) | T-22, T-36, T-43 |
 | [!] | T-50 | The survival grid | T-36, T-59 |
-| [~] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
+| [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
 | [ ] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
 | [ ] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
 
