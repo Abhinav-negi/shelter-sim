@@ -937,6 +937,21 @@ Design decisions / gotchas for a successor:
 
 **Completed by:** T-40 subagent  **Date:** 2026-09-18
 
+**POST-MERGE FIX (orchestrator, 2026-09-19):** a real, pre-existing type error in `pool.ts`'s
+`Task` interface (`signal?: AbortSignal`) surfaced by `npx tsc --noEmit -p apps/web/tsconfig.json`
+under `exactOptionalPropertyTypes: true` -- `run()` always pushes a `signal` key onto the queued
+task object (`{ ..., signal }`, where `signal` is `AbortSignal | undefined` from `run()`'s own
+optional parameter), and that strict flag treats "key present holding `undefined`" as distinct
+from "key absent," which an *optional* (`?:`) property promises never to be. `npx vitest run`
+alone never catches this (it type-strips via esbuild, no full type-check pass), and `next build`'s
+own TypeScript step would have failed on it -- found while investigating a report from T-50's own
+subagent, which hit the same error via `apps/web/tsconfig.json` and correctly reported it upward
+rather than fixing it (outside T-50's file allow-list). **Fixed** by widening the field to
+`signal: AbortSignal | undefined` (not optional) -- the type every reader of `task.signal` already
+saw either way, so no other line changes. Reverified: `npx tsc --noEmit -p apps/web/tsconfig.json`
+-> zero errors; `npx vitest run apps/web/test/pool.test.ts` -> all 12 tests still pass (test 12's
+10,000-call run: 139.7s, `workersCreated` stayed at the configured `size`).
+
 ---
 
 ### [x] T-41 — `/api/designs` and `/api/materials`

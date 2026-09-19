@@ -70,7 +70,7 @@ interface Task {
   req: SimulationRequest;
   resolve: (r: SimulationResult) => void;
   reject: (e: unknown) => void;
-  signal?: AbortSignal;
+  signal: AbortSignal | undefined;
 }
 
 interface Slot {
