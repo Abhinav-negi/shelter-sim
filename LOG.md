@@ -403,7 +403,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [!] | T-50 | The survival grid | T-36, T-59 |
 | [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
 | [ ] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
-| [~] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
+| [x] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
 
 ### Area G — Decision support — 0 / 5 — `log/AREA-G-decision-support.md`
 
