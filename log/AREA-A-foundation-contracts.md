@@ -951,11 +951,11 @@ allow-list (packages/engine/src is off limits to this task). Flagging upward for
 
 ---
 
-### [~] T-72 — Cover `apps/web/**` in the root ESLint config
+### [x] T-72 — Cover `apps/web/**` in the root ESLint config
 
 **Area:** A — Foundation (new task, raised by LOG.md's own HANDOFF — carried forward across at
 least two prior sessions, "`npm run lint` is still a silent no-op for the entire frontend") ·
-**Status:** CLAIMED by orchestrator-session7 at 2026-09-20T02:45:03Z · **Est:** 2 h
+**Status:** DONE · **Est:** 2 h
 **Depends on:** T-03 · **Conflicts with:** none
 
 **Why this exists.** `eslint.config.js` (T-03) only defines a `files: ['packages/**/*.ts']` block
@@ -1017,9 +1017,154 @@ what a genuine, reported, minimal lint-violation fix requires.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+DECISIONS AND WHY (for the zero-context successor):
+
+- Mechanism: native eslint-config-next flat export, NOT FlatCompat. Confirmed by reading
+  node_modules/eslint-config-next/package.json "exports" -- the "." entry
+  (dist/index.js) is `module.exports = config` where config is a `Linter.Config[]`
+  (flat-config array), no legacy .eslintrc shim involved. Also confirmed
+  `npm ls @eslint/eslintrc` -> empty: FlatCompat isn't even installed anywhere in this
+  tree, so it was never an available fallback -- moot, since the native export exists.
+  eslint-config-next is resolved from ROOT node_modules by workspace hoisting (it is an
+  apps/web/package.json devDependency, T-36; npm workspaces hoisted it to the root
+  node_modules since nothing else in the tree needs a conflicting version). No new
+  dependency was added anywhere -- root package.json/package-lock.json untouched.
+
+- Scoping mechanism: eslint-config-next's own blocks ship repo-wide `files` globs
+  (e.g. `**/*.{js,jsx,mjs,ts,tsx,mts,cts}`) because it assumes it is the *only* config
+  in a single-app repo. `eslint.config.js` maps over the imported array and rewrites
+  every block's `files` to exactly `apps/web/**/*.{ts,tsx}` (the glob the task prompt
+  names), and re-roots the one ignores-only block (`.next/**`, `out/**`, etc.) under
+  `apps/web/`. This is why the existing `packages/**` block (T-03) is provably
+  untouched -- see Test 3 below, all 8 exit codes identical to T-03's own Evidence.
+
+- GOTCHA (real, not hypothetical -- hit this on the first `npm run lint` run): the
+  nested `eslint-plugin-react@7.37.5` that ships inside eslint-config-next's own
+  node_modules calls `context.getFilename()` (via its `settings.react.version: 'detect'`
+  auto-detection path) to locate the installed `react` package. That method does not
+  exist on this repo's installed `eslint@10.10.0` rule-context object, and the whole
+  lint run crashed with `TypeError: contextOrFilename.getFilename is not a function`
+  on EVERY apps/web file, not a lint finding but a hard crash. This is an upstream
+  eslint-config-next/eslint-plugin-react vs. this-ESLint-version incompatibility, not a
+  config mistake. Fix: pin `settings.react.version` to the real installed React version
+  (read at config-load time from `react/package.json`, currently 19.3.0) instead of
+  `'detect'`, which skips the broken auto-detect call entirely. No new dependency, no
+  node_modules edit -- a one-line override of a config value the plugin itself exposes
+  for exactly this purpose.
+
+- One genuine, real, trivial pre-existing apps/web violation surfaced on the first real
+  run: `react/no-unescaped-entities` (error) on
+  apps/web/components/inputs/SimpleForm.tsx:380, a bare apostrophe in JSX text
+  ("Who's staying here"). Fixed with `&apos;`, the standard JSX escape -- a one-character
+  content change, nothing else touched in that file (see gotcha below about NOT running
+  prettier --write on it).
+
+- One class of pre-existing "violation" was scoped off, not fixed: ~67
+  `Unused eslint-disable directive (no problems were reported from 'no-console')`
+  warnings across ~15 apps/web files (mostly apps/web/test/**). These are leftover
+  `// eslint-disable-next-line no-console` comments from before apps/web was linted at
+  all; no-console is a packages/**-only rule (T-03 item 3 / LOG.md rule 17) and is not
+  part of eslint-config-next's ruleset, so once ESLint's core default
+  (`linterOptions.reportUnusedDisableDirectives: 'warn'`) actually saw these files, every
+  one of those comments lit up. Fixing this by hand means editing ~15 files outside this
+  task's allow-list for a purely cosmetic reason -- exactly the "mass-editing" the task
+  prompt says to avoid. Scoped `linterOptions.reportUnusedDisableDirectives: 'off'` to
+  `apps/web/**` instead, with the reason written inline in eslint.config.js. This does
+  not hide a real rule violation (no-console isn't even active there) and does not touch
+  the packages/** block.
+
+- GOTCHA: do not run `prettier --write` on any apps/web/** file while fixing a trivial
+  lint violation. Tried it on SimpleForm.tsx (to keep format:check green) and it
+  reformatted 45 unrelated lines (line-wrapping over 100 cols) because that file was
+  never prettier-clean to begin with -- part of a pre-existing, unrelated 115-file
+  format:check backlog (confirmed identical count, 115, both with and without this
+  task's changes via `git stash`). Reverted and reapplied only the one-character
+  `&apos;` fix by hand. `format:check` is NOT one of this task's 7 acceptance tests and
+  was already red before this task (pre-existing gap, flagged here for the successor,
+  not fixed -- fixing it means reformatting ~115 files across packages/** and
+  apps/web/**, both outside this task's scope).
+
+- ASSUMPTION: "apps/web/**/*.{ts,tsx}" (the exact glob the task prompt names) is
+  sufficient -- confirmed by `find apps/web -name '*.ts' -o -name '*.tsx'` (excluding
+  node_modules/.next): every real source/test file in apps/web is .ts or .tsx, none are
+  .js/.jsx/.mjs, so narrowing eslint-config-next's broader default extension list costs
+  nothing today. If a future task adds a .js/.mjs file under apps/web, extend
+  APPS_WEB_GLOB, don't add a second glob.
+
+- STATE: fully finished, all 7 acceptance tests below pass. Nothing half-done.
+
+TEST 1 -- npx eslint apps/web/components/charts/temp:
+  BEFORE: exit 2, "you are linting ... but all of the files matching the glob pattern
+    ... are ignored."
+  AFTER:  exit 0, "ESLint: No issues found"
+
+TEST 2 -- npm run lint actually visits apps/web:
+  `npx eslint . -f json` parsed: 89 apps/web/** files present in the JSON results
+  (0 before this task, by definition -- they were unmatched by any block).
+
+TEST 3 -- T-03's four boundary-rule revert-tests, repeated verbatim against
+  packages/engine/src/air.ts (proves the new apps/web block did not widen/narrow the
+  existing packages/** block):
+  React rule:    before=1  after=0
+  Prisma rule:   before=1  after=0
+  any rule:      before=1  after=0
+  console rule (src):  before=1  after=0
+  console rule (packages/engine/test/perf.test.ts): exit=0 (no-console correctly off there)
+  All eight exit codes match T-03's own Evidence block exactly.
+
+TEST 4 -- initial real apps/web violations from the first `npm run lint` run:
+  1 error:  react/no-unescaped-entities, SimpleForm.tsx:380 -- FIXED (one-character
+    `&apos;` escape).
+  ~67 warnings: "Unused eslint-disable directive ('no-console')" across ~15 apps/web
+    files -- SCOPED OFF via `linterOptions.reportUnusedDisableDirectives: 'off'` for
+    `apps/web/**` only, reason documented inline in eslint.config.js (no-console isn't
+    part of the apps/web ruleset at all; see decisions above).
+
+TEST 5 -- npm run lint on the tree as it stands:
+  "ESLint: 0 errors, 12 warnings in 3 files" (storage.test.ts 8, pcm.test.ts 3,
+  weather.test.ts 1 -- all three are packages/engine/test|packages/data/test files,
+  pre-existing "Unused eslint-disable directive" warnings unrelated to this task,
+  confirmed identical before and after this task's changes via `git stash` -- out of
+  this task's allow-list (packages/**), reported here per rule 16, not fixed).
+  Exit code: 0.
+
+TEST 6 -- npx vitest run, full suite, no regressions:
+  Test Files  26 failed | 14 passed (40)
+  Tests       3 failed | 160 passed | 10 skipped (173)
+  IDENTICAL file-for-file and test-for-test both with and without this task's changes
+  (confirmed via `git stash` / `git stash pop`, same two runs). The 26 failing files are
+  apps/web/test/db*.test.ts-style DB-integration tests that need a live database
+  connection (e.g. "T-30 db.ts ... dbHealthy() ... true live") which this sandboxed
+  worktree does not have -- pre-existing, unrelated to lint config, out of scope for a
+  lint-config-only task.
+
+TEST 7 -- .github/workflows/ci.yml already runs `npm run lint`; no workflow file changed:
+  ci.yml Lint step is exactly `npm run lint` (unchanged, confirmed via file read).
+  Ran CI's exact steps locally up through this task's concern:
+    npm run typecheck                                   -> exit 0
+    npm run lint                                         -> exit 0 (Test 5 above)
+    npx vitest run packages/engine/test/gate.test.ts (THE HARD GATE) -> 8/8 passed, exit 0
+  No `.github/workflows/*.yml` edit was needed or made.
+
+  NOTE FOR THE LEDGER (not this task's to fix, reported per rule 16): CI's separate
+  "Format check" step (`npm run format:check`) is ALREADY red independent of this task
+  -- 115 files fail Prettier formatting both before and after this task's changes
+  (confirmed via `git stash`). This task did not create or worsen it (SimpleForm.tsx was
+  already on that 115-file list before this task touched it, and still is -- the
+  `&apos;` fix is a single character, not a reformat). Whichever task owns
+  format:check/`.prettierignore` should pick this up.
+
+FILES CHANGED:
+  eslint.config.js (new apps/web block, native eslint-config-next flat export, scoped;
+    see decisions above) -- the only file this task's allow-list names outright.
+  apps/web/components/inputs/SimpleForm.tsx -- ONE line, `Who's` -> `Who&apos;s`
+    (genuine, reported, minimal lint-violation fix, explicitly permitted by this task's
+    own allow-list clause).
+  No devDependency was added. root package.json / package-lock.json untouched.
+  packages/** untouched (git diff --stat packages/ -> empty).
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** claude-agent-T72 (Sonnet 5)  **Date:** 2026-09-20
 
 ---
 

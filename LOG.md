@@ -301,7 +301,7 @@ with an Area file again, the Area file is right — fix this table.)*
 
 | Area | Name | Done / Total | File |
 |---|---|---|---|
-| A | Foundation & contracts | 7 / 8 | `log/AREA-A-foundation-contracts.md` |
+| A | Foundation & contracts | 8 / 8 | `log/AREA-A-foundation-contracts.md` |
 | B | Engine | 16 / 17 | `log/AREA-B-engine.md` |
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
@@ -311,7 +311,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **48 / 72** | |
+| | **TOTAL** | **49 / 72** | |
 
 *(T-71 and T-72 added this session — new tasks the orchestrator raised from the prior HANDOFF's
 recommended next steps, same pattern as T-70 last session. Totals above include them as not-yet-done.)*
@@ -320,7 +320,7 @@ recommended next steps, same pattern as T-70 last session. Totals above include 
 
 ### Full task list, by Area
 
-### Area A — Foundation & contracts — 7 / 8 — `log/AREA-A-foundation-contracts.md`
+### Area A — Foundation & contracts — 8 / 8 — `log/AREA-A-foundation-contracts.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
@@ -331,7 +331,7 @@ recommended next steps, same pattern as T-70 last session. Totals above include 
 | [x] | T-05 | The `.work/` claim ledger and `board.sh` | T-02 |
 | [x] | T-06 | Extend the shared contract with the types the rest of the build needs | T-01 |
 | [x] | T-07 | Canonical test fixtures, including the C-01 kill-shot pair | T-06 |
-| [~] | T-72 | Cover `apps/web/**` in the root ESLint config | T-03 |
+| [x] | T-72 | Cover `apps/web/**` in the root ESLint config | T-03 |
 
 ### Area B — Engine — 15 / 16 — `log/AREA-B-engine.md`
 
