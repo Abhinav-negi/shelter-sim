@@ -1,0 +1,99 @@
+/* apps/web/components/meta/assumptions/AssumptionsPanel.module.css
+ *
+ * Native CSS table, no layout library (ponytail rung 4). At <=480px the
+ * table switches to a stacked block layout so nothing overflows a 400px
+ * viewport (same breakpoint KpiColumn.module.css uses).
+ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.sectionTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: #a9adba;
+  margin: 0 0 0.5rem 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #2a2d36;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.note {
+  font-size: 0.75rem;
+  color: #d6c46a;
+  margin-top: 0.2rem;
+}
+
+.editRow input {
+  width: 100%;
+  max-width: 8rem;
+  background: #1a1c22;
+  color: #e8e8ec;
+  border: 1px solid #3a3e4a;
+  border-radius: 4px;
+  padding: 0.2rem 0.35rem;
+}
+
+.fuelCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem;
+}
+
+.fuelCard {
+  border: 1px solid #2a2d36;
+  border-radius: 8px;
+  padding: 0.6rem;
+}
+
+.fuelCardLabel {
+  font-size: 0.7rem;
+  color: #a9adba;
+}
+
+.fuelCardValue {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .table thead {
+    display: none;
+  }
+  .table tr {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #a9adba;
+    flex: 0 0 auto;
+  }
+}

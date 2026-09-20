@@ -1911,9 +1911,9 @@ surfaces it; not this task's file, not touched.
 
 ---
 
-### [~] T-52 — The assumptions panel, exports, the offline banner and bilingual labels
+### [!] T-52 — The assumptions panel, exports, the offline banner and bilingual labels
 
-**Area:** F — Frontend (≈ W-45) · **Status:** CLAIMED by orchestrator-session7 at 2026-09-20T03:43:10Z · **Est:** 8 h
+**Area:** F — Frontend (≈ W-45) · **Status:** BLOCKED on ledger defect (tests 8, 11 need cross-component wiring outside this task's allow-list; 11/13 tests fully green) · **Est:** 8 h
 **Depends on:** T-36, T-43, T-51 · **Conflicts with:** all Area F tasks (message-file boundary)
 
 **Why this exists.** Four cheap credibility features in one place. *"Every assumption we make is
@@ -1989,9 +1989,214 @@ i18n aggregator. Each gets its own subdirectory and its own acceptance tests (1�
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Built apps/web/components/meta/:
+  assumptions/constants.data.ts        -- ENGINE_CONSTANTS (17 entries, values read
+    live off @shelter/engine's barrel), UNEXPORTED_CALIBRATION_KNOBS (ACH_PER_GLAZING_
+    FRACTION, M=4 -- see GOTCHA below), SOLAR_DISTRIBUTION, CORRELATIONS, annualisation
+    MethodNote().
+  assumptions/constants.data.test.ts   -- mechanical diff test (test 1) + test 2 data check
+  assumptions/fuelCost.ts              -- pure recomputeFuelCost() (test 5's engine)
+  assumptions/limitations.data.ts      -- 9 LIMITATIONS entries (>= the 7 named)
+  assumptions/AssumptionsPanel.tsx + .module.css -- renders everything, editable fuel/
+    cost inputs wired to recomputeFuelCost()
+  assumptions/LimitationsList.tsx
+  assumptions/assumptions.test.tsx     -- tests 3, 5
+  export/csv.ts, json.ts, download.ts, print.ts, share.ts, ExportPanel.tsx
+  export/export.test.ts                -- tests 6, 7, 9
+  locale/OfflineBanner.tsx, LocaleSwitch.tsx, aggregator.ts
+  locale/locale.test.tsx               -- tests 10, 11 (partial, see below), 12
+  messages.ts                          -- this task's own EN/HI strings
+  index.ts                             -- public barrel
+apps/web/app/globals.css               -- added one @media print section (only edit
+  made to this file; no other rule touched).
+
+DEVIATION FROM SUBAGENT GUIDANCE (reported, not silently ignored, matching T-49/T-64's
+precedent for the same harness constraint): the task text says "Spawn 3 subagents."
+This harness's subagents cannot spawn further subagents, so a single subagent (me) is
+never able to spawn a 3-subagent fan-out at all -- confirmed by the orchestrator's own
+prompt for this task, which pre-states the constraint and asks me to "work through the
+three parts as a single agent instead, sequentially." Did exactly that: (a) assumptions
+panel + limitations list, then (c) exporters + print stylesheet, then (d) offline
+banner + i18n aggregator, each in its own subdirectory as the guidance still asked for
+structurally, just not built by three separate processes.
+
+Commands to build/run/test:
+  npm run build --workspace @shelter/engine
+  npm run build --workspace @shelter/data
+  npx vitest run apps/web/components/meta
+  npx tsc --noEmit -p apps/web/tsconfig.json   (0 errors in components/meta)
+  npx prettier --check apps/web/components/meta apps/web/app/globals.css
+
+ENVIRONMENT NOTE (same constraint as T-46/T-51/T-53): no jsdom/happy-dom/
+@testing-library in this worktree (neither on the approved dependency list,
+CONTRACTS.md §7.13). DOM structure verified via react-dom/server's
+renderToStaticMarkup, same pattern as components/kpis/KpiColumn.test.tsx. Real
+bundled Leh preset run through the REAL engine (packages/data + packages/engine,
+both built from source) for every fixture -- numbers below are measured, not
+synthetic. Did NOT set up the local sqlite dev database (DATABASE_PROVIDER=sqlite):
+none of this task's own 13 acceptance tests need it (the share-link flow is
+exercised only through export/share.ts's fetch-shape code, which is unreachable
+without a browser regardless of DB state) -- ran the full `apps/web` suite once
+as a regression check and confirmed every failure is a PRE-EXISTING Area D
+database-tier test (api-designs/api-simulate/api-weather/db/repo-*) that needs a
+live DB this session never started; zero apps/web/components/meta files appear in
+that failure list.
+
+CONDITIONS CHECKLIST -- 11 of 13 fully PASS with real evidence; 2 are ledger
+defects reported per LOG.md rule 3/16, not silently routed around:
+
+1. PASS -- mechanical diff, empty.
+   $ npx vitest run apps/web/components/meta/assumptions/constants.data.test.ts
+   "assumptions panel mechanically matches packages/engine/src/constants.ts >
+    lists every export with a value, unit and source; the diff is empty" -- PASS
+   (missingFromPanel: [], extraInPanel: []) against all 17 export const names
+   read live off packages/engine/src/constants.ts via regex.
+
+2. PASS. Both calibration notes (verbatim, from constants.data.ts):
+   ACH_PER_GLAZING_FRACTION: "LOG.md rule 14 calibration knob. Couples requested
+   ACH to the glazed fraction of the envelope because a larger window area
+   correlates with a leakier, less-carefully-sealed opening in the kind of
+   shelter this tool targets. A measured blower-door series across several
+   Ladakhi shelters of varying window area, regressed against glazing fraction,
+   would justify a different slope than 1.2; today it is an engineering
+   estimate, not a fitted regression."
+   AIR_CAPACITANCE_MULTIPLIER_M (M=4): "LOG.md rule 14 calibration knob. Bare
+   room air alone has a laughably small heat capacity; furniture, bedding,
+   clothing and thin finishes respond within minutes and effectively move with
+   the air, and ignoring them makes the simulated air twitchy and unrealistic.
+   M = 4 is defensible standard practice, not a measurement of any specific
+   shelter's furnishings. A furniture/contents survey of a real occupied
+   shelter, converted to an equivalent air-mass multiplier, would justify a
+   different value."
+   GOTCHA (reported per rule 16): neither constant is exported from
+   @shelter/engine's public barrel (packages/engine/src/index.ts only
+   re-exports `infiltration`/`effectiveAirCapacitance` from loads/
+   infiltration.ts, not the constant itself or the multiplier's default param;
+   package.json's `exports` map has no subpath either) -- both shown as sourced
+   literals citing the exact file/line, not live imports. packages/engine/src
+   is outside this task's allow-list to fix.
+
+3. PASS. 9 items (>= the 7 named), each choice + consequence:
+   single-air-node, uniform-surface-temperature, no-moisture-transport,
+   simplified-wind, lumped-thermal-bridging, single-zone, beam-only-shading,
+   no-cfd, one-representative-day. Full text in limitations.data.ts.
+
+4. PASS. `grep -rni "well-stratified" apps/web` -> 0 matches (verified after
+   final formatting pass).
+
+5. PASS -- real before/after (packages/data + packages/engine, real Leh preset):
+   auxEnergyKWhPerDay (illustrative 5 kWh/day -- see FINDING below for why the
+   real Leh preset's own value is 0):
+     BEFORE KEROSENE_INR_PER_L=80  -> costPerYearINR = 25524.475524475525
+     AFTER  KEROSENE_INR_PER_L=120 -> costPerYearINR = 38286.71328671329
+   Cross-check against the REAL Leh result at the REAL default price: this
+   panel's recompute = 0, engine's own result.kpis.costPerYearINR = 0 (exact
+   match -- same formula, not a drifted duplicate).
+   FINDING (reported upward, not fixed across boundaries): all 6 bundled
+   presets ship with operation.auxHeating.enabled=false, so
+   auxEnergyKWhPerDay=0 for every one of them -- a legitimate passive-design
+   reading, not a bug, but it means this card only visibly moves once a
+   preset/advanced-panel edit turns aux heating on (components/inputs,
+   off this task's allow-list).
+
+6. PASS. Header row (18 columns: time + 4 temperatures + 14 heatFlows fields,
+   matching packages/engine/src/types.ts's HeatFlows field names verbatim):
+     time,temperatures.indoorAir,temperatures.ambient,temperatures.sky,
+     temperatures.meanRadiant,Q1_solarOpaque,Q2_solarGlazed,Q3_extConvection,
+     Q4_skyRadiation,Q5_envelopeConduction,Q6_intConvection,
+     Q7_interiorLongwave,Q8_windowConduction,Q9_infiltration,Q10_ground,
+     Q11_internalGains,Qaux,storageRate,deltaT
+   Row count: 288 (== result.time.length exactly, real Leh preset run).
+
+7. PASS. `buildDesignJson(request)` -> `parseDesignJson(json)` deep-equals the
+   original `SimulationRequest` (`toEqual`), and independently via
+   `requestFromJson(JSON.parse(json))` too. JSON byte length: 903971.
+
+8. STRUCTURAL PASS ONLY, reported as a ledger defect, not faked as measured:
+   no PDF library anywhere (`grep -in pdf` over every package.json in the repo
+   and `ls node_modules | grep -i pdf` both return nothing); print.ts calls
+   ONLY `window.print()`; globals.css has one `@media print` block hiding
+   `[data-print-hide]` chrome and the tabstrip. Cannot literally verify "PDF
+   output contains the isometric house, the three deliverable charts, the KPI
+   cards and the assumptions panel" on one printed page: that requires
+   `slot-assumptions` to be wired into app/app-shell.tsx alongside the house/
+   chart/KPI slots, which app-shell.tsx's own header (log/AREA-F-frontend.md
+   ~line 2318/2391) explicitly left as a placeholder because "T-52 does not
+   exist yet," and app-shell.tsx is outside this task's Files-you-may-touch
+   list (components/meta/** and globals.css print styles only). No headless
+   browser/PDF rasteriser is installed either way (same constraint export.ts
+   in components/house documents), so a literal page count cannot be
+   produced regardless of wiring.
+
+9. PASS (CSV/JSON) + honest limitation (PDF), all real byte counts:
+     CSV file size: 81331 bytes
+     JSON file size: 903971 bytes
+     PDF: no literal file in this environment -- window.print()'s "Save as
+     PDF" output is produced by the browser itself, not by any code this task
+     writes, and cannot be sized headlessly. csv.ts/json.ts import only
+     @shelter/engine (zero runtime deps) and contain no fetch/XHR call
+     anywhere in their source (grepped), so both are offline-safe by
+     construction, not by having been observed once online.
+
+10. PASS. `store.online=false` -> rendered banner html:
+    `<div role="status" data-testid="offline-banner" data-print-hide="true">
+    Offline — showing 1 scenario, AI advice unavailable.</div>` (exact literal
+    text, verbatim). `store.online=true` -> renders nothing (`""`).
+    export/ExportPanel.tsx's share button carries `disabled={!online}` plus a
+    `title`/inline `data-testid="export-share-offline-reason"` explanation
+    ("Sharing needs the server — download the design as a file instead.").
+
+11. PARTIAL / BLOCKED -- ledger defect, reported per rule 3, not silently
+    routed around. Fully green for every label this task OWNS: switching to
+    Hindi changes the offline banner
+    ("ऑफ़लाइन — 1 परिदृश्य दिखाया जा रहा है, AI सलाह अनुपलब्ध है।") and the
+    locale switch itself ("भाषा" / "हिन्दी"), no raw key ever rendered
+    (asserted both ways). BUT: `grep -rln registerMessages apps/web/components`
+    finds only this task's own messages.ts -- components/inputs/SimpleForm.tsx
+    and components/kpis/KpiColumn.tsx (T-47/T-51, already [x]) render 100%
+    hardcoded English JSX text and call `t()`/`registerMessages` nowhere at
+    all (verified directly in both files). "The basic input panel and the KPI
+    cards" the test names are therefore NOT translatable today, and cannot be
+    made translatable from apps/web/components/meta/** alone -- fixing it
+    means editing components/inputs/** and components/kpis/**, both outside
+    this task's Files-you-may-touch list, and lib/i18n.ts's registry design
+    already correctly supports it the moment those files register their own
+    strings. This is why the task is flagged [!] rather than [x]: the
+    aggregator/registry/switch this task owns is complete and correct: the
+    keys it is asked to translate on someone else's file are still English.
+
+12. PASS. A key registered only for 'en' ("meta.__test.onlyEnglish"), looked
+    up as `t(key, 'hi')` -> "English-only fallback text" (the English value,
+    not the key). A key registered nowhere -> `t(key,'hi')` ->
+    "meta.__test.totally.unregistered" (the key itself, lib/i18n.ts's own
+    documented "never undefined" contract for a truly unregistered key,
+    distinct from a partially-translated one).
+
+13. PASS. `grep -rn "273\.15" apps/web/components/meta` -> 0 matches.
+
+Test run summary (this task's own 4 files):
+  $ npx vitest run apps/web/components/meta
+  Test Files  4 passed (4) / Tests  10 passed (10)
+
+Full apps/web regression check (`npx vitest run apps/web`): 8 files / 16 tests
+failed, ALL in Area D's database tier (api-designs, api-simulate, api-weather,
+db.test.ts, repo-designs, repo-materials, repo-runs, repo-weather) because this
+session never started a local Postgres/sqlite dev database -- pre-existing,
+unrelated to this task, zero apps/web/components/meta files in the failure
+list. 16 other files / 173 tests passed.
+
+RULE-CONFLICT / LEDGER-DEFECT SUMMARY (LOG.md rule 3): T-52's acceptance tests
+8 and 11 both require content this task's allow-list (components/meta/**,
+globals.css print styles only) structurally cannot produce alone -- test 8
+needs app-shell.tsx wiring (owned by whoever fills slot-assumptions, not yet
+claimed), test 11 needs components/inputs/** and components/kpis/** to call
+t()/registerMessages (T-47/T-51, already closed [x] without i18n). Everything
+inside components/meta/** that COULD be built, tested and proven was built,
+tested with real measured numbers, and is ready to wire in as soon as those
+two dependencies land.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** claude (subagent, task/T-52)  **Date:** 2026-09-20
 
 ---
 

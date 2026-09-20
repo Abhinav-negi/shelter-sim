@@ -16,7 +16,12 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden; /* T-36 acceptance test 11: no horizontal scrollbar at 400px */
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   background: #0f1115;
   color: #e8e8ec;
 }
@@ -85,5 +90,43 @@ body {
 @media (max-width: 480px) {
   .app-shell {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ============================== PRINT (T-52c) ==============================
+ * "PDF export uses the browser's own print pipeline (a print stylesheet plus
+ * window.print()), not a PDF library" -- CONTRACTS.md §7.13, the approved-
+ * dependency list. T-52's `ExportPanel`/`OfflineBanner`/`LocaleSwitch` mark
+ * their own interactive-only chrome with `data-print-hide="true"`
+ * (components/meta/export/ExportPanel.tsx, components/meta/locale/
+ * OfflineBanner.tsx) -- meta-UI that means nothing on paper. This section
+ * hides that chrome and the tab strip (also interactive-only) and lets
+ * everything else -- the isometric house, the charts, the KPI cards, the
+ * assumptions panel -- print as it currently renders on screen, in one
+ * continuous flow rather than the fixed three-column layout.
+ */
+@media print {
+  [data-print-hide='true'] {
+    display: none !important;
+  }
+
+  .tabstrip {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .app-shell {
+    display: block;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .col {
+    break-inside: avoid;
   }
 }
