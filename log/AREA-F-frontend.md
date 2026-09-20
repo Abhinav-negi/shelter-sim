@@ -2876,3 +2876,106 @@ GOTCHAS for the next agent:
 
 ---
 
+### [~] T-74 — Wire i18n into `SimpleForm.tsx` and `KpiColumn.tsx` to close T-52's own test 11
+
+**Status:** CLAIMED by orchestrator-dispatched-subagent at 2026-09-20T00:00:00Z (placeholder —
+subagent must overwrite with its own real timestamp on claim) · **Est:** 3 h
+**Area:** F — Frontend (new task, raised by T-52's own Evidence block and named as the highest-
+priority follow-up in session 7's and session 8's HANDOFFs)
+**Depends on:** T-47, T-51, T-52 · **Conflicts with:** T-44 (both touch
+`components/inputs/SimpleForm.tsx`; T-44 is currently `[!]` and not actively claimed, so there is
+no lock, but do not run this task in parallel with a future T-44 continuation)
+
+**Why this exists.** T-52 built the entire i18n mechanism — `lib/i18n.ts`'s registry (T-36, already
+done), `components/meta/messages.ts` (T-52's own strings), and
+`components/meta/locale/aggregator.ts` (the one file that side-effect-imports every component's
+`messages.ts` so `t()` actually resolves before `<LocaleSwitch>` renders). T-52's own acceptance
+test 11 requires *"Switching to Hindi changes **every** label on the basic input panel and the KPI
+cards"* — but `components/inputs/SimpleForm.tsx` (T-47) and `components/kpis/KpiColumn.tsx` (T-51)
+were both built and closed `[x]` before T-52 existed, call `t()`/`registerMessages` nowhere, and
+render 100% hardcoded English JSX (confirmed directly by two separate sessions' `grep`). T-52 could
+not fix this itself — both files are outside its allow-list (`components/meta/**` only) — and
+flagged the gap honestly rather than papering over it. This task closes it. Pure integration: no
+new physics, no new design decisions, the translation strings and the registry mechanism already
+exist and are already tested.
+
+**PROMPT — paste this to start the task:**
+> Read `apps/web/lib/i18n.ts` (the registry — `registerMessages(locale, messages)`,
+> `t(key, locale?)`, never edit this file), `apps/web/components/meta/messages.ts` (the pattern to
+> copy: a module whose only job is calling `registerMessages('en', {...})` and
+> `registerMessages('hi', {...})` at load time), and `apps/web/components/meta/locale/aggregator.ts`
+> (its own header explains exactly what to do: *"When a future component adds its own messages.ts,
+> this is the file its side-effect import belongs in — add one line here, never edit that
+> component's own file."*).
+>
+> 1. Create `apps/web/components/inputs/messages.ts`: register an English and a Hindi string for
+>    every user-facing label, legend, button, tooltip `title` and status message currently
+>    hardcoded in `apps/web/components/inputs/SimpleForm.tsx` (location, date, size — length/width/
+>    height, shelter type, wall/roof/floor material, window size per orientation, glazing, night
+>    shutter, occupancy — plus the error and location-notice status strings). Prefix every key
+>    `inputs.simpleForm.*`.
+> 2. Edit `SimpleForm.tsx` to import `./messages` (side effect, exactly like `LocaleSwitch.tsx`
+>    imports `./aggregator`) and `t` + `useStore`'s `locale` from the existing store/i18n modules,
+>    then replace every hardcoded string this task's own `messages.ts` now covers with
+>    `t('inputs.simpleForm.<key>', locale)`. Do not change any `data-testid`, any prop, any layout,
+>    or any non-text logic.
+> 3. Do the same for `apps/web/components/kpis/messages.ts` (prefix `kpis.column.*`) and
+>    `apps/web/components/kpis/KpiColumn.tsx` — every KPI card label, unit suffix and the integrity
+>    badge / safety warning text.
+> 4. In `apps/web/components/meta/locale/aggregator.ts` **only**, add two more side-effect import
+>    lines (`import '../../inputs/messages';` and `import '../../kpis/messages';`) next to the
+>    existing `import '../messages';`, per that file's own documented convention. Do not touch
+>    anything else in `components/meta/**`.
+>
+> Every English string must have a real Hindi translation, not a placeholder or a transliteration
+> of the English. A missing key must still fall back to English, never render the raw key
+> (`lib/i18n.ts`'s own contract — do not weaken it).
+
+**Files you may touch.** `apps/web/components/inputs/messages.ts` (new),
+`apps/web/components/inputs/SimpleForm.tsx`, `apps/web/components/kpis/messages.ts` (new),
+`apps/web/components/kpis/KpiColumn.tsx`, `apps/web/components/meta/locale/aggregator.ts` (import
+lines only, as described above).
+**Files you may NOT touch.** `apps/web/lib/i18n.ts`, `apps/web/lib/store.ts`,
+`apps/web/app/app-shell.tsx`, `apps/web/components/meta/messages.ts`,
+`apps/web/components/meta/index.ts`, any other file under `apps/web/components/meta/**`, any file
+under `apps/web/components/inputs/**` or `apps/web/components/kpis/**` other than the four named
+above.
+
+**Subagent guidance.** Single agent. Well-bounded, four files, no new mechanism to design.
+
+**ACCEPTANCE TESTS — the task is NOT done until every one passes:**
+1. `apps/web/components/inputs/messages.ts` and `apps/web/components/kpis/messages.ts` both exist
+   and both call `registerMessages` for `'en'` and `'hi'`. Paste the key count for each.
+2. `grep -c "registerMessages\|t('" apps/web/components/inputs/SimpleForm.tsx` and the same for
+   `KpiColumn.tsx` are both non-zero; `grep` for any remaining hardcoded English label text (a
+   manual list of what's left, if anything, with justification — e.g. a `data-testid` string is not
+   a label) shows nothing missed. Paste the diff stat for both component files.
+3. `components/meta/locale/aggregator.ts` shows exactly two new import lines added, nothing else in
+   `components/meta/**` touched (`git diff --stat` limited to that directory). Paste the diff.
+4. Through the real app (render `AppShell` via `react-dom/server`'s `renderToStaticMarkup`, same
+   no-jsdom pattern T-73 and T-52 both used — no new test dependency), switching `store.locale` to
+   `'hi'` changes **every** label on `SimpleForm` and every KPI card in `KpiColumn`; **no key renders
+   as raw text** (assert this both ways: grep the rendered HTML for any `inputs.simpleForm.` or
+   `kpis.column.` substring — must be zero occurrences). Paste at least 4 before/after label pairs (2
+   from each component) — this is T-52's own acceptance test 11, finally provable end-to-end.
+5. A deliberately-unregistered key in one of the two new modules falls back to English when looked
+   up in Hindi, never to the raw key (same contract as T-52's own test 12). Paste the before/after.
+6. `npx tsc --noEmit -p apps/web/tsconfig.json` exits with 0 new errors versus the pre-task baseline.
+7. `npm run build --workspace apps/web` exits 0 (the pre-existing, unrelated `topLevelAwait` warning
+   from `@shelter/engine/dist/serialise.js` is expected and not a regression).
+8. `npx vitest run apps/web/components/inputs apps/web/components/kpis apps/web/components/meta`
+   — every pre-existing test in all three directories still passes (paste before/after counts); any
+   new test file this task adds is included in the after count.
+9. `grep -rn "273\.15" apps/web/components/inputs/messages.ts apps/web/components/kpis/messages.ts`
+   returns no matches (Kelvin-discipline rule 5 — these are label strings, not temperature math, but
+   the grep must still come back clean).
+
+**Evidence (fill this in when done — numbers, not adjectives):**
+```
+(subagent fills this in)
+```
+
+**Completed by:** _(fill in)_  **Date:** _(fill in)_
+
+---
+

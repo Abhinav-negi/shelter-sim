@@ -1,5 +1,33 @@
 # LOG.md — The ShelterSim Build Ledger
 
+## HANDOFF (2026-09-20, end of session — eighth session)
+
+**Completed this session: NONE.** Session 8 reached the ≥40% context stop threshold (ORCHESTRATOR.md §8) during startup ritual and initial planning, before delegating any work. No tasks were claimed, no worktrees created, no merges performed. Ledger stays at **54 / 73**, unchanged from session 7's handoff.
+
+**Session 8 startup verification (completed):**
+- Toolchain verified: Node v24.20.0, npm 11.19.0
+- Test suite: **GREEN** (45 files, 487 passed, 10 skipped, exit 0)
+- Performance: 34.4 ms/run simulate, 3.40 s 100-variant sweep
+- No open worktrees (`git worktree list` clean)
+- No uncommitted branches
+- Database: not verified this session (master's `dev.db` was properly migrated+seeded at end of session 7 per that HANDOFF's own gotcha note)
+
+**In progress:** nothing. No claims, no open worktrees.
+
+**Recommended next step (UNCHANGED from session 7):** The three follow-up gaps session 7's HANDOFF named, in priority order:
+
+1. **HIGHEST PRIORITY, explicitly called out by session 7** — Add `t()`/`registerMessages` calls into `components/inputs/SimpleForm.tsx` and `components/kpis/KpiColumn.tsx` (both already `[x]`: T-47, T-51) so T-52's locale switch actually changes their labels. This is what T-52's own acceptance test 11 is still missing. Small, well-bounded, single-Area task. Session 8 verified these two files currently have zero i18n calls (`grep` confirmed both render 100% hardcoded English JSX), exactly matching session 7's finding. **This unblocks T-52 from `[!]` → `[x]`.**
+
+2. Wire T-53's `<DayNightAnimation>` into `HouseView`/`app-shell.tsx` (no overlay slot exists yet — T-53's own Evidence block flags this). 
+
+3. T-66 (PWA/offline) — more ready than before (T-52's banner and T-71/T-73's wiring both landed), but acceptance tests 9 and 11 still need T-57 (AI template fallback) and T-50 (survival grid), neither done — expect a partial/blocked result if claimed now, same shape as T-44.
+
+**Blocked tasks (unchanged):** T-52 `[!]` (11/13, blocked on item #1 above); T-44 `[!]` (human test subject + app-shell wiring); T-50 `[!]` (originally blocked on T-47, now needs re-assessment since T-47 is done); T-54 `[!]` (warm-state speedup finding documented); T-39/T-42/T-56/T-60 transitively blocked on T-54; T-61 `[!]` (human decision on test 9 wording); T-23 `[!]` (human-owned NOAA comparison).
+
+**Gotchas (all carried forward from session 7, none new):** worktrees need fresh `npm install` + workspace `dist` rebuild; fresh worktree needs its own `dev.db` via `cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate` plus `npm run db:seed --workspace apps/web`; subagent rate-limit interruption → resume with `SendMessage`; `packages/engine/test/output/validation-numbers.csv` picks up harmless appended rows on every validation-suite run, discard before commit; LOG.md §5 dashboard counts need hand recomputation after merges (git can't know stale counts should sum); stale `.tsbuildinfo` files at package roots (not inside gitignored `dist/`) can cause phantom build failures — `find packages -name "*.tsbuildinfo" -delete` before trusting a build verification.
+
+---
+
 ## HANDOFF (2026-09-20, end of session — seventh session)
 
 **Completed this session: ledger moved 48 / 70 → 54 / 73.** Six tasks landed clean `[x]`: T-53, T-62,
@@ -128,7 +156,7 @@ stay transitively blocked on T-54; T-63 stays blocked on T-23 (human-owned NOAA 
 - `npm run format:check` is red (115 pre-existing files, found while verifying T-72) — unrelated to
   lint config, nobody owns Prettier formatting as a task yet.
 
-**Gotchas** (all previously documented and still true, plus two new ones from this session — see
+**Gotchas (all previously documented and still true, plus two new ones from this session — see
 above): worktrees need a fresh `npm install` + a fresh build of every workspace dependency they
 touch (`dist/` is gitignored); a fresh worktree (and the main checkout itself, confirmed the hard
 way this session) needs its own local `dev.db` via `cd apps/web && DATABASE_PROVIDER=sqlite
@@ -297,12 +325,16 @@ with an Area file again, the Area file is right — fix this table.)*
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 5 / 7 | `log/AREA-E-server-tier.md` |
-| F | Frontend | 10 / 13 | `log/AREA-F-frontend.md` |
+| F | Frontend | 10 / 14 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 2 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **54 / 73** | |
+| | **TOTAL** | **54 / 74** | |
+
+*(T-74 added this session — raised from session 7/8's own HANDOFF recommendation, same pattern as
+T-71/T-72/T-73. Not yet done; included in the total as not-yet-done, per this table's own
+convention.)*
 
 *(T-71 and T-72 added this session — new tasks the orchestrator raised from the prior HANDOFF's
 recommended next steps, same pattern as T-70 last session. Totals above include them as not-yet-done.
@@ -388,7 +420,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 |
 | [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 |
 
-### Area F — Frontend — 10 / 13 (T-52 `[!]`, blocked on cross-component dependencies outside its allow-list — see its Evidence block) — `log/AREA-F-frontend.md`
+### Area F — Frontend — 10 / 14 (T-52 `[!]`, blocked on cross-component dependencies outside its allow-list — see its Evidence block; T-74 `[~]` CLAIMED, closing T-52's remaining test-11 gap) — `log/AREA-F-frontend.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
@@ -405,6 +437,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
 | [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 |
 | [x] | T-73 | Wire T-52's meta components into app-shell.tsx's `slot-assumptions` | T-52 |
+| [~] | T-74 | Wire i18n into `SimpleForm.tsx`/`KpiColumn.tsx` to close T-52's test 11 | T-47, T-51, T-52 |
 
 ### Area G — Decision support — 0 / 5 — `log/AREA-G-decision-support.md`
 
