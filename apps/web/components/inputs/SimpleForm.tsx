@@ -377,7 +377,7 @@ export function SimpleForm() {
       {/* 10. OCCUPANCY / HEATING PRESET */}
       <div data-testid="control-occupancy">
         <label htmlFor="input-occupancy" title="Who lives here and whether there is a heater running.">
-          Who's staying here
+          Who&apos;s staying here
         </label>
         <select
           id="input-occupancy"
