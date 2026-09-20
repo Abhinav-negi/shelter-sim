@@ -325,16 +325,18 @@ with an Area file again, the Area file is right — fix this table.)*
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 5 / 7 | `log/AREA-E-server-tier.md` |
-| F | Frontend | 10 / 14 | `log/AREA-F-frontend.md` |
+| F | Frontend | 12 / 14 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 2 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **54 / 74** | |
+| | **TOTAL** | **56 / 74** | |
 
-*(T-74 added this session — raised from session 7/8's own HANDOFF recommendation, same pattern as
-T-71/T-72/T-73. Not yet done; included in the total as not-yet-done, per this table's own
-convention.)*
+*(T-74 added and closed this session — raised from session 7/8's own HANDOFF recommendation, same
+pattern as T-71/T-72/T-73. T-52 reconciled `[x]` this session too, once T-74 closed its last
+remaining gap (test 11) on top of T-73's earlier closure of test 8 — both re-verified end-to-end by
+the orchestrator, not just mirrored from a subagent report. Area F: 10 -> 12 done (T-52 + T-74);
+total: 54 -> 56 done, 73 -> 74 tasks.)*
 
 *(T-71 and T-72 added this session — new tasks the orchestrator raised from the prior HANDOFF's
 recommended next steps, same pattern as T-70 last session. Totals above include them as not-yet-done.
@@ -420,7 +422,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 |
 | [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 |
 
-### Area F — Frontend — 11 / 14 (T-52 `[!]`, blocked on cross-component dependencies outside its allow-list — see its Evidence block; T-74 `[x]` closed T-52's remaining test-11 gap — see T-74's own Evidence block; T-52's own status/count is unchanged pending the orchestrator's cross-task reconciliation) — `log/AREA-F-frontend.md`
+### Area F — Frontend — 12 / 14 (T-52 reconciled `[x]` this session — T-73 and T-74 both closed its remaining gaps, re-verified end-to-end by the orchestrator, see its Evidence block's RECONCILIATION note) — `log/AREA-F-frontend.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
@@ -433,7 +435,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-49 | The heat-flow view and the Sankey (PS Deliverable 3) | T-22, T-36, T-43 |
 | [!] | T-50 | The survival grid | T-36, T-59 |
 | [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
-| [!] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
+| [x] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
 | [x] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
 | [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 |
 | [x] | T-73 | Wire T-52's meta components into app-shell.tsx's `slot-assumptions` | T-52 |

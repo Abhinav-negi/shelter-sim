@@ -1911,9 +1911,13 @@ surfaces it; not this task's file, not touched.
 
 ---
 
-### [!] T-52 — The assumptions panel, exports, the offline banner and bilingual labels
+### [x] T-52 — The assumptions panel, exports, the offline banner and bilingual labels
 
-**Area:** F — Frontend (≈ W-45) · **Status:** BLOCKED on ledger defect (tests 8, 11 need cross-component wiring outside this task's allow-list; 11/13 tests fully green) · **Est:** 8 h
+**Area:** F — Frontend (≈ W-45) · **Status:** DONE — reconciled by the orchestrator 2026-09-20 after
+T-73 (test 8, app-shell wiring) and T-74 (test 11, SimpleForm/KpiColumn i18n) closed both of the
+cross-component gaps this task's own Evidence block honestly flagged. All 13 tests now pass. See the
+RECONCILIATION note appended at the end of the Evidence block below; the original 11/13 evidence is
+left untouched above it as the historical record of what this task itself could prove. · **Est:** 8 h
 **Depends on:** T-36, T-43, T-51 · **Conflicts with:** all Area F tasks (message-file boundary)
 
 **Why this exists.** Four cheap credibility features in one place. *"Every assumption we make is
@@ -2194,9 +2198,26 @@ t()/registerMessages (T-47/T-51, already closed [x] without i18n). Everything
 inside components/meta/** that COULD be built, tested and proven was built,
 tested with real measured numbers, and is ready to wire in as soon as those
 two dependencies land.
+
+RECONCILIATION (orchestrator, 2026-09-20, after T-73 and T-74 both merged to
+master): both gaps above are now closed. Test 8's wiring landed via T-73
+(`slot-assumptions` in app/app-shell.tsx now renders `<AssumptionsPanel>`,
+`<LimitationsList>`, `<ExportPanel>`). Test 11's i18n gap landed via T-74
+(`components/inputs/messages.ts` and `components/kpis/messages.ts` now
+register real EN/HI strings, wired into the SimpleForm.tsx/KpiColumn.tsx JSX
+and hooked into the aggregator). Re-verified directly by the orchestrator, not
+just trusted from either subagent's report: a real `AppShell` render (via
+`react-dom/server`'s `renderToStaticMarkup`, real bundled Leh preset through
+the real engine, no jsdom) with `store.locale = 'hi'` shows
+`data-testid="assumptions-panel"` present (test 8, finally provable end-to-
+end) and the rendered HTML contains no `inputs.simpleForm.` or
+`kpis.column.` substring while containing real Hindi text ("स्थान") in a
+SimpleForm-owned label (test 11, finally provable end-to-end). Combined with
+tests 1-7, 9-10, 12-13 already PASS above, all 13 conditions now hold. Task
+flipped `[!]` -> `[x]`.
 ```
 
-**Completed by:** claude (subagent, task/T-52)  **Date:** 2026-09-20
+**Completed by:** claude (subagent, task/T-52); reconciled by orchestrator  **Date:** 2026-09-20
 
 ---
 
