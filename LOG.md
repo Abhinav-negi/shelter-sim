@@ -309,9 +309,9 @@ with an Area file again, the Area file is right — fix this table.)*
 | F | Frontend | 7 / 11 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
-| I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
+| I | Validation & credibility | 1 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **48 / 70** | |
+| | **TOTAL** | **49 / 70** | |
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
@@ -423,11 +423,11 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [ ] | T-60 | Run the matrix and shape the survival-grid contract | T-54, T-59 |
 | [!] | T-61 | Multi-day runs and the sunless-streak path | T-59 |
 
-### Area I — Validation & credibility — 0 / 4 — `log/AREA-I-validation-credibility.md`
+### Area I — Validation & credibility — 1 / 4 — `log/AREA-I-validation-credibility.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
-| [~] | T-62 | The continuous energy-balance audit in CI | T-04, T-28, T-59 |
+| [x] | T-62 | The continuous energy-balance audit in CI | T-04, T-28, T-59 |
 | [ ] | T-63 | `VALIDATION.md` | T-23, T-62 |
 | [~] | T-64 | `EQUATIONS.md` and the limitations list | T-18, T-19, T-22 |
 | [ ] | T-65 | One EnergyPlus reference case (needs a human owner) | T-27, T-62, **plus a named human owner** |
