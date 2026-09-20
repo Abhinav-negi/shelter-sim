@@ -2689,3 +2689,74 @@ git status --porcelain before commit: " M apps/web/app/app-shell.tsx" only.
 
 ---
 
+### [~] T-73 — Wire T-52's meta components into app-shell.tsx's `slot-assumptions`
+
+**Area:** F — Frontend (new task, raised by T-52's own Evidence block this session — the same
+"cross-boundary wiring gap" pattern T-71 closed for the first seven Area F components) ·
+**Status:** CLAIMED by orchestrator-session7 at 2026-09-20T04:11:08Z · **Est:** 2 h
+**Depends on:** T-52 · **Conflicts with:** none
+
+**Why this exists.** T-52 built `apps/web/components/meta/**` in full — the assumptions panel,
+limitations list, CSV/JSON/print/share exporters, the offline banner and the locale switch — with
+a ready public barrel at `components/meta/index.ts`. Its own allow-list forbade touching
+`app/app-shell.tsx`, so `slot-assumptions` there is still `<Placeholder label="Assumptions panel +
+exports (T-52)" testId="slot-assumptions" />` (T-71 deliberately left it that way, since T-52 did
+not exist yet when T-71 ran). T-52's Evidence block names this exact gap as the reason its own
+acceptance tests 8 (print output showing the assumptions panel) and part of 9 could not be proven
+end-to-end. This task is pure integration, same shape as T-71: no new physics, no new design
+decisions, just rendering the already-built, already-tested components.
+
+**PROMPT — paste this to start the task:**
+> In `apps/web/app/app-shell.tsx` only:
+>
+> 1. Replace the `slot-assumptions` placeholder (currently inside the KPI `<aside>`, after
+>    `<KpiColumn />`) with `<AssumptionsPanel />`, `<LimitationsList />` and `<ExportPanel />` in
+>    that order, all imported from `../components/meta` (the barrel). All three take zero props and
+>    read `lib/store.ts` themselves — do not add new store fields, do not touch `lib/store.ts`,
+>    `lib/i18n.ts` or `lib/units.ts`, and do not edit any file under `components/**`.
+> 2. Render `<OfflineBanner />` and `<LocaleSwitch />` (same barrel import) near the top of the
+>    outer `<div className="app-shell">`, before the three `<aside>`/`<main>`/`<aside>` columns —
+>    they are global, shell-wide concerns (the offline state and the language choice apply to the
+>    whole app), not scoped to the assumptions column. Zero props, same store-reading pattern.
+> 3. `OfflineBanner`'s test carries `data-print-hide="true"` — if you add any shell-level print CSS
+>    of your own, respect that attribute; if you don't need to touch CSS at all, don't.
+>
+> This is a five-line change in one file. Do not restructure the existing layout, do not rename
+> `slot-assumptions`, do not touch the tab strip, `SimpleForm`, `AdvancedPanel`, `HouseView`, the
+> chart panels or `KpiColumn`.
+
+**Files you may touch.** `apps/web/app/app-shell.tsx` only.
+**Files you may NOT touch.** `apps/web/app/page.tsx`, `apps/web/lib/store.ts`,
+`apps/web/lib/units.ts`, `apps/web/lib/i18n.ts`, `apps/web/app/globals.css`, anything under
+`apps/web/components/**`.
+
+**Subagent guidance.** Single agent. Five-line wiring change in one file.
+
+**ACCEPTANCE TESTS — the task is NOT done until every one passes:**
+1. `slot-assumptions`'s placeholder testid is gone; `<AssumptionsPanel>`, `<LimitationsList>` and
+   `<ExportPanel>` all render in the KPI column, in that order. Paste the rendered testids present.
+2. `<OfflineBanner>` and `<LocaleSwitch>` render once each, at the shell's top level (not nested
+   inside any of the three columns). Paste their position relative to the three `<aside>`/`<main>`.
+3. With `store.online = false`, the banner shows the literal text *"Offline — showing 1 scenario,
+   AI advice unavailable."* — re-run T-52's own acceptance test 10 through the real shell this time,
+   not through `components/meta`'s isolated test harness. Paste the rendered markup.
+4. Switching the locale switch to Hindi changes the assumptions panel's and export panel's own
+   labels (T-52's own labels, not `SimpleForm`'s/`KpiColumn`'s — those remain a separate, already
+   known, already-flagged gap outside this task's scope). Paste two before/after label pairs.
+5. `npx tsc --noEmit -p apps/web/tsconfig.json` exits with 0 new errors versus the pre-task baseline.
+6. `npm run build --workspace apps/web` exits 0 (the pre-existing, unrelated `topLevelAwait` warning
+   from `@shelter/engine/dist/serialise.js` is expected and not a regression).
+7. `npx vitest run apps/web/components/meta` still shows the same pass count T-52 recorded in its
+   own Evidence block (no file under `components/meta/**` touched by this task).
+8. `appState.result === null` does not crash `AssumptionsPanel`/`LimitationsList`/`ExportPanel` —
+   each either shows its own empty/disabled state or the shell's existing guard pattern. Paste the
+   render result with `result` forced null.
+
+**Evidence (fill this in when done — numbers, not adjectives):**
+```
+```
+
+**Completed by:** ___  **Date:** ___
+
+---
+
