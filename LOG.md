@@ -420,7 +420,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 |
 | [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 |
 
-### Area F — Frontend — 10 / 14 (T-52 `[!]`, blocked on cross-component dependencies outside its allow-list — see its Evidence block; T-74 `[~]` CLAIMED, closing T-52's remaining test-11 gap) — `log/AREA-F-frontend.md`
+### Area F — Frontend — 11 / 14 (T-52 `[!]`, blocked on cross-component dependencies outside its allow-list — see its Evidence block; T-74 `[x]` closed T-52's remaining test-11 gap — see T-74's own Evidence block; T-52's own status/count is unchanged pending the orchestrator's cross-task reconciliation) — `log/AREA-F-frontend.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
@@ -437,7 +437,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
 | [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 |
 | [x] | T-73 | Wire T-52's meta components into app-shell.tsx's `slot-assumptions` | T-52 |
-| [~] | T-74 | Wire i18n into `SimpleForm.tsx`/`KpiColumn.tsx` to close T-52's test 11 | T-47, T-51, T-52 |
+| [x] | T-74 | Wire i18n into `SimpleForm.tsx`/`KpiColumn.tsx` to close T-52's test 11 | T-47, T-51, T-52 |
 
 ### Area G — Decision support — 0 / 5 — `log/AREA-G-decision-support.md`
 
