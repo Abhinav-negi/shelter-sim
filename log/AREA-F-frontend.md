@@ -2080,10 +2080,10 @@ product and not cut as decoration:
 
 ---
 
-### [~] T-71 — Wire the Area F components into app-shell.tsx's placeholders
+### [x] T-71 — Wire the Area F components into app-shell.tsx's placeholders
 
 **Area:** F — Frontend (new task, raised by LOG.md's own HANDOFF — "the single highest-leverage
-task to create and run next session") · **Status:** CLAIMED by orchestrator-session7 at 2026-09-20T02:45:03Z · **Est:** 5 h
+task to create and run next session") · **Status:** DONE · **Est:** 5 h
 **Depends on:** T-43, T-45, T-46, T-47, T-48, T-49, T-51 · **Conflicts with:** none
 
 **Why this exists.** `app/app-shell.tsx` (T-36) pre-wired one labelled placeholder `<div>` per Area F
@@ -2184,9 +2184,120 @@ conflicts on the same 80-line function for no benefit.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+Implementation: apps/web/app/app-shell.tsx only. Imports added: SimpleForm
+(components/inputs barrel), AdvancedPanel (components/advanced/AdvancedPanel,
+named export -- that directory has no barrel), HouseView (components/house
+barrel), TempChart + TempChartVariant (components/charts/temp/TempChart,
+named export -- that directory has no barrel), SolarPanel
+(components/charts/solar/SolarPanel, named export -- no barrel), HeatFlowPanel
+(components/charts/heatflow barrel), KpiColumn (components/kpis/KpiColumn,
+named export -- no barrel). All export names/props matched the T-71 PROMPT
+exactly on inspection of the real source files -- no prop-name mismatches
+found, no deviation from the prescribed wiring was needed. Also added
+`import React from 'react'` (was previously only `import { useState }`):
+required so the file can be rendered outside Next's own SWC pipeline (esbuild's
+classic JSX transform, used by vitest here since no jsdom/@testing-library is
+installed -- CONTRACTS.md §7.13 -- needs `React` in each file's own scope);
+every sibling component in components/** already carries this same import for
+the same reason. No new store fields; lib/store.ts, lib/units.ts, lib/i18n.ts,
+app/page.tsx, app/globals.css and everything under components/** untouched.
+No app-shell.module.css was needed -- every wired component is already
+required to render correctly down to 320-400px on its own.
+
+No deviations from the PROMPT's prescribed wiring were needed; slot-tab-grid
+and slot-assumptions were left exactly as pre-existing placeholders, per the
+PROMPT.
+
+Verification method: this worktree has no jsdom/@testing-library (neither is
+on the approved dependency list, CONTRACTS.md §7.13), matching every existing
+Area F component test (T-46/T-47/T-48/T-49/T-51's own test files). A temporary
+verification file was written at apps/web/app/_t71-verify.test.tsx, following
+house.test.tsx's exact pattern (react-dom/server's renderToStaticMarkup for
+DOM structure, direct lib/store.ts action calls in place of simulated DOM
+events for interaction), run under vitest, and then DELETED before commit --
+it is not part of the deliverable and is off this task's allow-list to leave
+behind. `git status --porcelain` showed only apps/web/app/app-shell.tsx
+modified before commit.
+
+1. PASS -- 8 wired-slot testids (slot-simple-form, slot-advanced-panel,
+   slot-house, slot-tab-temp, slot-kpi-cards, plus slot-tab-solar/
+   slot-tab-heatflow which never existed as separate testids -- SolarPanel/
+   HeatFlowPanel replace the whole conditional branch) are absent from the
+   rendered markup; the real components' own testids (control-location,
+   house-view, integrity-badge, temp-chart) plus the unconditional
+   slot-preset-readout are present instead. slot-tab-grid and
+   slot-assumptions remain present with their placeholder text when
+   activeTab='grid'. Exact assertion list is in the (deleted) verification
+   file; testids checked absent: [slot-simple-form, slot-advanced-panel,
+   slot-house, slot-tab-temp, slot-kpi-cards]; checked present:
+   [control-location, house-view, integrity-badge, temp-chart,
+   slot-preset-readout, slot-tab-grid, slot-assumptions (latter two only
+   under activeTab='grid')].
+
+2. PASS -- preset used: traditionalLadakhiByre (Leh). Real numbers read off
+   first paint: indoor min = 278.732938485249 K (5.6 degC); solar
+   dailyTotalKWh.opaque = 216.99181486516417 kWh; aux energy =
+   0 kWh/day; energy balance residual = 0.000019019464372686306
+   (0.002%, well under the < 0.001 gate, CONTRACTS.md §7.4). TempChart,
+   SolarPanel and HeatFlowPanel all rendered their real "PS Deliverable N"
+   titles (1/2/3) with this data; KpiColumn rendered its integrity-badge and
+   12 KPI cards with matching preset numbers (06:00 = 6.8 degC, min = 5.6
+   degC, max = 14.6 degC).
+
+3. PASS -- cross-component integration verified through the real shell:
+   activateSurface('wallSouth') (HouseView's own click/Enter handler
+   function, per T-46's own test convention) set store.selectedSurfaceId to
+   'wallSouth', and the rendered markup then contained SimpleForm's
+   data-testid="stack-editor" (absent before). Calling
+   actions.setSelectedSurfaceId(null) cleared it and the stack-editor
+   testid disappeared again. Both directions asserted.
+
+4. PASS -- for each of temp/solar/heatflow/grid, exactly one of
+   {temp-chart, solar-panel, heatflow-panel, slot-tab-grid} testids was
+   present per render and it matched the active tab; the other three were
+   absent (the shell only renders the active tab's branch -- the inactive
+   tabs' components are not mounted at all, not merely hidden).
+
+5. PASS -- `npx tsc --noEmit -p apps/web/tsconfig.json` exits with 0 errors,
+   both before this task's edit (after running `prisma generate` via
+   db:migrate -- the baseline had pre-existing errors in lib/repo/*.ts from
+   an ungenerated Prisma client, unrelated to this task and resolved simply
+   by generating the client once) and after. 0 new errors either way.
+
+6. PASS -- `npm run build --workspace apps/web` (with
+   DATABASE_PROVIDER=sqlite DATABASE_URL set) exits 0. Only warning: the
+   expected pre-existing `topLevelAwait` warning from
+   `@shelter/engine/dist/serialise.js`, now reached via
+   `./lib/store.ts -> ./app/app-shell.tsx` (previously reached via
+   `./lib/units.ts -> ./app/app-shell.tsx` before the store was imported
+   directly by the real components) -- same underlying warning, not a new
+   one; nothing else changed in the warning list.
+
+7. PASS -- `npx vitest run apps/web/components/inputs apps/web/components/advanced
+   apps/web/components/house apps/web/components/charts apps/web/components/kpis`:
+   6 test files, 75 tests, all passed, both before and after this task's
+   edit (identical counts -- no file under components/** was touched, so
+   this is expected, not incidental). Note: apps/web/components/advanced has
+   no test file of its own (T-45 recorded none in its own Evidence block
+   either), so "6 files / 75 tests" already reflects that.
+
+8. PASS -- with the store hydrated then `actions.setResult(null)` called
+   (the real post-hydration null-result path -- a hard-reload re-hydrate is
+   a no-op per store.ts's own documented idempotent-hydrateStore contract,
+   so a thrown-engine-error's setResult(null) is the actual code path that
+   produces this state), rendering did not throw. SimpleForm and HouseView
+   render unconditionally (their own empty/neutral states); the KPI column
+   shows slot-preset-readout-empty; the temp tab shows the shell's own
+   "No result yet" placeholder (testid slot-tab-temp-empty, guarding
+   TempChartVariant.result's non-optional type per the PROMPT); SolarPanel
+   and HeatFlowPanel each render their own internal empty states
+   (solar-empty-state / heatflow-empty-state) since both already handle
+   result === null internally.
+
+git status --porcelain before commit: " M apps/web/app/app-shell.tsx" only.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** Claude (subagent, task/T-71)  **Date:** 2026-09-20
 
 ---
 
