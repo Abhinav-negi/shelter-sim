@@ -2689,11 +2689,11 @@ git status --porcelain before commit: " M apps/web/app/app-shell.tsx" only.
 
 ---
 
-### [~] T-73 — Wire T-52's meta components into app-shell.tsx's `slot-assumptions`
+### [x] T-73 — Wire T-52's meta components into app-shell.tsx's `slot-assumptions`
 
 **Area:** F — Frontend (new task, raised by T-52's own Evidence block this session — the same
 "cross-boundary wiring gap" pattern T-71 closed for the first seven Area F components) ·
-**Status:** CLAIMED by orchestrator-session7 at 2026-09-20T04:11:08Z · **Est:** 2 h
+**Status:** DONE · **Est:** 2 h
 **Depends on:** T-52 · **Conflicts with:** none
 
 **Why this exists.** T-52 built `apps/web/components/meta/**` in full — the assumptions panel,
@@ -2754,9 +2754,125 @@ decisions, just rendering the already-built, already-tested components.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
+DIFF -- exactly the surgical 5-line-plus-imports change the task text asked for, only
+apps/web/app/app-shell.tsx touched (git diff --stat: 1 file changed, 14 insertions(+),
+1 deletion(-)):
+  + import { AssumptionsPanel, LimitationsList, ExportPanel, OfflineBanner, LocaleSwitch }
+    from '../components/meta';
+  + <OfflineBanner /> and <LocaleSwitch /> rendered directly inside <div className=
+    "app-shell">, before the first <aside aria-label="inputs">.
+  - Placeholder(testId="slot-assumptions") removed; replaced with <AssumptionsPanel />,
+    <LimitationsList />, <ExportPanel /> in that order, inside the KPI <aside>, still
+    after <KpiColumn />.
+  No other line touched. lib/store.ts, lib/units.ts, lib/i18n.ts, app/page.tsx,
+  app/globals.css and everything under components/** untouched (git status --short shows
+  only apps/web/app/app-shell.tsx modified).
+
+SETUP: fresh worktree. npm install (442 packages). npm run build --workspace
+@shelter/engine / @shelter/data / @shelter/optimise all exit 0. Local sqlite dev DB stood
+up per the task's own instructions (DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db"
+npm run db:migrate, then npm run db:seed -- 27 materials seeded) because npm run build
+--workspace apps/web runs next build's own `next build`'s TypeScript pass over the WHOLE
+app, including lib/repo/*.ts, which fails on unrelated Prisma-client-not-generated errors
+until the DB is migrated -- this is environment setup, not an app-shell.tsx defect (test 5's
+tsc run over just tsconfig.json shows those same 16 errors present identically before AND
+after this task's change, see test 5 below).
+
+Verification method: two TEMPORARY vitest files created under apps/web/ (__tmp_verify_t73.
+test.tsx, __tmp_verify_t73_null.test.tsx), rendering the REAL AppShell component through
+react-dom/server's renderToStaticMarkup (same no-jsdom pattern components/kpis/
+KpiColumn.test.tsx and T-52's own locale.test.tsx use) against the REAL bundled Leh preset
+run through the REAL engine. Both files DELETED after evidence was captured below -- not
+part of the committed diff, not a new permanent test file (git status confirms only
+app-shell.tsx changed).
+
+CONDITIONS CHECKLIST -- all 8 PASS, real measured evidence:
+
+1. PASS. `slot-assumptions` testid gone (`html.includes('data-testid="slot-assumptions"')`
+   === false). Rendered testids present in the KPI column, in order:
+   data-testid="assumptions-panel" (offset 44139 in the rendered HTML string),
+   data-testid="limitations-list" (57651), data-testid="export-panel" (61386) --
+   44139 < 57651 < 61386, confirming AssumptionsPanel, then LimitationsList, then
+   ExportPanel, exactly the order the task text specifies.
+
+2. PASS. data-testid="offline-banner" and data-testid="locale-switch" both render once
+   each. Position: LocaleSwitch's rendered offset (28) is BEFORE
+   aria-label="inputs" (the first <aside>, offset 290) -- i.e. both render as direct
+   children of <div className="app-shell"> before any of the three <aside>/<main>/<aside>
+   columns open, never nested inside one. (OfflineBanner renders null when store.online
+   is true, its default -- see test 3's own render for OfflineBanner present with
+   online=false.)
+
+3. PASS. With store.online = false, rendered markup (through the real shell, not T-52's
+   isolated harness):
+   <div role="status" data-testid="offline-banner" data-print-hide="true">Offline —
+   showing 1 scenario, AI advice unavailable.</div>
+   -- exact literal match to T-52's own acceptance test 10 string.
+
+4. PASS. Two before/after label pairs (EN -> HI), from AssumptionsPanel and ExportPanel
+   specifically (not SimpleForm/KpiColumn, out of scope per the task text):
+     export-csv button label: "Download CSV (every timestep)" -> "CSV डाउनलोड करें (हर
+       टाइमस्टेप)"
+     assumptions panel <h2> title: "Assumptions" -> "मान्यताएँ"
+
+5. PASS. `npx tsc --noEmit -p apps/web/tsconfig.json`: 16 errors, all in lib/repo/*.ts
+   (designs.ts, materials.ts, runs.ts, weather.ts -- Prisma-client-generation-dependent,
+   nothing in app-shell.tsx). Verified identical before/after via `git stash` /
+   `git stash pop` around the same tsc invocation: 16 errors both times, 0 mentioning
+   app-shell.tsx either time (`grep -c "app-shell"` on the tsc output = 0). 0 new errors.
+
+6. PASS. `npm run build --workspace apps/web` exits 0. Output: "Compiled with warnings"
+   (only the expected, pre-existing topLevelAwait warning from
+   @shelter/engine/dist/serialise.js, now reached via lib/store.ts -> app-shell.tsx,
+   same warning the task text names as expected and not a regression), "Finished
+   TypeScript", static pages generated, all 7 routes built.
+
+7. PASS. `npx vitest run apps/web/components/meta`: 4 test files, 10 tests, all passed
+   (assumptions.test.tsx: 2, locale.test.tsx: 3, export.test.ts: 3, constants.data.
+   test.ts: 2) -- matches T-52's own recorded pass count (10 of its 13 acceptance tests
+   have runnable test cases; the other 3 are mechanical-diff/grep-based, also unaffected).
+   Zero files under components/meta/** touched by this task.
+
+8. PASS. `appState.result === null` (hydrateStore + AppShell both given a null result)
+   does not throw (threw: false). All three components render their own empty/disabled
+   state: assumptions-panel and limitations-list render fully (LimitationsList doesn't
+   read result at all); export-panel's CSV button renders
+   `<button type="button" data-testid="export-csv" disabled="">` (disabled, since
+   `disabled={!result}`); AssumptionsPanel's fuel-cost section shows
+   data-testid="fuel-cost-no-result" (present === true) instead of the derived
+   litres/cost/CO2 cards, its own documented `derived === null` branch.
+
+Commands to build/run/test:
+  npm install
+  npm run build --workspace @shelter/engine
+  npm run build --workspace @shelter/data
+  npm run build --workspace @shelter/optimise
+  (cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate)
+  (cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:seed)
+  npx tsc --noEmit -p apps/web/tsconfig.json
+  npm run build --workspace apps/web
+  npx vitest run apps/web/components/meta
+
+GOTCHAS for the next agent:
+- `lib/store.ts`'s `hydrateStore()` is idempotent by design (a `hydrated` module flag,
+  "safe to call on every AppShell render, only takes effect once") -- to render AppShell
+  with a null `result` for an acceptance-test-8-style check, that render must be the
+  FIRST hydrate in the module/process (a fresh test file, since Vitest gives each test
+  file its own module graph), never a second hydrateStore() call after a real result has
+  already hydrated the store once.
+- `npm run build --workspace apps/web` runs `next build`'s TypeScript pass over the
+  ENTIRE app, not just the changed file, so the pre-existing Prisma-client-not-generated
+  errors in `lib/repo/*.ts` fail the whole build until the local sqlite dev DB is
+  migrated once (see SETUP above) -- this is an environment-setup step, not a defect
+  introduced or touched by this task.
+- Nothing left unfinished. This task's own 8 acceptance tests are the full scope; the
+  known-and-flagged gap that SimpleForm/KpiColumn labels don't yet localize is T-52's
+  own pre-existing, explicitly out-of-scope item (task text: "not SimpleForm's/
+  KpiColumn's -- those remain a separate, already known, already flagged gap outside
+  this task's scope"), not something this task was asked to close.
 ```
 
-**Completed by:** ___  **Date:** ___
+**Completed by:** T-73 subagent (abhinav77negi@gmail.com)  **Date:** 2026-09-20
 
 ---
 

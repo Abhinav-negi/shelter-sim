@@ -306,12 +306,12 @@ with an Area file again, the Area file is right — fix this table.)*
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 5 / 7 | `log/AREA-E-server-tier.md` |
-| F | Frontend | 9 / 13 | `log/AREA-F-frontend.md` |
+| F | Frontend | 10 / 13 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 2 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **53 / 73** | |
+| | **TOTAL** | **54 / 73** | |
 
 *(T-71 and T-72 added this session — new tasks the orchestrator raised from the prior HANDOFF's
 recommended next steps, same pattern as T-70 last session. Totals above include them as not-yet-done.
@@ -397,7 +397,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 |
 | [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 |
 
-### Area F — Frontend — 9 / 13 (T-52 `[!]`, blocked on cross-component dependencies outside its allow-list — see its Evidence block) — `log/AREA-F-frontend.md`
+### Area F — Frontend — 10 / 13 (T-52 `[!]`, blocked on cross-component dependencies outside its allow-list — see its Evidence block) — `log/AREA-F-frontend.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
@@ -413,7 +413,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [!] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
 | [x] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
 | [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 |
-| [~] | T-73 | Wire T-52's meta components into app-shell.tsx's `slot-assumptions` | T-52 |
+| [x] | T-73 | Wire T-52's meta components into app-shell.tsx's `slot-assumptions` | T-52 |
 
 ### Area G — Decision support — 0 / 5 — `log/AREA-G-decision-support.md`
 

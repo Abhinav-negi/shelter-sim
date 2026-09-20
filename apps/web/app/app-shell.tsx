@@ -38,6 +38,13 @@ import { TempChart, type TempChartVariant } from '../components/charts/temp/Temp
 import { SolarPanel } from '../components/charts/solar/SolarPanel';
 import { HeatFlowPanel } from '../components/charts/heatflow';
 import { KpiColumn } from '../components/kpis/KpiColumn';
+import {
+  AssumptionsPanel,
+  LimitationsList,
+  ExportPanel,
+  OfflineBanner,
+  LocaleSwitch,
+} from '../components/meta';
 
 const TABS: TabId[] = ['temp', 'solar', 'heatflow', 'grid'];
 
@@ -91,6 +98,10 @@ export function AppShell({ initialRequest, initialResult, initialPresetId }: App
 
   return (
     <div className="app-shell">
+      {/* T-52: global, shell-wide concerns -- not scoped to any one column */}
+      <OfflineBanner />
+      <LocaleSwitch />
+
       <aside className="col" aria-label="inputs">
         {/* T-44: the five-control simple form (value-add per T-71; T-44 itself stays [!]) */}
         <SimpleForm />
@@ -141,7 +152,9 @@ export function AppShell({ initialRequest, initialResult, initialPresetId }: App
         {/* T-51: KPI cards, the integrity badge and the safety warning */}
         <KpiColumn />
         {/* T-52: assumptions panel, exports, offline banner, bilingual labels */}
-        <Placeholder label="Assumptions panel + exports (T-52)" testId="slot-assumptions" />
+        <AssumptionsPanel />
+        <LimitationsList />
+        <ExportPanel />
       </aside>
     </div>
   );
