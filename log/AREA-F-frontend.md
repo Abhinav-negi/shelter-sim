@@ -2080,3 +2080,113 @@ product and not cut as decoration:
 
 ---
 
+### [~] T-71 — Wire the Area F components into app-shell.tsx's placeholders
+
+**Area:** F — Frontend (new task, raised by LOG.md's own HANDOFF — "the single highest-leverage
+task to create and run next session") · **Status:** CLAIMED by orchestrator-session7 at 2026-09-20T02:45:03Z · **Est:** 5 h
+**Depends on:** T-43, T-45, T-46, T-47, T-48, T-49, T-51 · **Conflicts with:** none
+
+**Why this exists.** `app/app-shell.tsx` (T-36) pre-wired one labelled placeholder `<div>` per Area F
+task specifically so no component task ever needed to touch it. Seven of those components are now
+real, tested and `[x]`, and are still sitting behind their own placeholder text — nobody owns
+swapping the placeholder for the real import. This is pure integration: no new physics, no new
+design decision, just replacing `<Placeholder .../>` with the already-built component, wired to the
+same `lib/store.ts` every one of them already reads or accepts as props.
+
+`T-44`'s own Evidence block (this file, above) independently found the same gap and named it as one
+of its two follow-up needs ("a follow-up Area E/F task wires T-44 next to a KPI/temperature display
+in app-shell.tsx"). **This task also wires T-44's `SimpleForm` export as a value-add**, even though
+`T-44` itself stays `[!]` BLOCKED — its block reason is the human C-13 study, which is orthogonal to
+whether its already-built, already-tested component can be safely rendered. Wiring it in does not
+change T-44's own status or claim its acceptance tests; T-44 stays `[!]` until its own human-owned
+test runs.
+
+**PROMPT — paste this to start the task:**
+> In `apps/web/app/app-shell.tsx` only, replace each placeholder below with the real component it
+> stands for. Every listed component already reads what it needs from `lib/store.ts` itself except
+> where noted — **do not add new store fields, do not touch `lib/store.ts`, `lib/units.ts` or
+> `lib/i18n.ts`**, and do not edit any file under `components/**`.
+>
+> - `slot-simple-form` → `<SimpleForm />` from `components/inputs` (zero props, reads the store
+>   itself). Value-add per the note above; T-44 stays `[!]`.
+> - `slot-advanced-panel` → `<AdvancedPanel />` from `components/advanced`. It already implements its
+>   own collapsed-by-default `<details>` disclosure internally (T-45 acceptance test 1) — render it
+>   unconditionally in place of both the current `Placeholder` and the shell's own
+>   `toggleAdvanced`/`appState.advancedOpen` button-and-conditional. The `advancedOpen` field may stay
+>   defined in `lib/store.ts` (you may not touch that file); just stop reading it here if it becomes
+>   unused.
+> - `slot-house` → `<HouseView />` from `components/house` (zero props, reads/writes the store
+>   itself, including `selectedSurfaceId` for T-44's stack editor and `scrubberHour`).
+> - `slot-tab-temp` → when `appState.result` is non-null, `<TempChart variants={...}
+>   comfortBand={appState.request.operation.comfortBand} />` from `components/charts/temp`, where
+>   `variants` is a one-element array built from the current store state: `{ id: appState.presetId,
+>   label: appState.presetId, result: appState.result, weatherStartHour:
+>   appState.request.weather.startHour }`. `TempChartVariant.result` is non-optional, so guard on
+>   `appState.result` exactly like the existing `PresetReadout` guard a few lines below; when null,
+>   keep the existing "No result yet"-style placeholder.
+> - `slot-tab-solar` → `<SolarPanel />` from `components/charts/solar` (zero props, reads the store
+>   itself, already handles `result === null`).
+> - `slot-tab-heatflow` → `<HeatFlowPanel result={appState.result} />` from
+>   `components/charts/heatflow` (takes `result` explicitly; already renders its own empty state on
+>   `null`, so no extra guard needed here).
+> - `slot-tab-grid` → **leave as the existing placeholder.** T-50 (survival grid) is still `[!]`
+>   BLOCKED and not in this task's dependency list.
+> - `slot-kpi-cards` → `<KpiColumn />` from `components/kpis` (zero props, reads the store itself).
+> - `slot-assumptions` → **leave as the existing placeholder.** T-52 does not exist yet.
+>
+> Import every component from its directory's existing public surface (barrel `index.ts` where one
+> exists — `components/inputs`, `components/house`, `components/charts/heatflow`; the named export
+> directly from its file otherwise — `AdvancedPanel`, `SolarPanel`, `KpiColumn`, `TempChart`). Do not
+> add a barrel to a directory that does not already have one; that is out of this task's scope and
+> not this task's file to create (it lives under `components/**`, off this task's allow-list).
+>
+> If shell-level layout CSS is genuinely needed beyond what each component already carries (all of
+> them are already required to render correctly down to 320-400 px on their own), add a new
+> `apps/web/app/app-shell.module.css` rather than editing `apps/web/app/globals.css` — T-52 owns the
+> print-style section of that file and does not exist yet to coordinate with.
+
+**Files you may touch.** `apps/web/app/app-shell.tsx`, and (only if needed) a new
+`apps/web/app/app-shell.module.css`.
+**Files you may NOT touch.** `apps/web/app/page.tsx`, `apps/web/lib/store.ts`,
+`apps/web/lib/units.ts`, `apps/web/lib/i18n.ts`, `apps/web/app/globals.css`, anything under
+`apps/web/components/**`.
+
+**Subagent guidance.** Single agent. Pure wiring in one file — splitting it produces merge
+conflicts on the same 80-line function for no benefit.
+
+**ACCEPTANCE TESTS — the task is NOT done until every one passes:**
+1. **Every one of the 8 wired slots** (`slot-simple-form`, `slot-advanced-panel`, `slot-house`,
+   `slot-tab-temp`, `slot-tab-solar`, `slot-tab-heatflow`, `slot-kpi-cards`, plus the unconditional
+   `slot-preset-readout`) renders its real component with **no placeholder `data-testid` left** for
+   any of those eight. `slot-tab-grid` and `slot-assumptions` still show their placeholder text
+   (T-50/T-52 don't exist yet) — assert both ways. Paste the list of testids present/absent.
+2. Loading a bundled preset (server-rendered `app/page.tsx` path) shows a non-empty temperature
+   chart, solar panel, heat-flow panel and KPI column on first paint — no manual interaction
+   required. Paste the preset id used and one real number read off each of the four.
+3. **Cross-component integration, not just four components sitting side by side:** clicking a wall
+   in `HouseView` sets `selectedSurfaceId`, which `SimpleForm`'s stack editor reacts to (T-44
+   acceptance test 7's own integration check, now exercised through the real shell for the first
+   time). Assert both directions (set, then cleared).
+4. Switching the tab strip between `temp`/`solar`/`heatflow`/`grid` shows exactly one tab's content
+   at a time and the inactive ones unmount (or are hidden) — no two real chart components mounted
+   and fighting for the same DOM region simultaneously.
+5. `npx tsc --noEmit -p apps/web/tsconfig.json` exits with 0 new errors versus the pre-task baseline.
+6. `npm run build --workspace apps/web` exits 0 (the pre-existing, unrelated `topLevelAwait` warning
+   from `@shelter/engine/dist/serialise.js` is expected and not a regression — paste the full warning
+   list and confirm nothing new).
+7. **No regression in any wired component's own test suite** — `npx vitest run
+   apps/web/components/inputs apps/web/components/advanced apps/web/components/house
+   apps/web/components/charts apps/web/components/kpis` still shows the same pass counts each task
+   already recorded in its own Evidence block. Paste the combined result.
+8. `appState.result === null` (a hard reload before any simulation resolves, or a thrown engine
+   error) does not crash any of the eight wired slots — each either shows its own empty state or the
+   shell's existing "No result yet" placeholder. Paste the render result with `result` forced null.
+
+**Evidence (fill this in when done — numbers, not adjectives):**
+```
+```
+
+**Completed by:** ___  **Date:** ___
+
+---
+

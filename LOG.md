@@ -301,23 +301,26 @@ with an Area file again, the Area file is right — fix this table.)*
 
 | Area | Name | Done / Total | File |
 |---|---|---|---|
-| A | Foundation & contracts | 7 / 7 | `log/AREA-A-foundation-contracts.md` |
+| A | Foundation & contracts | 7 / 8 | `log/AREA-A-foundation-contracts.md` |
 | B | Engine | 16 / 17 | `log/AREA-B-engine.md` |
 | C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
 | D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
 | E | Server tier | 5 / 7 | `log/AREA-E-server-tier.md` |
-| F | Frontend | 7 / 11 | `log/AREA-F-frontend.md` |
+| F | Frontend | 7 / 13 | `log/AREA-F-frontend.md` |
 | G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
 | H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
 | I | Validation & credibility | 0 / 4 | `log/AREA-I-validation-credibility.md` |
 | J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
-| | **TOTAL** | **48 / 70** | |
+| | **TOTAL** | **48 / 72** | |
+
+*(T-71 and T-72 added this session — new tasks the orchestrator raised from the prior HANDOFF's
+recommended next steps, same pattern as T-70 last session. Totals above include them as not-yet-done.)*
 
 **THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
 
 ### Full task list, by Area
 
-### Area A — Foundation & contracts — 7 / 7 — `log/AREA-A-foundation-contracts.md`
+### Area A — Foundation & contracts — 7 / 8 — `log/AREA-A-foundation-contracts.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
@@ -328,6 +331,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | [x] | T-05 | The `.work/` claim ledger and `board.sh` | T-02 |
 | [x] | T-06 | Extend the shared contract with the types the rest of the build needs | T-01 |
 | [x] | T-07 | Canonical test fixtures, including the C-01 kill-shot pair | T-06 |
+| [~] | T-72 | Cover `apps/web/**` in the root ESLint config | T-03 |
 
 ### Area B — Engine — 15 / 16 — `log/AREA-B-engine.md`
 
@@ -389,7 +393,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 |
 | [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 |
 
-### Area F — Frontend — 3 / 11 — `log/AREA-F-frontend.md`
+### Area F — Frontend — 7 / 13 — `log/AREA-F-frontend.md`
 
 | | ID | Title | Depends on |
 |---|---|---|---|
@@ -404,6 +408,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
 | [ ] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
 | [~] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
+| [~] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 |
 
 ### Area G — Decision support — 0 / 5 — `log/AREA-G-decision-support.md`
 

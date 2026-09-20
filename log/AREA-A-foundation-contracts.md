@@ -951,3 +951,75 @@ allow-list (packages/engine/src is off limits to this task). Flagging upward for
 
 ---
 
+### [~] T-72 — Cover `apps/web/**` in the root ESLint config
+
+**Area:** A — Foundation (new task, raised by LOG.md's own HANDOFF — carried forward across at
+least two prior sessions, "`npm run lint` is still a silent no-op for the entire frontend") ·
+**Status:** CLAIMED by orchestrator-session7 at 2026-09-20T02:45:03Z · **Est:** 2 h
+**Depends on:** T-03 · **Conflicts with:** none
+
+**Why this exists.** `eslint.config.js` (T-03) only defines a `files: ['packages/**/*.ts']` block
+(plus a narrower `packages/engine/test/**` override). Flat ESLint config lints **only** files that
+match some block's `files` glob — anything else is silently skipped, not merely unstyled. Since
+`apps/web` was created after T-03 (by T-36), no block ever covers it, so `npm run lint` (`eslint .`)
+has linted zero frontend files since the app was scaffolded, and every direct check
+(`npx eslint apps/web/components/...`) prints "file ignored, no matching configuration" instead of
+running. `apps/web/package.json` already carries `eslint-config-next` as a devDependency (added by
+T-36) but nothing in the root config references it — the tool was installed and never wired in.
+
+**PROMPT — paste this to start the task:**
+> In `eslint.config.js` only, add a new flat-config block (or blocks) so `apps/web/**/*.{ts,tsx}` is
+> actually linted, using the already-installed `eslint-config-next` (`apps/web/package.json`,
+> `^16.3.5`) as the base rule set for that block. Check `eslint-config-next`'s own package exports
+> first for a native flat-config entry point for this installed version (Next 16 ships one); fall
+> back to `@eslint/eslintrc`'s `FlatCompat` only if no native flat export exists, and only if
+> `FlatCompat` (or whatever it needs) is already a transitive dependency of `next`/
+> `eslint-config-next` — **do not add a new top-level devDependency** without checking `npm ls` first
+> and reporting back if one is genuinely unavoidable (rule 4 territory, even though it's root
+> tooling, not a `packages/**` runtime dependency).
+>
+> This block must not touch or weaken the existing `packages/**` block — the React/Prisma/Next
+> import-ban and the `packages/**`-scoped `no-explicit-any`/`no-console` rules must fire exactly as
+> before (T-03's own four revert-tests are the regression check, see Test 3 below).
+>
+> Run `npm run lint` once the block exists. If real, pre-existing violations surface in `apps/web`,
+> follow T-03's own precedent exactly: fix genuine, trivial violations; for anything stylistic that
+> would churn unrelated files, turn that specific rule off for `apps/web/**` rather than mass-editing
+> code outside this task's own scope, and say so plainly rather than silently suppressing.
+
+**Files you may touch.** `eslint.config.js` only. (If, and only if, a new devDependency is
+genuinely required and already covered by the approved-tooling latitude T-03 used, also the root
+`package.json` devDependencies + `package-lock.json` — report this explicitly rather than doing it
+quietly.)
+**Files you may NOT touch.** Anything under `packages/**`, anything under `apps/web/**` other than
+what a genuine, reported, minimal lint-violation fix requires.
+
+**Subagent guidance.** Single agent. Config-only, small surface.
+
+**ACCEPTANCE TESTS — the task is NOT done until every one passes:**
+1. `npx eslint apps/web/components/charts/temp` (or any other real `apps/web` path) no longer prints
+   "file ignored" — it either exits 0 or reports real findings. Paste the before/after output.
+2. `npm run lint` (root) actually visits `apps/web` files — paste output or a file count showing
+   `apps/web/**` was included in the run, not skipped.
+3. **T-03's four boundary-rule revert-tests still behave identically:** repeat T-03's own React-rule,
+   Prisma-rule, `any`-rule and `no-console`-rule checks against `packages/engine/src/air.ts`
+   (non-zero before revert, zero after, for all four) and paste all eight exit codes — this proves
+   the new `apps/web` block did not widen or narrow the existing `packages/**` block.
+4. Whatever real, pre-existing `apps/web` violations `npm run lint` finds on the first run are either
+   fixed (if trivial) or have their specific rule explicitly scoped off for `apps/web/**` with a
+   one-line reason — paste the initial violation count and how each was resolved.
+5. `npm run lint` exits 0 on the tree as it stands once this task is done.
+6. `npx vitest run` — full suite, no regressions (this task changes lint config only, never runtime
+   source). Paste files/tests/pass counts.
+7. `.github/workflows/*.yml` (T-04's CI) already runs `npm run lint` — confirm it still passes in CI
+   or locally simulating CI's exact invocation, with no workflow file changes needed. If a change
+   *is* needed, that's a T-04-owned file outside this task's allow-list — report it, don't edit it.
+
+**Evidence (fill this in when done — numbers, not adjectives):**
+```
+```
+
+**Completed by:** ___  **Date:** ___
+
+---
+
