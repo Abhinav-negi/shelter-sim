@@ -410,7 +410,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-49 | The heat-flow view and the Sankey (PS Deliverable 3) | T-22, T-36, T-43 |
 | [!] | T-50 | The survival grid | T-36, T-59 |
 | [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
-| [ ] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
+| [~] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
 | [x] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
 | [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 |
 

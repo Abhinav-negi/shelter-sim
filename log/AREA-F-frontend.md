@@ -1911,9 +1911,9 @@ surfaces it; not this task's file, not touched.
 
 ---
 
-### [ ] T-52 — The assumptions panel, exports, the offline banner and bilingual labels
+### [~] T-52 — The assumptions panel, exports, the offline banner and bilingual labels
 
-**Area:** F — Frontend (≈ W-45) · **Status:** NOT STARTED · **Est:** 8 h
+**Area:** F — Frontend (≈ W-45) · **Status:** CLAIMED by orchestrator-session7 at 2026-09-20T03:43:10Z · **Est:** 8 h
 **Depends on:** T-36, T-43, T-51 · **Conflicts with:** all Area F tasks (message-file boundary)
 
 **Why this exists.** Four cheap credibility features in one place. *"Every assumption we make is
