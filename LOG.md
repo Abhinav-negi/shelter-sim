@@ -403,7 +403,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [!] | T-50 | The survival grid | T-36, T-59 |
 | [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
 | [ ] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
-| [ ] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
+| [~] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
 
 ### Area G — Decision support — 0 / 5 — `log/AREA-G-decision-support.md`
 
@@ -427,9 +427,9 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 
 | | ID | Title | Depends on |
 |---|---|---|---|
-| [ ] | T-62 | The continuous energy-balance audit in CI | T-04, T-28, T-59 |
+| [~] | T-62 | The continuous energy-balance audit in CI | T-04, T-28, T-59 |
 | [ ] | T-63 | `VALIDATION.md` | T-23, T-62 |
-| [ ] | T-64 | `EQUATIONS.md` and the limitations list | T-18, T-19, T-22 |
+| [~] | T-64 | `EQUATIONS.md` and the limitations list | T-18, T-19, T-22 |
 | [ ] | T-65 | One EnergyPlus reference case (needs a human owner) | T-27, T-62, **plus a named human owner** |
 
 ### Area J — Delivery — 0 / 4 — `log/AREA-J-delivery.md`

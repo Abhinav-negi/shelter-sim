@@ -1995,9 +1995,9 @@ i18n aggregator. Each gets its own subdirectory and its own acceptance tests (1�
 
 ---
 
-### [ ] T-53 — The day/night animation, driven by the real solar-position code
+### [~] T-53 — The day/night animation, driven by the real solar-position code
 
-**Area:** F — Frontend (≈ `plan.md` §5 step 4) · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** F — Frontend (≈ `plan.md` §5 step 4) · **Status:** CLAIMED by orchestrator-session7 at 2026-09-20T02:45:03Z · **Est:** 6 h
 **Depends on:** T-46 · **Conflicts with:** T-46 (renders into its SVG — coordinate the layer)
 
 **Why this exists.** While the server works, the 3D scene does not freeze and does not show a

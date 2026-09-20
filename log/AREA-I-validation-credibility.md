@@ -15,9 +15,9 @@
 
 ---
 
-### [ ] T-62 — The continuous energy-balance audit in CI
+### [~] T-62 — The continuous energy-balance audit in CI
 
-**Area:** I — Validation (≈ W-23 / `CHALLENGE.md` C-09) · **Status:** NOT STARTED · **Est:** 3 h
+**Area:** I — Validation (≈ W-23 / `CHALLENGE.md` C-09) · **Status:** CLAIMED by orchestrator-session7 at 2026-09-20T02:45:03Z · **Est:** 3 h
 **Depends on:** T-04, T-28, T-59 · **Conflicts with:** T-07 (imports fixtures, never edits them)
 
 **Why this exists.** *"This is the highest-value test in the entire suite relative to its cost. It
@@ -168,9 +168,9 @@ voice and a single standard of evidence.
 
 ---
 
-### [ ] T-64 — `EQUATIONS.md` and the limitations list
+### [~] T-64 — `EQUATIONS.md` and the limitations list
 
-**Area:** I — Validation (≈ W-49) · **Status:** NOT STARTED · **Est:** 6 h
+**Area:** I — Validation (≈ W-49) · **Status:** CLAIMED by orchestrator-session7 at 2026-09-20T02:45:03Z · **Est:** 6 h
 **Depends on:** T-18, T-19, T-22 · **Conflicts with:** T-63 (adjacent document, no shared file)
 
 **Why this exists.** *"Every input has a documented, citable source. This is not bureaucracy — it is
