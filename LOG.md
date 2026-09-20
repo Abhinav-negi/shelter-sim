@@ -408,7 +408,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
 | [ ] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
 | [~] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
-| [~] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 |
+| [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 |
 
 ### Area G — Decision support — 0 / 5 — `log/AREA-G-decision-support.md`
 
