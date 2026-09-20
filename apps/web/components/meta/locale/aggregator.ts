@@ -23,5 +23,7 @@
 // component's own file (this task's allow-list is components/meta/** only).
 
 import '../messages';
+import '../../inputs/messages';
+import '../../kpis/messages';
 
 export {};

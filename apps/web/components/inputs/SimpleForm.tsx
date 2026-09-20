@@ -23,6 +23,8 @@
 import React, { useRef, useState } from 'react';
 import type { Material, SimulationRequest, WeatherSeries } from '@shelter/engine';
 import { actions, useStore } from '../../lib/store';
+import { t, type Locale } from '../../lib/i18n';
+import './messages';
 import {
   GLAZINGS,
   OCCUPANCY_PRESETS,
@@ -85,7 +87,9 @@ export const CONTROL_NAMES = [
   'occupancy',
 ] as const;
 
-const ORIENTATION_LABEL: Record<Orientation, string> = { S: 'South-facing', E: 'East-facing', W: 'West-facing', N: 'North-facing' };
+function orientationLabel(o: Orientation, locale: Locale): string {
+  return t(`inputs.simpleForm.windows.orientation.${o}`, locale);
+}
 
 function MaterialSelect({
   id,
@@ -93,6 +97,7 @@ function MaterialSelect({
   title,
   value,
   materials,
+  locale,
   onChange,
 }: {
   id: string;
@@ -100,6 +105,7 @@ function MaterialSelect({
   title: string;
   value: string;
   materials: Material[];
+  locale: Locale;
   onChange: (materialId: string) => void;
 }) {
   const selected = materials.find((m) => m.id === value);
@@ -109,7 +115,9 @@ function MaterialSelect({
         {label}
       </label>
       <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
-        {materials.length === 0 && <option value={value}>{value || 'Loading materials...'}</option>}
+        {materials.length === 0 && (
+          <option value={value}>{value || t('inputs.simpleForm.materialSelect.loading', locale)}</option>
+        )}
         {materials.map((m) => (
           <option key={m.id} value={m.id}>
             {m.name}
@@ -119,7 +127,9 @@ function MaterialSelect({
       {selected?.blurb && <p style={{ fontSize: 12, color: '#475569', margin: '2px 0' }}>{selected.blurb}</p>}
       {selected?.source && (
         <details>
-          <summary style={{ cursor: 'pointer', fontSize: 12 }}>Where this number comes from</summary>
+          <summary style={{ cursor: 'pointer', fontSize: 12 }}>
+            {t('inputs.simpleForm.materialSelect.sourceSummary', locale)}
+          </summary>
           <p data-testid={`citation-${id}`} style={{ fontSize: 12, color: '#475569' }}>
             {selected.source}
           </p>
@@ -131,7 +141,7 @@ function MaterialSelect({
 
 export function SimpleForm() {
   const state = useStore();
-  const { request, selectedSurfaceId } = state;
+  const { request, selectedSurfaceId, locale } = state;
   const materialsState = useMaterialsCatalogue();
   const materials: Material[] = materialsState.status === 'ready' ? materialsState.materials : [];
 
@@ -159,14 +169,13 @@ export function SimpleForm() {
        * of leaving the rest of the app silently stuck on stale numbers. */}
       {state.status === 'error' && state.error && (
         <p role="alert" data-testid="simple-form-error" style={{ fontSize: 13, color: '#991b1b', margin: 0 }}>
-          That combination could not be simulated ({state.error.message}). Try a different value for
-          whatever you just changed.
+          {t('inputs.simpleForm.error', locale).replace('{message}', state.error.message)}
         </p>
       )}
       {/* 1. LOCATION */}
       <div data-testid="control-location">
-        <label htmlFor="input-location" title="Which town's weather this design is tested against.">
-          Location
+        <label htmlFor="input-location" title={t('inputs.simpleForm.location.title', locale)}>
+          {t('inputs.simpleForm.location.label', locale)}
         </label>
         <select
           id="input-location"
@@ -178,7 +187,9 @@ export function SimpleForm() {
               return;
             }
             setLocationNotice(
-              `Full weather for ${loc.name} is not bundled into this build's browser client yet (a known gap, see log/AREA-F-frontend.md T-44) -- still showing ${request.site.name}'s weather.`,
+              t('inputs.simpleForm.location.notice', locale)
+                .replace('{location}', loc.name)
+                .replace('{site}', request.site.name),
             );
           }}
         >
@@ -205,8 +216,8 @@ export function SimpleForm() {
 
       {/* 2. DATE */}
       <div data-testid="control-date">
-        <label htmlFor="input-date" title="Which day of the year to test. Ladakh's coldest nights are in mid-January.">
-          Design day
+        <label htmlFor="input-date" title={t('inputs.simpleForm.date.title', locale)}>
+          {t('inputs.simpleForm.date.label', locale)}
         </label>
         <input
           id="input-date"
@@ -223,8 +234,8 @@ export function SimpleForm() {
 
       {/* 3. SIZE */}
       <fieldset data-testid="control-size">
-        <legend title="The shelter's floor size and wall height.">Size</legend>
-        <label htmlFor="input-length">Length (m)</label>
+        <legend title={t('inputs.simpleForm.size.title', locale)}>{t('inputs.simpleForm.size.legend', locale)}</legend>
+        <label htmlFor="input-length">{t('inputs.simpleForm.size.length', locale)}</label>
         <input
           id="input-length"
           type="number"
@@ -234,7 +245,7 @@ export function SimpleForm() {
           value={size.lengthM}
           onChange={(e) => update(setSize(request, { ...size, lengthM: Number(e.target.value) }))}
         />
-        <label htmlFor="input-width">Width (m)</label>
+        <label htmlFor="input-width">{t('inputs.simpleForm.size.width', locale)}</label>
         <input
           id="input-width"
           type="number"
@@ -244,7 +255,7 @@ export function SimpleForm() {
           value={size.widthM}
           onChange={(e) => update(setSize(request, { ...size, widthM: Number(e.target.value) }))}
         />
-        <label htmlFor="input-height">Height (m)</label>
+        <label htmlFor="input-height">{t('inputs.simpleForm.size.height', locale)}</label>
         <input
           id="input-height"
           type="number"
@@ -257,8 +268,14 @@ export function SimpleForm() {
       </fieldset>
 
       {/* 4. SHELTER TYPE / PRESET PICKER */}
-      <div data-testid="control-shelterType" role="radiogroup" aria-label="Shelter type">
-        <p title="A ready-made starting point. Loading one sets every material and window below.">Shelter type</p>
+      <div
+        data-testid="control-shelterType"
+        role="radiogroup"
+        aria-label={t('inputs.simpleForm.shelterType.label', locale)}
+      >
+        <p title={t('inputs.simpleForm.shelterType.title', locale)}>
+          {t('inputs.simpleForm.shelterType.label', locale)}
+        </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {PRESET_SUMMARIES.map((p) => (
             <button
@@ -291,44 +308,50 @@ export function SimpleForm() {
       <div data-testid="control-wallMaterial">
         <MaterialSelect
           id="input-wall-material"
-          label="Wall material"
-          title="What the outer walls are built from."
+          label={t('inputs.simpleForm.wallMaterial.label', locale)}
+          title={t('inputs.simpleForm.wallMaterial.title', locale)}
           value={currentWallMaterialId(request.building)}
           materials={materials}
+          locale={locale}
           onChange={(id) => update(setWallMaterial(request, id, materials))}
         />
       </div>
       <div data-testid="control-roofMaterial">
         <MaterialSelect
           id="input-roof-material"
-          label="Roof material"
-          title="What the roof is built from."
+          label={t('inputs.simpleForm.roofMaterial.label', locale)}
+          title={t('inputs.simpleForm.roofMaterial.title', locale)}
           value={currentRoofMaterialId(request.building)}
           materials={materials}
+          locale={locale}
           onChange={(id) => update(setRoofMaterial(request, id, materials))}
         />
       </div>
       <div data-testid="control-floorMaterial">
         <MaterialSelect
           id="input-floor-material"
-          label="Floor material"
-          title="What the floor is built from."
+          label={t('inputs.simpleForm.floorMaterial.label', locale)}
+          title={t('inputs.simpleForm.floorMaterial.title', locale)}
           value={currentFloorMaterialId(request.building)}
           materials={materials}
+          locale={locale}
           onChange={(id) => update(setFloorMaterial(request, id, materials))}
         />
       </div>
 
       {/* 8. WINDOW AMOUNT (per orientation) */}
       <fieldset data-testid="control-windows">
-        <legend title="How much of each wall is glass.">Window size, by direction</legend>
+        <legend title={t('inputs.simpleForm.windows.title', locale)}>
+          {t('inputs.simpleForm.windows.legend', locale)}
+        </legend>
         {ORIENTATIONS.map((o) => {
           const pct = Math.round(currentWwr(request.building, o) * 100);
           const id = `input-wwr-${o}`;
           return (
             <div key={o}>
               <label htmlFor={id}>
-                {ORIENTATION_LABEL[o]} windows: {pct}% of that wall
+                {orientationLabel(o, locale)}{' '}
+                {t('inputs.simpleForm.windows.percentSuffix', locale).replace('{pct}', String(pct))}
               </label>
               <input
                 id={id}
@@ -346,8 +369,8 @@ export function SimpleForm() {
 
       {/* 9. GLAZING TYPE (+ night shutters) */}
       <div data-testid="control-glazing">
-        <label htmlFor="input-glazing" title="How many panes of glass, and how well they hold heat in.">
-          Window glazing type
+        <label htmlFor="input-glazing" title={t('inputs.simpleForm.glazing.title', locale)}>
+          {t('inputs.simpleForm.glazing.label', locale)}
         </label>
         <select
           id="input-glazing"
@@ -370,14 +393,14 @@ export function SimpleForm() {
             checked={nightShuttersEnabled(request.building)}
             onChange={(e) => update(setNightShutters(request, e.target.checked))}
           />{' '}
-          Close an insulating shutter over the windows at night
+          {t('inputs.simpleForm.glazing.nightShutter', locale)}
         </label>
       </div>
 
       {/* 10. OCCUPANCY / HEATING PRESET */}
       <div data-testid="control-occupancy">
-        <label htmlFor="input-occupancy" title="Who lives here and whether there is a heater running.">
-          Who&apos;s staying here
+        <label htmlFor="input-occupancy" title={t('inputs.simpleForm.occupancy.title', locale)}>
+          {t('inputs.simpleForm.occupancy.label', locale)}
         </label>
         <select
           id="input-occupancy"

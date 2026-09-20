@@ -2876,10 +2876,9 @@ GOTCHAS for the next agent:
 
 ---
 
-### [~] T-74 — Wire i18n into `SimpleForm.tsx` and `KpiColumn.tsx` to close T-52's own test 11
+### [x] T-74 — Wire i18n into `SimpleForm.tsx` and `KpiColumn.tsx` to close T-52's own test 11
 
-**Status:** CLAIMED by orchestrator-dispatched-subagent at 2026-09-20T00:00:00Z (placeholder —
-subagent must overwrite with its own real timestamp on claim) · **Est:** 3 h
+**Status:** DONE · **Est:** 3 h
 **Area:** F — Frontend (new task, raised by T-52's own Evidence block and named as the highest-
 priority follow-up in session 7's and session 8's HANDOFFs)
 **Depends on:** T-47, T-51, T-52 · **Conflicts with:** T-44 (both touch
@@ -2972,10 +2971,156 @@ above.
 
 **Evidence (fill this in when done — numbers, not adjectives):**
 ```
-(subagent fills this in)
+Created:
+  apps/web/components/inputs/messages.ts  -- 33 en keys / 33 hi keys, prefix
+    inputs.simpleForm.*, registers into both 'en' and 'hi' at load time.
+  apps/web/components/kpis/messages.ts    -- 20 en keys / 20 hi keys, prefix
+    kpis.column.*, same pattern.
+Edited: apps/web/components/inputs/SimpleForm.tsx, apps/web/components/kpis/
+  KpiColumn.tsx (side-effect import of own ./messages + t()/locale wiring for
+  every label/legend/title/status string), apps/web/components/meta/locale/
+  aggregator.ts (two new side-effect import lines only).
+
+DECISIONS (for the next agent):
+- Two keys carry a `{token}` placeholder instead of true interpolation
+  (inputs.simpleForm.error -- {message}; inputs.simpleForm.location.notice --
+  {location}/{site}; inputs.simpleForm.windows.percentSuffix -- {pct}):
+  lib/i18n.ts's t() takes no interpolation args, so the component does
+  `t(key, locale).replace('{token}', value)` itself. Documented in
+  messages.ts's own header.
+- Orientation labels (South/East/West/North-facing) were hardcoded directly
+  in SimpleForm.tsx (not catalog-driven), so they got their own keys
+  (inputs.simpleForm.windows.orientation.{S,E,W,N}); a small `orientationLabel()`
+  helper replaces the old static ORIENTATION_LABEL map.
+- MaterialSelect (used for wall/roof/floor material) took its "Loading
+  materials..." and "Where this number comes from" strings as a new `locale`
+  prop, since that sub-component owns those two literals itself.
+- Deliberately NOT translated: (a) catalog-driven text (preset names/blurbs,
+  material names/blurbs/sources, glazing names/blurbs, occupancy preset
+  names/blurbs) -- these come from ./catalog.ts and the materials API, not
+  hardcoded in SimpleForm.tsx, and catalog.ts is outside this task's
+  allow-list; (b) `meta.warnings` entries in KpiColumn's WarningsList --
+  dynamic, engine-generated text, not a label this component owns; (c) unit
+  ABBREVIATIONS produced either by lib/units.ts (°C, K, kWh, ₹ -- off this
+  task's allow-list) or written as literal abbreviations in KpiColumn.tsx
+  itself (h, /day, L/yr, /yr, kg/yr) -- left as internationally-recognised
+  notation by design (documented in kpis/messages.ts's header), not a gap.
+  Descriptive English suffix TEXT ("vs outside air", "(dimensionless)") *is*
+  translated, distinguishing "abbreviation" from "sentence".
+- data-testid, props, layout and non-text logic in both files are byte-for-
+  byte unchanged from before this task -- only string literals rendered to
+  the user were touched.
+
+GOTCHA for the next agent: this worktree's `npx tsc --noEmit -p
+apps/web/tsconfig.json` and `npm run build --workspace apps/web` both failed
+against a fresh `npm install` with 16 Prisma-client-generation errors in
+lib/repo/*.ts (Prisma types not generated yet) -- NOT a code defect, and NOT
+requiring a database: `npx prisma generate --schema apps/web/prisma/schema.prisma`
+(a non-destructive, schema-only command, no DB connection needed) fixed both
+checks immediately. No `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` gate was
+hit or needed -- `prisma generate` is not on that gate's list of commands.
+
+CONDITIONS CHECKLIST -- all 9 acceptance tests PASS:
+
+1. PASS. apps/web/components/inputs/messages.ts and apps/web/components/kpis/
+   messages.ts both exist, both call registerMessages for 'en' and 'hi'.
+   Key counts (verified with a small Node script parsing each
+   registerMessages(...) block): inputs -- 33 en / 33 hi; kpis -- 20 en / 20 hi.
+
+2. PASS.
+   $ grep -c "registerMessages\|t('" apps/web/components/inputs/SimpleForm.tsx
+   29
+   $ grep -c "registerMessages\|t('" apps/web/components/kpis/KpiColumn.tsx
+   20
+   Manual review of both files after editing found no remaining hardcoded
+   user-facing label/legend/title/status string (data-testid strings, and the
+   catalog-driven/dynamic text listed under DECISIONS above, are not labels
+   in scope). Diff stat:
+   apps/web/components/inputs/SimpleForm.tsx | 83 +++++++++++++--------
+    1 file changed, 53 insertions(+), 30 deletions(-)
+   apps/web/components/kpis/KpiColumn.tsx | 100 +++++++++++++++++++++--------
+    1 file changed, 78 insertions(+), 22 deletions(-)
+
+3. PASS. `git diff -- apps/web/components/meta/locale/aggregator.ts`:
+   @@ -23,5 +23,7 @@
+   +import '../../inputs/messages';
+   +import '../../kpis/messages';
+
+    export {};
+   2 insertions(+), 0 deletions(-). `git diff --stat -- apps/web/components/meta/`
+   shows only this one file, only these two lines -- nothing else under
+   components/meta/** touched.
+
+4. PASS. Real AppShell (react-dom/server renderToStaticMarkup, no jsdom,
+   real bundled Leh preset through the real engine) rendered twice, once at
+   store.locale='en' and once at 'hi', via a temporary vitest file (deleted
+   after evidence captured, same convention T-52/T-73 used -- not part of the
+   committed diff). Both renders searched for the literal substrings
+   "inputs.simpleForm." and "kpis.column." -- zero occurrences in either
+   locale (no key ever leaks as raw text). Before/after label pairs (4 of the
+   required 4, 2 per component):
+     SimpleForm  "Location"              -> "स्थान"
+     SimpleForm  "Window glazing type"   -> "खिड़की के शीशे का प्रकार"
+     KpiColumn   "06:00 temperature"     -> "06:00 तापमान"
+     KpiColumn   "Hours in comfort"      -> "आरामदायक घंटे"
+   (also checked and passing: "Who's staying here" -> "यहाँ कौन रह रहा है",
+   "Running cost" -> "परिचालन लागत"). This is T-52's own acceptance test 11,
+   now provable end-to-end through the real shell.
+
+5. PASS. A deliberately-unregistered key
+   (`inputs.simpleForm.__test.onlyEnglish`, registered only for 'en') looked
+   up as `t(key, 'hi')` -> "English-only test text" (the English value, not
+   the key). A key registered nowhere
+   (`inputs.simpleForm.__test.totallyUnregistered`) looked up the same way ->
+   the literal key string itself (lib/i18n.ts's own "never undefined, never a
+   throw" contract, same distinction T-52's own test 12 draws between a
+   partially-translated key and a truly unregistered one).
+
+6. PASS. `npx tsc --noEmit -p apps/web/tsconfig.json`: 0 errors, both before
+   (git stash) and after this task's change, with the Prisma client
+   generated (see GOTCHA above) -- 0 new errors.
+
+7. PASS. `npm run build --workspace apps/web` exits 0. Only warning: the
+   expected, pre-existing topLevelAwait warning from
+   @shelter/engine/dist/serialise.js (via lib/units.ts -> app-shell.tsx) --
+   not a regression, all 7 routes built.
+
+8. PASS. `npx vitest run apps/web/components/inputs apps/web/components/kpis
+   apps/web/components/meta`:
+   Before (git stash, pre-task): Test Files 6 passed (6) / Tests 40 passed (40)
+   After  (this task's change):  Test Files 6 passed (6) / Tests 40 passed (40)
+   Identical pass count -- this task added no new permanent test file (its
+   own verification used a temporary, deleted vitest file per acceptance
+   test 4's own instruction to reuse T-52/T-73's no-jsdom pattern), so the
+   count is unchanged, not regressed.
+
+9. PASS. `grep -rn "273\.15" apps/web/components/inputs/messages.ts
+   apps/web/components/kpis/messages.ts` -> 0 matches.
+
+Commands to build/run/test:
+  npm install
+  npm run build --workspace @shelter/engine
+  npm run build --workspace @shelter/data
+  npm run build --workspace @shelter/optimise
+  find packages -name "*.tsbuildinfo" -delete
+  npx prisma generate --schema apps/web/prisma/schema.prisma   (no DB needed)
+  npx tsc --noEmit -p apps/web/tsconfig.json
+  npm run build --workspace apps/web
+  npx vitest run apps/web/components/inputs apps/web/components/kpis apps/web/components/meta
+
+Not run: the full `apps/web` vitest suite (Area D's database-tier tests hang
+without a live DB and are outside this task's scope; the task brief says
+"you do NOT need a local database for this task" and names only the three
+directories above for its own test 8).
+
+Nothing left half-finished. All 9 acceptance tests pass with pasted, measured
+evidence. T-52's own status/count is deliberately left untouched (its
+cross-task reconciliation to `[x]` is the orchestrator's job, per this task's
+own instructions), even though the specific gap its test 11 named is now
+closed.
 ```
 
-**Completed by:** _(fill in)_  **Date:** _(fill in)_
+**Completed by:** T-74 subagent (abhinav77negi@gmail.com)  **Date:** 2026-09-20
 
 ---
 

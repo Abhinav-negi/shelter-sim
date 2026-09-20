@@ -18,20 +18,23 @@ import React from 'react';
 import type { SimulationResult } from '@shelter/engine';
 import { useStore } from '../../lib/store';
 import { formatDeltaT, formatEnergy, formatHours, formatINR, formatTempC } from '../../lib/units';
+import { t, type Locale } from '../../lib/i18n';
+import './messages';
 import { badgeFor } from './badge';
 import { deltaVsAmbientAt0600 } from './cards';
 import styles from './KpiColumn.module.css';
 
-function IntegrityBadge({ meta }: { meta: SimulationResult['meta'] }) {
+function IntegrityBadge({ meta, locale }: { meta: SimulationResult['meta']; locale: Locale }) {
   const badge = badgeFor(meta.energyBalanceResidual);
   return (
     <div
       className={`${styles.badge} ${badge.ok ? styles.badgeOk : styles.badgeBad}`}
       data-testid="integrity-badge"
       data-status={badge.ok ? 'ok' : 'bad'}
-      title="Energy balance residual: |net energy in − stored energy| ÷ gross energy throughput, over the reported run (CONTRACTS.md §7.4). Below 0.1% is a converged, trustworthy result."
+      title={t('kpis.column.integrityBadge.title', locale)}
     >
-      Energy balance: {badge.text}
+      {t('kpis.column.integrityBadge.label', locale)}
+      {badge.text}
     </div>
   );
 }
@@ -78,44 +81,97 @@ function Card({
 }
 
 export function KpiColumn() {
-  const { result } = useStore();
+  const { result, locale } = useStore();
 
   if (!result) {
     return (
       <div className={styles.column} data-testid="kpi-column-empty">
-        No result yet.
+        {t('kpis.column.empty', locale)}
       </div>
     );
   }
 
   const { kpis, meta } = result;
   const delta = deltaVsAmbientAt0600(result);
-  const deltaSub = delta === null ? undefined : `${delta >= 0 ? '+' : ''}${formatDeltaT(delta)} vs outside air`;
+  const deltaSub =
+    delta === null
+      ? undefined
+      : `${delta >= 0 ? '+' : ''}${formatDeltaT(delta)} ${t('kpis.column.vsOutsideAir', locale)}`;
+  const dimensionless = t('kpis.column.dimensionlessSuffix', locale);
 
   return (
     <div className={styles.column} data-testid="kpi-column">
-      <IntegrityBadge meta={meta} />
+      <IntegrityBadge meta={meta} locale={locale} />
       <WarningsList warnings={meta.warnings} />
 
       <div className={styles.grid}>
-        <Card label="06:00 temperature" value={formatTempC(kpis.tempAt0600)} sub={deltaSub} testId="kpi-0600" />
-        <Card label="Hours in comfort" value={`${kpis.hoursInComfort.toFixed(1)} h`} testId="kpi-hours-comfort" />
-        <Card label="Auxiliary heating" value={`${formatEnergy(kpis.auxEnergyKWhPerDay)}/day`} testId="kpi-aux" />
-        <Card label="Fuel (kerosene-equivalent)" value={`${kpis.keroseneEquivalentLitresPerYear.toFixed(1)} L/yr`} testId="kpi-fuel" />
-        <Card label="Running cost" value={`${formatINR(kpis.costPerYearINR)}/yr`} testId="kpi-cost" />
-        <Card label="CO2 emitted" value={`${kpis.co2EquivalentKgPerYear.toFixed(1)} kg/yr`} testId="kpi-co2" />
-        <Card label="Min indoor temperature" value={formatTempC(kpis.minIndoorTemp)} testId="kpi-min" />
-        <Card label="Max indoor temperature" value={formatTempC(kpis.maxIndoorTemp)} testId="kpi-max" />
-        <Card label="Mean indoor temperature" value={formatTempC(kpis.meanIndoorTemp)} testId="kpi-mean" />
-        <Card label="Daily swing (peak to peak)" value={formatDeltaT(kpis.peakToPeakSwing)} testId="kpi-swing" />
-        <Card label="Decrement factor" value={`${kpis.decrementFactor.toFixed(3)} (dimensionless)`} testId="kpi-decrement" />
-        <Card label="Time lag" value={`${kpis.timeLagHours.toFixed(1)} h`} testId="kpi-lag" />
-        <Card label="Hours below 5 °C" value={`${kpis.hoursBelow5C.toFixed(1)} h`} testId="kpi-below5" />
-        <Card label="Hours below freezing" value={`${kpis.hoursBelowFreezing.toFixed(1)} h`} testId="kpi-freezing" />
+        <Card
+          label={t('kpis.column.card.temp0600', locale)}
+          value={formatTempC(kpis.tempAt0600)}
+          sub={deltaSub}
+          testId="kpi-0600"
+        />
+        <Card
+          label={t('kpis.column.card.hoursComfort', locale)}
+          value={`${kpis.hoursInComfort.toFixed(1)} h`}
+          testId="kpi-hours-comfort"
+        />
+        <Card
+          label={t('kpis.column.card.auxHeating', locale)}
+          value={`${formatEnergy(kpis.auxEnergyKWhPerDay)}/day`}
+          testId="kpi-aux"
+        />
+        <Card
+          label={t('kpis.column.card.fuel', locale)}
+          value={`${kpis.keroseneEquivalentLitresPerYear.toFixed(1)} L/yr`}
+          testId="kpi-fuel"
+        />
+        <Card
+          label={t('kpis.column.card.cost', locale)}
+          value={`${formatINR(kpis.costPerYearINR)}/yr`}
+          testId="kpi-cost"
+        />
+        <Card
+          label={t('kpis.column.card.co2', locale)}
+          value={`${kpis.co2EquivalentKgPerYear.toFixed(1)} kg/yr`}
+          testId="kpi-co2"
+        />
+        <Card label={t('kpis.column.card.minTemp', locale)} value={formatTempC(kpis.minIndoorTemp)} testId="kpi-min" />
+        <Card label={t('kpis.column.card.maxTemp', locale)} value={formatTempC(kpis.maxIndoorTemp)} testId="kpi-max" />
+        <Card
+          label={t('kpis.column.card.meanTemp', locale)}
+          value={formatTempC(kpis.meanIndoorTemp)}
+          testId="kpi-mean"
+        />
+        <Card
+          label={t('kpis.column.card.swing', locale)}
+          value={formatDeltaT(kpis.peakToPeakSwing)}
+          testId="kpi-swing"
+        />
+        <Card
+          label={t('kpis.column.card.decrement', locale)}
+          value={`${kpis.decrementFactor.toFixed(3)} ${dimensionless}`}
+          testId="kpi-decrement"
+        />
+        <Card label={t('kpis.column.card.timeLag', locale)} value={`${kpis.timeLagHours.toFixed(1)} h`} testId="kpi-lag" />
+        <Card
+          label={t('kpis.column.card.below5', locale)}
+          value={`${kpis.hoursBelow5C.toFixed(1)} h`}
+          testId="kpi-below5"
+        />
+        <Card
+          label={t('kpis.column.card.belowFreezing', locale)}
+          value={`${kpis.hoursBelowFreezing.toFixed(1)} h`}
+          testId="kpi-freezing"
+        />
         {/* CONTRACTS.md §7.7: null must render as "not available", never as
          * "0 hours" -- rendering null as zero is a lie about data quality.
          * `formatHours` (lib/units.ts) already implements exactly that. */}
-        <Card label="Condensation risk" value={formatHours(kpis.condensationRiskHours)} testId="kpi-condensation" />
+        <Card
+          label={t('kpis.column.card.condensation', locale)}
+          value={formatHours(kpis.condensationRiskHours)}
+          testId="kpi-condensation"
+        />
       </div>
     </div>
   );
