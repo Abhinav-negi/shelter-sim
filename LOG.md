@@ -367,7 +367,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 | `log/AREA-E/T-41.md` |
 | [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 | `log/AREA-E/T-42.md` |
 
-### Area F — Frontend — 12 / 15 (T-52 reconciled `[x]` a prior session — T-73 and T-74 both closed its remaining gaps, re-verified end-to-end by the orchestrator, see its Evidence block's RECONCILIATION note; T-75 added this session, raised from that session's own HANDOFF) — `log/AREA-F/`
+### Area F — Frontend — 13 / 15 (T-52 reconciled `[x]` a prior session — T-73 and T-74 both closed its remaining gaps, re-verified end-to-end by the orchestrator, see its Evidence block's RECONCILIATION note; T-75 added this session, raised from that session's own HANDOFF, and landed this session) — `log/AREA-F/`
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
@@ -385,7 +385,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 | `log/AREA-F/T-71.md` |
 | [x] | T-73 | Wire T-52's meta components into app-shell.tsx's `slot-assumptions` | T-52 | `log/AREA-F/T-73.md` |
 | [x] | T-74 | Wire i18n into `SimpleForm.tsx`/`KpiColumn.tsx` to close T-52's test 11 | T-47, T-51, T-52 | `log/AREA-F/T-74.md` |
-| [~] | T-75 | Stack T-53's `<DayNightAnimation>` behind `<HouseView>` in `slot-house` | T-53, T-71 | `log/AREA-F/T-75.md` |
+| [x] | T-75 | Stack T-53's `<DayNightAnimation>` behind `<HouseView>` in `slot-house` | T-53, T-71 | `log/AREA-F/T-75.md` |
 
 ### Area G — Decision support — 0 / 5 — `log/AREA-G/`
 

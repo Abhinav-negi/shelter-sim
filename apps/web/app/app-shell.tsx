@@ -34,6 +34,7 @@ import { t } from '../lib/i18n';
 import { SimpleForm } from '../components/inputs';
 import { AdvancedPanel } from '../components/advanced/AdvancedPanel';
 import { HouseView } from '../components/house';
+import { DayNightAnimation } from '../components/house/daynight';
 import { TempChart, type TempChartVariant } from '../components/charts/temp/TempChart';
 import { SolarPanel } from '../components/charts/solar/SolarPanel';
 import { HeatFlowPanel } from '../components/charts/heatflow';
@@ -110,8 +111,14 @@ export function AppShell({ initialRequest, initialResult, initialPresetId }: App
       </aside>
 
       <main className="col" aria-label="house and views">
-        {/* T-46: the isometric house, click-a-wall, scrub-the-day */}
-        <HouseView />
+        {/* T-46: the isometric house, click-a-wall, scrub-the-day.
+            T-75: T-53's DayNightAnimation stacked behind it -- same order
+            matters: DayNightAnimation first (painted behind, pointer-events
+            none), HouseView second (painted on top, clickable). */}
+        <div style={{ position: 'relative' }}>
+          <DayNightAnimation />
+          <HouseView />
+        </div>
 
         <nav className="tabstrip" role="tablist" aria-label="views">
           {TABS.map((tab) => (
