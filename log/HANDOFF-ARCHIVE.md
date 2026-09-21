@@ -38,7 +38,7 @@ that actually drives spin-up day-count down). Small, surgical: two new optional 
 (`serialise.ts`). All 8 acceptance tests independently re-verified by the orchestrator: fresh
 package-scoped `npx vitest run packages` (21 files / 257 passed / 10 skipped, matching), fresh
 `npx eslint` on the four touched files (0 problems), confirmed `gate.test.ts` untouched, confirmed
-the field is genuinely *absent* (not `undefined`-valued) when unrequested. Also fixed a pre-existing
+the field is genuinely _absent_ (not `undefined`-valued) when unrequested. Also fixed a pre-existing
 stale Area B dashboard header (was reading "15/16" when the true count, matching the §5 table, was
 "16/17").
 
@@ -50,7 +50,7 @@ independently by the orchestrator via a package-scoped rebuild + `npm run test -
 packages/optimise`, 11/11), but the honestly re-measured speedup is still only **~1.1–1.4x, not
 2x** — this specific fixture (`wallConstruction`/`wwr:S`/`buildingAzimuth`) perturbs the
 solar-driven boundary condition and overall level within a mass-hash group, not the through-wall
-gradient *shape* that T-76's own test 3 proved the real vector can exploit. No further fix is
+gradient _shape_ that T-76's own test 3 proved the real vector can exploit. No further fix is
 available within either T-54's or T-76's file allow-lists; closing this would need either a
 different acceptance-test-4 variable set (arguably fitting the test to the mechanism) or a
 different engine-side sharing strategy (trajectory sharing, not just the converged endpoint) — a
