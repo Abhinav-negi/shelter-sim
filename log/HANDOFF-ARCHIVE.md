@@ -4,6 +4,99 @@
 > only the single most recent HANDOFF; when a session writes a new one, the previous
 > occupant of that slot moves here, inserted at the top (newest-archived-first).
 
+## HANDOFF (2026-09-20, end of session — ninth session)
+
+**Completed this session: ledger moved 54 / 73 → 56 / 74.** Two boxes flipped: **T-74** (new task,
+raised from session 7/8's own top-priority HANDOFF recommendation) and **T-52** (reconciled from
+`[!]` to `[x]` once T-74 closed its last remaining gap). One new task id created and closed in the
+same session, same "orchestrator creates the follow-up task from the prior HANDOFF" pattern
+T-70/T-71/T-72/T-73 all established.
+
+**Session start found a discrepancy worth recording:** session 8's own HANDOFF claimed "no open
+worktrees" and "no tasks claimed," but `git worktree list` at this session's start showed an
+existing `../wt-T-74` worktree on branch `task/T-74`, sitting at master's tip with zero commits and
+zero diff. Investigated before doing anything else (per ORCHESTRATOR.md §3's own instruction to
+check worktrees/branches at session start): harmless, not a sign of lost work, just an
+unaccounted-for empty scaffold. Reused it rather than deleting it, since its id already matched the
+task this session intended to raise anyway.
+
+**T-74 (NEW task, Area F — wire i18n into `SimpleForm.tsx`/`KpiColumn.tsx`) — `[x]`:** closed the
+top-priority gap both session 7's and session 8's HANDOFFs named. Added
+`components/inputs/messages.ts` (33 EN/33 HI keys) and `components/kpis/messages.ts` (20 EN/20 HI
+keys), following `components/meta/messages.ts`'s exact `registerMessages` pattern; wired both into
+their components via `t(key, locale)`; added the two documented side-effect import lines to
+`components/meta/locale/aggregator.ts` (and nothing else in `components/meta/**`). All 9 acceptance
+tests independently re-verified by the orchestrator, not just mirrored from the subagent's report:
+fresh `tsc --noEmit` (0 errors), fresh `npm run build --workspace apps/web` (exit 0), fresh
+`npx vitest run apps/web/components/{inputs,kpis,meta}` (6 files / 40 tests, matching the subagent's
+count), `git diff --stat` against the true merge-base confirming the allow-list was respected
+exactly (only the 5 intended files plus the two ledger files touched), `grep -rn "273\.15"` on both
+new `messages.ts` files empty, and a live re-render of the real `AppShell` (via
+`react-dom/server`'s `renderToStaticMarkup`, real bundled Leh preset through the real engine, no
+jsdom) with `store.locale = 'hi'` showing translated labels and zero leaked `inputs.simpleForm.` /
+`kpis.column.` key substrings in the output.
+
+**T-52 (assumptions panel, exports, offline banner, i18n, Area F) — reconciled `[!]` → `[x]`:** its
+own Evidence block from session 7 named exactly two gaps outside its allow-list — test 8 (app-shell
+wiring) and test 11 (SimpleForm/KpiColumn i18n) — both now closed, by T-73 (session 7) and T-74
+(this session) respectively. Re-verified end-to-end this session with one additional check beyond
+what either subagent ran: a single real `AppShell` render, locale forced to `'hi'`, confirming
+**both** gaps simultaneously — `data-testid="assumptions-panel"` present (test 8) and real Hindi
+text with no leaked translation keys anywhere in the tree, including SimpleForm/KpiColumn labels
+(test 11). All 13 of T-52's own acceptance tests now hold. The original 11/13 evidence from session
+7 is left untouched in the Area file as the historical record of what T-52 itself could prove
+standalone; a RECONCILIATION note is appended below it, not merged into it, so the two are never
+confused.
+
+**Full suite, measured fresh on master after both merges:** `npx vitest run` → **45 files, 487
+passed, 10 skipped (497 total), exit 0**. `full simulate() incl. spin-up: 31.9 ms/run`,
+`100-variant sweep: 2.88 s` (both slightly better than session 7's own baseline of 34.4 ms / 3.40 s
+— within normal run-to-run variance, not a claimed improvement). One anomaly worth flagging for the
+next session: this run's wall-clock duration was **355.65 s**, far longer than session 7's report of
+a fast run, even though the per-file numbers and pass counts are identical — most likely system load
+from other processes running concurrently on this machine during the run, not a regression in the
+suite itself (the two numbers that actually matter, the perf budget and the pass count, are both
+fine). Not investigated further this session; if a future session sees the same slowdown with
+nothing else running, that would be worth a real look. `npx tsc --noEmit -p apps/web/tsconfig.json`:
+0 errors. `npm run build --workspace apps/web`: exit 0 (the one pre-existing, unrelated
+`topLevelAwait` warning from `@shelter/engine/dist/serialise.js`).
+
+**Worktrees/branches:** `../wt-T-74` removed and `task/T-74` deleted after merging, confirmed clean
+(`git worktree list` shows only the main checkout). Several older merged branches
+(`task/T-52`, `task/T-53`, `task/T-62`, `task/T-64`, `task/T-71`, `task/T-72`, `task/T-73`) are still
+present locally from prior sessions — left untouched, as they were already there at this session's
+start and cleaning them up was not part of this session's task; harmless either way since they carry
+no unmerged work (all already folded into master).
+
+**In progress:** nothing. No open claims, no open worktrees.
+
+**Recommended next step:** the two follow-ups session 7's HANDOFF named as lower priority than the
+now-closed i18n gap, neither claimed as a task id yet: (1) wire T-53's `<DayNightAnimation>` into
+`HouseView`/`app-shell.tsx` (no overlay slot exists yet — T-53's own Evidence block flags this); (2)
+T-66 (PWA/offline) is more ready than before (T-52 and its wiring are now fully closed), but its
+acceptance tests 9 and 11 still need T-57 (AI template fallback) and T-50 (survival grid), neither
+done — expect a partial/blocked result if claimed now, same shape as T-44. Third, in strict
+ledger-scan order once those land: `npm run format:check` is still red (115 pre-existing files,
+found while verifying T-72 two sessions ago) — unrelated to lint config, nobody owns Prettier
+formatting as a task yet.
+
+**Blocked tasks (unchanged from session 7, T-52 now removed from this list since it reconciled):**
+T-44 `[!]` (human test subject + app-shell wiring — the app-shell half is now arguably closeable
+since T-71/T-73 both landed, but the human-test-subject half of test 1 still needs a named human
+owner); T-50 `[!]` (originally blocked on T-47, now needs re-assessment since T-47 is done); T-54
+`[!]` (warm-state speedup finding documented); T-39/T-42/T-56/T-60 transitively blocked on T-54;
+T-61 `[!]` (human decision on test 9 wording); T-23 `[!]` (human-owned NOAA comparison).
+
+**Gotchas (all carried forward from prior sessions, none new this session):** worktrees need fresh
+`npm install` + workspace `dist` rebuild; a fresh worktree needs `npx prisma generate --schema
+apps/web/prisma/schema.prisma` (non-destructive, schema-only, does not touch any database, does not
+trigger the AI-agent consent gate) before `tsc`/`next build` will pass, since a bare `npm install`
+alone does not run Prisma's generator; `packages/engine/test/output/validation-numbers.csv` picks up
+harmless appended rows on every validation-suite run, discard before commit (done this session);
+LOG.md §5 dashboard counts need hand recomputation after merges; stale `.tsbuildinfo` files at
+package roots (not inside gitignored `dist/`) can cause phantom build failures — `find packages -name
+"*.tsbuildinfo" -delete` before trusting a build verification.
+
 ---
 
 ## HANDOFF (2026-09-20, end of session — eighth session)
