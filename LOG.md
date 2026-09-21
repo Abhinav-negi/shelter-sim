@@ -267,7 +267,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | C | Data layer | 5 / 5 | `log/AREA-C/` |
 | D | Database tier | 7 / 7 | `log/AREA-D/` |
 | E | Server tier | 5 / 7 | `log/AREA-E/` |
-| F | Frontend | 12 / 15 | `log/AREA-F/` |
+| F | Frontend | 13 / 15 | `log/AREA-F/` |
 | G | Decision support | 0 / 5 | `log/AREA-G/` |
 | H | Scenarios | 1 / 3 | `log/AREA-H/` |
 | I | Validation & credibility | 2 / 4 | `log/AREA-I/` |
