@@ -220,7 +220,8 @@ describe('acceptance test 4 -- spin-up sharing changes speed, not answers', () =
     const unsharedMs = performance.now() - t0;
 
     // "sharing enabled": the shipped runSweep, which seeds `options.initialTemperatureK`
-    // (T-70) from a uniform warm-start value cached per mass-hash group.
+    // (T-70) from the real per-node `warmState` (T-76) of the first variant computed
+    // per mass-hash group.
     const t1 = performance.now();
     const shared = await runSweep(req, syncRunner);
     const sharedMs = performance.now() - t1;
@@ -233,13 +234,10 @@ describe('acceptance test 4 -- spin-up sharing changes speed, not answers', () =
       maxDevK = Math.max(maxDevK, Math.abs(withSharing.kpis.tempAt0600 - unsharedResults[i]!.kpis.tempAt0600));
     }
 
-    // See sweep.ts's `warmStartFillK` doc and this task's Evidence block (2026-09-19
-    // continuation): the uniform warm start is the only construction that is safe
-    // without knowing @shelter/engine's internal node order, and it measurably cuts
-    // spin-up days (mean 12.29 -> 10.05 on this fixture) while keeping the deviation
-    // far inside budget -- but it does not reliably clear a 2x wall-clock speedup,
-    // because it carries no per-node spatial gradient. Measured, not asserted >= 2x
-    // here, because it would flap: honest numbers live in the Evidence block.
+    // See sweep.ts's `SpinUpCacheEntry` doc and this task's Evidence block (2026-09-21
+    // continuation, after T-76): the real per-node vector is the accurate warm start --
+    // measured, not asserted >= 2x here, because run-to-run wall-clock variance would
+    // flap a hard-coded threshold: honest numbers live in the Evidence block.
     expect(maxDevK).toBeLessThan(0.05);
     expect(unsharedMs).toBeGreaterThan(0);
     expect(sharedMs).toBeGreaterThan(0);
