@@ -266,18 +266,22 @@ with an Area file again, the Area file is right — fix this table.)*
 | C | Data layer | 5 / 5 | `log/AREA-C/` |
 | D | Database tier | 7 / 7 | `log/AREA-D/` |
 | E | Server tier | 5 / 7 | `log/AREA-E/` |
-| F | Frontend | 12 / 14 | `log/AREA-F/` |
+| F | Frontend | 12 / 15 | `log/AREA-F/` |
 | G | Decision support | 0 / 5 | `log/AREA-G/` |
 | H | Scenarios | 1 / 3 | `log/AREA-H/` |
 | I | Validation & credibility | 2 / 4 | `log/AREA-I/` |
 | J | Delivery | 0 / 4 | `log/AREA-J/` |
-| | **TOTAL** | **56 / 74** | |
+| | **TOTAL** | **56 / 75** | |
 
 *(T-74 added and closed this session — raised from session 7/8's own HANDOFF recommendation, same
 pattern as T-71/T-72/T-73. T-52 reconciled `[x]` this session too, once T-74 closed its last
 remaining gap (test 11) on top of T-73's earlier closure of test 8 — both re-verified end-to-end by
 the orchestrator, not just mirrored from a subagent report. Area F: 10 -> 12 done (T-52 + T-74);
 total: 54 -> 56 done, 73 -> 74 tasks.)*
+
+*(T-75 added this session — raised from session 9's own HANDOFF, same "orchestrator creates the
+follow-up task" pattern as T-71/T-72/T-73/T-74. Not yet done; Area F denominator moves 14 -> 15,
+total tasks 74 -> 75, done count unchanged at 56 until T-75 is claimed and verified.)*
 
 *(T-71 and T-72 added this session — new tasks the orchestrator raised from the prior HANDOFF's
 recommended next steps, same pattern as T-70 last session. Totals above include them as not-yet-done.
@@ -363,7 +367,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 | `log/AREA-E/T-41.md` |
 | [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 | `log/AREA-E/T-42.md` |
 
-### Area F — Frontend — 12 / 14 (T-52 reconciled `[x]` this session — T-73 and T-74 both closed its remaining gaps, re-verified end-to-end by the orchestrator, see its Evidence block's RECONCILIATION note) — `log/AREA-F/`
+### Area F — Frontend — 12 / 15 (T-52 reconciled `[x]` a prior session — T-73 and T-74 both closed its remaining gaps, re-verified end-to-end by the orchestrator, see its Evidence block's RECONCILIATION note; T-75 added this session, raised from that session's own HANDOFF) — `log/AREA-F/`
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
@@ -381,6 +385,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 | `log/AREA-F/T-71.md` |
 | [x] | T-73 | Wire T-52's meta components into app-shell.tsx's `slot-assumptions` | T-52 | `log/AREA-F/T-73.md` |
 | [x] | T-74 | Wire i18n into `SimpleForm.tsx`/`KpiColumn.tsx` to close T-52's test 11 | T-47, T-51, T-52 | `log/AREA-F/T-74.md` |
+| [~] | T-75 | Stack T-53's `<DayNightAnimation>` behind `<HouseView>` in `slot-house` | T-53, T-71 | `log/AREA-F/T-75.md` |
 
 ### Area G — Decision support — 0 / 5 — `log/AREA-G/`
 
