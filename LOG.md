@@ -262,7 +262,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | Area | Name | Done / Total | File |
 |---|---|---|---|
 | A | Foundation & contracts | 8 / 8 | `log/AREA-A/` |
-| B | Engine | 16 / 17 | `log/AREA-B/` |
+| B | Engine | 16 / 18 | `log/AREA-B/` |
 | C | Data layer | 5 / 5 | `log/AREA-C/` |
 | D | Database tier | 7 / 7 | `log/AREA-D/` |
 | E | Server tier | 5 / 7 | `log/AREA-E/` |
@@ -271,7 +271,7 @@ with an Area file again, the Area file is right — fix this table.)*
 | H | Scenarios | 1 / 3 | `log/AREA-H/` |
 | I | Validation & credibility | 2 / 4 | `log/AREA-I/` |
 | J | Delivery | 0 / 4 | `log/AREA-J/` |
-| | **TOTAL** | **56 / 75** | |
+| | **TOTAL** | **57 / 76** | |
 
 *(T-74 added and closed this session — raised from session 7/8's own HANDOFF recommendation, same
 pattern as T-71/T-72/T-73. T-52 reconciled `[x]` this session too, once T-74 closed its last
@@ -279,9 +279,15 @@ remaining gap (test 11) on top of T-73's earlier closure of test 8 — both re-v
 the orchestrator, not just mirrored from a subagent report. Area F: 10 -> 12 done (T-52 + T-74);
 total: 54 -> 56 done, 73 -> 74 tasks.)*
 
-*(T-75 added this session — raised from session 9's own HANDOFF, same "orchestrator creates the
-follow-up task" pattern as T-71/T-72/T-73/T-74. Not yet done; Area F denominator moves 14 -> 15,
-total tasks 74 -> 75, done count unchanged at 56 until T-75 is claimed and verified.)*
+*(T-75 added and closed this session — raised from session 9's own HANDOFF, same "orchestrator
+creates the follow-up task" pattern as T-71/T-72/T-73/T-74. Area F: 12 -> 13 done; total: 56 -> 57
+done, 74 -> 75 tasks.)*
+
+*(T-76 added this session — raised from T-54's own Evidence block (2026-09-19 continuation), the
+specific "second, small, engine-owned addition" it named as the remaining path to closing T-54's
+acceptance test 4. Not yet done; Area B denominator moves 17 -> 18 (its header count was also
+found stale at 15/16 and corrected to the true 16/17 while adding this row), total tasks 75 -> 76,
+done count unchanged at 57 until T-76 is claimed and verified.)*
 
 *(T-71 and T-72 added this session — new tasks the orchestrator raised from the prior HANDOFF's
 recommended next steps, same pattern as T-70 last session. Totals above include them as not-yet-done.
@@ -307,7 +313,9 @@ independently flipped one task against a shared 0/4 baseline; Area F's own denom
 | [x] | T-07 | Canonical test fixtures, including the C-01 kill-shot pair | T-06 | `log/AREA-A/T-07.md` |
 | [x] | T-72 | Cover `apps/web/**` in the root ESLint config | T-03 | `log/AREA-A/T-72.md` |
 
-### Area B — Engine — 15 / 16 — `log/AREA-B/`
+### Area B — Engine — 16 / 18 (header count was stale at 15/16 — the true count from the entries
+themselves is 16 done of 17 pre-existing tasks, already matching the §5 dashboard row; T-76 added
+this session, raised from T-54's own Evidence block, bringing the denominator to 18) — `log/AREA-B/`
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
@@ -328,6 +336,7 @@ independently flipped one task against a shared 0/4 baseline; Area F's own denom
 | [x] | T-22 | Split out `post/heatFlows.ts` and add the ΔT and ground series | T-06 | `log/AREA-B/T-22.md` |
 | [!] | T-23 | Validation Test 5 against NOAA, and print every measured pair | T-07 | `log/AREA-B/T-23.md` |
 | [x] | T-70 | Warm-start hook: optional initial temperature state for `simulate()` | T-06, T-11 | `log/AREA-B/T-70.md` |
+| [~] | T-76 | Expose the real per-node warm state as an opaque `SimulationResult.warmState` | T-70 | `log/AREA-B/T-76.md` |
 
 ### Area C — Data layer — 5 / 5 — `log/AREA-C/`
 
