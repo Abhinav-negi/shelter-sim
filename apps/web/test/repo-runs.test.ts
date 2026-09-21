@@ -10,7 +10,13 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaClient, Prisma } from '@prisma/client';
 import { simulate, toK } from '@shelter/engine';
-import type { Material, Glazing, Surface, SimulationRequest, SimulationResult } from '@shelter/engine';
+import type {
+  Material,
+  Glazing,
+  Surface,
+  SimulationRequest,
+  SimulationResult,
+} from '@shelter/engine';
 // Same relative-import workaround as lib/repo/runs.ts, and for the same
 // reason: canonicalRequestHash is not re-exported from @shelter/engine's
 // public barrel. See runs.ts's header comment and T-33's Evidence block for
@@ -155,7 +161,13 @@ function baseRequest(): SimulationRequest {
       T_amb,
       GHI,
       v_wind,
-      provenance: { source: 'synthetic', label: 'T-33 test fixture', sourceElevation: null, lapseCorrectionK: 0, notes: [] },
+      provenance: {
+        source: 'synthetic',
+        label: 'T-33 test fixture',
+        sourceElevation: null,
+        lapseCorrectionK: 0,
+        notes: [],
+      },
     },
     materials: { [MATERIAL.id]: MATERIAL },
     glazings: { [GLAZING.id]: GLAZING },
@@ -202,7 +214,10 @@ describe('T-33 lib/repo/runs.ts', () => {
 
     const variants: Array<[string, SimulationRequest]> = [
       ['site.elevation', { ...req, site: { ...req.site, elevation: req.site.elevation + 100 } }],
-      ['building.volume', { ...req, building: { ...req.building, volume: req.building.volume + 5 } }],
+      [
+        'building.volume',
+        { ...req, building: { ...req.building, volume: req.building.volume + 5 } },
+      ],
       [
         'operation.achSchedule[3]',
         {
@@ -220,7 +235,9 @@ describe('T-33 lib/repo/runs.ts', () => {
       const miss = await readRun(variant);
       expect(miss, `${label} should be a miss`).toBeNull();
     }
-    console.log(`T-33 test 2: all 4 varied fields (${variants.map(([l]) => l).join(', ')}) were misses`);
+    console.log(
+      `T-33 test 2: all 4 varied fields (${variants.map(([l]) => l).join(', ')}) were misses`,
+    );
   });
 
   it('3. a request differing only in key insertion order is a hit', async () => {
@@ -270,7 +287,9 @@ describe('T-33 lib/repo/runs.ts', () => {
     const { readRun } = await freshRuns();
     const miss = await readRun(req);
     expect(miss).toBeNull();
-    console.log(`T-33 test 4: row engineVersion='0.0.1', running engine ENGINE_VERSION='${ENGINE_VERSION}' -> miss`);
+    console.log(
+      `T-33 test 4: row engineVersion='0.0.1', running engine ENGINE_VERSION='${ENGINE_VERSION}' -> miss`,
+    );
 
     // Clean up: this row's stale engineVersion would otherwise inflate test
     // 5's purgeRunsForOtherVersions() count, since both tests share the same
@@ -289,8 +308,12 @@ describe('T-33 lib/repo/runs.ts', () => {
     const kpis = simulate(reqA).kpis as unknown as Prisma.InputJsonValue;
     const meta = simulate(reqA).meta as unknown as Prisma.InputJsonValue;
 
-    await db.simulationRun.create({ data: { requestHash: hashA, kpis, meta, engineVersion: '0.0.1' } });
-    await db.simulationRun.create({ data: { requestHash: hashB, kpis, meta, engineVersion: '0.0.2' } });
+    await db.simulationRun.create({
+      data: { requestHash: hashA, kpis, meta, engineVersion: '0.0.1' },
+    });
+    await db.simulationRun.create({
+      data: { requestHash: hashB, kpis, meta, engineVersion: '0.0.2' },
+    });
     await disconnectStash();
 
     process.env.DATABASE_URL = LIVE_DATABASE_URL;
@@ -308,7 +331,9 @@ describe('T-33 lib/repo/runs.ts', () => {
     expect(stillA).toBeNull();
     expect(stillB).toBeNull();
     expect(stillC).not.toBeNull();
-    console.log(`T-33 test 5: purgeRunsForOtherVersions() removed=${removed} (expected 2), version-matched row kept`);
+    console.log(
+      `T-33 test 5: purgeRunsForOtherVersions() removed=${removed} (expected 2), version-matched row kept`,
+    );
   });
 
   it('6. readFullRun after writeRun(storeFull: true) round-trips the full SimulationResult', async () => {
@@ -324,9 +349,13 @@ describe('T-33 lib/repo/runs.ts', () => {
     expect(full!.temperatures.indoorAir).toBeInstanceOf(Float64Array);
     expect(full!.heatFlows.Qaux).toBeInstanceOf(Float64Array);
     expect(Array.from(full!.time)).toEqual(Array.from(result.time));
-    expect(Array.from(full!.temperatures.indoorAir)).toEqual(Array.from(result.temperatures.indoorAir));
+    expect(Array.from(full!.temperatures.indoorAir)).toEqual(
+      Array.from(result.temperatures.indoorAir),
+    );
     expect(full!.kpis).toEqual(result.kpis);
-    console.log(`T-33 test 6: readFullRun round-tripped ${full!.time.length} timesteps, Float64Array instanceof confirmed`);
+    console.log(
+      `T-33 test 6: readFullRun round-tripped ${full!.time.length} timesteps, Float64Array instanceof confirmed`,
+    );
   });
 
   it('7. readFullRun after writeRun(storeFull: false) returns null, not a partial object', async () => {
@@ -351,7 +380,9 @@ describe('T-33 lib/repo/runs.ts', () => {
     await writeRun(req, result, false);
     const cached = await readRun(req);
     expect(cached!.meta.warnings).toContain('served from cache');
-    console.log(`T-33 test 8: fresh warnings=${JSON.stringify(result.meta.warnings)}, cached warnings=${JSON.stringify(cached!.meta.warnings)}`);
+    console.log(
+      `T-33 test 8: fresh warnings=${JSON.stringify(result.meta.warnings)}, cached warnings=${JSON.stringify(cached!.meta.warnings)}`,
+    );
   });
 
   it('9. the cache never changes an answer: cached KPIs equal a second live run field-by-field', async () => {
@@ -370,55 +401,53 @@ describe('T-33 lib/repo/runs.ts', () => {
       if (!Object.is(cached!.kpis[key], second.kpis[key])) mismatches.push(String(key));
     }
     expect(mismatches).toEqual([]);
-    console.log(`T-33 test 9: compared ${Object.keys(second.kpis).length} kpis fields, mismatches=${JSON.stringify(mismatches)}`);
+    console.log(
+      `T-33 test 9: compared ${Object.keys(second.kpis).length} kpis fields, mismatches=${JSON.stringify(mismatches)}`,
+    );
   });
 
-  it(
-    '10. DB OFF: readRun null, writeRun silent, and the 18-scenario grid still computes live',
-    async () => {
-      delete process.env.DATABASE_URL;
-      const { readRun, writeRun } = await freshRuns();
-      const req = baseRequest();
+  it('10. DB OFF: readRun null, writeRun silent, and the 18-scenario grid still computes live', async () => {
+    delete process.env.DATABASE_URL;
+    const { readRun, writeRun } = await freshRuns();
+    const req = baseRequest();
 
-      const readResult = await readRun(req);
-      expect(readResult).toBeNull();
-      await expect(writeRun(req, simulate(req), false)).resolves.toBeUndefined();
+    const readResult = await readRun(req);
+    expect(readResult).toBeNull();
+    await expect(writeRun(req, simulate(req), false)).resolves.toBeUndefined();
 
-      const start = Date.now();
-      for (let i = 0; i < 18; i++) {
-        const variant = { ...req, site: { ...req.site, elevation: req.site.elevation + i } };
-        simulate(variant);
-      }
-      const elapsedMs = Date.now() - start;
-      console.log(`T-33 test 10: DB-off, readRun=null, writeRun resolved silently, 18 live simulate() calls took ${elapsedMs}ms`);
-      expect(elapsedMs).toBeLessThan(5000);
-    },
-    10000,
-  );
+    const start = Date.now();
+    for (let i = 0; i < 18; i++) {
+      const variant = { ...req, site: { ...req.site, elevation: req.site.elevation + i } };
+      simulate(variant);
+    }
+    const elapsedMs = Date.now() - start;
+    console.log(
+      `T-33 test 10: DB-off, readRun=null, writeRun resolved silently, 18 live simulate() calls took ${elapsedMs}ms`,
+    );
+    expect(elapsedMs).toBeLessThan(5000);
+  }, 10000);
 
-  it(
-    '11. DB UNREACHABLE: readRun null, writeRun silent, within 5s each',
-    async () => {
-      process.env.DATABASE_URL = BOGUS_DATABASE_URL;
-      const { readRun, writeRun } = await freshRuns();
-      const req = baseRequest();
-      const result = simulate(req);
+  it('11. DB UNREACHABLE: readRun null, writeRun silent, within 5s each', async () => {
+    process.env.DATABASE_URL = BOGUS_DATABASE_URL;
+    const { readRun, writeRun } = await freshRuns();
+    const req = baseRequest();
+    const result = simulate(req);
 
-      let start = Date.now();
-      const readResult = await readRun(req);
-      const readMs = Date.now() - start;
-      expect(readResult).toBeNull();
-      expect(readMs).toBeLessThan(5000);
+    let start = Date.now();
+    const readResult = await readRun(req);
+    const readMs = Date.now() - start;
+    expect(readResult).toBeNull();
+    expect(readMs).toBeLessThan(5000);
 
-      start = Date.now();
-      await writeRun(req, result, false);
-      const writeMs = Date.now() - start;
-      expect(writeMs).toBeLessThan(5000);
+    start = Date.now();
+    await writeRun(req, result, false);
+    const writeMs = Date.now() - start;
+    expect(writeMs).toBeLessThan(5000);
 
-      console.log(`T-33 test 11: DB-unreachable, readRun ${readMs}ms -> null, writeRun ${writeMs}ms -> resolved silently`);
-    },
-    12000,
-  );
+    console.log(
+      `T-33 test 11: DB-unreachable, readRun ${readMs}ms -> null, writeRun ${writeMs}ms -> resolved silently`,
+    );
+  }, 12000);
 
   it('12. concurrent write: ten simultaneous writeRun calls with the same request leave exactly one row', async () => {
     process.env.DATABASE_URL = LIVE_DATABASE_URL;
@@ -426,7 +455,9 @@ describe('T-33 lib/repo/runs.ts', () => {
     const req = { ...baseRequest(), site: { ...baseRequest().site, elevation: 4601 } };
     const result = simulate(req);
 
-    const outcomes = await Promise.allSettled(Array.from({ length: 10 }, () => writeRun(req, result, false)));
+    const outcomes = await Promise.allSettled(
+      Array.from({ length: 10 }, () => writeRun(req, result, false)),
+    );
     const rejected = outcomes.filter((o) => o.status === 'rejected');
     expect(rejected).toEqual([]);
 
@@ -434,7 +465,9 @@ describe('T-33 lib/repo/runs.ts', () => {
     const requestHash = canonicalRequestHash(req);
     const count = await db.simulationRun.count({ where: { requestHash } });
     expect(count).toBe(1);
-    console.log(`T-33 test 12: 10 concurrent writeRun calls, rejected=${rejected.length}, resulting row count=${count}`);
+    console.log(
+      `T-33 test 12: 10 concurrent writeRun calls, rejected=${rejected.length}, resulting row count=${count}`,
+    );
   });
 
   it('13. stored row size with and without storeFull, in bytes', async () => {
@@ -449,17 +482,26 @@ describe('T-33 lib/repo/runs.ts', () => {
     await writeRun(reqFull, resultFull, true);
 
     const db = await liveDb();
-    const rowSmall = await db.simulationRun.findUnique({ where: { requestHash: canonicalRequestHash(reqSmall) } });
-    const rowFull = await db.simulationRun.findUnique({ where: { requestHash: canonicalRequestHash(reqFull) } });
+    const rowSmall = await db.simulationRun.findUnique({
+      where: { requestHash: canonicalRequestHash(reqSmall) },
+    });
+    const rowFull = await db.simulationRun.findUnique({
+      where: { requestHash: canonicalRequestHash(reqFull) },
+    });
     expect(rowSmall).not.toBeNull();
     expect(rowFull).not.toBeNull();
 
-    const bytesSmall = Buffer.byteLength(JSON.stringify(rowSmall!.kpis) + JSON.stringify(rowSmall!.meta), 'utf8');
+    const bytesSmall = Buffer.byteLength(
+      JSON.stringify(rowSmall!.kpis) + JSON.stringify(rowSmall!.meta),
+      'utf8',
+    );
     const bytesFull =
       Buffer.byteLength(JSON.stringify(rowFull!.kpis) + JSON.stringify(rowFull!.meta), 'utf8') +
       Buffer.byteLength(JSON.stringify(rowFull!.fullResult), 'utf8');
 
     expect(bytesFull).toBeGreaterThan(bytesSmall);
-    console.log(`T-33 test 13: stored row bytes without storeFull=${bytesSmall}, with storeFull=${bytesFull}`);
+    console.log(
+      `T-33 test 13: stored row bytes without storeFull=${bytesSmall}, with storeFull=${bytesFull}`,
+    );
   });
 });

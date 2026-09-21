@@ -136,8 +136,16 @@ export function KpiColumn() {
           value={`${kpis.co2EquivalentKgPerYear.toFixed(1)} kg/yr`}
           testId="kpi-co2"
         />
-        <Card label={t('kpis.column.card.minTemp', locale)} value={formatTempC(kpis.minIndoorTemp)} testId="kpi-min" />
-        <Card label={t('kpis.column.card.maxTemp', locale)} value={formatTempC(kpis.maxIndoorTemp)} testId="kpi-max" />
+        <Card
+          label={t('kpis.column.card.minTemp', locale)}
+          value={formatTempC(kpis.minIndoorTemp)}
+          testId="kpi-min"
+        />
+        <Card
+          label={t('kpis.column.card.maxTemp', locale)}
+          value={formatTempC(kpis.maxIndoorTemp)}
+          testId="kpi-max"
+        />
         <Card
           label={t('kpis.column.card.meanTemp', locale)}
           value={formatTempC(kpis.meanIndoorTemp)}
@@ -153,7 +161,11 @@ export function KpiColumn() {
           value={`${kpis.decrementFactor.toFixed(3)} ${dimensionless}`}
           testId="kpi-decrement"
         />
-        <Card label={t('kpis.column.card.timeLag', locale)} value={`${kpis.timeLagHours.toFixed(1)} h`} testId="kpi-lag" />
+        <Card
+          label={t('kpis.column.card.timeLag', locale)}
+          value={`${kpis.timeLagHours.toFixed(1)} h`}
+          testId="kpi-lag"
+        />
         <Card
           label={t('kpis.column.card.below5', locale)}
           value={`${kpis.hoursBelow5C.toFixed(1)} h`}

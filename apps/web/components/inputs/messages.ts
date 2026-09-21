@@ -54,13 +54,10 @@ registerMessages('en', {
   'inputs.simpleForm.windows.orientation.N': 'North-facing',
   'inputs.simpleForm.windows.percentSuffix': 'windows: {pct}% of that wall',
   'inputs.simpleForm.glazing.label': 'Window glazing type',
-  'inputs.simpleForm.glazing.title':
-    'How many panes of glass, and how well they hold heat in.',
-  'inputs.simpleForm.glazing.nightShutter':
-    'Close an insulating shutter over the windows at night',
+  'inputs.simpleForm.glazing.title': 'How many panes of glass, and how well they hold heat in.',
+  'inputs.simpleForm.glazing.nightShutter': 'Close an insulating shutter over the windows at night',
   'inputs.simpleForm.occupancy.label': "Who's staying here",
-  'inputs.simpleForm.occupancy.title':
-    'Who lives here and whether there is a heater running.',
+  'inputs.simpleForm.occupancy.title': 'Who lives here and whether there is a heater running.',
 });
 
 registerMessages('hi', {
@@ -99,8 +96,7 @@ registerMessages('hi', {
   'inputs.simpleForm.glazing.label': 'खिड़की के शीशे का प्रकार',
   'inputs.simpleForm.glazing.title':
     'शीशे की कितनी परतें हैं, और वे गर्मी को कितनी अच्छी तरह रोकती हैं।',
-  'inputs.simpleForm.glazing.nightShutter':
-    'रात में खिड़कियों पर इन्सुलेटिंग शटर बंद करें',
+  'inputs.simpleForm.glazing.nightShutter': 'रात में खिड़कियों पर इन्सुलेटिंग शटर बंद करें',
   'inputs.simpleForm.occupancy.label': 'यहाँ कौन रह रहा है',
   'inputs.simpleForm.occupancy.title': 'यहाँ कौन रहता है और क्या हीटर चल रहा है।',
 });

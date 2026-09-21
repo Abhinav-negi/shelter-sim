@@ -22,7 +22,15 @@
 // instead of silently interpolated across a wide span) -- a narrower, honest
 // subset of the full six-stage pipeline, not a claim of feature parity.
 
-import { decompose, skyTemperature, sunPosition, EngineError, SIGMA, T0, type WeatherSeries } from '@shelter/engine';
+import {
+  decompose,
+  skyTemperature,
+  sunPosition,
+  EngineError,
+  SIGMA,
+  T0,
+  type WeatherSeries,
+} from '@shelter/engine';
 
 export const REQUIRED_COLUMNS = ['T_amb_C', 'GHI', 'v_wind'] as const;
 export const OPTIONAL_COLUMNS = ['DNI', 'DHI', 'LW_down', 'RH'] as const;
@@ -45,7 +53,12 @@ function splitRow(line: string): string[] {
   return line.split(',').map((c) => c.trim());
 }
 
-function parseCell(cell: string | undefined, row: number, column: string, errors: CsvRowError[]): number {
+function parseCell(
+  cell: string | undefined,
+  row: number,
+  column: string,
+  errors: CsvRowError[],
+): number {
   if (cell === undefined || cell === '') {
     errors.push({ row, column, message: 'missing value' });
     return NaN;
@@ -80,7 +93,11 @@ export function parseWeatherCsv(csvText: string, opts: ParseWeatherCsvOptions): 
   const missingRequired = REQUIRED_COLUMNS.filter((c) => !columnIndex.has(c));
   if (missingRequired.length > 0) {
     return {
-      rowErrors: missingRequired.map((c) => ({ row: 0, column: c, message: `required column "${c}" is missing from the header` })),
+      rowErrors: missingRequired.map((c) => ({
+        row: 0,
+        column: c,
+        message: `required column "${c}" is missing from the header`,
+      })),
     };
   }
   const presentOptional = OPTIONAL_COLUMNS.filter((c) => columnIndex.has(c));
@@ -99,20 +116,28 @@ export function parseWeatherCsv(csvText: string, opts: ParseWeatherCsvOptions): 
     T_amb_C.push(parseCell(cells[columnIndex.get('T_amb_C')!], rowNumber, 'T_amb_C', rowErrors));
     GHI.push(parseCell(cells[columnIndex.get('GHI')!], rowNumber, 'GHI', rowErrors));
     v_wind.push(parseCell(cells[columnIndex.get('v_wind')!], rowNumber, 'v_wind', rowErrors));
-    for (const c of presentOptional) optional[c]!.push(parseCell(cells[columnIndex.get(c)!], rowNumber, c, rowErrors));
+    for (const c of presentOptional)
+      optional[c]!.push(parseCell(cells[columnIndex.get(c)!], rowNumber, c, rowErrors));
   });
 
   // Also reject negative GHI/v_wind and an implausible temperature outright,
   // by row -- the same "report every problem, not just the first" spirit as
   // `@shelter/engine`'s own INVALID_INPUT (CONTRACTS.md §7.8).
   T_amb_C.forEach((t, i) => {
-    if (!Number.isNaN(t) && (t < -60 || t > 60)) rowErrors.push({ row: i + 1, column: 'T_amb_C', message: `${t} degC is outside the plausible [-60, 60] range` });
+    if (!Number.isNaN(t) && (t < -60 || t > 60))
+      rowErrors.push({
+        row: i + 1,
+        column: 'T_amb_C',
+        message: `${t} degC is outside the plausible [-60, 60] range`,
+      });
   });
   GHI.forEach((g, i) => {
-    if (!Number.isNaN(g) && g < 0) rowErrors.push({ row: i + 1, column: 'GHI', message: `${g} W/m^2 is negative` });
+    if (!Number.isNaN(g) && g < 0)
+      rowErrors.push({ row: i + 1, column: 'GHI', message: `${g} W/m^2 is negative` });
   });
   v_wind.forEach((v, i) => {
-    if (!Number.isNaN(v) && v < 0) rowErrors.push({ row: i + 1, column: 'v_wind', message: `${v} m/s is negative` });
+    if (!Number.isNaN(v) && v < 0)
+      rowErrors.push({ row: i + 1, column: 'v_wind', message: `${v} m/s is negative` });
   });
 
   if (rowErrors.length > 0) return { rowErrors };
@@ -129,10 +154,22 @@ export function parseWeatherCsv(csvText: string, opts: ParseWeatherCsvOptions): 
   for (let i = 0; i < n; i++) {
     const clockHour = i % 24;
     const dayOfYear = opts.startDayOfYear + Math.floor(i / 24);
-    const sun = sunPosition(opts.site.latitude, opts.site.longitude, opts.site.standardMeridian, dayOfYear, clockHour);
+    const sun = sunPosition(
+      opts.site.latitude,
+      opts.site.longitude,
+      opts.site.standardMeridian,
+      dayOfYear,
+      clockHour,
+    );
     const known = {
-      DNI: optional.DNI?.[i] !== undefined && !Number.isNaN(optional.DNI[i]) ? optional.DNI[i] : undefined,
-      DHI: optional.DHI?.[i] !== undefined && !Number.isNaN(optional.DHI[i]) ? optional.DHI[i] : undefined,
+      DNI:
+        optional.DNI?.[i] !== undefined && !Number.isNaN(optional.DNI[i])
+          ? optional.DNI[i]
+          : undefined,
+      DHI:
+        optional.DHI?.[i] !== undefined && !Number.isNaN(optional.DHI[i])
+          ? optional.DHI[i]
+          : undefined,
     };
     const irr = decompose(GHI[i]!, sun.cosZenith, dayOfYear, known);
     DNI[i] = irr.DNI;
@@ -142,7 +179,10 @@ export function parseWeatherCsv(csvText: string, opts: ParseWeatherCsvOptions): 
   const LW_down = new Float64Array(n);
   for (let i = 0; i < n; i++) {
     const measured = optional.LW_down?.[i];
-    LW_down[i] = measured !== undefined && !Number.isNaN(measured) ? measured : SIGMA * Math.pow(skyTemperature(T_amb[i]!), 4);
+    LW_down[i] =
+      measured !== undefined && !Number.isNaN(measured)
+        ? measured
+        : SIGMA * Math.pow(skyTemperature(T_amb[i]!), 4);
   }
 
   const RH = optional.RH ? Float64Array.from(optional.RH) : undefined;
@@ -163,7 +203,12 @@ export function parseWeatherCsv(csvText: string, opts: ParseWeatherCsvOptions): 
       label: `Uploaded CSV (${n} hourly rows)`,
       sourceElevation: null,
       lapseCorrectionK: 0,
-      notes: presentOptional.length > 0 ? [] : ['DNI/DHI derived via Erbs; LW_down derived via Swinbank (no matching columns in the upload)'],
+      notes:
+        presentOptional.length > 0
+          ? []
+          : [
+              'DNI/DHI derived via Erbs; LW_down derived via Swinbank (no matching columns in the upload)',
+            ],
     },
   };
   return { rowErrors: [], series };

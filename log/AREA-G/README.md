@@ -13,7 +13,7 @@
 
 # AREA G — DECISION SUPPORT
 
-> *"This is the feature that makes this a design tool rather than a slower ANSYS."* `AUDIT.md` F-3
+> _"This is the feature that makes this a design tool rather than a slower ANSYS."_ `AUDIT.md` F-3
 > records that Compare and Optimise were **the least-specified, least-owned and least-scheduled part
 > of the whole plan**, despite being explicitly the product's reason to exist. This area closes that.
 > Everything here lives in `packages/optimise` (`@shelter/optimise`), whose only runtime dependency

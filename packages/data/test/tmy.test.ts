@@ -26,7 +26,11 @@ describe('T-27 acceptance test 1 -- every bundled series parses as WeatherSeries
     for (const loc of TMY_LOCATIONS) {
       const series = tmyById(loc.id);
       expect(() =>
-        validateWeatherSeries(series, { latitude: loc.latitude, longitude: loc.longitude, standardMeridian: 82.5 }),
+        validateWeatherSeries(series, {
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          standardMeridian: 82.5,
+        }),
       ).not.toThrow();
       console.log(`TEST1 ${loc.id}: validates clean`);
     }
@@ -69,9 +73,12 @@ describe('T-27 acceptance test 4 -- Leh January mean and minima match BLUEPRINT.
     const series = tmyById('leh');
     const janHours: number[] = [];
     for (let i = 0; i < series.T_amb.length; i++) if (dayOfYearFor(i) <= 31) janHours.push(i);
-    const janMeanC = janHours.reduce((s, i) => s + (series.T_amb[i]! - 273.15), 0) / janHours.length;
+    const janMeanC =
+      janHours.reduce((s, i) => s + (series.T_amb[i]! - 273.15), 0) / janHours.length;
     const janMinC = Math.min(...janHours.map((i) => series.T_amb[i]! - 273.15));
-    console.log(`TEST4 Leh January mean=${janMeanC.toFixed(2)} degC min=${janMinC.toFixed(2)} degC`);
+    console.log(
+      `TEST4 Leh January mean=${janMeanC.toFixed(2)} degC min=${janMinC.toFixed(2)} degC`,
+    );
     expect(Math.abs(janMeanC - -8)).toBeLessThanOrEqual(3);
     expect(janMinC).toBeLessThanOrEqual(-15); // reaches (or exceeds) the -15..-20 band
   });
@@ -115,7 +122,9 @@ describe('T-27 acceptance test 6 -- Leh sunshine hours and clear days', () => {
       if (kt > 0.5) clearDays++;
     }
 
-    console.log(`TEST6 Leh meanDailySunshine=${meanDailySunshineH.toFixed(2)}h clearDays=${clearDays}`);
+    console.log(
+      `TEST6 Leh meanDailySunshine=${meanDailySunshineH.toFixed(2)}h clearDays=${clearDays}`,
+    );
     // "near 7.9h": within a documented +/-25% engineering tolerance of the
     // problem-statement figure -- this is real single-year reanalysis data,
     // not the multi-year average the 7.9h figure itself was computed from.
@@ -132,16 +141,20 @@ describe('T-27 acceptance test 7 -- Jaisalmer/Leh contrast', () => {
 
     const janHours: number[] = [];
     for (let i = 0; i < leh.T_amb.length; i++) if (dayOfYearFor(i) <= 31) janHours.push(i);
-    const lehJanMeanC = janHours.reduce((s, i) => s + (leh.T_amb[i]! - 273.15), 0) / janHours.length;
+    const lehJanMeanC =
+      janHours.reduce((s, i) => s + (leh.T_amb[i]! - 273.15), 0) / janHours.length;
 
     const julHours: number[] = [];
     for (let i = 0; i < jaisalmer.T_amb.length; i++) {
       const doy = dayOfYearFor(i);
       if (doy >= 182 && doy <= 212) julHours.push(i); // July 1-31, 2023 (non-leap)
     }
-    const jaisalmerJulMeanC = julHours.reduce((s, i) => s + (jaisalmer.T_amb[i]! - 273.15), 0) / julHours.length;
+    const jaisalmerJulMeanC =
+      julHours.reduce((s, i) => s + (jaisalmer.T_amb[i]! - 273.15), 0) / julHours.length;
 
-    console.log(`TEST7 Leh Jan mean=${lehJanMeanC.toFixed(2)} degC, Jaisalmer Jul mean=${jaisalmerJulMeanC.toFixed(2)} degC`);
+    console.log(
+      `TEST7 Leh Jan mean=${lehJanMeanC.toFixed(2)} degC, Jaisalmer Jul mean=${jaisalmerJulMeanC.toFixed(2)} degC`,
+    );
     expect(jaisalmerJulMeanC - lehJanMeanC).toBeGreaterThanOrEqual(20);
   });
 });

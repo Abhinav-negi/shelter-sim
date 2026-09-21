@@ -9,7 +9,11 @@
  */
 import { describe, it, expect } from 'vitest';
 import { buildWallMesh, constructionUValue } from '@shelter/engine';
-import { MATERIALS, materialById, SCHEMA_VERSION as MATERIALS_SCHEMA_VERSION } from '../src/materials.js';
+import {
+  MATERIALS,
+  materialById,
+  SCHEMA_VERSION as MATERIALS_SCHEMA_VERSION,
+} from '../src/materials.js';
 import { GLAZING, glazingById } from '../src/glazing.js';
 import { CONSTRUCTIONS } from '../src/constructions.js';
 import { EngineError } from '../src/errors.js';
@@ -162,9 +166,10 @@ describe('T-24 acceptance test 11 -- plain-language blurbs', () => {
   it('every material has a non-empty blurb with no standalone physics-glossary symbol', () => {
     for (const m of MATERIALS) {
       expect(m.blurb, `material "${m.id}" has no blurb`).toBeTruthy();
-      expect(PHYSICS_TOKENS.test(m.blurb!), `material "${m.id}" blurb contains a physics symbol: ${m.blurb}`).toBe(
-        false,
-      );
+      expect(
+        PHYSICS_TOKENS.test(m.blurb!),
+        `material "${m.id}" blurb contains a physics symbol: ${m.blurb}`,
+      ).toBe(false);
     }
   });
 });

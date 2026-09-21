@@ -37,7 +37,13 @@ export const TMY_LOCATIONS: readonly TmyLocation[] = [
   { id: 'leh', name: 'Leh', latitude: 34.15, longitude: 77.58, elevation: 3500 },
   { id: 'kargil', name: 'Kargil', latitude: 34.5539, longitude: 76.1349, elevation: 2676 },
   { id: 'drass', name: 'Drass', latitude: 34.4239, longitude: 75.7666, elevation: 3230 },
-  { id: 'nubra', name: 'Nubra Valley (Diskit)', latitude: 34.5443, longitude: 77.5584, elevation: 3144 },
+  {
+    id: 'nubra',
+    name: 'Nubra Valley (Diskit)',
+    latitude: 34.5443,
+    longitude: 77.5584,
+    elevation: 3144,
+  },
   { id: 'jaisalmer', name: 'Jaisalmer', latitude: 26.9157, longitude: 70.9083, elevation: 225 },
 ] as const;
 
@@ -70,7 +76,11 @@ function readTmyFile(id: string): TmyFileShape {
   try {
     text = readFileSync(`${TMY_DIR}${id}.json`, 'utf8');
   } catch (err) {
-    throw new EngineError('INVALID_INPUT', `Bundled TMY file for "${id}" could not be read: ${(err as Error).message}`, { id });
+    throw new EngineError(
+      'INVALID_INPUT',
+      `Bundled TMY file for "${id}" could not be read: ${(err as Error).message}`,
+      { id },
+    );
   }
   const parsed = JSON.parse(text) as TmyFileShape;
   fileCache.set(id, parsed);

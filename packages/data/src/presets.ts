@@ -28,7 +28,16 @@
  * apples to apples, not confounded by a second geometry change at the same
  * time.
  */
-import type { Building, Layer, Operation, Preset, Site, Surface, SimulationRequest, WindowSpec } from '@shelter/engine';
+import type {
+  Building,
+  Layer,
+  Operation,
+  Preset,
+  Site,
+  Surface,
+  SimulationRequest,
+  WindowSpec,
+} from '@shelter/engine';
 import { ACH_MIN, DEFAULT_SIM_OPTIONS, EngineError, GAIN_WATTS, asK, toK } from '@shelter/engine';
 import { materialById } from './materials.js';
 import { glazingById } from './glazing.js';
@@ -54,7 +63,13 @@ const ROOF_AREA = SIDE * SIDE; // 25 m^2
 const FLOOR_AREA = SIDE * SIDE; // 25 m^2
 const VOLUME = SIDE * SIDE * HEIGHT; // 65 m^3
 
-function wall(id: string, azimuth: number, construction: Layer[], exteriorAbsorptivity: number, exteriorEmissivity: number): Surface {
+function wall(
+  id: string,
+  azimuth: number,
+  construction: Layer[],
+  exteriorAbsorptivity: number,
+  exteriorEmissivity: number,
+): Surface {
   return {
     id,
     type: 'wall',
@@ -69,7 +84,11 @@ function wall(id: string, azimuth: number, construction: Layer[], exteriorAbsorp
   };
 }
 
-function roof(construction: Layer[], exteriorAbsorptivity: number, exteriorEmissivity: number): Surface {
+function roof(
+  construction: Layer[],
+  exteriorAbsorptivity: number,
+  exteriorEmissivity: number,
+): Surface {
   return {
     id: 'roof',
     type: 'roof',
@@ -111,7 +130,12 @@ const NO_AUX_HEATING = { enabled: false, setpoint: toK(15), maxPower: 0 };
 
 function siteFor(locationId: string, groundTempMeanAnnual: number): Site {
   const loc = TMY_LOCATIONS.find((l) => l.id === locationId);
-  if (!loc) throw new EngineError('INVALID_INPUT', `No bundled TMY location "${locationId}" to build a preset Site from.`, { locationId });
+  if (!loc)
+    throw new EngineError(
+      'INVALID_INPUT',
+      `No bundled TMY location "${locationId}" to build a preset Site from.`,
+      { locationId },
+    );
   return {
     id: loc.id,
     name: loc.name,
@@ -169,12 +193,27 @@ const SITE_JAISALMER = siteFor('jaisalmer', annualMeanK('jaisalmer'));
  * plausible bound, or gate the HDKR branch on solar altitude) -- see this
  * task's Evidence block in `log/AREA-C-data-layer.md`.
  */
-const OPTIONS: SimulationRequest['options'] = { ...DEFAULT_SIM_OPTIONS, simulationDays: 1, skyModel: 'isotropic' };
+const OPTIONS: SimulationRequest['options'] = {
+  ...DEFAULT_SIM_OPTIONS,
+  simulationDays: 1,
+  skyModel: 'isotropic',
+};
 
 // ============================== BUILDING HELPER ==============================
 
-function building(surfaces: Surface[], windows: WindowSpec[], thermalBridgeFactor: number): Building {
-  return { floorArea: FLOOR_AREA, volume: VOLUME, azimuth: 0, surfaces, windows, thermalBridgeFactor };
+function building(
+  surfaces: Surface[],
+  windows: WindowSpec[],
+  thermalBridgeFactor: number,
+): Building {
+  return {
+    floorArea: FLOOR_AREA,
+    volume: VOLUME,
+    azimuth: 0,
+    surfaces,
+    windows,
+    thermalBridgeFactor,
+  };
 }
 
 function achAll(value: number): number[] {
@@ -202,8 +241,10 @@ const LIVESTOCK_ANIMALS = 3;
 const traditionalGains: number[] = (() => {
   const livestock = GAIN_WATTS.livestockPerAnimal * LIVESTOCK_ANIMALS; // 1500 W, all 24 h
   const gains = new Array(24).fill(livestock + GAIN_WATTS.adultSeated); // baseline: 1 person home
-  for (let h = 6; h < 9; h++) gains[h] = livestock + 2 * GAIN_WATTS.adultActive + GAIN_WATTS.cooking; // morning cooking
-  for (let h = 18; h < 21; h++) gains[h] = livestock + 2 * GAIN_WATTS.adultActive + GAIN_WATTS.cooking; // evening cooking
+  for (let h = 6; h < 9; h++)
+    gains[h] = livestock + 2 * GAIN_WATTS.adultActive + GAIN_WATTS.cooking; // morning cooking
+  for (let h = 18; h < 21; h++)
+    gains[h] = livestock + 2 * GAIN_WATTS.adultActive + GAIN_WATTS.cooking; // evening cooking
   for (let h = 21; h < 24; h++) gains[h] = livestock + 2 * GAIN_WATTS.adultSeated; // asleep, 2 people
   for (let h = 0; h < 6; h++) gains[h] = livestock + 2 * GAIN_WATTS.adultSeated; // asleep, 2 people
   return gains;
@@ -217,17 +258,45 @@ const PRESET_TRADITIONAL: Preset = {
     'Animals are stabled in a byre on the ground floor -- their body heat (about 500 W per animal, 3 animals here) ' +
     'rises into the living space above and measurably helps keep it warm overnight, a real vernacular passive-heating ' +
     'strategy still used across Ladakh, not a curiosity. The envelope is leaky (about 2 air changes per hour) by ' +
-    'today\'s standards, with no insulation and no auxiliary heater.',
+    "today's standards, with no insulation and no auxiliary heater.",
   locationId: 'leh',
   request: {
     site: SITE_LEH,
     building: building(
       [
-        wall('wallSouth', 0, RAMMED_EARTH_400, DARK_MUD_EARTH.exteriorAbsorptivity, DARK_MUD_EARTH.exteriorEmissivity),
-        wall('wallEast', -90, RAMMED_EARTH_400, DARK_MUD_EARTH.exteriorAbsorptivity, DARK_MUD_EARTH.exteriorEmissivity),
-        wall('wallWest', 90, RAMMED_EARTH_400, DARK_MUD_EARTH.exteriorAbsorptivity, DARK_MUD_EARTH.exteriorEmissivity),
-        wall('wallNorth', 180, RAMMED_EARTH_400, DARK_MUD_EARTH.exteriorAbsorptivity, DARK_MUD_EARTH.exteriorEmissivity),
-        roof(MUD_POPLAR_ROOF, DARK_MUD_EARTH.exteriorAbsorptivity, DARK_MUD_EARTH.exteriorEmissivity),
+        wall(
+          'wallSouth',
+          0,
+          RAMMED_EARTH_400,
+          DARK_MUD_EARTH.exteriorAbsorptivity,
+          DARK_MUD_EARTH.exteriorEmissivity,
+        ),
+        wall(
+          'wallEast',
+          -90,
+          RAMMED_EARTH_400,
+          DARK_MUD_EARTH.exteriorAbsorptivity,
+          DARK_MUD_EARTH.exteriorEmissivity,
+        ),
+        wall(
+          'wallWest',
+          90,
+          RAMMED_EARTH_400,
+          DARK_MUD_EARTH.exteriorAbsorptivity,
+          DARK_MUD_EARTH.exteriorEmissivity,
+        ),
+        wall(
+          'wallNorth',
+          180,
+          RAMMED_EARTH_400,
+          DARK_MUD_EARTH.exteriorAbsorptivity,
+          DARK_MUD_EARTH.exteriorEmissivity,
+        ),
+        roof(
+          MUD_POPLAR_ROOF,
+          DARK_MUD_EARTH.exteriorAbsorptivity,
+          DARK_MUD_EARTH.exteriorEmissivity,
+        ),
         floor(EARTH_FLOOR),
       ],
       [{ id: 'windowSouth', hostSurfaceId: 'wallSouth', area: 0.8, glazingId: 'singleGlazing' }], // small windows
@@ -273,11 +342,39 @@ const PRESET_BARRACK: Preset = {
     site: SITE_LEH,
     building: building(
       [
-        wall('wallSouth', 0, BARE_STEEL_CGI, GALVANISED_WEATHERED.exteriorAbsorptivity, GALVANISED_WEATHERED.exteriorEmissivity),
-        wall('wallEast', -90, BARE_STEEL_CGI, GALVANISED_WEATHERED.exteriorAbsorptivity, GALVANISED_WEATHERED.exteriorEmissivity),
-        wall('wallWest', 90, BARE_STEEL_CGI, GALVANISED_WEATHERED.exteriorAbsorptivity, GALVANISED_WEATHERED.exteriorEmissivity),
-        wall('wallNorth', 180, BARE_STEEL_CGI, GALVANISED_WEATHERED.exteriorAbsorptivity, GALVANISED_WEATHERED.exteriorEmissivity),
-        roof(BARE_STEEL_CGI, GALVANISED_WEATHERED.exteriorAbsorptivity, GALVANISED_WEATHERED.exteriorEmissivity),
+        wall(
+          'wallSouth',
+          0,
+          BARE_STEEL_CGI,
+          GALVANISED_WEATHERED.exteriorAbsorptivity,
+          GALVANISED_WEATHERED.exteriorEmissivity,
+        ),
+        wall(
+          'wallEast',
+          -90,
+          BARE_STEEL_CGI,
+          GALVANISED_WEATHERED.exteriorAbsorptivity,
+          GALVANISED_WEATHERED.exteriorEmissivity,
+        ),
+        wall(
+          'wallWest',
+          90,
+          BARE_STEEL_CGI,
+          GALVANISED_WEATHERED.exteriorAbsorptivity,
+          GALVANISED_WEATHERED.exteriorEmissivity,
+        ),
+        wall(
+          'wallNorth',
+          180,
+          BARE_STEEL_CGI,
+          GALVANISED_WEATHERED.exteriorAbsorptivity,
+          GALVANISED_WEATHERED.exteriorEmissivity,
+        ),
+        roof(
+          BARE_STEEL_CGI,
+          GALVANISED_WEATHERED.exteriorAbsorptivity,
+          GALVANISED_WEATHERED.exteriorEmissivity,
+        ),
         floor(RCC_150),
       ],
       [
@@ -322,10 +419,34 @@ const PRESET_MODERN_RCC: Preset = {
     site: SITE_LEH,
     building: building(
       [
-        wall('wallSouth', 0, RCC_150, GREY_CONCRETE.exteriorAbsorptivity, GREY_CONCRETE.exteriorEmissivity),
-        wall('wallEast', -90, RCC_150, GREY_CONCRETE.exteriorAbsorptivity, GREY_CONCRETE.exteriorEmissivity),
-        wall('wallWest', 90, RCC_150, GREY_CONCRETE.exteriorAbsorptivity, GREY_CONCRETE.exteriorEmissivity),
-        wall('wallNorth', 180, RCC_150, GREY_CONCRETE.exteriorAbsorptivity, GREY_CONCRETE.exteriorEmissivity),
+        wall(
+          'wallSouth',
+          0,
+          RCC_150,
+          GREY_CONCRETE.exteriorAbsorptivity,
+          GREY_CONCRETE.exteriorEmissivity,
+        ),
+        wall(
+          'wallEast',
+          -90,
+          RCC_150,
+          GREY_CONCRETE.exteriorAbsorptivity,
+          GREY_CONCRETE.exteriorEmissivity,
+        ),
+        wall(
+          'wallWest',
+          90,
+          RCC_150,
+          GREY_CONCRETE.exteriorAbsorptivity,
+          GREY_CONCRETE.exteriorEmissivity,
+        ),
+        wall(
+          'wallNorth',
+          180,
+          RCC_150,
+          GREY_CONCRETE.exteriorAbsorptivity,
+          GREY_CONCRETE.exteriorEmissivity,
+        ),
         roof(RCC_150, GREY_CONCRETE.exteriorAbsorptivity, GREY_CONCRETE.exteriorEmissivity), // flat, uninsulated RCC roof
         floor(RCC_150_FLOOR),
       ],
@@ -386,21 +507,49 @@ const PRESET_TROMBE: Preset = {
     'indoors after dark. The rest of the house (other walls, roof, floor) is unchanged from the traditional design. ' +
     'The glazed cavity itself is approximated, not fully modelled -- see the approximations note.',
   approximations: [
-    'The Trombe wall\'s glazing + ventilated air cavity is approximated as a single extra 25 mm sealed-air-gap layer ' +
+    "The Trombe wall's glazing + ventilated air cavity is approximated as a single extra 25 mm sealed-air-gap layer " +
       'on the outside of the massive absorber wall (added surface resistance only). A real two-air-node Trombe model ' +
       '-- a separate glazing pane, cavity convection, and top/bottom vents -- is out of scope (LOG.md global rule 12); ' +
-      'this cannot capture the cavity\'s trapped-air heat boost or a real installation\'s summer vent-bypass behaviour.',
+      "this cannot capture the cavity's trapped-air heat boost or a real installation's summer vent-bypass behaviour.",
   ],
   locationId: 'leh',
   request: {
     site: SITE_LEH,
     building: building(
       [
-        wall('wallSouth', 0, TROMBE_SOUTH_WALL, BLACK_PAINT.exteriorAbsorptivity, BLACK_PAINT.exteriorEmissivity),
-        wall('wallEast', -90, RAMMED_EARTH_400, DARK_MUD_EARTH.exteriorAbsorptivity, DARK_MUD_EARTH.exteriorEmissivity),
-        wall('wallWest', 90, RAMMED_EARTH_400, DARK_MUD_EARTH.exteriorAbsorptivity, DARK_MUD_EARTH.exteriorEmissivity),
-        wall('wallNorth', 180, RAMMED_EARTH_400, DARK_MUD_EARTH.exteriorAbsorptivity, DARK_MUD_EARTH.exteriorEmissivity),
-        roof(MUD_POPLAR_ROOF, DARK_MUD_EARTH.exteriorAbsorptivity, DARK_MUD_EARTH.exteriorEmissivity),
+        wall(
+          'wallSouth',
+          0,
+          TROMBE_SOUTH_WALL,
+          BLACK_PAINT.exteriorAbsorptivity,
+          BLACK_PAINT.exteriorEmissivity,
+        ),
+        wall(
+          'wallEast',
+          -90,
+          RAMMED_EARTH_400,
+          DARK_MUD_EARTH.exteriorAbsorptivity,
+          DARK_MUD_EARTH.exteriorEmissivity,
+        ),
+        wall(
+          'wallWest',
+          90,
+          RAMMED_EARTH_400,
+          DARK_MUD_EARTH.exteriorAbsorptivity,
+          DARK_MUD_EARTH.exteriorEmissivity,
+        ),
+        wall(
+          'wallNorth',
+          180,
+          RAMMED_EARTH_400,
+          DARK_MUD_EARTH.exteriorAbsorptivity,
+          DARK_MUD_EARTH.exteriorEmissivity,
+        ),
+        roof(
+          MUD_POPLAR_ROOF,
+          DARK_MUD_EARTH.exteriorAbsorptivity,
+          DARK_MUD_EARTH.exteriorEmissivity,
+        ),
         floor(EARTH_FLOOR),
       ],
       [{ id: 'windowEast', hostSurfaceId: 'wallEast', area: 0.5, glazingId: 'singleGlazing' }], // small daylighting window; the south face is the Trombe wall, not a window
@@ -471,10 +620,34 @@ const PRESET_OPTIMISED_PLACEHOLDER: Preset = {
     site: SITE_LEH,
     building: building(
       [
-        wall('wallSouth', 0, OPTIMISED_WALL, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity),
-        wall('wallEast', -90, OPTIMISED_WALL, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity),
-        wall('wallWest', 90, OPTIMISED_WALL, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity),
-        wall('wallNorth', 180, OPTIMISED_WALL, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity),
+        wall(
+          'wallSouth',
+          0,
+          OPTIMISED_WALL,
+          WHITEWASH.exteriorAbsorptivity,
+          WHITEWASH.exteriorEmissivity,
+        ),
+        wall(
+          'wallEast',
+          -90,
+          OPTIMISED_WALL,
+          WHITEWASH.exteriorAbsorptivity,
+          WHITEWASH.exteriorEmissivity,
+        ),
+        wall(
+          'wallWest',
+          90,
+          OPTIMISED_WALL,
+          WHITEWASH.exteriorAbsorptivity,
+          WHITEWASH.exteriorEmissivity,
+        ),
+        wall(
+          'wallNorth',
+          180,
+          OPTIMISED_WALL,
+          WHITEWASH.exteriorAbsorptivity,
+          WHITEWASH.exteriorEmissivity,
+        ),
         roof(OPTIMISED_ROOF, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity),
         floor(OPTIMISED_FLOOR),
       ],
@@ -531,10 +704,34 @@ const PRESET_JAISALMER: Preset = {
     site: SITE_JAISALMER,
     building: building(
       [
-        wall('wallSouth', 0, STONE_MASONRY_400, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity),
-        wall('wallEast', -90, STONE_MASONRY_400, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity),
-        wall('wallWest', 90, STONE_MASONRY_400, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity),
-        wall('wallNorth', 180, STONE_MASONRY_400, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity),
+        wall(
+          'wallSouth',
+          0,
+          STONE_MASONRY_400,
+          WHITEWASH.exteriorAbsorptivity,
+          WHITEWASH.exteriorEmissivity,
+        ),
+        wall(
+          'wallEast',
+          -90,
+          STONE_MASONRY_400,
+          WHITEWASH.exteriorAbsorptivity,
+          WHITEWASH.exteriorEmissivity,
+        ),
+        wall(
+          'wallWest',
+          90,
+          STONE_MASONRY_400,
+          WHITEWASH.exteriorAbsorptivity,
+          WHITEWASH.exteriorEmissivity,
+        ),
+        wall(
+          'wallNorth',
+          180,
+          STONE_MASONRY_400,
+          WHITEWASH.exteriorAbsorptivity,
+          WHITEWASH.exteriorEmissivity,
+        ),
         roof(RCC_150, WHITEWASH.exteriorAbsorptivity, WHITEWASH.exteriorEmissivity), // common flat desert roof, whitewashed
         floor(EARTH_FLOOR_DESERT),
       ],
@@ -589,9 +786,13 @@ for (const preset of PRESETS) {
   }
   for (const win of preset.request.building.windows) glazingById(win.glazingId);
   if (!TMY_LOCATIONS.some((loc) => loc.id === preset.locationId)) {
-    throw new EngineError('INVALID_INPUT', `Preset "${preset.id}" references unknown locationId "${preset.locationId}".`, {
-      presetId: preset.id,
-      locationId: preset.locationId,
-    });
+    throw new EngineError(
+      'INVALID_INPUT',
+      `Preset "${preset.id}" references unknown locationId "${preset.locationId}".`,
+      {
+        presetId: preset.id,
+        locationId: preset.locationId,
+      },
+    );
   }
 }

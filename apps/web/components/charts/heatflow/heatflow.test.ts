@@ -16,11 +16,25 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PRESETS, tmyById, materialById, glazingById } from '@shelter/data';
 import { simulate, toK, DEFAULT_SIM_OPTIONS } from '@shelter/engine';
-import type { Building, Glazing, HeatFlows, Material, Preset, SimulationRequest, SimulationResult, Surface } from '@shelter/engine';
+import type {
+  Building,
+  Glazing,
+  HeatFlows,
+  Material,
+  Preset,
+  SimulationRequest,
+  SimulationResult,
+  Surface,
+} from '@shelter/engine';
 
 import { HeatFlowPanel } from './HeatFlowPanel';
 import { PATHWAY_KEYS, PATHWAY_META, BOUNDARY_KEYS } from './pathways';
-import { buildStackedAreaLayout, computeStack, everyBandOnCorrectSide, toStackData } from './stackedArea';
+import {
+  buildStackedAreaLayout,
+  computeStack,
+  everyBandOnCorrectSide,
+  toStackData,
+} from './stackedArea';
 import { buildSankeyLayout, checkBalance, classifyFlows, isLayoutValid, linkPath } from './sankey';
 import { buildScatterLayout, linearFit, scatterPoints } from './scatter';
 
@@ -30,10 +44,12 @@ import { buildScatterLayout, linearFit, scatterPoints } from './scatter';
 function resolvePreset(preset: Preset): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
 }
 
@@ -72,8 +88,20 @@ function thinSteelBox(): SimulationRequest {
     exteriorEmissivity: 0.28,
     interiorEmissivity: 0.9,
   });
-  const surfaces: Surface[] = [opaque('south', 90, 0), opaque('east', 90, -90), opaque('west', 90, 90), opaque('north', 90, 180)];
-  const building: Building = { floorArea: area, volume: area * side, azimuth: 0, surfaces, windows: [], thermalBridgeFactor: 1.05 };
+  const surfaces: Surface[] = [
+    opaque('south', 90, 0),
+    opaque('east', 90, -90),
+    opaque('west', 90, 90),
+    opaque('north', 90, 180),
+  ];
+  const building: Building = {
+    floorArea: area,
+    volume: area * side,
+    azimuth: 0,
+    surfaces,
+    windows: [],
+    thermalBridgeFactor: 1.05,
+  };
 
   const steps = 24;
   const T_amb = new Float64Array(steps);
@@ -106,11 +134,22 @@ function thinSteelBox(): SimulationRequest {
       T_amb,
       GHI,
       v_wind,
-      provenance: { source: 'synthetic', label: 'T-49 test 4 fixture', sourceElevation: null, lapseCorrectionK: 0, notes: [] },
+      provenance: {
+        source: 'synthetic',
+        label: 'T-49 test 4 fixture',
+        sourceElevation: null,
+        lapseCorrectionK: 0,
+        notes: [],
+      },
     },
     materials: { [steelCGI.id]: steelCGI },
     glazings: {},
-    options: { ...DEFAULT_SIM_OPTIONS, simulationDays: 2, skyModel: 'isotropic', allowUnsafeVentilation: false },
+    options: {
+      ...DEFAULT_SIM_OPTIONS,
+      simulationDays: 2,
+      skyModel: 'isotropic',
+      allowUnsafeVentilation: false,
+    },
   };
 }
 
@@ -125,7 +164,11 @@ function handComputedEnvelopeUA(): number {
   const steelCGI = materialById('steelCGI');
   const hOuter = hConvExterior(3, 3500);
   const hInner = hConvInterior('wall', 0, 0, 3500);
-  const mesh = buildWallMesh([{ materialId: steelCGI.id, thickness: 0.0006 }], { [steelCGI.id]: steelCGI }, 0.02);
+  const mesh = buildWallMesh(
+    [{ materialId: steelCGI.id, thickness: 0.0006 }],
+    { [steelCGI.id]: steelCGI },
+    0.02,
+  );
   const U = constructionUValue(mesh, hOuter, hInner);
   const totalWallArea = 4 * 16; // 4 walls, 4m x 4m each
   return U * totalWallArea;
@@ -135,9 +178,19 @@ describe('T-49 heat-flow view and Sankey', () => {
   it('test 1 -- all 11 pathways plus Qaux and storageRate appear in the stacked chart and legend, including Q7', () => {
     expect(PATHWAY_KEYS.length).toBe(13);
     const expected = [
-      'Q1_solarOpaque', 'Q2_solarGlazed', 'Q3_extConvection', 'Q4_skyRadiation', 'Q5_envelopeConduction',
-      'Q6_intConvection', 'Q7_interiorLongwave', 'Q8_windowConduction', 'Q9_infiltration', 'Q10_ground',
-      'Q11_internalGains', 'Qaux', 'storageRate',
+      'Q1_solarOpaque',
+      'Q2_solarGlazed',
+      'Q3_extConvection',
+      'Q4_skyRadiation',
+      'Q5_envelopeConduction',
+      'Q6_intConvection',
+      'Q7_interiorLongwave',
+      'Q8_windowConduction',
+      'Q9_infiltration',
+      'Q10_ground',
+      'Q11_internalGains',
+      'Qaux',
+      'storageRate',
     ];
     expect([...PATHWAY_KEYS].sort()).toEqual([...expected].sort());
     expect(PATHWAY_KEYS).toContain('Q7_interiorLongwave');
@@ -147,7 +200,10 @@ describe('T-49 heat-flow view and Sankey', () => {
       expect(markup).toContain(`data-testid="legend-${key}"`);
       expect(markup).toContain(`data-testid="stacked-band-${key}"`);
     }
-    console.log('T-49 test 1 evidence -- legend list (13 entries):', PATHWAY_KEYS.map((k) => PATHWAY_META[k].label));
+    console.log(
+      'T-49 test 1 evidence -- legend list (13 entries):',
+      PATHWAY_KEYS.map((k) => PATHWAY_META[k].label),
+    );
   });
 
   it('test 2 -- gains render above the axis, losses below, at every timestep (real run)', () => {
@@ -185,8 +241,16 @@ describe('T-49 heat-flow view and Sankey', () => {
 
     const stepSeconds = 300; // modernRccNoInsulation's OPTIONS: DEFAULT_SIM_OPTIONS.timestepSeconds
     const idx0200 = Math.round((2 * 3600) / stepSeconds);
-    console.log('T-49 test 3 evidence -- Q4_skyRadiation at 02:00 (modernRccNoInsulation, Leh Jan 15):', Q4[idx0200], 'W;',
-      'hours with ambient > indoor:', hoursAmbWarmer, '; max Q4 during those hours:', maxQ4WhenAmbWarmer, 'W');
+    console.log(
+      'T-49 test 3 evidence -- Q4_skyRadiation at 02:00 (modernRccNoInsulation, Leh Jan 15):',
+      Q4[idx0200],
+      'W;',
+      'hours with ambient > indoor:',
+      hoursAmbWarmer,
+      '; max Q4 during those hours:',
+      maxQ4WhenAmbWarmer,
+      'W',
+    );
   });
 
   it('test 4 -- Q5 vs deltaT: R^2 > 0.95 and fitted slope within 10% of hand-computed ΣUA', () => {
@@ -197,8 +261,17 @@ describe('T-49 heat-flow view and Sankey', () => {
 
     expect(fit.r2).toBeGreaterThan(0.95);
     expect(Math.abs(pctDiff)).toBeLessThan(0.1);
-    console.log('T-49 test 4 evidence -- R^2:', fit.r2, '; fitted slope:', fit.slope, 'W/K; hand ΣUA:', handUA,
-      'W/K; |slope| vs ΣUA relative diff:', (pctDiff * 100).toFixed(2), '%');
+    console.log(
+      'T-49 test 4 evidence -- R^2:',
+      fit.r2,
+      '; fitted slope:',
+      fit.slope,
+      'W/K; hand ΣUA:',
+      handUA,
+      'W/K; |slope| vs ΣUA relative diff:',
+      (pctDiff * 100).toFixed(2),
+      '%',
+    );
   });
 
   it('test 5 -- the panel title contains the literal string "PS Deliverable 3"', () => {
@@ -209,12 +282,31 @@ describe('T-49 heat-flow view and Sankey', () => {
   it('test 6 -- Sankey inflow equals outflow plus storage change to within 1%', () => {
     const { inflowKWh, outflowKWh, deviation } = checkBalance(barrack.heatFlows.dailyTotalsKWh);
     expect(deviation).toBeLessThan(0.01);
-    console.log('T-49 test 6 evidence (armyBroBarrack) -- inflow:', inflowKWh, 'kWh; outflow:', outflowKWh,
-      'kWh; deviation:', (deviation * 100).toFixed(4), '%');
+    console.log(
+      'T-49 test 6 evidence (armyBroBarrack) -- inflow:',
+      inflowKWh,
+      'kWh; outflow:',
+      outflowKWh,
+      'kWh; deviation:',
+      (deviation * 100).toFixed(4),
+      '%',
+    );
 
-    const { inflowKWh: i2, outflowKWh: o2, deviation: d2 } = checkBalance(modernRcc.heatFlows.dailyTotalsKWh);
+    const {
+      inflowKWh: i2,
+      outflowKWh: o2,
+      deviation: d2,
+    } = checkBalance(modernRcc.heatFlows.dailyTotalsKWh);
     expect(d2).toBeLessThan(0.01);
-    console.log('T-49 test 6 evidence (modernRccNoInsulation) -- inflow:', i2, 'kWh; outflow:', o2, 'kWh; deviation:', (d2 * 100).toFixed(4), '%');
+    console.log(
+      'T-49 test 6 evidence (modernRccNoInsulation) -- inflow:',
+      i2,
+      'kWh; outflow:',
+      o2,
+      'kWh; deviation:',
+      (d2 * 100).toFixed(4),
+      '%',
+    );
   });
 
   it('test 7 -- the Sankey renders with no negative-width link and no NaN node', () => {
@@ -273,7 +365,11 @@ describe('T-49 heat-flow view and Sankey', () => {
     expect(Math.abs(q7Daily)).toBeLessThan(1e-6); // T-22's ~1e-11 W finding, confirmed again here
     const { gains, losses } = classifyFlows(barrack.heatFlows.dailyTotalsKWh);
     for (const term of [...gains, ...losses]) expect(term.key).not.toBe('Q7_interiorLongwave');
-    console.log('T-49 Q7 handling evidence -- Q7 daily total (armyBroBarrack):', q7Daily, 'kWh; excluded from Sankey classification.');
+    console.log(
+      'T-49 Q7 handling evidence -- Q7 daily total (armyBroBarrack):',
+      q7Daily,
+      'kWh; excluded from Sankey classification.',
+    );
   });
 
   it('example layout smoke test -- buildStackedAreaLayout / buildScatterLayout never produce NaN paths for a real run', () => {

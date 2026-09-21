@@ -54,7 +54,10 @@ export function usedGlazingIds(building: Building): string[] {
  * mutation that introduced it, and a missing id can only mean the catalogue
  * has not loaded yet -- `validateRequest` will report it clearly if it is
  * still missing by dispatch time, which is more honest than a UI-level throw. */
-export function rebuildMaterialsRecord(building: Building, catalogue: Material[]): Record<string, Material> {
+export function rebuildMaterialsRecord(
+  building: Building,
+  catalogue: Material[],
+): Record<string, Material> {
   const out: Record<string, Material> = {};
   for (const id of usedMaterialIds(building)) {
     const m = catalogue.find((x) => x.id === id);
@@ -65,7 +68,16 @@ export function rebuildMaterialsRecord(building: Building, catalogue: Material[]
 
 function toEngineGlazing(id: string): Glazing {
   const g = glazingSummaryById(id);
-  return { id: g.id, name: g.name, U: g.U, SHGC: g.SHGC, tauVis: g.tauVis, b0: g.b0, source: g.source, blurb: g.blurb };
+  return {
+    id: g.id,
+    name: g.name,
+    U: g.U,
+    SHGC: g.SHGC,
+    tauVis: g.tauVis,
+    b0: g.b0,
+    source: g.source,
+    blurb: g.blurb,
+  };
 }
 
 export function rebuildGlazingsRecord(building: Building): Record<string, Glazing> {
@@ -79,7 +91,11 @@ export function rebuildGlazingsRecord(building: Building): Record<string, Glazin
  * newly-referenced id. Needs the FULL fetched catalogue (not just what is
  * already in `request.materials`), since a newly-picked material may not be
  * in there yet. */
-function finalizeWithCatalogue(request: SimulationRequest, building: Building, catalogue: Material[]): SimulationRequest {
+function finalizeWithCatalogue(
+  request: SimulationRequest,
+  building: Building,
+  catalogue: Material[],
+): SimulationRequest {
   return {
     ...request,
     building,
@@ -90,31 +106,62 @@ function finalizeWithCatalogue(request: SimulationRequest, building: Building, c
 
 // ============================== WALL / ROOF / FLOOR MATERIAL ==============================
 
-function singleLayerConstruction(materialId: string, catalogue: Material[]): Surface['construction'] {
+function singleLayerConstruction(
+  materialId: string,
+  catalogue: Material[],
+): Surface['construction'] {
   const m = catalogue.find((x) => x.id === materialId);
   const thickness = defaultThicknessM(materialId, m?.category ?? 'structural');
   return [{ materialId, thickness }];
 }
 
-function withConstructionForType(building: Building, type: Surface['type'], construction: Surface['construction']): Building {
+function withConstructionForType(
+  building: Building,
+  type: Surface['type'],
+  construction: Surface['construction'],
+): Building {
   return {
     ...building,
     surfaces: building.surfaces.map((s) => (s.type === type ? { ...s, construction } : s)),
   };
 }
 
-export function setWallMaterial(request: SimulationRequest, materialId: string, catalogue: Material[]): SimulationRequest {
-  const building = withConstructionForType(request.building, 'wall', singleLayerConstruction(materialId, catalogue));
+export function setWallMaterial(
+  request: SimulationRequest,
+  materialId: string,
+  catalogue: Material[],
+): SimulationRequest {
+  const building = withConstructionForType(
+    request.building,
+    'wall',
+    singleLayerConstruction(materialId, catalogue),
+  );
   return finalizeWithCatalogue(request, building, catalogue);
 }
 
-export function setRoofMaterial(request: SimulationRequest, materialId: string, catalogue: Material[]): SimulationRequest {
-  const building = withConstructionForType(request.building, 'roof', singleLayerConstruction(materialId, catalogue));
+export function setRoofMaterial(
+  request: SimulationRequest,
+  materialId: string,
+  catalogue: Material[],
+): SimulationRequest {
+  const building = withConstructionForType(
+    request.building,
+    'roof',
+    singleLayerConstruction(materialId, catalogue),
+  );
   return finalizeWithCatalogue(request, building, catalogue);
 }
 
-export function setFloorMaterial(request: SimulationRequest, materialId: string, catalogue: Material[]): SimulationRequest {
-  const building = withConstructionForType(request.building, 'floor', singleLayerConstruction(materialId, catalogue));
+export function setFloorMaterial(
+  request: SimulationRequest,
+  materialId: string,
+  catalogue: Material[],
+): SimulationRequest {
+  const building = withConstructionForType(
+    request.building,
+    'floor',
+    singleLayerConstruction(materialId, catalogue),
+  );
   return finalizeWithCatalogue(request, building, catalogue);
 }
 
@@ -149,7 +196,9 @@ export function setLayerThickness(
     ...request.building,
     surfaces: request.building.surfaces.map((s) => {
       if (s.id !== surfaceId) return s;
-      const construction = s.construction.map((layer, i) => (i === layerIndex ? { ...layer, thickness: thicknessM } : layer));
+      const construction = s.construction.map((layer, i) =>
+        i === layerIndex ? { ...layer, thickness: thicknessM } : layer,
+      );
       return { ...s, construction };
     }),
   };
@@ -169,7 +218,9 @@ export function currentGlazingId(building: Building): string {
 }
 
 export function nightShuttersEnabled(building: Building): boolean {
-  return building.windows.length > 0 && building.windows.every((w) => w.shutterResistance !== undefined);
+  return (
+    building.windows.length > 0 && building.windows.every((w) => w.shutterResistance !== undefined)
+  );
 }
 
 const NIGHT_SHUTTER_SCHEDULE = Array.from({ length: 24 }, (_, h) => h >= 20 || h < 6);
@@ -180,7 +231,11 @@ export function setNightShutters(request: SimulationRequest, enabled: boolean): 
       const { shadingSchedule: _s, shutterResistance: _r, ...rest } = w;
       return rest;
     }
-    return { ...w, shadingSchedule: NIGHT_SHUTTER_SCHEDULE, shutterResistance: NIGHT_SHUTTER_RESISTANCE };
+    return {
+      ...w,
+      shadingSchedule: NIGHT_SHUTTER_SCHEDULE,
+      shutterResistance: NIGHT_SHUTTER_RESISTANCE,
+    };
   });
   return { ...request, building: { ...request.building, windows } };
 }
@@ -202,7 +257,9 @@ function wallForOrientation(building: Building, orientation: Orientation): Surfa
 export function currentWwr(building: Building, orientation: Orientation): number {
   const wall = wallForOrientation(building, orientation);
   if (!wall || wall.area <= 0) return 0;
-  const area = building.windows.filter((w) => w.hostSurfaceId === wall.id).reduce((sum, w) => sum + w.area, 0);
+  const area = building.windows
+    .filter((w) => w.hostSurfaceId === wall.id)
+    .reduce((sum, w) => sum + w.area, 0);
   return area / wall.area;
 }
 
@@ -210,7 +267,11 @@ export function currentWwr(building: Building, orientation: Orientation): number
  * or creates/removes one, keeping the currently-selected glazing type and
  * night-shutter state. At most one window per orientation on this basic
  * panel -- the stack editor is not needed to see the effect of this slider. */
-export function setWwr(request: SimulationRequest, orientation: Orientation, wwr: number): SimulationRequest {
+export function setWwr(
+  request: SimulationRequest,
+  orientation: Orientation,
+  wwr: number,
+): SimulationRequest {
   const clamped = Math.min(0.9, Math.max(0, wwr));
   const wall = wallForOrientation(request.building, orientation);
   if (!wall) return request;
@@ -258,10 +319,13 @@ export interface SizeM {
 export function currentSize(building: Building): SizeM {
   const south = building.surfaces.find((s) => s.type === 'wall' && s.azimuth === 0);
   const east = building.surfaces.find((s) => s.type === 'wall' && s.azimuth === -90);
-  const heightM = south && south.area > 0 ? south.area / Math.max(1e-6, lengthFromFloorArea(building)) : 2.6;
+  const heightM =
+    south && south.area > 0 ? south.area / Math.max(1e-6, lengthFromFloorArea(building)) : 2.6;
   return {
     lengthM: lengthFromFloorArea(building),
-    widthM: east ? east.area / Math.max(1e-6, heightM) : building.floorArea / Math.max(1e-6, lengthFromFloorArea(building)),
+    widthM: east
+      ? east.area / Math.max(1e-6, heightM)
+      : building.floorArea / Math.max(1e-6, lengthFromFloorArea(building)),
     heightM,
   };
 }
@@ -306,14 +370,18 @@ export function setSize(request: SimulationRequest, size: SizeM): SimulationRequ
 
   let building: Building = { ...request.building, floorArea, volume, surfaces };
   for (const o of ORIENTATIONS) {
-    if (wwrByOrientation[o] > 0) building = setWwr({ ...request, building }, o, wwrByOrientation[o]).building;
+    if (wwrByOrientation[o] > 0)
+      building = setWwr({ ...request, building }, o, wwrByOrientation[o]).building;
   }
   return { ...request, building, glazings: rebuildGlazingsRecord(building) };
 }
 
 // ============================== OCCUPANCY / HEATING PRESET ==============================
 
-export function setOccupancyPreset(request: SimulationRequest, occupancyId: string): SimulationRequest {
+export function setOccupancyPreset(
+  request: SimulationRequest,
+  occupancyId: string,
+): SimulationRequest {
   const p = occupancyPresetById(occupancyId);
   const operation: Operation = {
     ...request.operation,
@@ -337,7 +405,11 @@ export function setOccupancyPreset(request: SimulationRequest, occupancyId: stri
  * building's own current footprint (length/width/height) is preserved --
  * loading a shelter type changes ITS envelope, not the size the user already
  * dialled in. */
-export function applyPresetSummary(request: SimulationRequest, presetId: string, catalogue: Material[]): SimulationRequest {
+export function applyPresetSummary(
+  request: SimulationRequest,
+  presetId: string,
+  catalogue: Material[],
+): SimulationRequest {
   const p: PresetSummary = presetSummaryById(presetId);
 
   // `area`/`tilt`/`azimuth`/`boundary`/`id` are left untouched on every
@@ -345,17 +417,29 @@ export function applyPresetSummary(request: SimulationRequest, presetId: string,
   // last set), which loading a shelter-type card must not silently reset.
   const surfaces: Surface[] = request.building.surfaces.map((s) => {
     if (s.type === 'wall') {
-      return { ...s, construction: p.wallLayers, exteriorAbsorptivity: p.exteriorAbsorptivity, exteriorEmissivity: p.exteriorEmissivity };
+      return {
+        ...s,
+        construction: p.wallLayers,
+        exteriorAbsorptivity: p.exteriorAbsorptivity,
+        exteriorEmissivity: p.exteriorEmissivity,
+      };
     }
     if (s.type === 'roof') {
-      return { ...s, construction: p.roofLayers, exteriorAbsorptivity: p.exteriorAbsorptivity, exteriorEmissivity: p.exteriorEmissivity };
+      return {
+        ...s,
+        construction: p.roofLayers,
+        exteriorAbsorptivity: p.exteriorAbsorptivity,
+        exteriorEmissivity: p.exteriorEmissivity,
+      };
     }
     if (s.type === 'floor') return { ...s, construction: p.floorLayers };
     return s;
   });
 
   const southWall = surfaces.find((s) => s.type === 'wall' && s.azimuth === 0);
-  const windows: WindowSpec[] = southWall ? [defaultWindowSpecFor(southWall.id, p.window)] : request.building.windows;
+  const windows: WindowSpec[] = southWall
+    ? [defaultWindowSpecFor(southWall.id, p.window)]
+    : request.building.windows;
 
   const building: Building = { ...request.building, surfaces, windows };
 
@@ -385,7 +469,11 @@ export function applyPresetSummary(request: SimulationRequest, presetId: string,
  * has a real right-hand point at the last timestep instead of repeating the
  * final one -- `sample()` clamps safely either way, so this is an accuracy
  * nicety, not a correctness requirement. */
-export function sliceWeatherToDay(full: WeatherSeries, dayOfYear: number, daysCount = 1): WeatherSeries {
+export function sliceWeatherToDay(
+  full: WeatherSeries,
+  dayOfYear: number,
+  daysCount = 1,
+): WeatherSeries {
   const stepsPerHour = 3600 / full.stepSeconds;
   const startIdx = Math.round((dayOfYear - full.startDayOfYear) * 24 * stepsPerHour);
   const lengthIdx = Math.round(daysCount * 24 * stepsPerHour);

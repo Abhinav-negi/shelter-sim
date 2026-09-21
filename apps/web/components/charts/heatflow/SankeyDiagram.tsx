@@ -16,7 +16,12 @@ export function SankeyDiagram({ dailyTotalsKWh }: { dailyTotalsKWh: Record<strin
 
   return (
     <div className={styles.scrollBox} data-testid="heatflow-sankey">
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="Where the shelter's heat comes from and where it goes" className={styles.svg}>
+      <svg
+        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        role="img"
+        aria-label="Where the shelter's heat comes from and where it goes"
+        className={styles.svg}
+      >
         {links.map((link, i) => (
           <path
             key={i}
@@ -30,7 +35,13 @@ export function SankeyDiagram({ dailyTotalsKWh }: { dailyTotalsKWh: Record<strin
         ))}
         {nodes.map((node) => (
           <g key={node.id} data-testid={`sankey-node-${node.id}`}>
-            <rect x={node.x0} y={node.y0} width={(node.x1 ?? 0) - (node.x0 ?? 0)} height={Math.max(1, (node.y1 ?? 0) - (node.y0 ?? 0))} fill={node.color} />
+            <rect
+              x={node.x0}
+              y={node.y0}
+              width={(node.x1 ?? 0) - (node.x0 ?? 0)}
+              height={Math.max(1, (node.y1 ?? 0) - (node.y0 ?? 0))}
+              fill={node.color}
+            />
             <text
               x={(node.x0 ?? 0) < WIDTH / 2 ? (node.x1 ?? 0) + 6 : (node.x0 ?? 0) - 6}
               y={((node.y0 ?? 0) + (node.y1 ?? 0)) / 2}
@@ -38,7 +49,9 @@ export function SankeyDiagram({ dailyTotalsKWh }: { dailyTotalsKWh: Record<strin
               textAnchor={(node.x0 ?? 0) < WIDTH / 2 ? 'start' : 'end'}
               className={styles.sankeyLabel}
             >
-              {node.id === 'shelter' ? node.label : `${node.label} — ${formatEnergy(node.value ?? 0)}`}
+              {node.id === 'shelter'
+                ? node.label
+                : `${node.label} — ${formatEnergy(node.value ?? 0)}`}
             </text>
           </g>
         ))}

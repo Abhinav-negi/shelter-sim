@@ -18,6 +18,7 @@
 > D-1** before starting anything here.
 >
 > **Three rules bind every task in this area and none of them is negotiable:**
+>
 > 1. **No users, no auth, no sessions, no JWT, no permissions, no `userId` column.** If a task seems
 >    to need one, it does not.
 > 2. **`packages/**` may never import `@prisma/client`.** The lint rule from T-03 enforces it and CI

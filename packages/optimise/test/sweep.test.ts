@@ -24,7 +24,10 @@ function concurrentRunner(): (req: SimulationRequest) => Promise<SimulationResul
 }
 
 const THE_100_VARIANT_SPEC: VariableSpec[] = [
-  { kind: 'wallConstruction', values: ['stone', 'rammedEarth', 'firedBrick', 'mudBrick', 'denseConcrete'] },
+  {
+    kind: 'wallConstruction',
+    values: ['stone', 'rammedEarth', 'firedBrick', 'mudBrick', 'denseConcrete'],
+  },
   { kind: 'wwr', orientation: 'S', values: [0.1, 0.2, 0.3, 0.4] },
   { kind: 'buildingAzimuth', values: [0, 45, 90, 135, 180] },
 ];
@@ -47,14 +50,25 @@ describe('acceptance test 1 -- 5 materials x 4 wwr fractions x 5 azimuths = 100 
     expect(variants.length).toBe(100);
 
     // distinctness: no two requests are deep-equal
-    const seen = new Set(variants.map((v) => JSON.stringify(v.request, (_, val) => (val instanceof Float64Array ? Array.from(val) : val))));
+    const seen = new Set(
+      variants.map((v) =>
+        JSON.stringify(v.request, (_, val) =>
+          val instanceof Float64Array ? Array.from(val) : val,
+        ),
+      ),
+    );
     expect(seen.size).toBe(100);
 
     const base = req.base;
     for (const v of variants) {
       // building.azimuth is the only Building field allowed to differ
       const { azimuth: _az, ...buildingRest } = v.request.building;
-      const { azimuth: _azBase, surfaces: baseSurfaces, windows: baseWindows, ...baseBuildingRest } = base.building;
+      const {
+        azimuth: _azBase,
+        surfaces: baseSurfaces,
+        windows: baseWindows,
+        ...baseBuildingRest
+      } = base.building;
       const { surfaces, windows, ...variantBuildingRest } = buildingRest as typeof base.building;
       expect(variantBuildingRest).toEqual(baseBuildingRest);
 
@@ -81,7 +95,11 @@ describe('acceptance test 1 -- 5 materials x 4 wwr fractions x 5 azimuths = 100 
       expect(v.request.materials).toEqual(base.materials);
       expect(v.request.glazings).toEqual(base.glazings);
 
-      expect(Object.keys(v.overrides).sort()).toEqual(['buildingAzimuth', 'wallConstruction', 'wwr:S']);
+      expect(Object.keys(v.overrides).sort()).toEqual([
+        'buildingAzimuth',
+        'wallConstruction',
+        'wwr:S',
+      ]);
     }
   });
 });
@@ -100,7 +118,8 @@ describe('acceptance test 3 -- insulationPosition reorders layers without changi
     const req: SweepRequest = {
       base: baseRequest(),
       variables: [{ kind: 'insulationPosition', values: ['inside', 'outside'] }],
-      mode: 'grid', maxVariants: 10,
+      mode: 'grid',
+      maxVariants: 10,
       constraints: { achMin: ACH_MIN },
       objectives: [{ metric: 'auxEnergyKWhPerDay', direction: 'min' }],
     };
@@ -115,10 +134,16 @@ describe('acceptance test 3 -- insulationPosition reorders layers without changi
     const hOuter = hConvExterior(2, 3500);
     const hInner = hConvInterior('wall', 0, 0, 3500);
     const uInside = constructionUValue(buildWallMesh(insideWall.construction, MAT), hOuter, hInner);
-    const uOutside = constructionUValue(buildWallMesh(outsideWall.construction, MAT), hOuter, hInner);
+    const uOutside = constructionUValue(
+      buildWallMesh(outsideWall.construction, MAT),
+      hOuter,
+      hInner,
+    );
     expect(uInside).toBeCloseTo(uOutside, 9);
 
-    expect(insideWall.construction.map((l) => l.materialId)).not.toEqual(outsideWall.construction.map((l) => l.materialId));
+    expect(insideWall.construction.map((l) => l.materialId)).not.toEqual(
+      outsideWall.construction.map((l) => l.materialId),
+    );
   });
 });
 
@@ -137,7 +162,8 @@ describe('acceptance test 6 -- ACH below the safety floor stays in variants as i
     const req: SweepRequest = {
       base: baseRequest(),
       variables: [{ kind: 'ach', values: [0.1, 0.5, 1.0] }],
-      mode: 'grid', maxVariants: 10,
+      mode: 'grid',
+      maxVariants: 10,
       constraints: { achMin: ACH_MIN },
       objectives: [{ metric: 'auxEnergyKWhPerDay', direction: 'min' }],
     };
@@ -160,7 +186,9 @@ describe('acceptance test 7 -- AbortSignal cancels dispatch within one variant r
       return simulate(req);
     };
     const t0 = performance.now();
-    await expect(runSweep(the100VariantRequest(), countingRunner, undefined, controller.signal)).rejects.toThrow();
+    await expect(
+      runSweep(the100VariantRequest(), countingRunner, undefined, controller.signal),
+    ).rejects.toThrow();
     const elapsedMs = performance.now() - t0;
     expect(started).toBe(2); // the variant in flight when abort() fired is allowed to finish; no third is started
     expect(elapsedMs).toBeGreaterThanOrEqual(0);
@@ -170,10 +198,13 @@ describe('acceptance test 7 -- AbortSignal cancels dispatch within one variant r
 describe('acceptance test 8 -- onProgress fires monotonically and ends at done === total', () => {
   it('reports strictly increasing done values ending at total', async () => {
     const calls: Array<{ done: number; total: number }> = [];
-    await runSweep(the100VariantRequest(), syncRunner, (done, total) => calls.push({ done, total }));
+    await runSweep(the100VariantRequest(), syncRunner, (done, total) =>
+      calls.push({ done, total }),
+    );
     expect(calls.length).toBeGreaterThan(0);
     expect(calls.every((c) => c.total === 100)).toBe(true);
-    for (let i = 1; i < calls.length; i++) expect(calls[i]!.done).toBeGreaterThan(calls[i - 1]!.done);
+    for (let i = 1; i < calls.length; i++)
+      expect(calls[i]!.done).toBeGreaterThan(calls[i - 1]!.done);
     expect(calls.at(-1)!.done).toBe(100);
   });
 });
@@ -192,18 +223,24 @@ describe('acceptance test 10 -- aspectRatio variants keep floorArea fixed', () =
     const req: SweepRequest = {
       base: baseRequest(),
       variables: [{ kind: 'aspectRatio', values: [0.5, 1, 1.5, 2, 3] }],
-      mode: 'grid', maxVariants: 10,
+      mode: 'grid',
+      maxVariants: 10,
       constraints: { achMin: ACH_MIN },
       objectives: [{ metric: 'auxEnergyKWhPerDay', direction: 'min' }],
     };
     const variants = expandVariants(req);
-    for (const v of variants) expect(Math.abs(v.request.building.floorArea - req.base.building.floorArea)).toBeLessThan(1e-9);
+    for (const v of variants)
+      expect(Math.abs(v.request.building.floorArea - req.base.building.floorArea)).toBeLessThan(
+        1e-9,
+      );
   });
 });
 
 describe('acceptance test 11 -- package.json dependency isolation', () => {
   it('lists @shelter/engine and nothing else in dependencies', () => {
-    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8')) as { dependencies?: Record<string, string> };
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8')) as {
+      dependencies?: Record<string, string>;
+    };
     expect(Object.keys(pkg.dependencies ?? {})).toEqual(['@shelter/engine']);
   });
 });
@@ -231,7 +268,10 @@ describe('acceptance test 4 -- spin-up sharing changes speed, not answers', () =
     let maxDevK = 0;
     for (let i = 0; i < unshared.length; i++) {
       const withSharing = byId.get(unshared[i]!.id)!;
-      maxDevK = Math.max(maxDevK, Math.abs(withSharing.kpis.tempAt0600 - unsharedResults[i]!.kpis.tempAt0600));
+      maxDevK = Math.max(
+        maxDevK,
+        Math.abs(withSharing.kpis.tempAt0600 - unsharedResults[i]!.kpis.tempAt0600),
+      );
     }
 
     // See sweep.ts's `SpinUpCacheEntry` doc and this task's Evidence block (2026-09-21

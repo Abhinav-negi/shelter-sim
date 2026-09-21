@@ -52,7 +52,12 @@ export function validateRange(value: number, range: Range, label: string): Field
   return null;
 }
 
-export function validateArrayEntry(value: number, range: Range, label: string, index: number): FieldError | null {
+export function validateArrayEntry(
+  value: number,
+  range: Range,
+  label: string,
+  index: number,
+): FieldError | null {
   if (!Number.isFinite(value)) return { message: `${label}[${index}] must be a number` };
   if (value < range.min || value > range.max) {
     return { message: `${label}[${index}] must be between ${range.min} and ${range.max}` };
@@ -152,7 +157,10 @@ export const NUMERIC_SIM_OPTION_FIELDS: NumericFieldDef[] = [
 export const SKY_MODEL_OPTIONS = ['isotropic', 'hdkr'] as const;
 export const SKY_MODEL_DEFAULT: SimOptions['skyModel'] = DEFAULT_SIM_OPTIONS.skyModel;
 
-export function setSkyModel(req: SimulationRequest, value: SimOptions['skyModel']): SimulationRequest {
+export function setSkyModel(
+  req: SimulationRequest,
+  value: SimOptions['skyModel'],
+): SimulationRequest {
   return { ...req, options: { ...req.options, skyModel: value } };
 }
 
@@ -171,7 +179,10 @@ export const UNSAFE_VENTILATION_WARNING =
   `normal setting -- it defaults to off and the ${ACH_MIN} ACH floor is enforced again independently ` +
   'inside the engine (LOG.md global rule 10).';
 
-export function setAllowUnsafeVentilation(req: SimulationRequest, value: boolean): SimulationRequest {
+export function setAllowUnsafeVentilation(
+  req: SimulationRequest,
+  value: boolean,
+): SimulationRequest {
   return { ...req, options: { ...req.options, allowUnsafeVentilation: value } };
 }
 
@@ -207,7 +218,8 @@ export const thermalBridgeFactorField: NumericFieldDef = {
 // for that surface, the only well-defined default a per-surface field can
 // have (LOG.md rule 13: documented, not hidden).
 
-export type SurfaceOpticalKey = 'exteriorAbsorptivity' | 'exteriorEmissivity' | 'interiorEmissivity';
+export type SurfaceOpticalKey =
+  'exteriorAbsorptivity' | 'exteriorEmissivity' | 'interiorEmissivity';
 
 const SURFACE_OPTICAL_LABELS: Record<SurfaceOpticalKey, string> = {
   exteriorAbsorptivity: 'Exterior solar absorptivity',
@@ -216,12 +228,19 @@ const SURFACE_OPTICAL_LABELS: Record<SurfaceOpticalKey, string> = {
 };
 
 const SURFACE_OPTICAL_NOTES: Record<SurfaceOpticalKey, string> = {
-  exteriorAbsorptivity: 'Fraction of incident solar absorbed by the exterior finish (CONTRACTS §7.11 optical-properties table).',
-  exteriorEmissivity: 'Longwave emissivity of the exterior finish; drives sky-radiation loss Q4 (CONTRACTS §7.10).',
-  interiorEmissivity: 'Longwave emissivity of the interior finish; drives interior longwave exchange Q7 (CONTRACTS §7.10).',
+  exteriorAbsorptivity:
+    'Fraction of incident solar absorbed by the exterior finish (CONTRACTS §7.11 optical-properties table).',
+  exteriorEmissivity:
+    'Longwave emissivity of the exterior finish; drives sky-radiation loss Q4 (CONTRACTS §7.10).',
+  interiorEmissivity:
+    'Longwave emissivity of the interior finish; drives interior longwave exchange Q7 (CONTRACTS §7.10).',
 };
 
-function surfaceOpticalField(surfaceId: string, key: SurfaceOpticalKey, defaultValue: number): NumericFieldDef {
+function surfaceOpticalField(
+  surfaceId: string,
+  key: SurfaceOpticalKey,
+  defaultValue: number,
+): NumericFieldDef {
   return {
     key: `surface.${surfaceId}.${key}`,
     label: `${SURFACE_OPTICAL_LABELS[key]} — ${surfaceId}`,
@@ -234,7 +253,9 @@ function surfaceOpticalField(surfaceId: string, key: SurfaceOpticalKey, defaultV
       ...req,
       building: {
         ...req.building,
-        surfaces: req.building.surfaces.map((s) => (s.id === surfaceId ? { ...s, [key]: value } : s)),
+        surfaces: req.building.surfaces.map((s) =>
+          s.id === surfaceId ? { ...s, [key]: value } : s,
+        ),
       },
     }),
   };
@@ -264,7 +285,10 @@ export const groundAlbedoField: NumericFieldDef = {
   note:
     'Fraction of incident solar reflected by the ground. Default 0.30 (dry high-altitude desert, ' +
     'CONTRACTS Appendix C); the snow-cover override sets the winter value 0.75.',
-  get: (req) => (Array.isArray(req.site.groundAlbedo) ? (req.site.groundAlbedo[0] ?? GROUND_ALBEDO_DEFAULT) : req.site.groundAlbedo),
+  get: (req) =>
+    Array.isArray(req.site.groundAlbedo)
+      ? (req.site.groundAlbedo[0] ?? GROUND_ALBEDO_DEFAULT)
+      : req.site.groundAlbedo,
   set: (req, value) => ({ ...req, site: { ...req.site, groundAlbedo: value } }),
 };
 
@@ -280,7 +304,10 @@ export const groundTempMeanAnnualField: NumericFieldDef = {
     'Deep-soil annual-mean temperature driving the Kusuda-Achenbach ground model (CONTRACTS §7.10). ' +
     'The one absolute-Kelvin field in this panel: shown and edited in °C, stored as Kelvin (CONTRACTS §7.1).',
   get: (req) => toC(req.site.groundTempMeanAnnual),
-  set: (req, valueC) => ({ ...req, site: { ...req.site, groundTempMeanAnnual: toK(valueC as Celsius) } }),
+  set: (req, valueC) => ({
+    ...req,
+    site: { ...req.site, groundTempMeanAnnual: toK(valueC as Celsius) },
+  }),
 };
 
 export const GROUND_TEMP_AMPLITUDE_DEFAULT = 12; // CONTRACTS §7.10 Leh anchor: "A_s = 12 K"

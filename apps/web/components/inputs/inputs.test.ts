@@ -27,11 +27,7 @@ import { glazingById, materialById, MATERIALS, PRESETS, tmyById } from '@shelter
 import { simulate } from '@shelter/engine';
 import type { Glazing, Material, Preset, SimulationRequest } from '@shelter/engine';
 import { __debugDispatchCount, actions, getStoreState, hydrateStore } from '../../lib/store';
-import {
-  PRESET_SUMMARIES,
-  GLAZINGS as GLAZING_SUMMARIES,
-  TMY_LOCATIONS,
-} from './catalog';
+import { PRESET_SUMMARIES, GLAZINGS as GLAZING_SUMMARIES, TMY_LOCATIONS } from './catalog';
 import {
   applyPresetSummary,
   currentFloorMaterialId,
@@ -57,10 +53,12 @@ import { fetchMaterials, __resetMaterialsCacheForTest } from './materialsApi';
 function resolvePreset(preset: Preset): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
 }
 
@@ -78,7 +76,10 @@ function mockMaterialsFetchOnce() {
     'fetch',
     vi.fn(async (url: string) => {
       if (url === '/api/materials') {
-        return new Response(JSON.stringify({ materials: catalogue, schemaVersion: 1, servedFrom: 'code' }), { status: 200 });
+        return new Response(
+          JSON.stringify({ materials: catalogue, schemaVersion: 1, servedFrom: 'code' }),
+          { status: 200 },
+        );
       }
       throw new Error(`unexpected fetch: ${url}`);
     }),
@@ -141,7 +142,10 @@ describe('T-44 simple form', () => {
       // And the resulting request is actually simulatable, not just shaped right.
       expect(() => simulate(next)).not.toThrow();
     }
-    console.log('T-44 test 4 evidence -- all 6 presets populate every control and simulate cleanly:', PRESET_SUMMARIES.map((p) => p.id));
+    console.log(
+      'T-44 test 4 evidence -- all 6 presets populate every control and simulate cleanly:',
+      PRESET_SUMMARIES.map((p) => p.id),
+    );
   });
 
   it('test 5 -- changing wall material triggers exactly one re-simulation after the debounce', async () => {
@@ -197,7 +201,12 @@ describe('T-44 simple form', () => {
     expect(row2).toBeDefined();
     const row3 = outcome.rowErrors.find((e) => e.row === 3 && e.column === 'v_wind');
     expect(row3).toBeDefined();
-    console.log('T-44 test 8 evidence -- error text for row 2:', row2!.message, '| row 3:', row3!.message);
+    console.log(
+      'T-44 test 8 evidence -- error text for row 2:',
+      row2!.message,
+      '| row 3:',
+      row3!.message,
+    );
   });
 
   it('test 9 -- grep for the Kelvin-Celsius offset constant in this directory returns nothing (checked again via a real grep)', () => {
@@ -209,7 +218,9 @@ describe('T-44 simple form', () => {
     const offsetLiteral = ['273', '15'].join('.');
     let output = '';
     try {
-      output = execFileSync('grep', ['-rn', offsetLiteral.replace('.', '\\.'), dir], { encoding: 'utf8' });
+      output = execFileSync('grep', ['-rn', offsetLiteral.replace('.', '\\.'), dir], {
+        encoding: 'utf8',
+      });
     } catch (err: unknown) {
       // grep exits 1 (not an error here) when there are zero matches.
       output = (err as { stdout?: string }).stdout ?? '';
@@ -218,26 +229,24 @@ describe('T-44 simple form', () => {
     console.log('T-44 test 9 evidence -- grep output (expect empty):', JSON.stringify(output));
   });
 
-  it(
-    'test 10 -- at 400px width every control is reachable with no horizontal scroll (real headless Chrome measurement)',
-    async () => {
-      const execFileP = promisify(execFile);
-      // esbuild resolves bare specifiers ("react", ...) by walking UP from
-      // the entry file's own directory looking for node_modules -- an
-      // os.tmpdir() location has no such ancestor, so the scratch directory
-      // is created INSIDE the repo instead (never committed: created fresh
-      // and removed in `finally` below, and nothing here is `git add`ed).
-      const repoRoot = path.resolve(__dirname, '../../../..');
-      const dir = mkdtempSync(path.join(repoRoot, '.t44-width-'));
-      try {
-        // esbuild bundles the REAL component tree (SimpleForm + its store/
-        // engine imports) -- same one-off-harness technique as T-45's own
-        // test 10 (esbuild is already a transitive devDependency here, used
-        // only as a build tool, never added to any package.json).
-        const entry = path.join(dir, 'entry.tsx');
-        writeFileSync(
-          entry,
-          `
+  it('test 10 -- at 400px width every control is reachable with no horizontal scroll (real headless Chrome measurement)', async () => {
+    const execFileP = promisify(execFile);
+    // esbuild resolves bare specifiers ("react", ...) by walking UP from
+    // the entry file's own directory looking for node_modules -- an
+    // os.tmpdir() location has no such ancestor, so the scratch directory
+    // is created INSIDE the repo instead (never committed: created fresh
+    // and removed in `finally` below, and nothing here is `git add`ed).
+    const repoRoot = path.resolve(__dirname, '../../../..');
+    const dir = mkdtempSync(path.join(repoRoot, '.t44-width-'));
+    try {
+      // esbuild bundles the REAL component tree (SimpleForm + its store/
+      // engine imports) -- same one-off-harness technique as T-45's own
+      // test 10 (esbuild is already a transitive devDependency here, used
+      // only as a build tool, never added to any package.json).
+      const entry = path.join(dir, 'entry.tsx');
+      writeFileSync(
+        entry,
+        `
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { hydrateStore, actions } from '${path.resolve(__dirname, '../../lib/store.ts')}';
@@ -269,91 +278,110 @@ setTimeout(() => {
   });
 }, 150);
 `,
-        );
-        writeFileSync(
-          path.join(dir, 'fixture.json'),
-          JSON.stringify({
-            request: setWwr(baseRequest, 'S', 0.3),
-            result: simulate(baseRequest),
-            presetId: lehPreset.id,
-            materials: catalogue,
-          }),
-        );
-        writeFileSync(
-          path.join(dir, 'index.html'),
-          `<!doctype html><html><body style="margin:0">
+      );
+      writeFileSync(
+        path.join(dir, 'fixture.json'),
+        JSON.stringify({
+          request: setWwr(baseRequest, 'S', 0.3),
+          result: simulate(baseRequest),
+          presetId: lehPreset.id,
+          materials: catalogue,
+        }),
+      );
+      writeFileSync(
+        path.join(dir, 'index.html'),
+        `<!doctype html><html><body style="margin:0">
 <div id="container" style="width:400px;border:1px solid black;box-sizing:content-box"></div>
 <div id="measurement">pending</div>
 <script type="module" src="./bundle.js"></script>
 </body></html>`,
+      );
+
+      const esbuildBin = path.resolve(__dirname, '../../../../node_modules/.bin/esbuild');
+      await execFileP(esbuildBin, [
+        entry,
+        '--bundle',
+        '--format=esm',
+        '--jsx=automatic',
+        '--loader:.json=json',
+        '--define:process.env.NODE_ENV="production"',
+        '--define:process.env.NEXT_PUBLIC_DEFAULT_LOCATION="leh"',
+        '--define:process.env.NEXT_PUBLIC_DEFAULT_LOCALE="en"',
+        `--outfile=${path.join(dir, 'bundle.js')}`,
+      ]);
+
+      const server = http.createServer((req, res) => {
+        const p = path.join(
+          dir,
+          (req.url ?? '/') === '/' ? 'index.html' : (req.url as string).slice(1),
         );
+        if (!existsSync(p)) {
+          res.writeHead(404);
+          res.end();
+          return;
+        }
+        const ext = path.extname(p);
+        const contentType =
+          ext === '.js' ? 'text/javascript' : ext === '.json' ? 'application/json' : 'text/html';
+        res.writeHead(200, { 'Content-Type': contentType });
+        res.end(readFileSync(p));
+      });
+      await new Promise<void>((resolve) => server.listen(0, resolve));
+      const port = (server.address() as { port: number }).port;
 
-        const esbuildBin = path.resolve(__dirname, '../../../../node_modules/.bin/esbuild');
-        await execFileP(esbuildBin, [
-          entry,
-          '--bundle',
-          '--format=esm',
-          '--jsx=automatic',
-          '--loader:.json=json',
-          '--define:process.env.NODE_ENV="production"',
-          '--define:process.env.NEXT_PUBLIC_DEFAULT_LOCATION="leh"',
-          '--define:process.env.NEXT_PUBLIC_DEFAULT_LOCALE="en"',
-          `--outfile=${path.join(dir, 'bundle.js')}`,
-        ]);
+      const { stdout } = await execFileP(
+        'google-chrome',
+        [
+          '--headless=new',
+          '--disable-gpu',
+          '--no-sandbox',
+          '--dump-dom',
+          `--virtual-time-budget=2000`,
+          `http://localhost:${port}/`,
+        ],
+        { maxBuffer: 20 * 1024 * 1024 },
+      );
+      server.close();
 
-        const server = http.createServer((req, res) => {
-          const p = path.join(dir, (req.url ?? '/') === '/' ? 'index.html' : (req.url as string).slice(1));
-          if (!existsSync(p)) {
-            res.writeHead(404);
-            res.end();
-            return;
-          }
-          const ext = path.extname(p);
-          const contentType = ext === '.js' ? 'text/javascript' : ext === '.json' ? 'application/json' : 'text/html';
-          res.writeHead(200, { 'Content-Type': contentType });
-          res.end(readFileSync(p));
-        });
-        await new Promise<void>((resolve) => server.listen(0, resolve));
-        const port = (server.address() as { port: number }).port;
-
-        const { stdout } = await execFileP(
-          'google-chrome',
-          ['--headless=new', '--disable-gpu', '--no-sandbox', '--dump-dom', `--virtual-time-budget=2000`, `http://localhost:${port}/`],
-          { maxBuffer: 20 * 1024 * 1024 },
-        );
-        server.close();
-
-        const match = stdout.match(/<div id="measurement">([^<]*)<\/div>/);
-        expect(match).toBeTruthy();
-        const measured = JSON.parse(match![1]!) as {
-          containerWidthPx: number;
-          clientWidth: number;
-          scrollWidth: number;
-          hasHorizontalOverflow: boolean;
-        };
-        expect(measured.hasHorizontalOverflow).toBe(false);
-        console.log('T-44 test 10 evidence -- real headless-Chrome measurement at 400px:', measured);
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
-    },
-    30_000,
-  );
+      const match = stdout.match(/<div id="measurement">([^<]*)<\/div>/);
+      expect(match).toBeTruthy();
+      const measured = JSON.parse(match![1]!) as {
+        containerWidthPx: number;
+        clientWidth: number;
+        scrollWidth: number;
+        hasHorizontalOverflow: boolean;
+      };
+      expect(measured.hasHorizontalOverflow).toBe(false);
+      console.log('T-44 test 10 evidence -- real headless-Chrome measurement at 400px:', measured);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 30_000);
 
   it('test 11 -- every rendered input/select has a matching <label htmlFor>', () => {
     const markup = renderToStaticMarkup(React.createElement(SimpleForm));
     const ids = [...markup.matchAll(/<(?:input|select)[^>]*\bid="([^"]+)"/g)].map((m) => m[1]);
     // React's `htmlFor` prop renders as the real DOM attribute `for="..."`.
-    const labelledFor = new Set([...markup.matchAll(/<label[^>]*\bfor="([^"]+)"/g)].map((m) => m[1]));
+    const labelledFor = new Set(
+      [...markup.matchAll(/<label[^>]*\bfor="([^"]+)"/g)].map((m) => m[1]),
+    );
     const missing = ids.filter((id) => !labelledFor.has(id));
     expect(missing).toEqual([]);
-    console.log('T-44 test 11 evidence -- input/select ids checked:', ids.length, 'all labelled:', missing.length === 0);
+    console.log(
+      'T-44 test 11 evidence -- input/select ids checked:',
+      ids.length,
+      'all labelled:',
+      missing.length === 0,
+    );
   });
 
   it('test 12 -- with the database off, /api/materials still serves the full code catalogue', async () => {
     const prevUrl = process.env.DATABASE_URL;
     const stashKey = '__sheltersimDb' as const;
-    const globalAny = globalThis as unknown as Record<string, { $disconnect?: () => Promise<void> } | undefined>;
+    const globalAny = globalThis as unknown as Record<
+      string,
+      { $disconnect?: () => Promise<void> } | undefined
+    >;
     if (globalAny[stashKey]?.$disconnect) await globalAny[stashKey]!.$disconnect!().catch(() => {});
     delete globalAny[stashKey];
     delete process.env.DATABASE_URL;
@@ -365,11 +393,17 @@ setTimeout(() => {
       expect(res.status).toBe(200);
       expect(body.servedFrom).toBe('code');
       expect(body.materials.length).toBe(MATERIALS.length);
-      console.log('T-44 test 12 evidence -- DB-off /api/materials item count:', body.materials.length, 'servedFrom:', body.servedFrom);
+      console.log(
+        'T-44 test 12 evidence -- DB-off /api/materials item count:',
+        body.materials.length,
+        'servedFrom:',
+        body.servedFrom,
+      );
     } finally {
       if (prevUrl !== undefined) process.env.DATABASE_URL = prevUrl;
       else delete process.env.DATABASE_URL;
-      if (globalAny[stashKey]?.$disconnect) await globalAny[stashKey]!.$disconnect!().catch(() => {});
+      if (globalAny[stashKey]?.$disconnect)
+        await globalAny[stashKey]!.$disconnect!().catch(() => {});
       delete globalAny[stashKey];
       vi.resetModules();
     }
@@ -381,7 +415,9 @@ describe('T-44 requestOps: pure logic behind every control', () => {
     const next = setWallMaterial(baseRequest, 'stoneMasonryGranite', catalogue);
     expect(currentWallMaterialId(next.building)).toBe('stoneMasonryGranite');
     expect(currentRoofMaterialId(next.building)).toBe(currentRoofMaterialId(baseRequest.building));
-    expect(currentFloorMaterialId(next.building)).toBe(currentFloorMaterialId(baseRequest.building));
+    expect(currentFloorMaterialId(next.building)).toBe(
+      currentFloorMaterialId(baseRequest.building),
+    );
     expect(next.materials.stoneMasonryGranite).toBeDefined();
     expect(() => simulate(next)).not.toThrow();
   });

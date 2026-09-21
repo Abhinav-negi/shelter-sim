@@ -13,7 +13,13 @@
 // C-19 / T-36 acceptance test 9): first paint already carries a real result.
 
 import { glazingById, materialById, PRESETS, tmyById } from '@shelter/data';
-import { simulate, type Glazing, type Material, type Preset, type SimulationRequest } from '@shelter/engine';
+import {
+  simulate,
+  type Glazing,
+  type Material,
+  type Preset,
+  type SimulationRequest,
+} from '@shelter/engine';
 import { AppShell } from './app-shell';
 
 // `@shelter/data` (via the externals workaround in `next.config.mjs`) is an
@@ -40,10 +46,12 @@ const DEFAULT_LOCATION = process.env.NEXT_PUBLIC_DEFAULT_LOCATION ?? 'leh'; // C
 function resolvePreset(preset: Preset): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
 }
 

@@ -28,7 +28,14 @@ import path from 'node:path';
 import { Worker as NodeWorker } from 'node:worker_threads';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { EngineError, simulate, toK } from '@shelter/engine';
-import type { Glazing, Material, SimulationRequest, Surface, WorkerRequest, WorkerResponse } from '@shelter/engine';
+import type {
+  Glazing,
+  Material,
+  SimulationRequest,
+  Surface,
+  WorkerRequest,
+  WorkerResponse,
+} from '@shelter/engine';
 import {
   __setWorkerFactoryForTest,
   __terminateWorkerForTest,
@@ -130,7 +137,13 @@ function baseRequest(opts: { gains?: number; tol?: number; cap?: number } = {}):
       T_amb,
       GHI,
       v_wind,
-      provenance: { source: 'synthetic', label: 'T-43 test fixture', sourceElevation: null, lapseCorrectionK: 0, notes: [] },
+      provenance: {
+        source: 'synthetic',
+        label: 'T-43 test fixture',
+        sourceElevation: null,
+        lapseCorrectionK: 0,
+        notes: [],
+      },
     },
     materials: { [MATERIAL.id]: MATERIAL },
     glazings: { [GLAZING.id]: GLAZING },
@@ -187,7 +200,7 @@ function bootstrapFile(): string {
       "import { parentPort } from 'node:worker_threads';",
       'globalThis.self = globalThis;',
       'globalThis.postMessage = (msg) => parentPort.postMessage(msg);',
-      "globalThis.addEventListener = (type, cb) => {",
+      'globalThis.addEventListener = (type, cb) => {',
       "  if (type === 'message') parentPort.on('message', (data) => cb({ data }));",
       '};',
       `await import(${JSON.stringify(SIM_WORKER_URL)});`,
@@ -229,7 +242,11 @@ beforeAll(() => {
   // so getStoreState() is usable from the offline-flag assertions below. This
   // file only ever CALLS store.ts's existing actions/getState -- it never
   // edits lib/store.ts, per this task's allow-list.
-  hydrateStore({ request: baseRequest(), result: simulate(baseRequest({ tol: 0.5, cap: 5 })), presetId: 't43-test' });
+  hydrateStore({
+    request: baseRequest(),
+    result: simulate(baseRequest({ tol: 0.5, cap: 5 })),
+    presetId: 't43-test',
+  });
 });
 
 afterEach(() => {
@@ -291,7 +308,9 @@ describe('T-43 browser worker + offline fallback', () => {
       }),
     ]);
 
-    console.log(`  [test 2] settled = [${settled.map((s) => s.status).join(', ')}], store-write counter = ${storeWrites}`);
+    console.log(
+      `  [test 2] settled = [${settled.map((s) => s.status).join(', ')}], store-write counter = ${storeWrites}`,
+    );
     expect(settled[0]!.status).toBe('rejected');
     expect(settled[1]!.status).toBe('rejected');
     expect(settled[2]!.status).toBe('fulfilled');
@@ -312,7 +331,9 @@ describe('T-43 browser worker + offline fallback', () => {
     } catch (err) {
       expect(err).toBeInstanceOf(EngineError);
       expect((err as EngineError).code).toBe('INVALID_INPUT');
-      console.log(`  [test 3] rejected with EngineError code = ${(err as EngineError).code} (not an unhandled rejection)`);
+      console.log(
+        `  [test 3] rejected with EngineError code = ${(err as EngineError).code} (not an unhandled rejection)`,
+      );
     }
 
     // Also exercise the sibling code (UNKNOWN_MATERIAL, thrown later than
@@ -341,7 +362,9 @@ describe('T-43 browser worker + offline fallback', () => {
       prevAux = r.kpis.auxEnergyKWhPerDay;
     }
     const totalMs = performance.now() - t0;
-    console.log(`  [test 4] ${N} sequential requests, non-monotonic (mismatched) adjacent pairs = ${mismatches}, total = ${(totalMs / 1000).toFixed(1)} s`);
+    console.log(
+      `  [test 4] ${N} sequential requests, non-monotonic (mismatched) adjacent pairs = ${mismatches}, total = ${(totalMs / 1000).toFixed(1)} s`,
+    );
     expect(mismatches).toBe(0);
   }, 120_000);
 
@@ -361,7 +384,9 @@ describe('T-43 browser worker + offline fallback', () => {
     expect(viaWorker.temperatures.indoorAir).toBeInstanceOf(Float64Array);
     expect(viaWorker.temperatures.ambient).toBeInstanceOf(Float64Array);
     expect(viaWorker.heatFlows.Q1_solarOpaque).toBeInstanceOf(Float64Array);
-    console.log('  [test 5] deep-equal to in-process simulate(), Float64Array fields verified via instanceof: PASS');
+    console.log(
+      '  [test 5] deep-equal to in-process simulate(), Float64Array fields verified via instanceof: PASS',
+    );
   }, 15_000);
 
   it('6. the synchronous fallback is deep-equal to the worker path', async () => {
@@ -402,7 +427,9 @@ describe('T-43 browser worker + offline fallback', () => {
     globalThis.fetch = (async () => new Response('server error', { status: 500 })) as typeof fetch;
 
     const result = await runSimulation(baseRequest());
-    console.log(`  [test 8] result returned despite server 500, store.online = ${getStoreState().online}`);
+    console.log(
+      `  [test 8] result returned despite server 500, store.online = ${getStoreState().online}`,
+    );
     expect(result.meta.timesteps).toBeGreaterThan(0);
     expect(getStoreState().online).toBe(false);
   }, 10_000);
@@ -415,7 +442,9 @@ describe('T-43 browser worker + offline fallback', () => {
       // server that accepted the connection but never responds. Only settles
       // when workerClient.ts's own AbortController fires.
       return new Promise<Response>((_resolve, reject) => {
-        init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+        init?.signal?.addEventListener('abort', () =>
+          reject(new DOMException('aborted', 'AbortError')),
+        );
       });
     }) as typeof fetch;
 
@@ -423,7 +452,9 @@ describe('T-43 browser worker + offline fallback', () => {
     const result = await runSimulation(baseRequest());
     const elapsedMs = performance.now() - t0;
 
-    console.log(`  [test 9] elapsed = ${elapsedMs.toFixed(1)} ms (timeout budget 5000 ms, well under a naive 30s)`);
+    console.log(
+      `  [test 9] elapsed = ${elapsedMs.toFixed(1)} ms (timeout budget 5000 ms, well under a naive 30s)`,
+    );
     expect(elapsedMs).toBeGreaterThanOrEqual(4900); // genuinely waited out the real 5s timeout, not a fast-path fluke
     expect(elapsedMs).toBeLessThan(6500);
     expect(result.meta.timesteps).toBeGreaterThan(0);
@@ -438,7 +469,9 @@ describe('T-43 browser worker + offline fallback', () => {
     __terminateWorkerForTest();
 
     await expect(promise).rejects.toBeInstanceOf(Error);
-    console.log('  [test 10] pending promise settled (rejected) immediately after worker termination, did not hang: PASS');
+    console.log(
+      '  [test 10] pending promise settled (rejected) immediately after worker termination, did not hang: PASS',
+    );
   }, 10_000);
 
   it('11. 10,000 sequential requests do not grow the worker count beyond one', async () => {
@@ -461,14 +494,22 @@ describe('T-43 browser worker + offline fallback', () => {
     __setWorkerFactoryForTest(createBridgedWorker);
     globalThis.fetch = (() => Promise.reject(new Error('no server in this test'))) as typeof fetch;
 
-    const reqs = [baseRequest({ gains: 50 }), baseRequest({ gains: 150 }), baseRequest({ gains: 300 })];
+    const reqs = [
+      baseRequest({ gains: 50 }),
+      baseRequest({ gains: 150 }),
+      baseRequest({ gains: 300 }),
+    ];
     const calls: number[] = [];
     const results = await runScenarios(reqs, (done) => calls.push(done));
 
     expect(calls).toEqual([1, 2, 3]);
     expect(results.length).toBe(3);
-    expect(results[0]!.kpis.auxEnergyKWhPerDay).toBeGreaterThanOrEqual(results[1]!.kpis.auxEnergyKWhPerDay);
-    expect(results[1]!.kpis.auxEnergyKWhPerDay).toBeGreaterThanOrEqual(results[2]!.kpis.auxEnergyKWhPerDay);
+    expect(results[0]!.kpis.auxEnergyKWhPerDay).toBeGreaterThanOrEqual(
+      results[1]!.kpis.auxEnergyKWhPerDay,
+    );
+    expect(results[1]!.kpis.auxEnergyKWhPerDay).toBeGreaterThanOrEqual(
+      results[2]!.kpis.auxEnergyKWhPerDay,
+    );
     console.log('  [bonus] runScenarios: progress = [1, 2, 3], result order preserved: PASS');
   }, 30_000);
 
@@ -478,6 +519,8 @@ describe('T-43 browser worker + offline fallback', () => {
 
     globalThis.fetch = (async () => new Response(null, { status: 405 })) as typeof fetch; // /api/simulate only exports POST
     expect(await isServerReachable()).toBe(true);
-    console.log('  [bonus] isServerReachable: false when offline, true on any HTTP response (even 405): PASS');
+    console.log(
+      '  [bonus] isServerReachable: false when offline, true on any HTTP response (even 405): PASS',
+    );
   }, 10_000);
 });

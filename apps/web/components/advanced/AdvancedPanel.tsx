@@ -113,7 +113,12 @@ function NumberControl({
       </div>
       <p className="advanced-note">{field.note}</p>
       {error && (
-        <div role="alert" id={errorId} className="advanced-error" data-testid={`error-${field.key}`}>
+        <div
+          role="alert"
+          id={errorId}
+          className="advanced-error"
+          data-testid={`error-${field.key}`}
+        >
           {error}
         </div>
       )}
@@ -140,7 +145,12 @@ function BoolControl({
   return (
     <div className="advanced-field" data-testid={`field-${id}`}>
       <label htmlFor={inputId}>
-        <input id={inputId} type="checkbox" checked={checked} onChange={(e) => onCommit(e.target.checked)} />
+        <input
+          id={inputId}
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onCommit(e.target.checked)}
+        />
         {label}
       </label>
       <button type="button" onClick={() => onCommit(defaultValue)} data-testid={`reset-${id}`}>
@@ -203,7 +213,14 @@ function ArrayFieldControl({
       <button type="button" onClick={resetAll} data-testid={`reset-${field.key}`}>
         Reset all to default
       </button>
-      <div className="advanced-array-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(3.5rem, 1fr))', gap: '0.25rem' }}>
+      <div
+        className="advanced-array-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(3.5rem, 1fr))',
+          gap: '0.25rem',
+        }}
+      >
         {drafts.map((d, i) => {
           const cellId = `advanced-input-${field.key}-${i}`;
           return (
@@ -232,7 +249,13 @@ function ArrayFieldControl({
   );
 }
 
-function SkyModelControl({ value, onCommit }: { value: SimOptions['skyModel']; onCommit: (value: SimOptions['skyModel']) => void }) {
+function SkyModelControl({
+  value,
+  onCommit,
+}: {
+  value: SimOptions['skyModel'];
+  onCommit: (value: SimOptions['skyModel']) => void;
+}) {
   return (
     <div className="advanced-field" data-testid="field-skyModel">
       <label htmlFor="advanced-input-skyModel">Sky model</label>
@@ -247,20 +270,31 @@ function SkyModelControl({ value, onCommit }: { value: SimOptions['skyModel']; o
           </option>
         ))}
       </select>
-      <button type="button" onClick={() => onCommit(SKY_MODEL_DEFAULT)} data-testid="reset-skyModel">
+      <button
+        type="button"
+        onClick={() => onCommit(SKY_MODEL_DEFAULT)}
+        data-testid="reset-skyModel"
+      >
         Reset to default
       </button>
       <div className="advanced-hint" data-testid="hint-skyModel">
         default {SKY_MODEL_DEFAULT} · one of {SKY_MODEL_OPTIONS.join(', ')}
       </div>
       <p className="advanced-note">
-        Sky diffuse transposition model: Liu &amp; Jordan isotropic vs Hay-Davies/Klucher/Reindl (CONTRACTS §7.10).
+        Sky diffuse transposition model: Liu &amp; Jordan isotropic vs Hay-Davies/Klucher/Reindl
+        (CONTRACTS §7.10).
       </p>
     </div>
   );
 }
 
-function UnsafeVentilationControl({ value, onCommit }: { value: boolean; onCommit: (value: boolean) => void }) {
+function UnsafeVentilationControl({
+  value,
+  onCommit,
+}: {
+  value: boolean;
+  onCommit: (value: boolean) => void;
+}) {
   const [confirming, setConfirming] = useState(false);
 
   function handleToggle(next: boolean) {
@@ -278,7 +312,10 @@ function UnsafeVentilationControl({ value, onCommit }: { value: boolean; onCommi
   }
 
   return (
-    <div className="advanced-field advanced-field-danger" data-testid="field-allowUnsafeVentilation">
+    <div
+      className="advanced-field advanced-field-danger"
+      data-testid="field-allowUnsafeVentilation"
+    >
       <label htmlFor="advanced-input-allowUnsafeVentilation">
         <input
           id="advanced-input-allowUnsafeVentilation"
@@ -291,22 +328,38 @@ function UnsafeVentilationControl({ value, onCommit }: { value: boolean; onCommi
       <div className="advanced-hint" data-testid="hint-allowUnsafeVentilation">
         default {String(ALLOW_UNSAFE_VENTILATION_DEFAULT)} · escape hatch only (CONTRACTS §7.5)
       </div>
-      <p role="alert" className="advanced-note advanced-warning" data-testid="warning-allowUnsafeVentilation">
+      <p
+        role="alert"
+        className="advanced-note advanced-warning"
+        data-testid="warning-allowUnsafeVentilation"
+      >
         {UNSAFE_VENTILATION_WARNING}
       </p>
       {confirming && (
         <div className="advanced-confirm" data-testid="confirm-allowUnsafeVentilation">
           <p role="alert">{UNSAFE_VENTILATION_WARNING}</p>
-          <button type="button" onClick={confirmEnable} data-testid="confirm-allowUnsafeVentilation-yes">
+          <button
+            type="button"
+            onClick={confirmEnable}
+            data-testid="confirm-allowUnsafeVentilation-yes"
+          >
             I understand the carbon monoxide risk — enable anyway
           </button>
-          <button type="button" onClick={() => setConfirming(false)} data-testid="confirm-allowUnsafeVentilation-cancel">
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            data-testid="confirm-allowUnsafeVentilation-cancel"
+          >
             Cancel
           </button>
         </div>
       )}
       {value && (
-        <div className="advanced-badge advanced-badge-danger" role="status" data-testid="badge-unsafe-ventilation">
+        <div
+          className="advanced-badge advanced-badge-danger"
+          role="status"
+          data-testid="badge-unsafe-ventilation"
+        >
           ⚠ Unsafe ventilation floor disabled
         </div>
       )}
@@ -314,7 +367,13 @@ function UnsafeVentilationControl({ value, onCommit }: { value: boolean; onCommi
   );
 }
 
-function GroundAlbedoControl({ req, onCommit }: { req: SimulationRequest; onCommit: (value: number) => void }) {
+function GroundAlbedoControl({
+  req,
+  onCommit,
+}: {
+  req: SimulationRequest;
+  onCommit: (value: number) => void;
+}) {
   // Forces `NumberControl` to re-read from the store only when the snow
   // button is pressed (not on every keystroke, which would fight the local
   // draft) -- see fieldDefs.ts's groundAlbedoField comment.
@@ -325,10 +384,16 @@ function GroundAlbedoControl({ req, onCommit }: { req: SimulationRequest; onComm
 
   return (
     <div>
-      <NumberControl key={`albedo-${snowGeneration}`} field={groundAlbedoField} initialValue={scalarValue} onCommit={onCommit} />
+      <NumberControl
+        key={`albedo-${snowGeneration}`}
+        field={groundAlbedoField}
+        initialValue={scalarValue}
+        onCommit={onCommit}
+      />
       {isSeries && (
         <p className="advanced-note">
-          A custom per-timestep albedo series is currently set ({raw.length} values); editing here replaces it with a constant.
+          A custom per-timestep albedo series is currently set ({raw.length} values); editing here
+          replaces it with a constant.
         </p>
       )}
       <button
@@ -385,7 +450,13 @@ export function AdvancedPanel({ initialOpen = false }: AdvancedPanelProps = {}) 
         <div
           className="advanced-panel-body"
           data-testid="advanced-panel-body"
-          style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'hidden', maxWidth: '100%', boxSizing: 'border-box' }}
+          style={{
+            maxHeight: '70vh',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
+          }}
         >
           <section aria-label="Simulation options">
             <h3>Simulation options</h3>
@@ -397,7 +468,10 @@ export function AdvancedPanel({ initialOpen = false }: AdvancedPanelProps = {}) 
                 onCommit={(value) => commit((r) => field.set(r, value))}
               />
             ))}
-            <SkyModelControl value={request.options.skyModel} onCommit={(value) => commit((r) => setSkyModel(r, value))} />
+            <SkyModelControl
+              value={request.options.skyModel}
+              onCommit={(value) => commit((r) => setSkyModel(r, value))}
+            />
             <BoolControl
               id="keepSurfaceProfiles"
               label="Keep surface profiles"
@@ -423,7 +497,10 @@ export function AdvancedPanel({ initialOpen = false }: AdvancedPanelProps = {}) 
 
           <section aria-label="Site and ground">
             <h3>Site &amp; ground</h3>
-            <GroundAlbedoControl req={request} onCommit={(value) => commit((r) => groundAlbedoField.set(r, value))} />
+            <GroundAlbedoControl
+              req={request}
+              onCommit={(value) => commit((r) => groundAlbedoField.set(r, value))}
+            />
             <NumberControl
               field={groundTempMeanAnnualField}
               initialValue={groundTempMeanAnnualField.get(request)}

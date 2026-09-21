@@ -155,7 +155,8 @@ class WorkerPool implements PoolWithDebug {
     } catch {
       // already dead
     }
-    if (task) task.reject(new PoolWorkerCrashError('worker crashed mid-run; the pool replaced it', cause));
+    if (task)
+      task.reject(new PoolWorkerCrashError('worker crashed mid-run; the pool replaced it', cause));
     this.slots.push(this.spawn());
     this.pump();
   }
@@ -175,7 +176,11 @@ class WorkerPool implements PoolWithDebug {
   private dispatch(slot: Slot, task: Task): void {
     slot.busy = true;
     slot.task = task;
-    const req: WorkerRequest = { id: task.id, kind: 'simulate', payload: requestToJson(task.req) as SimulationRequest };
+    const req: WorkerRequest = {
+      id: task.id,
+      kind: 'simulate',
+      payload: requestToJson(task.req) as SimulationRequest,
+    };
     slot.worker.postMessage(req);
   }
 

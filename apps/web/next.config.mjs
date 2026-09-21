@@ -82,7 +82,11 @@ const nextConfig = {
       // Node refuses to `require()` that, so the external has to be the
       // `import` externalsType (an awaited dynamic `import()`), not
       // `commonjs`.
-      const existing = Array.isArray(config.externals) ? config.externals : config.externals ? [config.externals] : [];
+      const existing = Array.isArray(config.externals)
+        ? config.externals
+        : config.externals
+          ? [config.externals]
+          : [];
       config.externals = [...existing, { '@shelter/data': 'import @shelter/data' }];
     } else {
       // `@shelter/engine`'s barrel re-exports `serialise.ts`, which uses

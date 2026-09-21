@@ -123,8 +123,20 @@ describe('T-31 weather.ts', () => {
 
   it('2. weatherCellKey rounds adjacent floats to the same cell; a write under one hits under the other', async () => {
     const { weatherCellKey, writeWeatherCache, readWeatherCache } = await freshWeatherRepo();
-    const k1 = weatherCellKey({ source: 'nasa-power', latitude: 34.150014, longitude: 1, startDate: 'a', endDate: 'b' });
-    const k2 = weatherCellKey({ source: 'nasa-power', latitude: 34.149996, longitude: 1, startDate: 'a', endDate: 'b' });
+    const k1 = weatherCellKey({
+      source: 'nasa-power',
+      latitude: 34.150014,
+      longitude: 1,
+      startDate: 'a',
+      endDate: 'b',
+    });
+    const k2 = weatherCellKey({
+      source: 'nasa-power',
+      latitude: 34.149996,
+      longitude: 1,
+      startDate: 'a',
+      endDate: 'b',
+    });
     expect(k1.latitude).toBe(k2.latitude);
     expect(k1.latitude).toBe(34.15);
 
@@ -219,13 +231,20 @@ describe('T-31 weather.ts', () => {
     };
     for (const k of [...expiredKeys, freshKey]) await writeWeatherCache(k, makeSeries(), {}, null);
     for (const k of expiredKeys) {
-      await raw.weatherCache.update({ where: rawWhere(weatherCellKey(k)), data: { expiresAt: new Date(Date.now() - 1000) } });
+      await raw.weatherCache.update({
+        where: rawWhere(weatherCellKey(k)),
+        data: { expiresAt: new Date(Date.now() - 1000) },
+      });
     }
 
-    const expiredBefore = await raw.weatherCache.count({ where: { expiresAt: { lt: new Date() } } });
+    const expiredBefore = await raw.weatherCache.count({
+      where: { expiresAt: { lt: new Date() } },
+    });
     const removed = await purgeExpiredWeather();
     const expiredAfter = await raw.weatherCache.count({ where: { expiresAt: { lt: new Date() } } });
-    const freshStillThere = await raw.weatherCache.count({ where: rawFilter(weatherCellKey(freshKey)) });
+    const freshStillThere = await raw.weatherCache.count({
+      where: rawFilter(weatherCellKey(freshKey)),
+    });
     // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
     console.log(
       `T-31 test 6: expired rows before purge = ${expiredBefore}, purgeExpiredWeather() removed = ${removed}, expired rows after = ${expiredAfter}`,
@@ -237,7 +256,8 @@ describe('T-31 weather.ts', () => {
 
   it('7. TTL is 90 days for a past range and 24 hours for a current one', async () => {
     process.env.DATABASE_URL = LIVE_DATABASE_URL;
-    const { writeWeatherCache, weatherCellKey, HISTORICAL_TTL_MS, CURRENT_TTL_MS } = await freshWeatherRepo();
+    const { writeWeatherCache, weatherCellKey, HISTORICAL_TTL_MS, CURRENT_TTL_MS } =
+      await freshWeatherRepo();
     const todayIso = new Date().toISOString().slice(0, 10);
     const pastKey: WeatherKey = {
       source: 'nasa-power',
@@ -255,8 +275,12 @@ describe('T-31 weather.ts', () => {
     };
     await writeWeatherCache(pastKey, makeSeries(), {}, null);
     await writeWeatherCache(currentKey, makeSeries(), {}, null);
-    const pastRow = await raw.weatherCache.findUniqueOrThrow({ where: rawWhere(weatherCellKey(pastKey)) });
-    const currentRow = await raw.weatherCache.findUniqueOrThrow({ where: rawWhere(weatherCellKey(currentKey)) });
+    const pastRow = await raw.weatherCache.findUniqueOrThrow({
+      where: rawWhere(weatherCellKey(pastKey)),
+    });
+    const currentRow = await raw.weatherCache.findUniqueOrThrow({
+      where: rawWhere(weatherCellKey(currentKey)),
+    });
     const pastTtlMs = pastRow.expiresAt.getTime() - pastRow.fetchedAt.getTime();
     const currentTtlMs = currentRow.expiresAt.getTime() - currentRow.fetchedAt.getTime();
     // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
@@ -272,7 +296,13 @@ describe('T-31 weather.ts', () => {
   it('8. DB OFF: read resolves null, write resolves without throwing, purge returns 0', async () => {
     // DATABASE_URL already unset by beforeEach.
     const { readWeatherCache, writeWeatherCache, purgeExpiredWeather } = await freshWeatherRepo();
-    const key: WeatherKey = { source: 'nasa-power', latitude: 1, longitude: 70.08, startDate: 'x', endDate: 'y' };
+    const key: WeatherKey = {
+      source: 'nasa-power',
+      latitude: 1,
+      longitude: 70.08,
+      startDate: 'x',
+      endDate: 'y',
+    };
     const readResult = await readWeatherCache(key);
     let writeThrew = false;
     try {
@@ -282,49 +312,53 @@ describe('T-31 weather.ts', () => {
     }
     const purged = await purgeExpiredWeather();
     // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-    console.log(`T-31 test 8 (DB OFF): read=${readResult}, write threw=${writeThrew}, purge=${purged}`);
+    console.log(
+      `T-31 test 8 (DB OFF): read=${readResult}, write threw=${writeThrew}, purge=${purged}`,
+    );
     expect(readResult).toBeNull();
     expect(writeThrew).toBe(false);
     expect(purged).toBe(0);
   });
 
-  it(
-    '9. DB UNREACHABLE: same three behaviours within 5s each',
-    async () => {
-      process.env.DATABASE_URL = BOGUS_DATABASE_URL;
-      const { readWeatherCache, writeWeatherCache, purgeExpiredWeather } = await freshWeatherRepo();
-      const key: WeatherKey = { source: 'nasa-power', latitude: 1, longitude: 70.09, startDate: 'x', endDate: 'y' };
+  it('9. DB UNREACHABLE: same three behaviours within 5s each', async () => {
+    process.env.DATABASE_URL = BOGUS_DATABASE_URL;
+    const { readWeatherCache, writeWeatherCache, purgeExpiredWeather } = await freshWeatherRepo();
+    const key: WeatherKey = {
+      source: 'nasa-power',
+      latitude: 1,
+      longitude: 70.09,
+      startDate: 'x',
+      endDate: 'y',
+    };
 
-      let start = Date.now();
-      const readResult = await readWeatherCache(key);
-      const readMs = Date.now() - start;
+    let start = Date.now();
+    const readResult = await readWeatherCache(key);
+    const readMs = Date.now() - start;
 
-      start = Date.now();
-      let writeThrew = false;
-      try {
-        await writeWeatherCache(key, makeSeries(), {}, null);
-      } catch {
-        writeThrew = true;
-      }
-      const writeMs = Date.now() - start;
+    start = Date.now();
+    let writeThrew = false;
+    try {
+      await writeWeatherCache(key, makeSeries(), {}, null);
+    } catch {
+      writeThrew = true;
+    }
+    const writeMs = Date.now() - start;
 
-      start = Date.now();
-      const purged = await purgeExpiredWeather();
-      const purgeMs = Date.now() - start;
+    start = Date.now();
+    const purged = await purgeExpiredWeather();
+    const purgeMs = Date.now() - start;
 
-      // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-      console.log(
-        `T-31 test 9 (DB UNREACHABLE): read=${readResult} in ${readMs}ms, write threw=${writeThrew} in ${writeMs}ms, purge=${purged} in ${purgeMs}ms`,
-      );
-      expect(readResult).toBeNull();
-      expect(writeThrew).toBe(false);
-      expect(purged).toBe(0);
-      expect(readMs).toBeLessThan(5000);
-      expect(writeMs).toBeLessThan(5000);
-      expect(purgeMs).toBeLessThan(5000);
-    },
-    20000,
-  );
+    // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
+    console.log(
+      `T-31 test 9 (DB UNREACHABLE): read=${readResult} in ${readMs}ms, write threw=${writeThrew} in ${writeMs}ms, purge=${purged} in ${purgeMs}ms`,
+    );
+    expect(readResult).toBeNull();
+    expect(writeThrew).toBe(false);
+    expect(purged).toBe(0);
+    expect(readMs).toBeLessThan(5000);
+    expect(writeMs).toBeLessThan(5000);
+    expect(purgeMs).toBeLessThan(5000);
+  }, 20000);
 
   it('10. ten concurrent writes to the same key leave exactly one row and none reject', async () => {
     process.env.DATABASE_URL = LIVE_DATABASE_URL;

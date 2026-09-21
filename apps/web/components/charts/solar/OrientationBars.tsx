@@ -31,7 +31,13 @@
 import React from 'react';
 import type { SimulationRequest, SimulationResult } from '@shelter/engine';
 import { formatEnergy } from '../../../lib/units';
-import { BAR_ORIENTATIONS, ORIENTATION_LABELS, surfaceCaptures, byOrientation, type Orientation } from './orientation';
+import {
+  BAR_ORIENTATIONS,
+  ORIENTATION_LABELS,
+  surfaceCaptures,
+  byOrientation,
+  type Orientation,
+} from './orientation';
 
 const BAR_COLOR: Record<Orientation, string> = {
   S: '#d97706',
@@ -50,7 +56,13 @@ function intensityKWhPerM2(result: SimulationResult, surfaceId: string, dt: numb
   return joules / 3.6e6;
 }
 
-export function OrientationBars({ result, request }: { result: SimulationResult; request: SimulationRequest }) {
+export function OrientationBars({
+  result,
+  request,
+}: {
+  result: SimulationResult;
+  request: SimulationRequest;
+}) {
   const rows = surfaceCaptures(result, request);
   const totals = byOrientation(rows);
   const dt = request.options.timestepSeconds;
@@ -61,7 +73,8 @@ export function OrientationBars({ result, request }: { result: SimulationResult;
   const representative: Partial<Record<Orientation, string>> = {};
   for (const row of rows) {
     const current = representative[row.orientation];
-    if (!current || row.totalKWh > (byIdKWh(rows, current) ?? -Infinity)) representative[row.orientation] = row.surfaceId;
+    if (!current || row.totalKWh > (byIdKWh(rows, current) ?? -Infinity))
+      representative[row.orientation] = row.surfaceId;
   }
   function byIdKWh(list: typeof rows, id: string): number | undefined {
     return list.find((r) => r.surfaceId === id)?.totalKWh;
@@ -79,9 +92,23 @@ export function OrientationBars({ result, request }: { result: SimulationResult;
           const surfaceId = representative[o];
           const intensity = surfaceId ? intensityKWhPerM2(result, surfaceId, dt) : 0;
           return (
-            <div key={o} data-testid={`solar-bar-${o}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
-              <div style={{ width: '3.2rem', flexShrink: 0, fontSize: '0.8rem' }}>{ORIENTATION_LABELS[o]}</div>
-              <div style={{ flex: '1 1 auto', minWidth: 0, background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+            <div
+              key={o}
+              data-testid={`solar-bar-${o}`}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}
+            >
+              <div style={{ width: '3.2rem', flexShrink: 0, fontSize: '0.8rem' }}>
+                {ORIENTATION_LABELS[o]}
+              </div>
+              <div
+                style={{
+                  flex: '1 1 auto',
+                  minWidth: 0,
+                  background: '#f1f5f9',
+                  borderRadius: '3px',
+                  overflow: 'hidden',
+                }}
+              >
                 <div
                   style={{
                     width: `${widthPct}%`,
@@ -91,12 +118,21 @@ export function OrientationBars({ result, request }: { result: SimulationResult;
                   }}
                 />
               </div>
-              <div data-testid={`solar-bar-${o}-value`} style={{ width: '5.5rem', flexShrink: 0, fontSize: '0.78rem', textAlign: 'right' }}>
+              <div
+                data-testid={`solar-bar-${o}-value`}
+                style={{ width: '5.5rem', flexShrink: 0, fontSize: '0.78rem', textAlign: 'right' }}
+              >
                 {formatEnergy(kWh)}
               </div>
               <div
                 data-testid={`solar-bar-${o}-intensity`}
-                style={{ width: '5.5rem', flexShrink: 0, fontSize: '0.7rem', textAlign: 'right', color: '#64748b' }}
+                style={{
+                  width: '5.5rem',
+                  flexShrink: 0,
+                  fontSize: '0.7rem',
+                  textAlign: 'right',
+                  color: '#64748b',
+                }}
                 title="Solar intensity, independent of this surface's real area"
               >
                 {intensity.toFixed(2)} kWh/m²

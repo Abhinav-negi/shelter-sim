@@ -101,8 +101,18 @@ const COS_Z_FLOOR = 0.0872; // cos(85 deg)
 
 const MONTH_CUM_DAYS = [31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365] as const;
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ] as const;
 
 /** Calendar month (0-11) for a day-of-year on the non-leap 365-day calendar
@@ -169,7 +179,13 @@ function computeDailyStats(series: WeatherSeries, site: SiteAngle): DailyStats[]
       sumT += T_amb;
       sumGhiWh += GHI * (series.stepSeconds / 3600);
 
-      const sun = sunPosition(site.latitude, site.longitude, site.standardMeridian, dayOfYear, clockHour);
+      const sun = sunPosition(
+        site.latitude,
+        site.longitude,
+        site.standardMeridian,
+        dayOfYear,
+        clockHour,
+      );
       if (sun.cosZenith > COS_Z_FLOOR) {
         const irr = decompose(GHI, sun.cosZenith, dayOfYear, {
           DNI: series.DNI?.[idx],
@@ -202,7 +218,11 @@ function computeDailyStats(series: WeatherSeries, site: SiteAngle): DailyStats[]
  * contribute comparably to one combined score. Used for the twelve monthly
  * days (pool = one calendar month) and the annual-mean day (pool = the
  * whole year). */
-function pickRepresentativeDay(pool: DailyStats[]): { day: DailyStats; meanTempK: number; meanGhi: number } {
+function pickRepresentativeDay(pool: DailyStats[]): {
+  day: DailyStats;
+  meanTempK: number;
+  meanGhi: number;
+} {
   const meanTempK = pool.reduce((a, s) => a + s.meanTempK, 0) / pool.length;
   const meanGhi = pool.reduce((a, s) => a + s.ghiTotalWhM2, 0) / pool.length;
   const stdT = populationStdev(pool.map((s) => s.meanTempK)) || 1;
@@ -211,7 +231,8 @@ function pickRepresentativeDay(pool: DailyStats[]): { day: DailyStats; meanTempK
   let best = pool[0]!;
   let bestScore = Infinity;
   for (const s of pool) {
-    const score = Math.abs(s.meanTempK - meanTempK) / stdT + Math.abs(s.ghiTotalWhM2 - meanGhi) / stdG;
+    const score =
+      Math.abs(s.meanTempK - meanTempK) / stdT + Math.abs(s.ghiTotalWhM2 - meanGhi) / stdG;
     if (score < bestScore) {
       bestScore = score;
       best = s;
@@ -232,7 +253,10 @@ export function buildScenarios(series: WeatherSeries, locationId: string): Scena
   const site: SiteAngle = siteAngleFor(locationId);
   const stats = computeDailyStats(series, site);
   if (stats.length === 0) {
-    throw new EngineError('WEATHER_INVALID', 'buildScenarios: series has no full calendar day to build scenarios from.');
+    throw new EngineError(
+      'WEATHER_INVALID',
+      'buildScenarios: series has no full calendar day to build scenarios from.',
+    );
   }
   const record = series.provenance.label;
   const scenarios: Scenario[] = [];
@@ -305,7 +329,10 @@ export function buildScenarios(series: WeatherSeries, locationId: string): Scena
     }
   }
   if (bestStreak.len === 0) {
-    throw new EngineError('WEATHER_INVALID', `No day in the record falls below the overcast threshold (${OVERCAST_GHI_THRESHOLD_WHM2} Wh/m^2/day); cannot build the sunless-streak scenario.`);
+    throw new EngineError(
+      'WEATHER_INVALID',
+      `No day in the record falls below the overcast threshold (${OVERCAST_GHI_THRESHOLD_WHM2} Wh/m^2/day); cannot build the sunless-streak scenario.`,
+    );
   }
   const streakDays = stats.slice(bestStreak.start, bestStreak.start + bestStreak.len);
   const streakMeanGhi = streakDays.reduce((a, s) => a + s.ghiTotalWhM2, 0) / streakDays.length;
@@ -323,11 +350,18 @@ export function buildScenarios(series: WeatherSeries, locationId: string): Scena
   // excluding the overall coldest day itself (scenario 13): the whole point
   // of this scenario is that it is a DIFFERENT night, colder in radiative/
   // sky terms despite not being the coldest night by air temperature alone.
-  const clearCandidates = stats.filter((s) => s.dayIndex !== coldest.dayIndex && s.daytimeKt > CLEAR_SKY_KT_THRESHOLD);
+  const clearCandidates = stats.filter(
+    (s) => s.dayIndex !== coldest.dayIndex && s.daytimeKt > CLEAR_SKY_KT_THRESHOLD,
+  );
   if (clearCandidates.length === 0) {
-    throw new EngineError('WEATHER_INVALID', `No day (other than the coldest day) has daytime k_t above ${CLEAR_SKY_KT_THRESHOLD}; cannot build the clear-cold-night scenario.`);
+    throw new EngineError(
+      'WEATHER_INVALID',
+      `No day (other than the coldest day) has daytime k_t above ${CLEAR_SKY_KT_THRESHOLD}; cannot build the clear-cold-night scenario.`,
+    );
   }
-  const clearColdNight = clearCandidates.reduce((a, b) => (b.nightMeanTempK < a.nightMeanTempK ? b : a));
+  const clearColdNight = clearCandidates.reduce((a, b) =>
+    b.nightMeanTempK < a.nightMeanTempK ? b : a,
+  );
   scenarios.push({
     id: 'clear-cold-night',
     name: 'Clear cold night',
@@ -365,7 +399,11 @@ export function buildScenarios(series: WeatherSeries, locationId: string): Scena
 function siteAngleFor(locationId: string): SiteAngle {
   const loc = TMY_LOCATIONS.find((l) => l.id === locationId);
   if (!loc) {
-    throw new EngineError('INVALID_INPUT', `buildScenarios: no known site coordinates for location id "${locationId}".`, { locationId });
+    throw new EngineError(
+      'INVALID_INPUT',
+      `buildScenarios: no known site coordinates for location id "${locationId}".`,
+      { locationId },
+    );
   }
   return { latitude: loc.latitude, longitude: loc.longitude, standardMeridian: 82.5 };
 }
@@ -391,7 +429,8 @@ export function scenarioWeather(series: WeatherSeries, s: Scenario): WeatherSeri
     );
   }
 
-  const slice = (arr: Float64Array | undefined): Float64Array | undefined => arr?.slice(startIdx, endIdx);
+  const slice = (arr: Float64Array | undefined): Float64Array | undefined =>
+    arr?.slice(startIdx, endIdx);
 
   const provenance: WeatherProvenance = {
     ...series.provenance,

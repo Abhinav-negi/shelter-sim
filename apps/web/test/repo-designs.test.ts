@@ -74,7 +74,13 @@ function makeFixtureRequest(overrides?: Partial<SimulationRequest>): SimulationR
       T_amb: Float64Array.from({ length: 24 }, (_, i) => 260 + i),
       GHI: Float64Array.from({ length: 24 }, () => 200),
       v_wind: Float64Array.from({ length: 24 }, () => 2),
-      provenance: { source: 'synthetic', label: 'Test fixture', sourceElevation: 3500, lapseCorrectionK: 0, notes: [] },
+      provenance: {
+        source: 'synthetic',
+        label: 'Test fixture',
+        sourceElevation: 3500,
+        lapseCorrectionK: 0,
+        notes: [],
+      },
     },
     materials: {
       'mat-1': {
@@ -220,7 +226,11 @@ describe('T-32 repo/designs.ts', () => {
     const req = makeFixtureRequest();
     const shareId = `expired-${randomUUID().slice(0, 8)}`;
     await db.designSnapshot.create({
-      data: { shareId, request: requestToJson(req) as object, expiresAt: new Date(Date.now() - 60_000) },
+      data: {
+        shareId,
+        request: requestToJson(req) as object,
+        expiresAt: new Date(Date.now() - 60_000),
+      },
     });
     await expect(loadDesign(shareId)).resolves.toBeNull();
   });
@@ -237,25 +247,21 @@ describe('T-32 repo/designs.ts', () => {
     expect(roundTripped).toEqual(req);
   });
 
-  it(
-    '10. DB UNREACHABLE: same behaviour within 5s with a bogus DATABASE_URL',
-    async () => {
-      process.env.DATABASE_URL = BOGUS_DATABASE_URL;
-      const req = makeFixtureRequest();
+  it('10. DB UNREACHABLE: same behaviour within 5s with a bogus DATABASE_URL', async () => {
+    process.env.DATABASE_URL = BOGUS_DATABASE_URL;
+    const req = makeFixtureRequest();
 
-      const start = Date.now();
-      const saved = await saveDesign(req);
-      const loaded = await loadDesign('anything');
-      const elapsedMs = Date.now() - start;
+    const start = Date.now();
+    const saved = await saveDesign(req);
+    const loaded = await loadDesign('anything');
+    const elapsedMs = Date.now() - start;
 
-      expect(saved).toBeNull();
-      expect(loaded).toBeNull();
-      expect(elapsedMs).toBeLessThan(5000);
-      // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-      console.log(`T-32 test 10: saveDesign+loadDesign(bogus) resolved null in ${elapsedMs}ms`);
-    },
-    7000,
-  );
+    expect(saved).toBeNull();
+    expect(loaded).toBeNull();
+    expect(elapsedMs).toBeLessThan(5000);
+    // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
+    console.log(`T-32 test 10: saveDesign+loadDesign(bogus) resolved null in ${elapsedMs}ms`);
+  }, 7000);
 
   it('11. 20 concurrent saveDesign calls all succeed with 20 distinct ids', async () => {
     process.env.DATABASE_URL = LIVE_DATABASE_URL;

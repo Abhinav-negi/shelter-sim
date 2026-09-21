@@ -5,7 +5,8 @@ import { PwaRegister } from './_pwa-register';
 
 export const metadata: Metadata = {
   title: 'ShelterSim',
-  description: 'Passive shelter thermal simulation for Ladakh — DRDO/DIHAR, SIH problem statement 26051.',
+  description:
+    'Passive shelter thermal simulation for Ladakh — DRDO/DIHAR, SIH problem statement 26051.',
   manifest: '/manifest.webmanifest',
 };
 

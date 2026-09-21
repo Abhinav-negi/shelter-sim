@@ -8,22 +8,21 @@
 
 **The application must run with none of these set.** Every one is an enhancement.
 
-| Name | Used by | Default when unset |
-|---|---|---|
-| `DATABASE_URL` | T-29…T-35 | unset → the app runs in **DB-off mode**: no cache, no share links, catalogue served from code |
-| `DATABASE_PROVIDER` | T-29 | `postgresql`; set to `sqlite` for local dev |
-| `NEXT_PUBLIC_ENABLE_LIVE_WEATHER` | T-37, T-45 | `false` — bundled TMY only, fetch UI hidden |
-| `NEXT_PUBLIC_DEFAULT_LOCATION` | T-36 | `leh` |
-| `NEXT_PUBLIC_DEFAULT_LOCALE` | T-52 | `en` |
-| `NASA_POWER_BASE_URL` | T-37 (server only) | the public NASA POWER endpoint |
-| `OPEN_METEO_BASE_URL` | T-37 (server only) | the public Open-Meteo endpoint |
-| `ANTHROPIC_API_KEY` *(or equivalent)* | T-58 (server only) | unset → the non-AI template write-up is used |
+| Name                                  | Used by            | Default when unset                                                                            |
+| ------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                        | T-29…T-35          | unset → the app runs in **DB-off mode**: no cache, no share links, catalogue served from code |
+| `DATABASE_PROVIDER`                   | T-29               | `postgresql`; set to `sqlite` for local dev                                                   |
+| `NEXT_PUBLIC_ENABLE_LIVE_WEATHER`     | T-37, T-45         | `false` — bundled TMY only, fetch UI hidden                                                   |
+| `NEXT_PUBLIC_DEFAULT_LOCATION`        | T-36               | `leh`                                                                                         |
+| `NEXT_PUBLIC_DEFAULT_LOCALE`          | T-52               | `en`                                                                                          |
+| `NASA_POWER_BASE_URL`                 | T-37 (server only) | the public NASA POWER endpoint                                                                |
+| `OPEN_METEO_BASE_URL`                 | T-37 (server only) | the public Open-Meteo endpoint                                                                |
+| `ANTHROPIC_API_KEY` _(or equivalent)_ | T-58 (server only) | unset → the non-AI template write-up is used                                                  |
 
 Browser-visible variables are `NEXT_PUBLIC_*`; anything without that prefix is server-only and must
 never be referenced from a component or a worker. Both weather sources are **keyless**.
 
 ---
-
 
 ## 9. DEVIATIONS FROM THE FROZEN PLAN
 
@@ -44,19 +43,19 @@ server, Prisma as the client, PostgreSQL in production and SQLite for local deve
 persisting **exactly four things**:
 
 1. **Weather cache.** A normalised `WeatherSeries` keyed by `(source, latitude, longitude,
-   startDate, endDate)`, stored with the raw upstream payload, the fetch timestamp and the source
-   grid elevation. *Reason:* NASA POWER and Open-Meteo are slow and rate-limited, and the
+startDate, endDate)`, stored with the raw upstream payload, the fetch timestamp and the source
+   grid elevation. _Reason:_ NASA POWER and Open-Meteo are slow and rate-limited, and the
    eighteen-scenario matrix plus the design sweep re-ask for the same cell constantly. Never fetch
    the same cell twice.
 2. **Design snapshots.** A `SimulationRequest` stored under a short opaque share id, so a design is
-   retrievable by URL. *Reason:* this upgrades "designs download as files" to "designs download as
+   retrievable by URL. _Reason:_ this upgrades "designs download as files" to "designs download as
    files **or** get a link", which is what a field engineer actually wants when emailing a
    colleague at another post.
 3. **Simulation runs.** The `SimulationResult` KPIs plus `meta`, keyed by a hash of the request, so
-   a repeat run is served from the database. *Reason:* the survival grid re-runs eighteen scenarios
+   a repeat run is served from the database. _Reason:_ the survival grid re-runs eighteen scenarios
    every time the page loads; there is no reason to recompute an answer that has not changed.
 4. **Material catalogue.** The `Material` rows of `BLUEPRINT.md` Appendix B, seeded from code and
-   served to the client. Every row keeps its mandatory `source` citation. *Reason:* the browser
+   served to the client. Every row keeps its mandatory `source` citation. _Reason:_ the browser
    should not ship the whole catalogue in its bundle, and the citations are the thing a judge asks
    about.
 
@@ -84,16 +83,16 @@ The `docs/` directory is dropped.
 
 ### D-4 — Field names on disk differ from `WORKERS.md` §3.8 in eight places. The disk wins.
 
-| `WORKERS.md` §3.8 | On disk | Consequence |
-|---|---|---|
-| `Window` | `WindowSpec` | avoids the DOM `Window` global collision |
-| `Surface.area` is **gross** | `Surface.area` is **net** of windows | do not subtract twice |
-| `Q7_interiorRadiation` | `Q7_interiorLongwave` | rename nothing |
-| `heatFlows.storageChange` | `heatFlows.storageRate` | |
-| `Glazing.u`, `.shgc` | `Glazing.U`, `.SHGC` | |
-| `tAmb`, `ghi`, `windSpeed`, `number[]` | `T_amb`, `GHI`, `v_wind`, `Float64Array` | JSON boundaries convert |
-| `provenance: string` | `provenance: WeatherProvenance` object | carries the lapse correction |
-| `SimOptions.spinUp: {...}` object | flat `spinUpToleranceK`, `maxSpinUpDays` | |
+| `WORKERS.md` §3.8                      | On disk                                  | Consequence                              |
+| -------------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| `Window`                               | `WindowSpec`                             | avoids the DOM `Window` global collision |
+| `Surface.area` is **gross**            | `Surface.area` is **net** of windows     | do not subtract twice                    |
+| `Q7_interiorRadiation`                 | `Q7_interiorLongwave`                    | rename nothing                           |
+| `heatFlows.storageChange`              | `heatFlows.storageRate`                  |                                          |
+| `Glazing.u`, `.shgc`                   | `Glazing.U`, `.SHGC`                     |                                          |
+| `tAmb`, `ghi`, `windSpeed`, `number[]` | `T_amb`, `GHI`, `v_wind`, `Float64Array` | JSON boundaries convert                  |
+| `provenance: string`                   | `provenance: WeatherProvenance` object   | carries the lapse correction             |
+| `SimOptions.spinUp: {...}` object      | flat `spinUpToleranceK`, `maxSpinUpDays` |                                          |
 
 Resolution used throughout this ledger: **§7 restates the disk, and §7 is authoritative.**
 
@@ -113,11 +112,12 @@ Any task list that still shows "fix F-1" as pending is out of date; this ledger 
 ### D-7 — `envelope/conduction.ts` and `post/heatFlows.ts` were never separate files.
 
 `TECH.md` §5 lists both. Investigated directly:
+
 - **`envelope/conduction.ts` does not exist.** Its contract was folded into
   `envelope/mesh.ts`, which exports `constructionUValue(mesh, hOuter, hInner)` (the steady-state U
   of a meshed composite wall) and `analyticalWavePenetration(...)`. Validation Test 3 is green
   against it. **This is fine; do not split it out.** A separate `constructions.ts` **is** still
-  needed and is T-24's job — but for the *named construction catalogue*, not for conduction physics.
+  needed and is T-24's job — but for the _named construction catalogue_, not for conduction physics.
 - **`post/heatFlows.ts` does not exist.** `assembleHeatFlows(records, dt)` lives in
   `post/kpis.ts` alongside `computeKpis`. T-22 splits it out into its own file **and** adds the
   missing `deltaT` series while it is there, because that split is cheap and the ΔT series is a

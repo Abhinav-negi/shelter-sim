@@ -44,7 +44,10 @@ const STATUS_BY_CODE: Record<EngineErrorCode, number> = {
 };
 
 function jsonError(status: number, code: string, message: string, detail?: unknown): NextResponse {
-  return NextResponse.json({ code, message, ...(detail !== undefined ? { detail } : {}) }, { status });
+  return NextResponse.json(
+    { code, message, ...(detail !== undefined ? { detail } : {}) },
+    { status },
+  );
 }
 
 /**
@@ -90,7 +93,11 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   if (Buffer.byteLength(bodyText, 'utf8') > MAX_BODY_BYTES) {
-    return jsonError(413, 'PAYLOAD_TOO_LARGE', `Request body exceeds the ${MAX_BODY_BYTES}-byte limit.`);
+    return jsonError(
+      413,
+      'PAYLOAD_TOO_LARGE',
+      `Request body exceeds the ${MAX_BODY_BYTES}-byte limit.`,
+    );
   }
 
   let json: unknown;

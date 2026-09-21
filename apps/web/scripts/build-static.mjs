@@ -100,10 +100,12 @@ async function generateInitialData() {
   function resolvePreset(preset) {
     const materials = {};
     for (const surface of preset.request.building.surfaces) {
-      for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+      for (const layer of surface.construction)
+        materials[layer.materialId] = materialById(layer.materialId);
     }
     const glazings = {};
-    for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+    for (const win of preset.request.building.windows)
+      glazings[win.glazingId] = glazingById(win.glazingId);
     return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
   }
 
@@ -202,7 +204,11 @@ function buildScratch(initialData) {
   }
   writeFileSync(
     path.join(scratchDir, 'app', 'initial-data.json'),
-    JSON.stringify({ presetId: initialData.presetId, request: initialData.request, result: initialData.result }),
+    JSON.stringify({
+      presetId: initialData.presetId,
+      request: initialData.request,
+      result: initialData.result,
+    }),
   );
   writeFileSync(path.join(scratchDir, 'app', 'page.tsx'), PAGE_TSX_SOURCE);
 
@@ -216,7 +222,10 @@ function buildScratch(initialData) {
   // tsconfig.json's `extends` is relative ("../../tsconfig.base.json");
   // the scratch dir sits one level deeper than the real apps/web, so
   // rewrite it to an absolute path rather than duplicating tsconfig.base.json.
-  const rawTsconfig = readFileSync(path.join(webDir, 'tsconfig.json'), 'utf8').replace(/\/\/.*$/gm, '');
+  const rawTsconfig = readFileSync(path.join(webDir, 'tsconfig.json'), 'utf8').replace(
+    /\/\/.*$/gm,
+    '',
+  );
   const tsconfig = JSON.parse(rawTsconfig);
   tsconfig.extends = path.join(repoRoot, 'tsconfig.base.json');
   writeFileSync(path.join(scratchDir, 'tsconfig.json'), JSON.stringify(tsconfig, null, 2));
@@ -257,7 +266,8 @@ function listFilesRecursive(dir) {
 
 function verifyOutput() {
   const exportedOut = path.join(scratchDir, 'out');
-  if (!existsSync(exportedOut)) fail(`expected ${exportedOut} to exist after a successful export build`);
+  if (!existsSync(exportedOut))
+    fail(`expected ${exportedOut} to exist after a successful export build`);
 
   rmSync(outDir, { recursive: true, force: true });
   cpSync(exportedOut, outDir, { recursive: true });
@@ -287,7 +297,8 @@ function verifyOutput() {
   log('TMY files present:', tmyIds.filter((id) => !missingTmy.includes(id)).join(', ') || 'NONE');
   if (missingTmy.length) fail(`missing TMY files in export: ${missingTmy.join(', ')}`);
   log('localhost/127.0.0.1 occurrences:', localhostHits);
-  if (localhostHits !== 0) fail(`found ${localhostHits} localhost/127.0.0.1 reference(s) in the static export`);
+  if (localhostHits !== 0)
+    fail(`found ${localhostHits} localhost/127.0.0.1 reference(s) in the static export`);
 
   const indexHtml = path.join(outDir, 'index.html');
   if (!existsSync(indexHtml)) fail('index.html missing from export');
@@ -365,20 +376,24 @@ async function selfCheckServiceWorker() {
   // (a real node:vm gotcha), so the appended bare reference is how this
   // pulls PRECACHE_URLS back out, in the same lexical scope the file itself
   // declared it in.
-  const PRECACHE_URLS = vm.runInContext(src + '\nPRECACHE_URLS;', sandbox, { filename: 'public/sw.js' });
+  const PRECACHE_URLS = vm.runInContext(src + '\nPRECACHE_URLS;', sandbox, {
+    filename: 'public/sw.js',
+  });
 
   await listeners.install({ waitUntil: (p) => p });
   const cacheNames = [...stores.keys()];
-  const cachedUrls = [...stores.get(cacheNames[0])?.keys() ?? []];
+  const cachedUrls = [...(stores.get(cacheNames[0])?.keys() ?? [])];
   const missing = PRECACHE_URLS.filter((u) => !cachedUrls.includes(u));
   if (missing.length) fail(`sw.js self-check: install() did not precache: ${missing.join(', ')}`);
   const tmyPrecached = PRECACHE_URLS.filter((u) => u.startsWith('/tmy/')).length;
-  if (tmyPrecached !== 5) fail(`sw.js self-check: expected 5 precached TMY files, found ${tmyPrecached}`);
+  if (tmyPrecached !== 5)
+    fail(`sw.js self-check: expected 5 precached TMY files, found ${tmyPrecached}`);
 
   // Cache-busting: an old-named cache must be purged on activate().
   stores.set('shelter-sim-vOLD', new Map([['/stale', { ok: true }]]));
   await listeners.activate({ waitUntil: (p) => p });
-  if (stores.has('shelter-sim-vOLD')) fail('sw.js self-check: activate() did not purge the old-versioned cache');
+  if (stores.has('shelter-sim-vOLD'))
+    fail('sw.js self-check: activate() did not purge the old-versioned cache');
   if (!stores.has(cacheNames[0])) fail('sw.js self-check: activate() purged the CURRENT cache too');
 
   // navigation: network-first, falls back to cache when offline.
@@ -386,7 +401,8 @@ async function selfCheckServiceWorker() {
   let respondWithArg;
   await listeners.fetch({ request: navReq, respondWith: (p) => (respondWithArg = p) });
   const onlineNavResult = await respondWithArg;
-  if (onlineNavResult.url !== navReq.url) fail('sw.js self-check: online navigation did not hit the network');
+  if (onlineNavResult.url !== navReq.url)
+    fail('sw.js self-check: online navigation did not hit the network');
   networkUp = false;
   await listeners.fetch({ request: navReq, respondWith: (p) => (respondWithArg = p) });
   const offlineNavResult = await respondWithArg;
@@ -395,8 +411,12 @@ async function selfCheckServiceWorker() {
   }
   networkUp = true;
 
-  log('sw.js self-check: PASS (install precaches', PRECACHE_URLS.length, 'urls incl. 5 TMY files;',
-    'activate purges old cache only; navigation is network-first with offline cache fallback)');
+  log(
+    'sw.js self-check: PASS (install precaches',
+    PRECACHE_URLS.length,
+    'urls incl. 5 TMY files;',
+    'activate purges old cache only; navigation is network-first with offline cache fallback)',
+  );
 }
 
 // ============================== MAIN ==============================
@@ -404,9 +424,13 @@ async function selfCheckServiceWorker() {
 async function main() {
   log('1/5 precomputing the initial preset + result (plain Node, outside any Next sandbox)...');
   const initialData = await generateInitialData();
-  log(`    preset=${initialData.presetId} tempAt0600=${(initialData.tempAt0600K - 273.15).toFixed(2)} degC`);
+  log(
+    `    preset=${initialData.presetId} tempAt0600=${(initialData.tempAt0600K - 273.15).toFixed(2)} degC`,
+  );
 
-  log('2/5 assembling .export-scratch/ (production source only, no app/api, no app/page.tsx, no *.test.*)...');
+  log(
+    '2/5 assembling .export-scratch/ (production source only, no app/api, no app/page.tsx, no *.test.*)...',
+  );
   buildScratch(initialData);
 
   log('3/5 running next build --webpack (SHELTER_STATIC_EXPORT=1) in .export-scratch/...');

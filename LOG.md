@@ -345,7 +345,7 @@ independently flipped one task against a shared 0/4 baseline; Area F's own denom
 
 ### Full task list, by Area
 
-### Area A — Foundation & contracts — 8 / 10 — `log/AREA-A/`
+### Area A — Foundation & contracts — 9 / 10 — `log/AREA-A/`
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
@@ -358,7 +358,7 @@ independently flipped one task against a shared 0/4 baseline; Area F's own denom
 | [x] | T-07 | Canonical test fixtures, including the C-01 kill-shot pair | T-06 | `log/AREA-A/T-07.md` |
 | [x] | T-72 | Cover `apps/web/**` in the root ESLint config | T-03 | `log/AREA-A/T-72.md` |
 | [x] | T-78 | Exclude test files from `apps/web/tsconfig.json` | T-03 | `log/AREA-A/T-78.md` |
-| [ ] | T-79 | Prettier formatting sweep | T-03 | `log/AREA-A/T-79.md` |
+| [x] | T-79 | Prettier formatting sweep | T-03 | `log/AREA-A/T-79.md` |
 
 ### Area B — Engine — 17 / 18 (header count was stale at 15/16 — the true count from the entries
 themselves was 16 done of 17 pre-existing tasks, already matching the §5 dashboard row; T-76 added

@@ -20,7 +20,11 @@ export function buildXScale(plotWidth: number): ScaleLinear<number, number> {
  * onto one pixel row. Padding by at least 1 K keeps the line visible and
  * the axis non-degenerate without ever dividing by the (possibly zero)
  * span. */
-export function buildYScale(minC: number, maxC: number, plotHeight: number): ScaleLinear<number, number> {
+export function buildYScale(
+  minC: number,
+  maxC: number,
+  plotHeight: number,
+): ScaleLinear<number, number> {
   const span = maxC - minC;
   const pad = span < 2 ? 1 : span * 0.1;
   // SVG y grows downward -- range is inverted so higher temperatures sit

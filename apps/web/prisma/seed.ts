@@ -24,13 +24,18 @@ import { MATERIALS, type Material } from '@shelter/data';
 export function validateSources(materials: readonly Pick<Material, 'id' | 'source'>[]): void {
   for (const m of materials) {
     if (!m.source || !m.source.trim()) {
-      throw new Error(`db:seed: material "${m.id}" has an empty source -- LOG.md rule 20. Refusing to seed.`);
+      throw new Error(
+        `db:seed: material "${m.id}" has an empty source -- LOG.md rule 20. Refusing to seed.`,
+      );
     }
   }
 }
 
 /** Upserts every material by id. Idempotent: same id twice updates, never duplicates. */
-export async function seedMaterials(prisma: PrismaClient, materials: readonly Material[]): Promise<number> {
+export async function seedMaterials(
+  prisma: PrismaClient,
+  materials: readonly Material[],
+): Promise<number> {
   validateSources(materials);
   for (const m of materials) {
     const { id, ...fields } = m;
@@ -49,7 +54,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const prisma = new PrismaClient();
   seedMaterials(prisma, MATERIALS)
     .then((count) => {
-      console.log(`db:seed: upserted ${MATERIALS.length} materials from the code catalogue, table now has ${count} rows.`);
+      console.log(
+        `db:seed: upserted ${MATERIALS.length} materials from the code catalogue, table now has ${count} rows.`,
+      );
     })
     .catch((err) => {
       console.error(err instanceof Error ? err.message : err);

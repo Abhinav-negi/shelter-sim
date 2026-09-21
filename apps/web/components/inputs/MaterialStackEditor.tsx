@@ -26,7 +26,12 @@ export interface MaterialStackEditorProps {
 
 const MM_PER_M = 1000;
 
-export function MaterialStackEditor({ request, selectedSurfaceId, catalogue, onChange }: MaterialStackEditorProps) {
+export function MaterialStackEditor({
+  request,
+  selectedSurfaceId,
+  catalogue,
+  onChange,
+}: MaterialStackEditorProps) {
   const surface = request.building.surfaces.find((s) => s.id === selectedSurfaceId);
   if (!surface) return null;
 
@@ -41,23 +46,34 @@ export function MaterialStackEditor({ request, selectedSurfaceId, catalogue, onC
       style={{ border: '1px solid #cbd5e1', borderRadius: 8, padding: 12, marginTop: 8 }}
     >
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <strong>{surface!.type === 'wall' ? 'Wall' : surface!.type === 'roof' ? 'Roof' : 'Floor'} layers -- {surface!.id}</strong>
+        <strong>
+          {surface!.type === 'wall' ? 'Wall' : surface!.type === 'roof' ? 'Roof' : 'Floor'} layers
+          -- {surface!.id}
+        </strong>
         <button type="button" onClick={close} aria-label="Close material stack editor">
           Close
         </button>
       </header>
       <p style={{ fontSize: 12, color: '#475569' }}>
-        Layers ordered outside (top) to inside (bottom). Drag a slider to change how thick a layer is.
+        Layers ordered outside (top) to inside (bottom). Drag a slider to change how thick a layer
+        is.
       </p>
-      <ol style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <ol
+        style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}
+      >
         {surface!.construction.map((layer, i) => {
           const material = catalogue.find((m) => m.id === layer.materialId);
           const thicknessMm = Math.round(layer.thickness * MM_PER_M);
           const inputId = `stack-thickness-${surface!.id}-${i}`;
           return (
-            <li key={`${layer.materialId}-${i}`} style={{ border: '1px solid #e2e8f0', borderRadius: 6, padding: 8 }}>
+            <li
+              key={`${layer.materialId}-${i}`}
+              style={{ border: '1px solid #e2e8f0', borderRadius: 6, padding: 8 }}
+            >
               <div style={{ fontWeight: 600 }}>{material?.name ?? layer.materialId}</div>
-              {material?.blurb && <div style={{ fontSize: 12, color: '#475569' }}>{material.blurb}</div>}
+              {material?.blurb && (
+                <div style={{ fontSize: 12, color: '#475569' }}>{material.blurb}</div>
+              )}
               <label htmlFor={inputId} style={{ display: 'block', marginTop: 4 }}>
                 Thickness: {thicknessMm} mm
               </label>
@@ -75,7 +91,9 @@ export function MaterialStackEditor({ request, selectedSurfaceId, catalogue, onC
               />
               {material?.source && (
                 <details style={{ marginTop: 4 }}>
-                  <summary style={{ cursor: 'pointer', fontSize: 12 }}>Where this number comes from</summary>
+                  <summary style={{ cursor: 'pointer', fontSize: 12 }}>
+                    Where this number comes from
+                  </summary>
                   <p style={{ fontSize: 12, color: '#475569' }}>{material.source}</p>
                 </details>
               )}

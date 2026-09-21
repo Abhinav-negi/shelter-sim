@@ -37,7 +37,13 @@ import React, { useEffect, useState } from 'react';
 import { sunPosition } from '@shelter/engine';
 import { useStore } from '../../../lib/store';
 import { boundingBox, deriveGeometry } from '../geometry';
-import { computeShadow, isSunUp, skyGradientCss, starPositions, sunScreenPosition } from './sceneMath';
+import {
+  computeShadow,
+  isSunUp,
+  skyGradientCss,
+  starPositions,
+  sunScreenPosition,
+} from './sceneMath';
 import { attachDayNightLoop, prefersReducedMotion } from './loop';
 import { getProgress, subscribeProgress, type Progress } from './progress';
 
@@ -45,7 +51,13 @@ import { getProgress, subscribeProgress, type Progress } from './progress';
  * a full 24 h day plays out in 8 s. LOG.md rule 14: named calibration knob. */
 const HOURS_PER_SECOND = 3;
 
-function ProgressRing({ progress, reducedMotion }: { progress: Progress | null; reducedMotion: boolean }) {
+function ProgressRing({
+  progress,
+  reducedMotion,
+}: {
+  progress: Progress | null;
+  reducedMotion: boolean;
+}) {
   const r = 11;
   const c = 2 * Math.PI * r;
 
@@ -58,9 +70,18 @@ function ProgressRing({ progress, reducedMotion }: { progress: Progress | null; 
         data-testid="daynight-ring-indeterminate"
         role="progressbar"
         aria-label="Running scenarios"
-        style={{ position: 'absolute', top: 4, right: 4, width: 28, height: 28, pointerEvents: 'none' }}
+        style={{
+          position: 'absolute',
+          top: 4,
+          right: 4,
+          width: 28,
+          height: 28,
+          pointerEvents: 'none',
+        }}
       >
-        {!reducedMotion && <style>{'@keyframes daynight-spin { to { transform: rotate(360deg); } }'}</style>}
+        {!reducedMotion && (
+          <style>{'@keyframes daynight-spin { to { transform: rotate(360deg); } }'}</style>
+        )}
         <svg
           viewBox="0 0 28 28"
           style={{
@@ -69,7 +90,16 @@ function ProgressRing({ progress, reducedMotion }: { progress: Progress | null; 
             animation: reducedMotion ? undefined : 'daynight-spin 1s linear infinite',
           }}
         >
-          <circle cx={14} cy={14} r={r} fill="none" stroke="#e2e8f0" strokeWidth={3} strokeDasharray={`${c * 0.28} ${c}`} strokeLinecap="round" />
+          <circle
+            cx={14}
+            cy={14}
+            r={r}
+            fill="none"
+            stroke="#e2e8f0"
+            strokeWidth={3}
+            strokeDasharray={`${c * 0.28} ${c}`}
+            strokeLinecap="round"
+          />
         </svg>
       </div>
     );
@@ -86,7 +116,14 @@ function ProgressRing({ progress, reducedMotion }: { progress: Progress | null; 
       aria-valuenow={done}
       aria-valuemin={0}
       aria-valuemax={total}
-      style={{ position: 'absolute', top: 4, right: 4, width: 28, height: 28, pointerEvents: 'none' }}
+      style={{
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        width: 28,
+        height: 28,
+        pointerEvents: 'none',
+      }}
     >
       <svg viewBox="0 0 28 28" style={{ width: '100%', height: '100%' }}>
         <circle cx={14} cy={14} r={r} fill="none" stroke="#e2e8f0" strokeWidth={3} />
@@ -102,7 +139,10 @@ function ProgressRing({ progress, reducedMotion }: { progress: Progress | null; 
           transform="rotate(-90 14 14)"
         />
       </svg>
-      <span data-testid="daynight-ring-text" style={{ display: 'block', fontSize: 8, textAlign: 'center' }}>
+      <span
+        data-testid="daynight-ring-text"
+        style={{ display: 'block', fontSize: 8, textAlign: 'center' }}
+      >
         {done}/{total}
       </span>
     </div>
@@ -160,7 +200,13 @@ export function DayNightAnimation() {
   const geom = deriveGeometry(building);
 
   // THE import this entire task exists to make honest.
-  const sun = sunPosition(site.latitude, site.longitude, site.standardMeridian, dayOfYear, clockHour);
+  const sun = sunPosition(
+    site.latitude,
+    site.longitude,
+    site.standardMeridian,
+    dayOfYear,
+    clockHour,
+  );
   const shadow = computeShadow(sun, geom);
   const sunPos = sunScreenPosition(sun, geom);
   const up = isSunUp(sun);
@@ -202,7 +248,14 @@ export function DayNightAnimation() {
         viewBox={viewBox}
         role="presentation"
         aria-hidden="true"
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', overflow: 'visible' }}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          overflow: 'visible',
+        }}
       >
         {stars.map((s, i) => (
           <circle
@@ -215,7 +268,9 @@ export function DayNightAnimation() {
             opacity={0.85}
           />
         ))}
-        {shadow.d && <path data-testid="daynight-shadow" d={shadow.d} fill="rgba(15, 23, 42, 0.32)" />}
+        {shadow.d && (
+          <path data-testid="daynight-shadow" d={shadow.d} fill="rgba(15, 23, 42, 0.32)" />
+        )}
         {up && (
           <circle
             data-testid="daynight-sun"

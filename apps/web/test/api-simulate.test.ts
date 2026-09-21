@@ -10,7 +10,13 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
 import { simulate, toK, requestToJson, resultFromJson } from '@shelter/engine';
-import type { Material, Glazing, Surface, SimulationRequest, SimulationResult } from '@shelter/engine';
+import type {
+  Material,
+  Glazing,
+  Surface,
+  SimulationRequest,
+  SimulationResult,
+} from '@shelter/engine';
 // Same relative-import workaround as apps/web/lib/repo/runs.ts and
 // apps/web/test/repo-runs.test.ts: canonicalRequestHash is not re-exported
 // from @shelter/engine's public barrel. Used here only to look up the row a
@@ -155,7 +161,13 @@ function baseRequest(tag = 'base'): SimulationRequest {
       T_amb,
       GHI,
       v_wind,
-      provenance: { source: 'synthetic', label: 'T-38 test fixture', sourceElevation: null, lapseCorrectionK: 0, notes: [] },
+      provenance: {
+        source: 'synthetic',
+        label: 'T-38 test fixture',
+        sourceElevation: null,
+        lapseCorrectionK: 0,
+        notes: [],
+      },
     },
     materials: { [MATERIAL.id]: MATERIAL },
     glazings: { [GLAZING.id]: GLAZING },
@@ -194,7 +206,9 @@ describe('T-38 POST /api/simulate', () => {
     const fromApi = resultFromJson(json);
 
     expect(stripWallClock(fromApi)).toEqual(stripWallClock(inProcess));
-    console.log(`T-38 test 1: status=${res.status}, fields deep-equal (excluding meta.wallClockMs): true`);
+    console.log(
+      `T-38 test 1: status=${res.status}, fields deep-equal (excluding meta.wallClockMs): true`,
+    );
   });
 
   it('2. meta.energyBalanceResidual < 1e-3 on the returned result', async () => {
@@ -227,7 +241,9 @@ describe('T-38 POST /api/simulate', () => {
     const dbAfter = await liveDb();
     const after = await dbAfter.simulationRun.count();
     expect(after).toBe(before);
-    console.log(`T-38 test 3: status=${res.status}, code=${json.code}, detail=${JSON.stringify(json.detail)}, rows before=${before} after=${after}`);
+    console.log(
+      `T-38 test 3: status=${res.status}, code=${json.code}, detail=${JSON.stringify(json.detail)}, rows before=${before} after=${after}`,
+    );
   });
 
   it('4. three simultaneously invalid fields produce one response with three detail entries', async () => {
@@ -239,19 +255,26 @@ describe('T-38 POST /api/simulate', () => {
     req.operation.achSchedule = new Array(23).fill(0.5); // must have exactly 24 values
 
     const res = await postJson(POST, requestToJson(req));
-    const json = (await res.json()) as { code: string; detail: Array<{ path: string; message: string }> };
+    const json = (await res.json()) as {
+      code: string;
+      detail: Array<{ path: string; message: string }>;
+    };
 
     expect(res.status).toBe(400);
     expect(json.code).toBe('INVALID_INPUT');
     expect(json.detail.length).toBe(3);
-    console.log(`T-38 test 4: status=${res.status}, detail count=${json.detail.length}, paths=${json.detail.map((d) => d.path).join(', ')}`);
+    console.log(
+      `T-38 test 4: status=${res.status}, detail count=${json.detail.length}, paths=${json.detail.map((d) => d.path).join(', ')}`,
+    );
   });
 
   it('5. a window larger than its host surface returns 400 GEOMETRY_INCONSISTENT', async () => {
     process.env.DATABASE_URL = LIVE_DATABASE_URL;
     const { POST } = await freshRoute();
     const req = baseRequest('big-window');
-    req.building.windows = [{ id: 'southWindow', hostSurfaceId: 'south', area: 20, glazingId: GLAZING.id }]; // host 'south' is 16 m^2
+    req.building.windows = [
+      { id: 'southWindow', hostSurfaceId: 'south', area: 20, glazingId: GLAZING.id },
+    ]; // host 'south' is 16 m^2
 
     const res = await postJson(POST, requestToJson(req));
     const json = (await res.json()) as { code: string };
@@ -265,7 +288,9 @@ describe('T-38 POST /api/simulate', () => {
     const { POST } = await freshRoute();
     const req = baseRequest('bad-material');
     req.building.surfaces = req.building.surfaces.map((s) =>
-      s.id === 'south' ? { ...s, construction: [{ materialId: 'doesNotExist', thickness: 0.4 }] } : s,
+      s.id === 'south'
+        ? { ...s, construction: [{ materialId: 'doesNotExist', thickness: 0.4 }] }
+        : s,
     );
 
     const res = await postJson(POST, requestToJson(req));
@@ -298,7 +323,9 @@ describe('T-38 POST /api/simulate', () => {
     const json = (await res.json()) as { code: string };
     expect(res.status).toBe(413);
     expect(json.code).toBe('PAYLOAD_TOO_LARGE');
-    console.log(`T-38 test 8: bodyBytes=${Buffer.byteLength(bigBody, 'utf8')}, status=${res.status}, code=${json.code}`);
+    console.log(
+      `T-38 test 8: bodyBytes=${Buffer.byteLength(bigBody, 'utf8')}, status=${res.status}, code=${json.code}`,
+    );
   });
 
   it("9. cache hit: second identical POST returns the same KPIs with 'served from cache' in meta.warnings, and is measurably faster", async () => {
@@ -325,7 +352,9 @@ describe('T-38 POST /api/simulate', () => {
     expect(json2.meta.warnings).toContain('served from cache');
     expect(json2.kpis).toEqual(json1.kpis);
     expect(secondMs).toBeLessThan(firstMs);
-    console.log(`T-38 test 9: first (miss) ${firstMs.toFixed(2)}ms, second (hit) ${secondMs.toFixed(2)}ms`);
+    console.log(
+      `T-38 test 9: first (miss) ${firstMs.toFixed(2)}ms, second (hit) ${secondMs.toFixed(2)}ms`,
+    );
   });
 
   it('10. DB unreachable: route still returns a correct result within 5s, only caching is lost', async () => {
@@ -341,7 +370,9 @@ describe('T-38 POST /api/simulate', () => {
     expect(res.status).toBe(200);
     expect(elapsed).toBeLessThan(5000);
     expect(json.kpis).toBeDefined();
-    console.log(`T-38 test 10: DB unreachable -> status=${res.status}, elapsed=${elapsed.toFixed(1)}ms`);
+    console.log(
+      `T-38 test 10: DB unreachable -> status=${res.status}, elapsed=${elapsed.toFixed(1)}ms`,
+    );
   });
 
   it('11. every error response is Content-Type: application/json with no HTML and no stack trace', async () => {
@@ -371,6 +402,8 @@ describe('T-38 POST /api/simulate', () => {
     const db = await liveDb();
     const rows = await db.simulationRun.count({ where: { requestHash: hash } });
     expect(rows).toBe(1);
-    console.log(`T-38 test 12: statuses=${responses.map((r) => r.status).join(',')}, rows for hash=${rows}`);
+    console.log(
+      `T-38 test 12: statuses=${responses.map((r) => r.status).join(',')}, rows for hash=${rows}`,
+    );
   });
 });

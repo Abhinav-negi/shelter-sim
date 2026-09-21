@@ -36,15 +36,25 @@ import { groundReflectedKWhPerM2 } from './groundAlbedo';
 function resolvePreset(preset: Preset, weather = tmyById(preset.locationId)): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather, materials, glazings };
 }
 
 function daySlice(dayOfYear: number): Scenario {
-  return { id: `day${dayOfYear}`, name: `day${dayOfYear}`, description: '', kind: 'monthly', startDayOfYear: dayOfYear, days: 1, sourceNote: 'T-48 test fixture' };
+  return {
+    id: `day${dayOfYear}`,
+    name: `day${dayOfYear}`,
+    description: '',
+    kind: 'monthly',
+    startDayOfYear: dayOfYear,
+    days: 1,
+    sourceNote: 'T-48 test fixture',
+  };
 }
 
 const lehPreset = PRESETS.find((p) => p.locationId === 'leh')!;
@@ -76,8 +86,14 @@ describe('T-48 solar capture view', () => {
     const rows = surfaceCaptures(janResult, janRequest);
     const totals = byOrientation(rows);
     // eslint-disable-next-line no-console
-    console.log('T-48 test 2 (Jan 15, Leh, traditionalLadakhiByre): S=%s E=%s W=%s N=%s Roof=%s',
-      totals.S.toFixed(3), totals.E.toFixed(3), totals.W.toFixed(3), totals.N.toFixed(3), totals.Roof.toFixed(3));
+    console.log(
+      'T-48 test 2 (Jan 15, Leh, traditionalLadakhiByre): S=%s E=%s W=%s N=%s Roof=%s',
+      totals.S.toFixed(3),
+      totals.E.toFixed(3),
+      totals.W.toFixed(3),
+      totals.N.toFixed(3),
+      totals.Roof.toFixed(3),
+    );
     const walls = [totals.S, totals.E, totals.W, totals.N];
     expect(totals.S).toBe(Math.max(...walls));
     expect(totals.N).toBe(Math.min(...walls));
@@ -94,8 +110,12 @@ describe('T-48 solar capture view', () => {
     const rows = surfaceCaptures(decResult, decRequest);
     const totals = byOrientation(rows);
     const dt = decRequest.options.timestepSeconds;
-    const southId = decRequest.building.surfaces.find((s: Surface) => classifySurface(s) === 'S')!.id;
-    const roofId = decRequest.building.surfaces.find((s: Surface) => classifySurface(s) === 'Roof')!.id;
+    const southId = decRequest.building.surfaces.find(
+      (s: Surface) => classifySurface(s) === 'S',
+    )!.id;
+    const roofId = decRequest.building.surfaces.find(
+      (s: Surface) => classifySurface(s) === 'Roof',
+    )!.id;
     const intensity = (id: string) => {
       const series = decResult.solar.incidentBySurface[id]!;
       let j = 0;
@@ -105,8 +125,13 @@ describe('T-48 solar capture view', () => {
     const southIntensity = intensity(southId);
     const roofIntensity = intensity(roofId);
     // eslint-disable-next-line no-console
-    console.log('T-48 test 3 (21 Dec, Leh): south kWh=%s roof kWh=%s | south kWh/m2=%s roof kWh/m2=%s',
-      totals.S.toFixed(3), totals.Roof.toFixed(3), southIntensity.toFixed(3), roofIntensity.toFixed(3));
+    console.log(
+      'T-48 test 3 (21 Dec, Leh): south kWh=%s roof kWh=%s | south kWh/m2=%s roof kWh/m2=%s',
+      totals.S.toFixed(3),
+      totals.Roof.toFixed(3),
+      southIntensity.toFixed(3),
+      roofIntensity.toFixed(3),
+    );
     // CONTRACTS.md 7.10's anchor is stated per unit area ("integrated daily
     // I_T on a vertical south wall exceeds that on a horizontal roof") --
     // that is what is asserted here, and it holds.
@@ -131,8 +156,14 @@ describe('T-48 solar capture view', () => {
     const southBare = southTotal(ALBEDO.genericGround);
     const southSnow = southTotal(ALBEDO.freshSnow);
     // eslint-disable-next-line no-console
-    console.log('T-48 test 4: south wall total bare=%s snow=%s | ground-reflected only bare=%s snow=%s ratio=%s',
-      southBare.toFixed(3), southSnow.toFixed(3), bare.toFixed(4), snow.toFixed(4), (snow / bare).toFixed(4));
+    console.log(
+      'T-48 test 4: south wall total bare=%s snow=%s | ground-reflected only bare=%s snow=%s ratio=%s',
+      southBare.toFixed(3),
+      southSnow.toFixed(3),
+      bare.toFixed(4),
+      snow.toFixed(4),
+      (snow / bare).toFixed(4),
+    );
     expect(southSnow).toBeGreaterThan(southBare);
     expect(snow / bare).toBeCloseTo(4, 6);
   });
@@ -151,11 +182,20 @@ describe('T-48 solar capture view', () => {
 
   it('test 7 -- rotating the building 180 degrees redistributes the bars (done live)', () => {
     const before = byOrientation(surfaceCaptures(janResult, janRequest));
-    const rotatedRequest: SimulationRequest = { ...janRequest, building: { ...janRequest.building, azimuth: janRequest.building.azimuth + 180 } };
+    const rotatedRequest: SimulationRequest = {
+      ...janRequest,
+      building: { ...janRequest.building, azimuth: janRequest.building.azimuth + 180 },
+    };
     const rotatedResult = simulate(rotatedRequest);
     const after = byOrientation(surfaceCaptures(rotatedResult, rotatedRequest));
     // eslint-disable-next-line no-console
-    console.log('T-48 test 7: before S=%s N=%s | after S=%s N=%s', before.S.toFixed(3), before.N.toFixed(3), after.S.toFixed(3), after.N.toFixed(3));
+    console.log(
+      'T-48 test 7: before S=%s N=%s | after S=%s N=%s',
+      before.S.toFixed(3),
+      before.N.toFixed(3),
+      after.S.toFixed(3),
+      after.N.toFixed(3),
+    );
     // NOT exact floating-point equality: the traditional preset's window
     // (windowSouth, 0.8 m^2) is a fixed carve-out of wallSouth's own opaque
     // area (`opaqueArea = surface.area - windowArea`, solve/assemble.ts).
@@ -177,13 +217,23 @@ describe('T-48 solar capture view', () => {
     // later, CONTRACTS.md/store.ts -- irrelevant to what this test checks
     // and only a source of cross-test timing flakiness) -- the three
     // data-driven views are exercised directly with consistent props.
-    const windowlessRequest: SimulationRequest = { ...janRequest, building: { ...janRequest.building, windows: [] } };
+    const windowlessRequest: SimulationRequest = {
+      ...janRequest,
+      building: { ...janRequest.building, windows: [] },
+    };
     const windowlessResult = simulate(windowlessRequest);
     expect(windowlessResult.solar.dailyTotalKWh.glazed).toBe(0);
 
     const html =
-      renderToStaticMarkup(React.createElement(DailyTotalSplit, { solar: windowlessResult.solar })) +
-      renderToStaticMarkup(React.createElement(OrientationBars, { result: windowlessResult, request: windowlessRequest })) +
+      renderToStaticMarkup(
+        React.createElement(DailyTotalSplit, { solar: windowlessResult.solar }),
+      ) +
+      renderToStaticMarkup(
+        React.createElement(OrientationBars, {
+          result: windowlessResult,
+          request: windowlessRequest,
+        }),
+      ) +
       renderToStaticMarkup(React.createElement(AlbedoComparison, { request: windowlessRequest }));
     expect(html).not.toContain('NaN');
     expect(html).toContain('solar-orientation-bars');
@@ -198,7 +248,9 @@ describe('T-48 solar capture view', () => {
   });
 
   it('test 10 -- at 400px width every bar is sized by percentage, not a fixed pixel value that could overflow', () => {
-    const html = renderToStaticMarkup(React.createElement(OrientationBars, { result: janResult, request: janRequest }));
+    const html = renderToStaticMarkup(
+      React.createElement(OrientationBars, { result: janResult, request: janRequest }),
+    );
     // every bar's fill width is a CSS percentage -- it always fits its
     // (already-flexible) parent regardless of container width.
     const widthMatches = [...html.matchAll(/width:(\d+(?:\.\d+)?%)/g)];

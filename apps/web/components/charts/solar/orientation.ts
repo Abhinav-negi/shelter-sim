@@ -110,7 +110,10 @@ export interface SurfaceCapture {
  * path: have the engine report `transmittedGlazed` per window or per host
  * surface, then delete this function and read the field directly.
  */
-export function surfaceCaptures(result: SimulationResult, request: SimulationRequest): SurfaceCapture[] {
+export function surfaceCaptures(
+  result: SimulationResult,
+  request: SimulationRequest,
+): SurfaceCapture[] {
   const dt = request.options.timestepSeconds;
 
   const weightOf: Record<string, number> = {};

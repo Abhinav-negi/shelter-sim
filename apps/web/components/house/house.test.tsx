@@ -27,7 +27,14 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { glazingById, materialById, PRESETS, tmyById } from '@shelter/data';
 import { asK, simulate } from '@shelter/engine';
-import type { Building, Glazing, Material, Preset, SimulationRequest, Surface } from '@shelter/engine';
+import type {
+  Building,
+  Glazing,
+  Material,
+  Preset,
+  SimulationRequest,
+  Surface,
+} from '@shelter/engine';
 import { __debugDispatchCount, actions, getStoreState, hydrateStore } from '../../lib/store';
 import { formatTempC } from '../../lib/units';
 import { HouseView, activateSurface, nextScrubberHour } from './HouseView';
@@ -42,10 +49,12 @@ import { computeExportPixelSize } from './export';
 function resolvePreset(preset: Preset): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
 }
 
@@ -111,7 +120,13 @@ describe('T-46 house: geometry, colour, interaction', () => {
     const big = boxBuilding(lengthBig, 5, 2.6); // only the east-west length changes
     const widthSmall = southWallWidth(small);
     const widthBig = southWallWidth(big);
-    console.log('T-46 test 2 evidence:', { lengthSmall, widthSmall, lengthBig, widthBig, ratio: widthBig / widthSmall });
+    console.log('T-46 test 2 evidence:', {
+      lengthSmall,
+      widthSmall,
+      lengthBig,
+      widthBig,
+      ratio: widthBig / widthSmall,
+    });
     expect(widthBig / widthSmall).toBeCloseTo(lengthBig / lengthSmall, 2);
   });
 
@@ -120,8 +135,14 @@ describe('T-46 house: geometry, colour, interaction', () => {
     const idx1400 = hourToTimeIndex(result, request.weather.startHour, 14);
     const domain0300 = tempDomainForIndex(result, idx0300);
     const domain1400 = tempDomainForIndex(result, idx1400);
-    const colorAt0300 = colorForTemp(result.temperatures.surfaces.wallSouth!.exterior[idx0300]!, domain0300);
-    const colorAt1400 = colorForTemp(result.temperatures.surfaces.wallSouth!.exterior[idx1400]!, domain1400);
+    const colorAt0300 = colorForTemp(
+      result.temperatures.surfaces.wallSouth!.exterior[idx0300]!,
+      domain0300,
+    );
+    const colorAt1400 = colorForTemp(
+      result.temperatures.surfaces.wallSouth!.exterior[idx1400]!,
+      domain1400,
+    );
     expect(colorAt0300).not.toBe(colorAt1400);
 
     const idxNoon = hourToTimeIndex(result, request.weather.startHour, 12);
@@ -175,7 +196,11 @@ describe('T-46 house: geometry, colour, interaction', () => {
     const markup = renderToStaticMarkup(<HouseView />);
     expect(markup).toContain('06:00');
     const idx0600 = hourToTimeIndex(result, request.weather.startHour, 6);
-    console.log('T-46 test 6 evidence:', { loopVisited: seen.size, pausedAtLabel: '06:00', idx0600 });
+    console.log('T-46 test 6 evidence:', {
+      loopVisited: seen.size,
+      pausedAtLabel: '06:00',
+      idx0600,
+    });
   });
 
   it('test 7 -- no fixed pixel width/height on the <svg>, viewBox only, and CSS makes it shrink at narrow widths', () => {
@@ -213,7 +238,10 @@ describe('T-46 house: geometry, colour, interaction', () => {
     const vbW = bbox.maxX - bbox.minX + 2;
     const vbH = bbox.maxY - bbox.minY + 2;
     const size = computeExportPixelSize(vbW, vbH);
-    console.log('T-46 test 9 evidence -- computed export pixel size:', size, 'from viewBox', { vbW, vbH });
+    console.log('T-46 test 9 evidence -- computed export pixel size:', size, 'from viewBox', {
+      vbW,
+      vbH,
+    });
     expect(size.width).toBe(1920);
     expect(size.height).toBeGreaterThan(0);
   });
@@ -222,7 +250,11 @@ describe('T-46 house: geometry, colour, interaction', () => {
     const before = __debugDispatchCount();
     for (let h = 0; h < 24; h++) actions.setScrubberHour(h);
     const after = __debugDispatchCount();
-    console.log('T-46 test 11 evidence -- dispatch count before/after 24 scrubs:', { before, after, delta: after - before });
+    console.log('T-46 test 11 evidence -- dispatch count before/after 24 scrubs:', {
+      before,
+      after,
+      delta: after - before,
+    });
     expect(after - before).toBe(0);
   });
 });

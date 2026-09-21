@@ -49,7 +49,11 @@ function normaliseAzimuth(deg: number): number {
   return ((deg % 360) + 360) % 360;
 }
 
-function requireMaterial(materials: Record<string, Material>, id: string, specKind: string): Material {
+function requireMaterial(
+  materials: Record<string, Material>,
+  id: string,
+  specKind: string,
+): Material {
   const m = materials[id];
   if (!m) {
     throw new Error(`expandVariants: ${specKind} value "${id}" is not a key in base.materials`);
@@ -74,7 +78,12 @@ function requireGlazing(glazings: Record<string, Glazing>, id: string): Glazing 
  * supplies every candidate material's real k/rho/c/cost/carbon via
  * `base.materials`, the same way any `SimulationRequest` already must.
  */
-function swapStructuralMaterial(building: Building, materials: Record<string, Material>, type: Surface['type'], materialId: string): void {
+function swapStructuralMaterial(
+  building: Building,
+  materials: Record<string, Material>,
+  type: Surface['type'],
+  materialId: string,
+): void {
   for (const s of building.surfaces) {
     if (s.type !== type) continue;
     s.construction = s.construction.map((layer) => {
@@ -113,7 +122,11 @@ function applyInsulationThickness(req: SimulationRequest, thicknessM: number): n
  * series resistances, order-independent) is identical across positions.
  * Acceptance test 3 is exactly this invariant.
  */
-function reorderInsulation(construction: Layer[], materials: Record<string, Material>, position: 'inside' | 'outside' | 'cavity'): Layer[] {
+function reorderInsulation(
+  construction: Layer[],
+  materials: Record<string, Material>,
+  position: 'inside' | 'outside' | 'cavity',
+): Layer[] {
   const insulation = construction.filter((l) => materials[l.materialId]?.category === 'insulation');
   const rest = construction.filter((l) => materials[l.materialId]?.category !== 'insulation');
   if (insulation.length === 0) return construction; // nothing to reorder on this surface
@@ -133,7 +146,10 @@ function reorderInsulation(construction: Layer[], materials: Record<string, Mate
   return [...rest.slice(0, mid), ...insulation, ...rest.slice(mid)];
 }
 
-function applyInsulationPosition(req: SimulationRequest, position: 'inside' | 'outside' | 'cavity'): string {
+function applyInsulationPosition(
+  req: SimulationRequest,
+  position: 'inside' | 'outside' | 'cavity',
+): string {
   for (const s of req.building.surfaces) {
     if (s.type === 'floor') continue; // ground-coupled; position is a wall/roof concept here
     s.construction = reorderInsulation(s.construction, req.materials, position);
@@ -147,11 +163,21 @@ function applyGlazing(req: SimulationRequest, glazingId: string): string {
   return glazing.name;
 }
 
-function applyWwr(req: SimulationRequest, orientation: 'S' | 'E' | 'W' | 'N', value: number): number {
+function applyWwr(
+  req: SimulationRequest,
+  orientation: 'S' | 'E' | 'W' | 'N',
+  value: number,
+): number {
   const az = ORIENTATION_AZIMUTH[orientation];
-  const hosts = new Map(req.building.surfaces.filter((s) => s.type !== 'floor' && normaliseAzimuth(s.azimuth) === normaliseAzimuth(az)).map((s) => [s.id, s]));
+  const hosts = new Map(
+    req.building.surfaces
+      .filter((s) => s.type !== 'floor' && normaliseAzimuth(s.azimuth) === normaliseAzimuth(az))
+      .map((s) => [s.id, s]),
+  );
   if (hosts.size === 0) {
-    throw new Error(`expandVariants: wwr orientation "${orientation}" matches no wall/roof surface in base.building`);
+    throw new Error(
+      `expandVariants: wwr orientation "${orientation}" matches no wall/roof surface in base.building`,
+    );
   }
   let touched = false;
   for (const w of req.building.windows) {
@@ -162,7 +188,9 @@ function applyWwr(req: SimulationRequest, orientation: 'S' | 'E' | 'W' | 'N', va
     w.area = value * grossFacadeAreaM2;
   }
   if (!touched) {
-    throw new Error(`expandVariants: wwr orientation "${orientation}" has no window hosted on it in base.building.windows`);
+    throw new Error(
+      `expandVariants: wwr orientation "${orientation}" has no window hosted on it in base.building.windows`,
+    );
   }
   return value;
 }
@@ -218,14 +246,21 @@ const PCM_LATENT_HEAT_J_PER_KG = 200_000;
 
 function findStorageMaterialId(materials: Record<string, Material>, kind: 'water' | 'pcm'): string {
   const pattern = kind === 'water' ? /water/i : /pcm/i;
-  const found = Object.values(materials).find((m) => m.category === 'storage' && (pattern.test(m.id) || pattern.test(m.name)));
+  const found = Object.values(materials).find(
+    (m) => m.category === 'storage' && (pattern.test(m.id) || pattern.test(m.name)),
+  );
   if (!found) {
-    throw new Error(`expandVariants: massStrategy "${kind}" requires a category:'storage' material matching /${pattern.source}/i in base.materials`);
+    throw new Error(
+      `expandVariants: massStrategy "${kind}" requires a category:'storage' material matching /${pattern.source}/i in base.materials`,
+    );
   }
   return found.id;
 }
 
-function applyMassStrategy(req: SimulationRequest, kind: 'none' | 'floor' | 'trombe' | 'water' | 'pcm'): string {
+function applyMassStrategy(
+  req: SimulationRequest,
+  kind: 'none' | 'floor' | 'trombe' | 'water' | 'pcm',
+): string {
   if (kind === 'none') {
     req.building.storageElements = [];
     return kind;
@@ -239,9 +274,18 @@ function applyMassStrategy(req: SimulationRequest, kind: 'none' | 'floor' | 'tro
           // (data/src/presets.ts): a single massive, high-absorptivity face,
           // no separate glazed air cavity node. Upgrade path: a real two-node
           // Trombe model is a physics addition, out of scope here (rule 12).
-          req.building.surfaces.filter((s) => s.type === 'wall').sort((a, b) => Math.abs(normaliseAzimuth(a.azimuth) - 180) - Math.abs(normaliseAzimuth(b.azimuth) - 180))[0];
+          req.building.surfaces
+            .filter((s) => s.type === 'wall')
+            .sort(
+              (a, b) =>
+                Math.abs(normaliseAzimuth(a.azimuth) - 180) -
+                Math.abs(normaliseAzimuth(b.azimuth) - 180),
+            )[0];
     if (target) {
-      target.construction = target.construction.map((l) => ({ ...l, thickness: l.thickness * MASS_STRATEGY_THICKNESS_MULTIPLIER }));
+      target.construction = target.construction.map((l) => ({
+        ...l,
+        thickness: l.thickness * MASS_STRATEGY_THICKNESS_MULTIPLIER,
+      }));
       if (kind === 'trombe') {
         target.exteriorAbsorptivity = TROMBE_ABSORBER_ABSORPTIVITY;
         target.exteriorEmissivity = TROMBE_ABSORBER_EMISSIVITY;
@@ -258,7 +302,13 @@ function applyMassStrategy(req: SimulationRequest, kind: 'none' | 'floor' | 'tro
     massKg: kind === 'water' ? DEFAULT_WATER_STORAGE_MASS_KG : DEFAULT_PCM_STORAGE_MASS_KG,
     surfaceAreaToRoom: DEFAULT_STORAGE_SURFACE_AREA_M2,
     conductanceToRoom: DEFAULT_STORAGE_CONDUCTANCE_W_PER_K,
-    ...(kind === 'pcm' ? { meltPoint: toK(PCM_MELT_POINT_C), meltRangeK: PCM_MELT_RANGE_K, latentHeat: PCM_LATENT_HEAT_J_PER_KG } : {}),
+    ...(kind === 'pcm'
+      ? {
+          meltPoint: toK(PCM_MELT_POINT_C),
+          meltRangeK: PCM_MELT_RANGE_K,
+          latentHeat: PCM_LATENT_HEAT_J_PER_KG,
+        }
+      : {}),
   };
   req.building.storageElements = [element];
   return kind;
@@ -418,7 +468,8 @@ function estimateCapitalCostINR(request: SimulationRequest): number {
   }
   for (const el of request.building.storageElements ?? []) {
     const material = request.materials[el.materialId];
-    if (material?.costPerM3 && material.rho > 0) total += (el.massKg / material.rho) * material.costPerM3;
+    if (material?.costPerM3 && material.rho > 0)
+      total += (el.massKg / material.rho) * material.costPerM3;
   }
   return total;
 }
@@ -434,7 +485,8 @@ function estimateEmbodiedCarbonKg(request: SimulationRequest): number {
   }
   for (const el of request.building.storageElements ?? []) {
     const material = request.materials[el.materialId];
-    if (material?.embodiedCarbon && material.rho > 0) total += (el.massKg / material.rho) * material.embodiedCarbon;
+    if (material?.embodiedCarbon && material.rho > 0)
+      total += (el.massKg / material.rho) * material.embodiedCarbon;
   }
   return total;
 }
@@ -490,14 +542,21 @@ export async function runSweep(
 
     // Only the first variant of a group needs `keepWarmState` -- later members just
     // receive the cached vector, they never produce one of their own.
-    const request = cached === undefined ? { ...ev.request, options: { ...ev.request.options, keepWarmState: true } } : ev.request;
+    const request =
+      cached === undefined
+        ? { ...ev.request, options: { ...ev.request.options, keepWarmState: true } }
+        : ev.request;
     const result = await runner(request);
     if (cached !== undefined && result.meta.nodeCount !== cached.nodeCount) {
-      throw new Error(`runSweep: massAffectingHash groups a variant with nodeCount=${result.meta.nodeCount} together with one of nodeCount=${cached.nodeCount} -- this is a bug in massAffectingHash, not a condition to fall back from.`);
+      throw new Error(
+        `runSweep: massAffectingHash groups a variant with nodeCount=${result.meta.nodeCount} together with one of nodeCount=${cached.nodeCount} -- this is a bug in massAffectingHash, not a condition to fall back from.`,
+      );
     }
     if (!spinUpCache.has(hash)) {
       if (!result.warmState) {
-        throw new Error('runSweep: runner returned no warmState for a keepWarmState:true request -- runner must pass options through to simulate() unmodified');
+        throw new Error(
+          'runSweep: runner returned no warmState for a keepWarmState:true request -- runner must pass options through to simulate() unmodified',
+        );
       }
       spinUpCache.set(hash, { nodeCount: result.meta.nodeCount, warmState: result.warmState });
     }
@@ -514,7 +573,11 @@ export async function runSweep(
       embodiedCarbonKg: estimateEmbodiedCarbonKg(ev.request),
       feasible,
       paretoRank: 0, // T-56 owns Pareto ranking; not computed here.
-      ...(feasible ? {} : { infeasibleReason: `ACH ${minAch.toFixed(3)} below safety floor ${achFloor.toFixed(3)}` }),
+      ...(feasible
+        ? {}
+        : {
+            infeasibleReason: `ACH ${minAch.toFixed(3)} below safety floor ${achFloor.toFixed(3)}`,
+          }),
     };
     variants.push(variant);
 

@@ -173,6 +173,8 @@ export async function writeWeatherCache(
 }
 
 export async function purgeExpiredWeather(): Promise<number> {
-  const result = await withDb((db) => db.weatherCache.deleteMany({ where: { expiresAt: { lt: new Date() } } }));
+  const result = await withDb((db) =>
+    db.weatherCache.deleteMany({ where: { expiresAt: { lt: new Date() } } }),
+  );
   return result?.count ?? 0;
 }

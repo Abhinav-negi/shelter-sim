@@ -129,7 +129,11 @@ export async function readFullRun(request: SimulationRequest): Promise<Simulatio
  * request from tripping SQLite's single-writer lock into a hard failure
  * (acceptance test 12).
  */
-export async function writeRun(request: SimulationRequest, result: SimulationResult, storeFull: boolean): Promise<void> {
+export async function writeRun(
+  request: SimulationRequest,
+  result: SimulationResult,
+  storeFull: boolean,
+): Promise<void> {
   const requestHash = canonicalRequestHash(request);
   const kpis = encodeNumbers(result.kpis) as Prisma.InputJsonValue;
   const meta = encodeNumbers(result.meta) as Prisma.InputJsonValue;
@@ -137,7 +141,9 @@ export async function writeRun(request: SimulationRequest, result: SimulationRes
   // later write for the same request doesn't ask for it, the field is simply
   // left out of `update` below so a previously-cached full result is not
   // discarded by a cheaper follow-up write.
-  const fullResult = storeFull ? (encodeNumbers(resultToJson(result)) as Prisma.InputJsonValue) : undefined;
+  const fullResult = storeFull
+    ? (encodeNumbers(resultToJson(result)) as Prisma.InputJsonValue)
+    : undefined;
 
   await withDb(async (db) => {
     await db.simulationRun.upsert({
@@ -162,7 +168,9 @@ export async function writeRun(request: SimulationRequest, result: SimulationRes
 
 export async function purgeRunsForOtherVersions(): Promise<number> {
   const removed = await withDb(async (db) => {
-    const { count } = await db.simulationRun.deleteMany({ where: { engineVersion: { not: ENGINE_VERSION } } });
+    const { count } = await db.simulationRun.deleteMany({
+      where: { engineVersion: { not: ENGINE_VERSION } },
+    });
     return count;
   });
   return removed ?? 0;

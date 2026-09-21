@@ -51,7 +51,9 @@ export type MaterialsState =
 /** The one hook every basic-panel material dropdown shares. */
 export function useMaterialsCatalogue(): MaterialsState {
   const [state, setState] = useState<MaterialsState>(() =>
-    cached ? { status: 'ready', materials: cached.materials, servedFrom: cached.servedFrom } : { status: 'loading' },
+    cached
+      ? { status: 'ready', materials: cached.materials, servedFrom: cached.servedFrom }
+      : { status: 'loading' },
   );
 
   useEffect(() => {
@@ -59,10 +61,12 @@ export function useMaterialsCatalogue(): MaterialsState {
     if (cached) return;
     fetchMaterials()
       .then((body) => {
-        if (!cancelled) setState({ status: 'ready', materials: body.materials, servedFrom: body.servedFrom });
+        if (!cancelled)
+          setState({ status: 'ready', materials: body.materials, servedFrom: body.servedFrom });
       })
       .catch((err: unknown) => {
-        if (!cancelled) setState({ status: 'error', message: err instanceof Error ? err.message : String(err) });
+        if (!cancelled)
+          setState({ status: 'error', message: err instanceof Error ? err.message : String(err) });
       });
     return () => {
       cancelled = true;

@@ -20,7 +20,7 @@ Every file was produced by:
 
 1. Fetching NASA POWER's hourly point API for the full 2023 calendar year, all 8 parameters
    `T-26`'s `NASA_POWER_PARAMETERS` names (`T2M, ALLSKY_SFC_SW_DWN, ALLSKY_SFC_SW_DNI,
-   ALLSKY_SFC_SW_DIFF, ALLSKY_SFC_LW_DWN, WS2M, RH2M, PS`), i.e. exactly what
+ALLSKY_SFC_SW_DIFF, ALLSKY_SFC_LW_DWN, WS2M, RH2M, PS`), i.e. exactly what
    `nasaPowerUrl()` (`packages/data/src/weather/sources.ts`) builds for
    `{ startDate: '2023-01-01', endDate: '2023-12-31' }` at each location's coordinates below.
 2. Parsing the raw response with `parseNasaPower()` (T-26, unmodified).
@@ -36,13 +36,13 @@ unmodified NASA POWER output — zero `-999` fill-value gaps in any of the 8 par
 before use. They are not committed to the repository (too large / not needed once normalised);
 only the normalised `WeatherSeries` output is bundled.
 
-| Location | id | Query lat, lon | Grid-cell elevation (source) | Real site elevation (corrected to) | URL |
-|---|---|---|---|---|---|
-| Leh | `leh` | 34.15, 77.58 | 4532.61 m | 3500 m | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=77.58&latitude=34.15&start=20230101&end=20231231&format=JSON` |
-| Kargil | `kargil` | 34.5539, 76.1349 | 4137.89 m | 2676 m | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=76.1349&latitude=34.5539&start=20230101&end=20231231&format=JSON` |
-| Drass | `drass` | 34.4239, 75.7666 | 4054.38 m | 3230 m | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=75.7666&latitude=34.4239&start=20230101&end=20231231&format=JSON` |
-| Nubra Valley (Diskit) | `nubra` | 34.5443, 77.5584 | 4548.84 m | 3144 m | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=77.5584&latitude=34.5443&start=20230101&end=20231231&format=JSON` |
-| Jaisalmer (hot-dry contrast) | `jaisalmer` | 26.9157, 70.9083 | 173.4 m | 225 m | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=70.9083&latitude=26.9157&start=20230101&end=20231231&format=JSON` |
+| Location                     | id          | Query lat, lon   | Grid-cell elevation (source) | Real site elevation (corrected to) | URL                                                                                                                                                                                                                                                  |
+| ---------------------------- | ----------- | ---------------- | ---------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Leh                          | `leh`       | 34.15, 77.58     | 4532.61 m                    | 3500 m                             | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=77.58&latitude=34.15&start=20230101&end=20231231&format=JSON`     |
+| Kargil                       | `kargil`    | 34.5539, 76.1349 | 4137.89 m                    | 2676 m                             | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=76.1349&latitude=34.5539&start=20230101&end=20231231&format=JSON` |
+| Drass                        | `drass`     | 34.4239, 75.7666 | 4054.38 m                    | 3230 m                             | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=75.7666&latitude=34.4239&start=20230101&end=20231231&format=JSON` |
+| Nubra Valley (Diskit)        | `nubra`     | 34.5443, 77.5584 | 4548.84 m                    | 3144 m                             | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=77.5584&latitude=34.5443&start=20230101&end=20231231&format=JSON` |
+| Jaisalmer (hot-dry contrast) | `jaisalmer` | 26.9157, 70.9083 | 173.4 m                      | 225 m                              | `https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=T2M,ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DNI,ALLSKY_SFC_SW_DIFF,ALLSKY_SFC_LW_DWN,WS2M,RH2M,PS&community=RE&longitude=70.9083&latitude=26.9157&start=20230101&end=20231231&format=JSON` |
 
 Retrieval date for all five: **2026-09-16**. Query parameters `community=RE`, `format=JSON`, no
 API key required (NASA POWER is keyless, `LOG.md` §7.16). Re-running the URL above reproduces
@@ -53,7 +53,7 @@ MERRA-2 reanalysis is not revised after the fact, so a re-fetch should match clo
 re-verified this session: Leh ≈3500 m, Kargil ≈2676 m, Drass ≈3230 m, Nubra Valley (Diskit)
 ≈3144 m, Jaisalmer ≈225 m. These are distinct from each file's `provenance.sourceElevation`,
 which is the NASA POWER grid cell's own elevation (the number the lapse-rate correction
-corrects *from*).
+corrects _from_).
 
 **Observed data characteristic, not a bug:** Leh's and Nubra's shortwave irradiance fields
 (`GHI`/`DNI`/`DHI`/`LW_down`) are byte-for-byte identical across all 8,760 hours in the raw
@@ -91,11 +91,11 @@ Two derived statistics need a documented definition — neither is a raw downloa
 are computed from the downloaded series:
 
 - **Sunshine hour**: an hour where `DNI > 120 W/m²`, the WMO instrumental threshold for
-  Campbell-Stokes-equivalent "bright sunshine" (WMO *Guide to Instruments and Methods of
-  Observation*). Applied to hourly-mean `DNI`, not an instantaneous reading — a documented
+  Campbell-Stokes-equivalent "bright sunshine" (WMO _Guide to Instruments and Methods of
+  Observation_). Applied to hourly-mean `DNI`, not an instantaneous reading — a documented
   approximation, not an invented one.
 - **Clear day**: daily clearness index `kt = (sum of hourly GHI that day) / (sum of hourly
-  extraterrestrial horizontal irradiance I0 that day) > 0.5` (`I0` from `@shelter/engine`'s
+extraterrestrial horizontal irradiance I0 that day) > 0.5` (`I0` from `@shelter/engine`'s
   `extraterrestrialNormal()` × `sunPosition().cosZenith`, Duffie & Beckman ch. 2 / the same
   clearness index `erbsDiffuseFraction()` already uses elsewhere in this codebase). `kt = 0.5`
   is a practical two-bin clear/cloudy split; a stricter three-bin scheme (Iqbal 1983) puts
@@ -105,13 +105,13 @@ are computed from the downloaded series:
 
 ## Files
 
-| File | Rows | Bytes |
-|---|---|---|
-| `leh.json` | 8,760 | see Evidence block, `log/AREA-C-data-layer.md` |
-| `kargil.json` | 8,760 | ″ |
-| `drass.json` | 8,760 | ″ |
-| `nubra.json` | 8,760 | ″ |
-| `jaisalmer.json` | 8,760 | ″ |
+| File             | Rows  | Bytes                                          |
+| ---------------- | ----- | ---------------------------------------------- |
+| `leh.json`       | 8,760 | see Evidence block, `log/AREA-C-data-layer.md` |
+| `kargil.json`    | 8,760 | ″                                              |
+| `drass.json`     | 8,760 | ″                                              |
+| `nubra.json`     | 8,760 | ″                                              |
+| `jaisalmer.json` | 8,760 | ″                                              |
 
 Loaded via `tmyById(id)` / `groundAlbedoById(id)` / `TMY_LOCATIONS` in `../src/tmy.ts`. No
 network access anywhere in this package (`packages/data/src/weather/*`'s own header comment,

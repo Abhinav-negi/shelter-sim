@@ -70,7 +70,11 @@ self.addEventListener('message', (ev) => {
   try {
     const request = requestFromJson(msg.payload);
     const result = simulate(request);
-    respond({ id: msg.id, kind: 'result', payload: resultToJson(result) as unknown as SimulationResult });
+    respond({
+      id: msg.id,
+      kind: 'result',
+      payload: resultToJson(result) as unknown as SimulationResult,
+    });
   } catch (err) {
     if (err instanceof EngineError) {
       respond({ id: msg.id, kind: 'error', code: err.code, message: err.message });

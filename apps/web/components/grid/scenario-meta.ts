@@ -48,8 +48,18 @@ export interface ScenarioDisplayMeta {
 }
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ] as const;
 
 function monthlyMeta(monthIndex0: number): ScenarioDisplayMeta {
@@ -81,22 +91,26 @@ const SCENARIO_META: Record<string, ScenarioDisplayMeta> = {
   },
   'hottest-day': {
     name: 'Hottest day on record',
-    description: 'The 24 h window with the highest mean temperature anywhere in the record -- a shelter optimised only for winter can bake in summer.',
+    description:
+      'The 24 h window with the highest mean temperature anywhere in the record -- a shelter optimised only for winter can bake in summer.',
     date: DATE_UNAVAILABLE,
   },
   'design-winter-day': {
     name: '1-in-100 design winter day',
-    description: 'The cold-but-not-freak day engineers conventionally design to (1st percentile of daily mean temperature).',
+    description:
+      'The cold-but-not-freak day engineers conventionally design to (1st percentile of daily mean temperature).',
     date: DATE_UNAVAILABLE,
   },
   'sunless-streak': {
     name: 'Longest sunless streak',
-    description: 'The longest run of consecutive overcast days, run end to end -- the real test of thermal storage.',
+    description:
+      'The longest run of consecutive overcast days, run end to end -- the real test of thermal storage.',
     date: DATE_UNAVAILABLE,
   },
   'clear-cold-night': {
     name: 'Clear cold night',
-    description: 'The coldest night that was also cloudless -- clear skies radiate more heat away than clouds trap, Ladakh’s true worst case.',
+    description:
+      'The coldest night that was also cloudless -- clear skies radiate more heat away than clouds trap, Ladakh’s true worst case.',
     date: DATE_UNAVAILABLE,
   },
   'annual-mean-day': {

@@ -63,7 +63,12 @@ function splitRow(line: string): string[] {
   return line.split(',').map((cell) => cell.trim());
 }
 
-function parseCell(cell: string | undefined, row: number, column: string, errors: CsvRowError[]): number {
+function parseCell(
+  cell: string | undefined,
+  row: number,
+  column: string,
+  errors: CsvRowError[],
+): number {
   if (cell === undefined || cell === '') {
     errors.push({ row, column, message: `missing value` });
     return NaN;

@@ -85,7 +85,10 @@ export const PATHWAY_META: Record<PathwayKey, PathwayMeta> = {
   Q4_skyRadiation: { label: 'Radiated to the night sky (Q4)', color: '#1f3a5f' },
   Q5_envelopeConduction: { label: 'Conduction inside the walls (Q5, internal)', color: '#b0b0b0' },
   Q6_intConvection: { label: 'Convection to the indoor air (Q6, internal)', color: '#8f8f8f' },
-  Q7_interiorLongwave: { label: 'Interior surface-to-surface radiation (Q7, internal)', color: '#6f6f6f' },
+  Q7_interiorLongwave: {
+    label: 'Interior surface-to-surface radiation (Q7, internal)',
+    color: '#6f6f6f',
+  },
   storageRate: { label: 'Stored in / released from the walls', color: '#2f9e44' },
 };
 

@@ -54,10 +54,14 @@ const result = spawnSync(
 const elapsedMs = Date.now() - start;
 
 if (result.status === 0) {
-  console.log(`PASS -- db-off mode (DATABASE_URL unset): six-exercise matrix green in ${elapsedMs}ms`);
+  console.log(
+    `PASS -- db-off mode (DATABASE_URL unset): six-exercise matrix green in ${elapsedMs}ms`,
+  );
   process.exit(0);
 } else {
-  console.log(`FAIL -- db-off mode (DATABASE_URL unset): suite failed after ${elapsedMs}ms (exit ${result.status})`);
+  console.log(
+    `FAIL -- db-off mode (DATABASE_URL unset): suite failed after ${elapsedMs}ms (exit ${result.status})`,
+  );
   console.log('--- vitest output, for debugging ---');
   process.stdout.write(result.stdout ?? '');
   process.stderr.write(result.stderr ?? '');

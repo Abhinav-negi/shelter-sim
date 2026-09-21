@@ -73,18 +73,46 @@ export function AlbedoComparison({ request }: { request: SimulationRequest }) {
 
   return (
     <div data-testid="solar-albedo-comparison">
-      <h3 style={{ fontSize: '0.95rem', margin: '0 0 0.5rem' }}>Ground albedo: bare ground vs. fresh snow</h3>
+      <h3 style={{ fontSize: '0.95rem', margin: '0 0 0.5rem' }}>
+        Ground albedo: bare ground vs. fresh snow
+      </h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         {[
-          { label: `Bare ground (albedo ${ALBEDO.genericGround.toFixed(2)})`, value: bare, testid: 'solar-albedo-bare' },
-          { label: `Fresh snow (albedo ${ALBEDO.freshSnow.toFixed(2)})`, value: snow, testid: 'solar-albedo-snow' },
+          {
+            label: `Bare ground (albedo ${ALBEDO.genericGround.toFixed(2)})`,
+            value: bare,
+            testid: 'solar-albedo-bare',
+          },
+          {
+            label: `Fresh snow (albedo ${ALBEDO.freshSnow.toFixed(2)})`,
+            value: snow,
+            testid: 'solar-albedo-snow',
+          },
         ].map((row) => (
           <div key={row.testid} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ width: '11rem', flexShrink: 0, fontSize: '0.78rem' }}>{row.label}</div>
-            <div style={{ flex: '1 1 auto', minWidth: 0, background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ width: `${(row.value / max) * 100}%`, minWidth: '2px', background: '#0891b2', height: '1.1rem' }} />
+            <div
+              style={{
+                flex: '1 1 auto',
+                minWidth: 0,
+                background: '#f1f5f9',
+                borderRadius: '3px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${(row.value / max) * 100}%`,
+                  minWidth: '2px',
+                  background: '#0891b2',
+                  height: '1.1rem',
+                }}
+              />
             </div>
-            <div data-testid={row.testid} style={{ width: '6rem', flexShrink: 0, fontSize: '0.78rem', textAlign: 'right' }}>
+            <div
+              data-testid={row.testid}
+              style={{ width: '6rem', flexShrink: 0, fontSize: '0.78rem', textAlign: 'right' }}
+            >
               {formatEnergy(row.value)}
             </div>
           </div>
@@ -93,9 +121,13 @@ export function AlbedoComparison({ request }: { request: SimulationRequest }) {
       <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: '0.4rem' }}>
         South wall total, same building and day, only ground albedo changed.
       </p>
-      <p data-testid="solar-albedo-ground-only" style={{ fontSize: '0.75rem', marginTop: '0.4rem' }}>
-        Ground-reflected component only (tilt {tilt.toFixed(0)}&deg;): {groundBare.toFixed(3)} kWh/m² (bare) &rarr;{' '}
-        {groundSnow.toFixed(3)} kWh/m² (snow) &mdash; <strong data-testid="solar-albedo-ratio">{ratio.toFixed(2)}&times;</strong>
+      <p
+        data-testid="solar-albedo-ground-only"
+        style={{ fontSize: '0.75rem', marginTop: '0.4rem' }}
+      >
+        Ground-reflected component only (tilt {tilt.toFixed(0)}&deg;): {groundBare.toFixed(3)}{' '}
+        kWh/m² (bare) &rarr; {groundSnow.toFixed(3)} kWh/m² (snow) &mdash;{' '}
+        <strong data-testid="solar-albedo-ratio">{ratio.toFixed(2)}&times;</strong>
       </p>
     </div>
   );

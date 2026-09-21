@@ -29,7 +29,13 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { glazingById, materialById, PRESETS, tmyById } from '@shelter/data';
 import { simulate, T0 } from '@shelter/engine';
-import type { Glazing, Material, Preset, SimulationRequest, SimulationResult } from '@shelter/engine';
+import type {
+  Glazing,
+  Material,
+  Preset,
+  SimulationRequest,
+  SimulationResult,
+} from '@shelter/engine';
 import { actions, hydrateStore } from '../../lib/store';
 import { formatTempC } from '../../lib/units';
 import { badgeFor } from './badge';
@@ -42,10 +48,12 @@ import { KpiColumn } from './KpiColumn';
 function resolvePreset(preset: Preset): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
 }
 
@@ -82,7 +90,10 @@ describe('T-51 KPI column', () => {
       ['kpi-hours-comfort', `${result.kpis.hoursInComfort.toFixed(1)} h`],
       ['kpi-aux', `${result.kpis.auxEnergyKWhPerDay.toFixed(2)} kWh/day`],
       ['kpi-fuel', `${result.kpis.keroseneEquivalentLitresPerYear.toFixed(1)} L/yr`],
-      ['kpi-cost', `${result.kpis.costPerYearINR.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`],
+      [
+        'kpi-cost',
+        `${result.kpis.costPerYearINR.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`,
+      ],
       ['kpi-co2', `${result.kpis.co2EquivalentKgPerYear.toFixed(1)} kg/yr`],
       ['kpi-min', formatTempC(result.kpis.minIndoorTemp)],
       ['kpi-max', formatTempC(result.kpis.maxIndoorTemp)],
@@ -108,7 +119,10 @@ describe('T-51 KPI column', () => {
   });
 
   it('test 2 -- the badge shows 0.020% for a stored residual of 0.0002', () => {
-    const broken: SimulationResult = { ...result, meta: { ...result.meta, energyBalanceResidual: 0.0002 } };
+    const broken: SimulationResult = {
+      ...result,
+      meta: { ...result.meta, energyBalanceResidual: 0.0002 },
+    };
     actions.setResult(broken);
     const html = render();
     const badge = badgeFor(0.0002);
@@ -119,11 +133,19 @@ describe('T-51 KPI column', () => {
   });
 
   it('test 3 -- the badge turns red when the residual reaches 0.001 (deliberately broken fixture)', () => {
-    const broken: SimulationResult = { ...result, meta: { ...result.meta, energyBalanceResidual: 0.001 } };
+    const broken: SimulationResult = {
+      ...result,
+      meta: { ...result.meta, energyBalanceResidual: 0.001 },
+    };
     actions.setResult(broken);
     const html = render();
     const badge = badgeFor(0.001);
-    console.log('T-51 test 3 evidence -- stored residual 0.001, rendered text:', badge.text, 'status:', badge.ok ? 'ok(green)' : 'bad(red)');
+    console.log(
+      'T-51 test 3 evidence -- stored residual 0.001, rendered text:',
+      badge.text,
+      'status:',
+      badge.ok ? 'ok(green)' : 'bad(red)',
+    );
     expect(badge.ok).toBe(false);
     expect(html).toContain('data-status="bad"');
     expect(html).not.toContain('data-status="ok"');
@@ -135,7 +157,10 @@ describe('T-51 KPI column', () => {
     // (packages/engine/src/index.ts's `achClampedBySafetyFloor`).
     const clampedRequest: SimulationRequest = {
       ...request,
-      operation: { ...request.operation, achSchedule: request.operation.achSchedule.map(() => 0.05) },
+      operation: {
+        ...request.operation,
+        achSchedule: request.operation.achSchedule.map(() => 0.05),
+      },
     };
     const clampedResult = simulate(clampedRequest);
     actions.setResult(clampedResult);
@@ -143,7 +168,12 @@ describe('T-51 KPI column', () => {
 
     const clampWarning = clampedResult.meta.warnings.find((w) => w.includes('carbon monoxide'));
     console.log('T-51 test 4 evidence -- warning text verbatim:', clampWarning);
-    console.log('T-51 test 7 evidence -- meta.warnings count:', clampedResult.meta.warnings.length, 'rendered <li> count:', (html.match(/data-testid="kpi-warning"/g) ?? []).length);
+    console.log(
+      'T-51 test 7 evidence -- meta.warnings count:',
+      clampedResult.meta.warnings.length,
+      'rendered <li> count:',
+      (html.match(/data-testid="kpi-warning"/g) ?? []).length,
+    );
     expect(clampWarning).toBeDefined();
     expect(clampWarning).toContain('carbon monoxide');
     expect(html).toContain(clampWarning);
@@ -157,7 +187,10 @@ describe('T-51 KPI column', () => {
   it('test 5 -- the warning cannot be dismissed into invisibility: no dismiss affordance exists to exercise', () => {
     const clampedRequest: SimulationRequest = {
       ...request,
-      operation: { ...request.operation, achSchedule: request.operation.achSchedule.map(() => 0.05) },
+      operation: {
+        ...request.operation,
+        achSchedule: request.operation.achSchedule.map(() => 0.05),
+      },
     };
     const clampedResult = simulate(clampedRequest);
     actions.setResult(clampedResult);
@@ -177,7 +210,10 @@ describe('T-51 KPI column', () => {
     // optional field.
     const { RH: _omittedRH, ...noRhWeather } = request.weather;
     const noRhResult = simulate({ ...request, weather: noRhWeather });
-    console.log('T-51 test 6 evidence -- kpis.condensationRiskHours:', noRhResult.kpis.condensationRiskHours);
+    console.log(
+      'T-51 test 6 evidence -- kpis.condensationRiskHours:',
+      noRhResult.kpis.condensationRiskHours,
+    );
     expect(noRhResult.kpis.condensationRiskHours).toBeNull();
     actions.setResult(noRhResult);
     const html = render();
@@ -187,7 +223,7 @@ describe('T-51 KPI column', () => {
     expect(rendered).not.toContain('0 hours');
   });
 
-  it('test 8 -- the 06:00 card uses the same formatter T-47\'s chart annotation must use (lib/units.ts is the only Celsius boundary)', () => {
+  it("test 8 -- the 06:00 card uses the same formatter T-47's chart annotation must use (lib/units.ts is the only Celsius boundary)", () => {
     // T-47 (log/AREA-F-frontend.md) is still "[~]" claimed and not merged
     // into this worktree -- there is no chart component here to literally
     // diff against (rule 16: report, don't fabricate). What CAN be verified
@@ -201,7 +237,13 @@ describe('T-51 KPI column', () => {
     const html = render();
     const rendered = cardValueText(html, 'kpi-0600');
     const expected = formatTempC(result.kpis.tempAt0600);
-    console.log('T-51 test 8 evidence -- kpi card rendered:', rendered, '| formatTempC(kpis.tempAt0600):', expected, '| T-47 chart: NOT PRESENT in this worktree (still [~]), see note above');
+    console.log(
+      'T-51 test 8 evidence -- kpi card rendered:',
+      rendered,
+      '| formatTempC(kpis.tempAt0600):',
+      expected,
+      '| T-47 chart: NOT PRESENT in this worktree (still [~]), see note above',
+    );
     expect(rendered).toContain(expected);
   });
 
@@ -246,15 +288,22 @@ describe('T-51 acceptance test 10 -- no Celsius arithmetic in this directory', (
     // literal copy of the offset here would be exactly the defect it hunts
     // for (LOG.md global rule 5), even inside a comment.
     const kelvinOffset = String(T0);
-    const files = ['KpiColumn.tsx', 'badge.ts', 'cards.ts'].map((f) => fileURLToPath(new URL(`./${f}`, import.meta.url)));
+    const files = ['KpiColumn.tsx', 'badge.ts', 'cards.ts'].map((f) =>
+      fileURLToPath(new URL(`./${f}`, import.meta.url)),
+    );
     for (const f of files) expect(readFileSync(f, 'utf8')).not.toContain(kelvinOffset);
   });
 });
 
 describe('T-51 acceptance test 11 -- 400px stacks to one column', () => {
   it('the CSS module collapses .grid to a single column at/under 480px (covers the 400px test point)', () => {
-    const css = readFileSync(fileURLToPath(new URL('./KpiColumn.module.css', import.meta.url)), 'utf8');
-    const mediaMatch = css.match(/@media \(max-width:\s*480px\)\s*{\s*\.grid\s*{\s*grid-template-columns:\s*1fr;/);
+    const css = readFileSync(
+      fileURLToPath(new URL('./KpiColumn.module.css', import.meta.url)),
+      'utf8',
+    );
+    const mediaMatch = css.match(
+      /@media \(max-width:\s*480px\)\s*{\s*\.grid\s*{\s*grid-template-columns:\s*1fr;/,
+    );
     console.log('T-51 test 11 evidence -- media query present:', !!mediaMatch);
     expect(mediaMatch).not.toBeNull();
   });

@@ -63,7 +63,12 @@ export function tooltipDataAt(variants: VariantSeries[], hour: number): TooltipD
     ambientC: anchor.ambientC,
     entries: variants.map((v) => {
       const idx = nearestPointIndex(v.points, hour);
-      return { id: v.id, label: v.label, color: v.color, indoorC: idx >= 0 ? v.points[idx]!.indoorC : NaN };
+      return {
+        id: v.id,
+        label: v.label,
+        color: v.color,
+        indoorC: idx >= 0 ? v.points[idx]!.indoorC : NaN,
+      };
     }),
   };
 }

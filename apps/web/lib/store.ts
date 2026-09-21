@@ -148,7 +148,9 @@ const listeners = new Set<Listener>();
 
 function getState(): AppState {
   if (!hydrated) {
-    throw new Error('store read before hydrate() ran -- AppShell must hydrate before any component reads the store');
+    throw new Error(
+      'store read before hydrate() ran -- AppShell must hydrate before any component reads the store',
+    );
   }
   return state;
 }

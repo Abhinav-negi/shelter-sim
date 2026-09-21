@@ -13,7 +13,7 @@
 
 # AREA H — SCENARIOS
 
-> *"A tool that takes four hours per run structurally cannot answer 'what happens during the longest
+> _"A tool that takes four hours per run structurally cannot answer 'what happens during the longest
 > sunless streak on record?' You would need three days of computing. Speed is not a convenience here
-> — it makes a whole category of question askable for the first time."* (`plan.md` §7.)
+> — it makes a whole category of question askable for the first time."_ (`plan.md` §7.)
 > **Every scenario is pulled from the real recorded history of that specific site, not invented.**

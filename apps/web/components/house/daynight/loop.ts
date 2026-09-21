@@ -20,7 +20,11 @@ export interface AnimationLoopHandle {
 /** Calls `onFrame` once per animation frame, via the injected `raf`, until
  * `.stop()` runs (which calls `caf` exactly once on the outstanding handle,
  * never again after -- ACCEPTANCE TEST 12: no leaked handle after unmount). */
-export function startAnimationLoop(onFrame: (t: number) => void, raf: RafFn, caf: CafFn): AnimationLoopHandle {
+export function startAnimationLoop(
+  onFrame: (t: number) => void,
+  raf: RafFn,
+  caf: CafFn,
+): AnimationLoopHandle {
   let stopped = false;
   let handle: number | null = null;
   function tick(t: number): void {

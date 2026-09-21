@@ -168,7 +168,10 @@ function genId(): string {
  * (worker or server) whose id no longer matches this is stale. */
 let currentId: string | null = null;
 
-const pending = new Map<string, { resolve: (r: SimulationResult) => void; reject: (e: unknown) => void }>();
+const pending = new Map<
+  string,
+  { resolve: (r: SimulationResult) => void; reject: (e: unknown) => void }
+>();
 const abortControllers = new Map<string, AbortController>();
 
 /** Marks `id` as the current one, cancelling whatever was in flight before it:
@@ -230,7 +233,11 @@ function runOnWorker(req: SimulationRequest, id: string): Promise<SimulationResu
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject });
     const worker = getWorker();
-    const wireRequest: WorkerRequest = { id, kind: 'simulate', payload: requestToJson(req) as SimulationRequest };
+    const wireRequest: WorkerRequest = {
+      id,
+      kind: 'simulate',
+      payload: requestToJson(req) as SimulationRequest,
+    };
     worker.postMessage(wireRequest);
   });
 }
@@ -245,7 +252,11 @@ function runSynchronously(req: SimulationRequest, id: string): Promise<Simulatio
     try {
       result = simulate(req);
     } catch (err) {
-      reject(err instanceof EngineError ? err : new EngineError('SOLVER_DIVERGED', err instanceof Error ? err.message : String(err)));
+      reject(
+        err instanceof EngineError
+          ? err
+          : new EngineError('SOLVER_DIVERGED', err instanceof Error ? err.message : String(err)),
+      );
       return;
     }
     if (id !== currentId) {

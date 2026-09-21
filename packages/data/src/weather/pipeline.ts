@@ -122,7 +122,12 @@ function toKelvinArray(values: number[], units: 'C' | 'K'): number[] {
  * and index, which is the correct behaviour: an edge gap cannot be estimated
  * from this data at all.
  */
-export function gapFill(values: number[], stepSeconds: number, fieldName: string, notes: string[]): number[] {
+export function gapFill(
+  values: number[],
+  stepSeconds: number,
+  fieldName: string,
+  notes: string[],
+): number[] {
   const out = values.slice();
   const n = out.length;
   let i = 0;
@@ -176,7 +181,12 @@ function timeAtIndex(
 // ============================== STAGE 5: resample ==============================
 
 /** Linear interpolation onto a new, uniform time grid. For T_amb, v_wind, RH. */
-export function resampleLinear(values: number[], srcStepSeconds: number, dstStepSeconds: number, outputCount: number): Float64Array {
+export function resampleLinear(
+  values: number[],
+  srcStepSeconds: number,
+  dstStepSeconds: number,
+  outputCount: number,
+): Float64Array {
   const n = values.length;
   const out = new Float64Array(outputCount);
   for (let j = 0; j < outputCount; j++) {
@@ -201,7 +211,12 @@ export function resampleLinear(values: number[], srcStepSeconds: number, dstStep
  * property (it treats hourly means as instantaneous point samples), which is
  * exactly the bug this function exists to avoid -- see acceptance test 3.
  */
-export function resampleConserving(values: number[], srcStepSeconds: number, dstStepSeconds: number, outputCount: number): Float64Array {
+export function resampleConserving(
+  values: number[],
+  srcStepSeconds: number,
+  dstStepSeconds: number,
+  outputCount: number,
+): Float64Array {
   const n = values.length;
   const totalDuration = n * srcStepSeconds;
   const out = new Float64Array(outputCount);
@@ -244,9 +259,12 @@ function isMoreThanOneHourFromDaylight(
 ): boolean {
   const altitudeAt = (h: number): number => {
     const wrapped = ((h % HOURS_PER_DAY) + HOURS_PER_DAY) % HOURS_PER_DAY;
-    return sunPosition(site.latitude, site.longitude, site.standardMeridian, dayOfYear, wrapped).altitude;
+    return sunPosition(site.latitude, site.longitude, site.standardMeridian, dayOfYear, wrapped)
+      .altitude;
   };
-  return altitudeAt(clockHour) <= 0 && altitudeAt(clockHour - 1) <= 0 && altitudeAt(clockHour + 1) <= 0;
+  return (
+    altitudeAt(clockHour) <= 0 && altitudeAt(clockHour - 1) <= 0 && altitudeAt(clockHour + 1) <= 0
+  );
 }
 
 /**
@@ -274,7 +292,10 @@ export function validateWeatherSeries(
 
   for (const [name, arr] of namedArrays) {
     if (arr && arr.length !== n) {
-      throw new EngineError('WEATHER_INVALID', `${name} has length ${arr.length}, expected ${n} (array-length mismatch)`);
+      throw new EngineError(
+        'WEATHER_INVALID',
+        `${name} has length ${arr.length}, expected ${n} (array-length mismatch)`,
+      );
     }
   }
 
@@ -290,7 +311,10 @@ export function validateWeatherSeries(
   for (let i = 0; i < n; i++) {
     const ghi = series.GHI[i]!;
     if (ghi < 0) {
-      throw new EngineError('WEATHER_INVALID', `GHI[${i}] = ${ghi} is negative`, { field: 'GHI', index: i });
+      throw new EngineError('WEATHER_INVALID', `GHI[${i}] = ${ghi} is negative`, {
+        field: 'GHI',
+        index: i,
+      });
     }
     const t = series.T_amb[i]!;
     if (t < T_MIN_PLAUSIBLE_WEATHER || t > T_MAX_PLAUSIBLE_WEATHER) {
@@ -307,7 +331,12 @@ export function validateWeatherSeries(
     for (let i = 0; i < n; i++) {
       const ghi = series.GHI[i]!;
       if (ghi <= GHI_NIGHT_WARNING_THRESHOLD_WM2) continue;
-      const { dayOfYear, clockHour } = timeAtIndex(series.startDayOfYear, series.startHour, series.stepSeconds, i);
+      const { dayOfYear, clockHour } = timeAtIndex(
+        series.startDayOfYear,
+        series.startHour,
+        series.stepSeconds,
+        i,
+      );
       if (isMoreThanOneHourFromDaylight(site, dayOfYear, clockHour)) {
         warnings.push(
           `GHI[${i}] = ${ghi} W/m^2 more than 1h outside any daylight window (day ${dayOfYear}, hour ${clockHour.toFixed(2)})`,
@@ -366,8 +395,19 @@ export function normaliseWeather(raw: RawWeather, opts: NormaliseOptions): Weath
   const derivedDNI = new Array<number>(T_amb.length);
   const derivedDHI = new Array<number>(T_amb.length);
   for (let i = 0; i < T_amb.length; i++) {
-    const { dayOfYear, clockHour } = timeAtIndex(raw.startDayOfYear, raw.startHour, raw.stepSeconds, i);
-    const sun = sunPosition(opts.site.latitude, opts.site.longitude, opts.site.standardMeridian, dayOfYear, clockHour);
+    const { dayOfYear, clockHour } = timeAtIndex(
+      raw.startDayOfYear,
+      raw.startHour,
+      raw.stepSeconds,
+      i,
+    );
+    const sun = sunPosition(
+      opts.site.latitude,
+      opts.site.longitude,
+      opts.site.standardMeridian,
+      dayOfYear,
+      clockHour,
+    );
     const irr = decompose(GHI[i]!, sun.cosZenith, dayOfYear, { DNI: DNI?.[i], DHI: DHI?.[i] });
     derivedDNI[i] = irr.DNI;
     derivedDHI[i] = irr.DHI;
@@ -375,14 +415,18 @@ export function normaliseWeather(raw: RawWeather, opts: NormaliseOptions): Weath
   DNI = derivedDNI;
   DHI = derivedDHI;
   if (dniWasMissing) {
-    notes.push('DNI/DHI derived via the Erbs correlation from GHI (@shelter/engine solar/decomposition.ts)');
+    notes.push(
+      'DNI/DHI derived via the Erbs correlation from GHI (@shelter/engine solar/decomposition.ts)',
+    );
   }
 
   if (!LW_down) {
     // Swinbank clear-sky estimate: skyTemperature(T_amb) with no measured
     // lwDown always takes the Swinbank branch (surfaces/exterior.ts).
     LW_down = T_amb.map((t) => SIGMA * Math.pow(skyTemperature(t), 4));
-    notes.push('LW_down derived via the Swinbank sky-temperature correlation (@shelter/engine surfaces/exterior.ts)');
+    notes.push(
+      'LW_down derived via the Swinbank sky-temperature correlation (@shelter/engine surfaces/exterior.ts)',
+    );
   }
 
   // Pressure: WeatherSeries (LOG.md §7.6) has no pressure field to store a
@@ -401,11 +445,18 @@ export function normaliseWeather(raw: RawWeather, opts: NormaliseOptions): Weath
   const outputCount = Math.round(totalDuration / opts.targetStepSeconds);
   const T_amb_out = resampleLinear(T_amb, raw.stepSeconds, opts.targetStepSeconds, outputCount);
   const v_wind_out = resampleLinear(v_wind, raw.stepSeconds, opts.targetStepSeconds, outputCount);
-  const RH_out = RH ? resampleLinear(RH, raw.stepSeconds, opts.targetStepSeconds, outputCount) : undefined;
+  const RH_out = RH
+    ? resampleLinear(RH, raw.stepSeconds, opts.targetStepSeconds, outputCount)
+    : undefined;
   const GHI_out = resampleConserving(GHI, raw.stepSeconds, opts.targetStepSeconds, outputCount);
   const DNI_out = resampleConserving(DNI, raw.stepSeconds, opts.targetStepSeconds, outputCount);
   const DHI_out = resampleConserving(DHI, raw.stepSeconds, opts.targetStepSeconds, outputCount);
-  const LW_down_out = resampleConserving(LW_down, raw.stepSeconds, opts.targetStepSeconds, outputCount);
+  const LW_down_out = resampleConserving(
+    LW_down,
+    raw.stepSeconds,
+    opts.targetStepSeconds,
+    outputCount,
+  );
 
   const provenance: WeatherProvenance = {
     source: opts.source,

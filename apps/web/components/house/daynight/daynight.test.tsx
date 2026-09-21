@@ -33,7 +33,13 @@ import { actions, getStoreState, hydrateStore } from '../../../lib/store';
 import { hourToTimeIndex } from '../time';
 import { DayNightAnimation } from './DayNightAnimation';
 import { computeShadow, isSunUp, sunScreenPosition, skyGradientCss } from './sceneMath';
-import { attachDayNightLoop, prefersReducedMotion, startAnimationLoop, type CafFn, type RafFn } from './loop';
+import {
+  attachDayNightLoop,
+  prefersReducedMotion,
+  startAnimationLoop,
+  type CafFn,
+  type RafFn,
+} from './loop';
 import { getProgress, setProgress, __resetProgressForTest } from './progress';
 import type { HouseGeometry } from '../geometry';
 
@@ -42,10 +48,12 @@ import type { HouseGeometry } from '../geometry';
 function resolvePreset(preset: Preset): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
 }
 
@@ -80,7 +88,12 @@ describe('T-53 day/night animation', () => {
       // `lib/store.ts` itself -- just calling what it already exports).
       const anchorRequest: SimulationRequest = {
         ...request,
-        site: { ...request.site, latitude: LEH.lat, longitude: LEH.lon, standardMeridian: LEH.meridian },
+        site: {
+          ...request.site,
+          latitude: LEH.lat,
+          longitude: LEH.lon,
+          standardMeridian: LEH.meridian,
+        },
         weather: { ...request.weather, startDayOfYear: doy },
       };
       actions.setRequest(() => anchorRequest);
@@ -112,18 +125,22 @@ describe('T-53 day/night animation', () => {
     const trigLines: string[] = [];
     for (const f of allFiles) {
       const text = fs.readFileSync(path.join(dir, f), 'utf8');
-      if (/import\s*\{[^}]*\bsunPosition\b[^}]*\}\s*from\s*'@shelter\/engine'/.test(text)) importFound = true;
+      if (/import\s*\{[^}]*\bsunPosition\b[^}]*\}\s*from\s*'@shelter\/engine'/.test(text))
+        importFound = true;
     }
     for (const f of sourceFiles) {
       const text = fs.readFileSync(path.join(dir, f), 'utf8');
       text.split('\n').forEach((line, i) => {
         const trimmed = line.trim();
-        if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/**')) return; // comment prose, not code
+        if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/**'))
+          return; // comment prose, not code
         if (/Math\.sin\(|Math\.cos\(/.test(line)) trigLines.push(`${f}:${i + 1}: ${trimmed}`);
       });
     }
     console.log('T-53 test 2 evidence -- sunPosition imported from @shelter/engine:', importFound);
-    console.log('T-53 test 2 evidence -- every Math.sin(/Math.cos( CALL in this directory\'s production source:');
+    console.log(
+      "T-53 test 2 evidence -- every Math.sin(/Math.cos( CALL in this directory's production source:",
+    );
     trigLines.forEach((l) => console.log('  ' + l));
     expect(importFound).toBe(true);
     expect(trigLines.length).toBeGreaterThan(0); // sanity: the scan actually found the projection maths
@@ -172,16 +189,24 @@ describe('T-53 day/night animation', () => {
     expect(afternoon.azimuth).toBeGreaterThan(0);
   });
 
-  it('test 4 -- shadow direction is opposite the sun\'s azimuth; length grows as altitude falls (21 Dec, Leh)', () => {
+  it("test 4 -- shadow direction is opposite the sun's azimuth; length grows as altitude falls (21 Dec, Leh)", () => {
     const doy = DEC21;
     const noon = solarNoonClockHour(doy, LEH.lon, LEH.meridian);
     const hours = [9, noon, 16];
     const observed = hours.map((h) => {
       const sun = sunPosition(LEH.lat, LEH.lon, LEH.meridian, doy, h);
       const shadow = computeShadow(sun, SAMPLE_GEOM);
-      return { hour: Number(h.toFixed(2)), altitude: Number(sun.altitude.toFixed(2)), azimuth: Number(sun.azimuth.toFixed(2)), lengthM: Number(shadow.lengthM.toFixed(3)) };
+      return {
+        hour: Number(h.toFixed(2)),
+        altitude: Number(sun.altitude.toFixed(2)),
+        azimuth: Number(sun.azimuth.toFixed(2)),
+        lengthM: Number(shadow.lengthM.toFixed(3)),
+      };
     });
-    console.log('T-53 test 4 evidence -- shadow length at 09:00, solar noon, 16:00 on 21 Dec at Leh:', observed);
+    console.log(
+      'T-53 test 4 evidence -- shadow length at 09:00, solar noon, 16:00 on 21 Dec at Leh:',
+      observed,
+    );
 
     // Direction: at solar noon the sun sits ~due south (azimuth ~0), so the
     // shadow must point north -- reconstruct the antisolar unit vector the
@@ -196,7 +221,12 @@ describe('T-53 day/night animation', () => {
     const DEG = Math.PI / 180;
     const dir = { x: -Math.sin(morningSun.azimuth * DEG), y: -Math.cos(morningSun.azimuth * DEG) };
     const antisolar = { x: -dir.x, y: -dir.y };
-    console.log('T-53 test 4 evidence -- morning sun azimuth', morningSun.azimuth, 'antisolar shift vector', antisolar);
+    console.log(
+      'T-53 test 4 evidence -- morning sun azimuth',
+      morningSun.azimuth,
+      'antisolar shift vector',
+      antisolar,
+    );
     expect(morningSun.azimuth).toBeLessThan(0); // sun in the east
     expect(antisolar.x).toBeLessThan(0); // shadow points west (-x, geometry.ts's own convention)
 
@@ -251,7 +281,10 @@ describe('T-53 day/night animation', () => {
     actions.setStatus('running');
     expect(getProgress()).toBeNull(); // events "blocked": nothing has called setProgress
     const markup = renderToStaticMarkup(<DayNightAnimation />);
-    console.log('T-53 test 7 evidence -- ring markup with no progress data:', markup.includes('daynight-ring-indeterminate'));
+    console.log(
+      'T-53 test 7 evidence -- ring markup with no progress data:',
+      markup.includes('daynight-ring-indeterminate'),
+    );
     expect(markup).toContain('daynight-ring-indeterminate');
     expect(markup).not.toContain('data-testid="daynight-ring-text"');
     expect(markup).not.toMatch(/\d+\s*\/\s*\d+/); // no fabricated "x/y" or percentage anywhere
@@ -260,7 +293,7 @@ describe('T-53 day/night animation', () => {
     __resetProgressForTest();
   });
 
-  it('test 8 -- scrubber mode: moving the scrubber to 06:00 places the sun at the computed 06:00 position, in sync with T-46\'s own surface colours', () => {
+  it("test 8 -- scrubber mode: moving the scrubber to 06:00 places the sun at the computed 06:00 position, in sync with T-46's own surface colours", () => {
     actions.setStatus('idle');
     actions.setScrubberHour(6);
     const markup = renderToStaticMarkup(<DayNightAnimation />);
@@ -275,7 +308,12 @@ describe('T-53 day/night animation', () => {
     );
     const m = /data-testid="daynight-altitude">sun altitude (-?\d+\.\d)°</.exec(markup);
     const shownAltitude = Number(m?.[1]);
-    console.log('T-53 test 8 evidence -- store.scrubberHour=6, DayNightAnimation altitude:', shownAltitude, 'sunPosition(...) altitude:', expectedSun.altitude);
+    console.log(
+      'T-53 test 8 evidence -- store.scrubberHour=6, DayNightAnimation altitude:',
+      shownAltitude,
+      'sunPosition(...) altitude:',
+      expectedSun.altitude,
+    );
     expect(shownAltitude).toBeCloseTo(expectedSun.altitude, 1);
 
     // "T-46's surfaces show their 06:00 colours at the same instant" -- same
@@ -284,7 +322,11 @@ describe('T-53 day/night animation', () => {
     // one shared field.
     const idx0600 = hourToTimeIndex(result, request.weather.startHour, 6);
     const idxNow = hourToTimeIndex(result, request.weather.startHour, getStoreState().scrubberHour);
-    console.log('T-53 test 8 evidence -- hourToTimeIndex(6) === hourToTimeIndex(store.scrubberHour):', idx0600, idxNow);
+    console.log(
+      'T-53 test 8 evidence -- hourToTimeIndex(6) === hourToTimeIndex(store.scrubberHour):',
+      idx0600,
+      idxNow,
+    );
     expect(idxNow).toBe(idx0600);
   });
 
@@ -308,7 +350,12 @@ describe('T-53 day/night animation', () => {
     const animate = status === 'running' && !reducedMotion;
     const handle = attachDayNightLoop(animate, () => {}, fakeRaf, fakeCaf);
     handle.stop();
-    console.log('T-53 test 9 evidence -- rAF calls with reducedMotion=true, status=running:', rafCalls, 'cAF calls:', cafCalls);
+    console.log(
+      'T-53 test 9 evidence -- rAF calls with reducedMotion=true, status=running:',
+      rafCalls,
+      'cAF calls:',
+      cafCalls,
+    );
     expect(rafCalls).toBe(0);
     expect(cafCalls).toBe(0); // nothing to cancel -- the no-op handle never scheduled a frame
 
@@ -319,12 +366,17 @@ describe('T-53 day/night animation', () => {
     // (not at module-load time -- see loop.ts), so stubbing it here, calling
     // the already-imported function, and restoring it works without any
     // module reload.
-    const g = globalThis as unknown as { window: { matchMedia: (q: string) => { matches: boolean } } | undefined };
+    const g = globalThis as unknown as {
+      window: { matchMedia: (q: string) => { matches: boolean } } | undefined;
+    };
     const previous = g.window;
     g.window = { matchMedia: () => ({ matches: true }) };
     const detected = prefersReducedMotion();
     g.window = previous;
-    console.log('T-53 test 9 evidence -- prefersReducedMotion() with a matchMedia stub returning matches:true ->', detected);
+    console.log(
+      'T-53 test 9 evidence -- prefersReducedMotion() with a matchMedia stub returning matches:true ->',
+      detected,
+    );
     expect(detected).toBe(true);
 
     // Scrubber mode still renders a static (non-animating) frame: with
@@ -350,7 +402,15 @@ describe('T-53 day/night animation', () => {
     }
     const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
     const max = Math.max(...durations);
-    console.log('T-53 test 10 evidence -- per-frame scene-math cost over', N, 'frames: avg', avg.toFixed(4), 'ms, max', max.toFixed(4), 'ms');
+    console.log(
+      'T-53 test 10 evidence -- per-frame scene-math cost over',
+      N,
+      'frames: avg',
+      avg.toFixed(4),
+      'ms, max',
+      max.toFixed(4),
+      'ms',
+    );
     expect(max).toBeLessThan(16);
     expect(avg).toBeLessThan(1);
   });
@@ -363,7 +423,9 @@ describe('T-53 day/night animation', () => {
     expect(markup).not.toMatch(/<svg[^>]*\swidth="\d/);
     expect(markup).not.toMatch(/<svg[^>]*\sheight="\d/);
     expect(markup).toMatch(/width:100%/); // the outer wrapper's own sizing
-    console.log('T-53 test 11 evidence -- no fixed-pixel svg width/height attribute present; wrapper uses width:100%.');
+    console.log(
+      'T-53 test 11 evidence -- no fixed-pixel svg width/height attribute present; wrapper uses width:100%.',
+    );
   });
 
   it('test 12 -- stopping the animation releases its requestAnimationFrame handle exactly once; no leak after "unmount"', () => {
@@ -383,7 +445,14 @@ describe('T-53 day/night animation', () => {
     const handle = startAnimationLoop(() => {}, fakeRaf, fakeCaf);
     expect(rafCalls).toBe(1); // scheduled exactly one outstanding frame
     handle.stop(); // the exact call a real useEffect cleanup makes on unmount
-    console.log('T-53 test 12 evidence -- rAF scheduled:', rafCalls, 'cAF released:', cafCalls, 'cancelled handle ids:', cancelled);
+    console.log(
+      'T-53 test 12 evidence -- rAF scheduled:',
+      rafCalls,
+      'cAF released:',
+      cafCalls,
+      'cancelled handle ids:',
+      cancelled,
+    );
     expect(cafCalls).toBe(1);
     expect(cancelled).toEqual([1]);
 
