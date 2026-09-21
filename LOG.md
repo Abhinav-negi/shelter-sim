@@ -80,7 +80,8 @@ formatting as a task yet.
 T-44 `[!]` (human test subject + app-shell wiring — the app-shell half is now arguably closeable
 since T-71/T-73 both landed, but the human-test-subject half of test 1 still needs a named human
 owner); T-50 `[!]` (originally blocked on T-47, now needs re-assessment since T-47 is done); T-54
-`[!]` (warm-state speedup finding documented); T-39/T-42/T-56/T-60 transitively blocked on T-54;
+`[!]` (T-76's real per-node `warmState` wired in and honestly re-measured, 2026-09-21 continuation --
+still ~1.1-1.4x, not 2x; see `log/AREA-G/T-54.md`); T-39/T-42/T-56/T-60 transitively blocked on T-54;
 T-61 `[!]` (human decision on test 9 wording); T-23 `[!]` (human-owned NOAA comparison).
 
 **Gotchas (all carried forward from prior sessions, none new this session):** worktrees need fresh

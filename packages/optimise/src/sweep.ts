@@ -360,66 +360,41 @@ function massAffectingHash(request: SimulationRequest): string {
 }
 
 /**
- * The state cached per mass-hash group: enough to build a same-length,
- * same-ballpark `options.initialTemperatureK` for every later variant that
- * shares this hash.
+ * The state cached per mass-hash group: the real per-node converged state from the
+ * first-computed variant, handed straight back to every later variant sharing this
+ * hash as its own `options.initialTemperatureK`.
+ *
+ * T-70 (`packages/engine`, merged on master) added `SimOptions.initialTemperatureK`:
+ * an optional per-node seed for `integrate()`'s spin-up loop, validated against the
+ * built model's node count. T-76 (`packages/engine`, merged on master) then added
+ * `SimOptions.keepWarmState` / `SimulationResult.warmState`: the REAL per-node
+ * converged-state vector, handed back OPAQUELY (T-76's own doc comment: never index,
+ * reorder or otherwise interpret its entries -- store it and hand it straight back).
+ * This replaces the cache's earlier uniform-fill mechanism (this task's 2026-09-19
+ * Evidence entry): a uniform fill only corrects the overall temperature *level*,
+ * where the real vector also carries the spatial *gradient* through each wall's
+ * thickness -- T-76's own Evidence (test 3) showed that gradient is what actually
+ * drives spin-up day-count down.
+ *
+ * `warmState`/`initialTemperatureK` is a `Float64Array` of length `n`, one entry per
+ * INTERNAL solver node, in `packages/engine`'s own internal order -- not part of the
+ * public contract and never inspected here, only captured from one variant's
+ * `result.warmState` and handed straight back as a later variant's
+ * `options.initialTemperatureK`, unchanged.
+ *
+ * Safe to share only within a `massAffectingHash` group, because `warmState`'s length
+ * is tied to the built model's node count, which moves with exactly the fields that
+ * hash groups on (constructions, thicknesses, storage elements, volume). If the hash
+ * is ever wrong, `integrate()` itself throws `EngineError('INVALID_INPUT')` on a
+ * length mismatch (packages/engine/src/solve/integrator.ts) -- that is treated here
+ * as a bug in the hash to fix, never as a condition to catch and silently fall back
+ * from (this task's CONTINUATION brief, point 2).
  */
 interface SpinUpCacheEntry {
   /** `SimulationResult.meta.nodeCount` of the first-computed variant in this group. */
   nodeCount: number;
-  /** The uniform warm-start fill value, K -- see `warmStartFillK` below. */
-  fillK: number;
-}
-
-/**
- * T-70 (`packages/engine`, merged on master) added `SimOptions.initialTemperatureK`:
- * an optional per-node seed for `integrate()`'s spin-up loop, validated against the
- * built model's node count. This is what `@shelter/optimise` was missing when this
- * task was first attempted (see this task's Evidence block, "NOT MET" sub-section) --
- * the day-count-only cap that used to live here (`SPIN_UP_SHARE_MARGIN_DAYS`) is
- * gone, replaced by an actual warm state.
- *
- * `initialTemperatureK` must be a `Float64Array` of length `n`, one entry per
- * INTERNAL solver node (each wall's mesh chain, the air node, the star node, every
- * storage node), in `packages/engine`'s own internal order. That order (and even
- * which index is which) is not part of the public contract -- `buildModel`, `Model`,
- * `AIR_NODE`, `STAR_NODE` are not exported from `@shelter/engine`'s index (CONTRACTS.md
- * §7.7 lists exactly what `SimulationResult` exposes, and it is per-channel series,
- * not the raw node vector). `@shelter/optimise`'s only approved dependency is
- * `@shelter/engine` (CONTRACTS.md §7.13), so this package cannot assume, guess at, or
- * hard-code that internal layout -- doing so would silently feed the wrong value into
- * the wrong node the moment `packages/engine` ever reordered its own nodes, and no
- * contract or test here would catch it.
- *
- * The one construction that is correct **regardless of internal node order** is a
- * UNIFORM fill: `new Float64Array(n).fill(v)` puts the same value `v` at every
- * index, so it cannot be "wrong node, right value" no matter how `n` is laid out
- * internally. `v` is chosen to be a much better guess than the engine's own cold
- * start (`fill(mean(T_amb))`, packages/engine/src/solve/integrator.ts): the plain
- * average, over every reported timestep, of every solved-node channel this
- * package's public contract actually exposes (`temperatures.indoorAir`, `.ground`,
- * `.meanRadiant`, and every surface's `.exterior`/`.interior`) -- see
- * `warmStartFillK` below. This is a SPEED lever only: T-70's own acceptance test 3
- * proved a warm start that is flatly wrong still converges to the same fixed point
- * within `spinUpToleranceK`, just possibly in more days than a good guess.
- */
-function warmStartFillK(result: SimulationResult): number {
-  let sum = 0;
-  let count = 0;
-  const add = (arr: Float64Array): void => {
-    for (let i = 0; i < arr.length; i++) {
-      sum += arr[i]!;
-      count++;
-    }
-  };
-  add(result.temperatures.indoorAir);
-  add(result.temperatures.ground);
-  add(result.temperatures.meanRadiant);
-  for (const s of Object.values(result.temperatures.surfaces)) {
-    add(s.exterior);
-    add(s.interior);
-  }
-  return count > 0 ? sum / count : result.kpis.meanIndoorTemp;
+  /** The first variant's real, opaque per-node converged state -- never indexed or reordered. */
+  warmState: Float64Array;
 }
 
 function computeAchFloor(req: SweepRequest, request: SimulationRequest): number {
@@ -497,15 +472,35 @@ export async function runSweep(
     const hash = massAffectingHash(ev.request);
     const cached = spinUpCache.get(hash);
     if (cached !== undefined) {
+      // The real vector, passed straight through -- never indexed, reordered, or
+      // otherwise combined with anything of this variant's own. `warmState`'s length
+      // is a pure function of the mass-affecting fields `massAffectingHash` groups on,
+      // so a same-hash later variant is GUARANTEED the same node count unless the hash
+      // itself is wrong -- there is no way to compute this variant's own node count
+      // without calling into @shelter/engine's unexported model builder, so the check
+      // below (against the LAST variant actually run) plus integrate()'s own
+      // `EngineError('INVALID_INPUT')` length guard are the two backstops; a mismatch
+      // in either is a bug in the hash to fix, never a case to catch-and-fall-back from.
       ev.request = {
         ...ev.request,
-        options: { ...ev.request.options, initialTemperatureK: new Float64Array(cached.nodeCount).fill(cached.fillK) },
+        options: { ...ev.request.options, initialTemperatureK: cached.warmState },
       };
       spinUpShared = true;
     }
 
-    const result = await runner(ev.request);
-    if (!spinUpCache.has(hash)) spinUpCache.set(hash, { nodeCount: result.meta.nodeCount, fillK: warmStartFillK(result) });
+    // Only the first variant of a group needs `keepWarmState` -- later members just
+    // receive the cached vector, they never produce one of their own.
+    const request = cached === undefined ? { ...ev.request, options: { ...ev.request.options, keepWarmState: true } } : ev.request;
+    const result = await runner(request);
+    if (cached !== undefined && result.meta.nodeCount !== cached.nodeCount) {
+      throw new Error(`runSweep: massAffectingHash groups a variant with nodeCount=${result.meta.nodeCount} together with one of nodeCount=${cached.nodeCount} -- this is a bug in massAffectingHash, not a condition to fall back from.`);
+    }
+    if (!spinUpCache.has(hash)) {
+      if (!result.warmState) {
+        throw new Error('runSweep: runner returned no warmState for a keepWarmState:true request -- runner must pass options through to simulate() unmodified');
+      }
+      spinUpCache.set(hash, { nodeCount: result.meta.nodeCount, warmState: result.warmState });
+    }
 
     const achFloor = computeAchFloor(req, ev.request);
     const minAch = Math.min(...ev.request.operation.achSchedule);
