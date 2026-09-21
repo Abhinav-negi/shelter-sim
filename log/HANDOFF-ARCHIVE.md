@@ -4,6 +4,143 @@
 > only the single most recent HANDOFF; when a session writes a new one, the previous
 > occupant of that slot moves here, inserted at the top (newest-archived-first).
 
+## HANDOFF (2026-09-21, end of session — tenth session)
+
+**Completed this session: ledger moved 56 / 74 → 58 / 76 (two new task ids created, both landed or
+resolved; one existing blocked task re-attempted and improved but still blocked).**
+
+**Session start found a large uncommitted change:** the working tree held an already-materialized
+but never-committed restructuring of the whole `log/` ledger — the old flat `log/AREA-<letter>-
+<name>.md` files and `log/CONTRACTS.md` had already been split into `log/AREA-<letter>/T-<NN>.md`
+(one file per task), `log/AREA-<letter>/README.md`, and `log/contracts/<topic>.md`, and `LOG.md`/
+`ORCHESTRATOR.md`/`README.md`/`.work/TEMPLATE.md` already referenced the new paths — but none of it
+was staged or committed. Verified content integrity first (new files totalled ~12.9k lines vs
+~13.0k in the deleted flat files, the gap being deduplicated boilerplate now centralized per Area's
+`README.md`; spot-checked several new task files for coherence), then committed it as its own commit
+before touching anything else, to stop 13k lines of restructuring from being one `git clean` away
+from lost.
+
+**T-75 (NEW task, Area F — stack T-53's `<DayNightAnimation>` behind `<HouseView>` in
+`app-shell.tsx`'s `slot-house`) — `[x]`:** raised from session 9's own HANDOFF top recommendation,
+same "orchestrator creates the follow-up task" pattern as T-70/T-71/T-72/T-73/T-74. A 3-line wiring
+change (one import, one `position: relative` wrapper, `<DayNightAnimation/>` before `<HouseView/>`
+so it paints behind). All 8 acceptance tests independently re-verified by the orchestrator: fresh
+`tsc --noEmit` (0 errors), fresh `npx vitest run apps/web/components/house` (2 files / 22 tests,
+matching the subagent's count), fresh `npm run build --workspace apps/web` (exit 0, only the
+pre-existing `topLevelAwait` warning), `git diff` confirming only `app-shell.tsx` touched.
+
+**T-76 (NEW task, Area B — expose `SimulationResult.warmState`, an opaque per-node converged-state
+vector, gated behind `SimOptions.keepWarmState`) — `[x]`:** raised directly from T-54's own Evidence
+block, which had named this exact addition as the remaining path to closing its 2x speedup gate
+(a uniform-fill warm start only corrects overall temperature level, not the through-wall gradient
+that actually drives spin-up day-count down). Small, surgical: two new optional fields
+(`types.ts`), one destructure + one conditional spread (`index.ts`), one deserialisation line
+(`serialise.ts`). All 8 acceptance tests independently re-verified by the orchestrator: fresh
+package-scoped `npx vitest run packages` (21 files / 257 passed / 10 skipped, matching), fresh
+`npx eslint` on the four touched files (0 problems), confirmed `gate.test.ts` untouched, confirmed
+the field is genuinely *absent* (not `undefined`-valued) when unrequested. Also fixed a pre-existing
+stale Area B dashboard header (was reading "15/16" when the true count, matching the §5 table, was
+"16/17").
+
+**T-54 (continuation, Area G — the sweep engine) — stays `[!]` BLOCKED, mechanism upgraded:** once
+T-76 landed, re-attempted acceptance test 4 (≥2x speedup) using the real per-node `warmState`
+instead of the uniform fill. The rewiring is correct and a strict improvement (replaces an
+approximation with the real converged state, all 11 other acceptance tests still pass, verified
+independently by the orchestrator via a package-scoped rebuild + `npm run test -w
+packages/optimise`, 11/11), but the honestly re-measured speedup is still only **~1.1–1.4x, not
+2x** — this specific fixture (`wallConstruction`/`wwr:S`/`buildingAzimuth`) perturbs the
+solar-driven boundary condition and overall level within a mass-hash group, not the through-wall
+gradient *shape* that T-76's own test 3 proved the real vector can exploit. No further fix is
+available within either T-54's or T-76's file allow-lists; closing this would need either a
+different acceptance-test-4 variable set (arguably fitting the test to the mechanism) or a
+different engine-side sharing strategy (trajectory sharing, not just the converged endpoint) — a
+`packages/engine` solver-design question, out of scope for a routine continuation. Recommend
+leaving T-54 `[!]` and not re-attempting again without a genuinely new idea, not just another
+rewiring pass.
+
+**T-66 (Area J — PWA + network-free static export) — `[!]` BLOCKED, substantial partial landed:**
+all three formal dependencies (T-27, T-36, T-43) were already done, so this was claimed expecting
+(and getting) a partial result. Of 12 acceptance tests: **4 fully PASS** (3, 4, 6, 7) — the
+self-contained static export (`apps/web/scripts/build-static.mjs`, new) is fully built and verified
+working end to end (44 files, 4.04 MB, all 5 TMY files, 0 dev-server URL references, 0 failed
+requests serving it locally — all independently reproduced by the orchestrator, including running
+the script fresh and getting byte-identical numbers). **4 PARTIAL** (1, 8, 10, 12) — the manifest
+and service worker are correct (self-tested against a real `node:vm` sandbox) but never actually
+registered/linked in the live app. **4 BLOCKED**: 2 genuinely new ledger defects this task found
+and correctly reported rather than routing around — (a) nothing in `app/layout.tsx`/`lib/store.ts`
+wires up `navigator.serviceWorker.register()` or real connectivity detection, both files outside
+this task's allow-list; (b) `components/inputs/inputs.test.ts` imports `app/api/materials/route`
+directly, which breaks `npm run build --workspace apps/web` the moment `app/api/` is deleted
+(independently reproduced by the orchestrator: deleted `app/api/`, got the exact same `TS2307`
+error at the exact same line, restored it) — plus the 2 pre-announced blockers (9 on T-57, 11 on
+T-50), confirmed genuinely not built. One correction made during orchestrator verification: the
+Evidence block's opening SUMMARY sentence ("8/12 tests fully PASS") was a stale draft count that
+didn't match the file's own precise 4/4/4 breakdown — fixed to match, per LOG.md rule 15 (log
+accurate numbers, and a summary that contradicts its own file's detail is worse than none). This
+subagent was interrupted by a Claude usage-limit reset partway through delivering its final report,
+but its work was already fully committed beforehand — verified as complete and correct before
+proceeding, nothing was lost or needed repeating.
+
+**Two follow-up tasks worth raising next session, both found by T-66, neither claimed as a task id
+yet:** (1) wire `navigator.serviceWorker.register()` + a real connectivity listener into
+`app/layout.tsx` and/or `lib/store.ts`'s `dispatchSimulation` — would close T-66's tests 2, 8, 10
+and 12's remaining live-app halves; (2) fix `components/inputs/inputs.test.ts`'s direct import of
+`app/api/materials/route` (needs removing or guarding) — would close T-66's test 5. Both are small,
+well-scoped, same "orchestrator raises the follow-up task from an Evidence block" pattern as
+T-71/T-73/T-75/T-76 all used.
+
+**Full suite, measured fresh on master after all four merges:** `npx vitest run` → **45 files, 492
+passed, 10 skipped (502 total), exit 0**. `full simulate() incl. spin-up: 25.4 ms/run`,
+`100-variant sweep: 2.86 s` (both within budget). One gotcha hit and worth flagging strongly for
+next session: **the main checkout's own `packages/*/dist/` must be rebuilt after every merge that
+touches a package**, not just the worktree's — this session's first full-suite run on master showed
+6 spurious failures in `packages/optimise/test/sweep.test.ts` ("runner returned no warmState")
+purely because master's own `@shelter/engine`/`@shelter/optimise` `dist/` were stale relative to
+the just-merged T-76/T-54 source; rebuilding both (`npm run build --workspace @shelter/engine` then
+`--workspace @shelter/optimise`) made the exact same run go fully green. Not a real regression, but
+costs a full ~6-minute suite run to discover if missed. `npx tsc --noEmit -p apps/web/tsconfig.json`:
+0 errors. `npm run build --workspace apps/web`: exit 0 (the one pre-existing, unrelated
+`topLevelAwait` warning from `@shelter/engine/dist/serialise.js`).
+
+**Worktrees/branches:** `../wt-T-75`, `../wt-T-76`, `../wt-T-54`, `../wt-T-66` all removed and their
+branches deleted after merging, confirmed clean (`git worktree list` shows only the main checkout).
+The same set of older merged branches from before session 9 (`task/T-52`, `task/T-53`, `task/T-62`,
+`task/T-64`, `task/T-71`, `task/T-72`, `task/T-73`) are still present locally — left untouched again,
+harmless, all already folded into master.
+
+**In progress:** nothing. No open claims, no open worktrees.
+
+**Recommended next step, in priority order:** (1) the two T-66-follow-up tasks named above — small,
+well-scoped, and would close 5 of T-66's 8 non-fully-passing tests; (2) `npm run format:check` is
+still red (115 pre-existing files, flagged two sessions running now) — unrelated to lint config,
+nobody owns Prettier formatting as a task yet, worth raising as a small task of its own rather than
+carrying it forward a third time; (3) do **not** re-attempt T-54's acceptance test 4 again without a
+genuinely new mechanism — two honest attempts (uniform fill, then real per-node state) have both
+been tried and both documented why they top out below 2x.
+
+**Blocked tasks (T-54 re-verified this session, entry updated; T-66 newly added; others unchanged):**
+T-44 `[!]` (human test subject + app-shell wiring — the app-shell half is closeable since T-71/T-73
+landed, but the human-test-subject half of test 1 still needs a named human owner); T-50 `[!]`
+(checked this session: still genuinely blocked, on T-60, which is itself blocked on T-54 — T-47
+landing did not free it as session 9's HANDOFF hoped); T-54 `[!]` (see above — real per-node warm
+state now wired in, ~1.1-1.4x measured, not 2x; no further fix available in either package's
+current allow-list); T-66 `[!]` (see above — substantial partial, 2 new follow-up tasks identified);
+T-39/T-42/T-56/T-58/T-60 transitively blocked on T-54; T-61 `[!]` (human decision on test 9
+wording); T-23 `[!]` (human-owned NOAA comparison).
+
+**Gotchas (carried forward, plus one new this session):** **NEW — rebuild every package's `dist/`
+on the MAIN checkout, not just in worktrees, before trusting a full-suite run there** (see above).
+Carried forward: worktrees need fresh `npm install` + workspace `dist` rebuild; a fresh worktree
+needs `npx prisma generate --schema apps/web/prisma/schema.prisma` (non-destructive, schema-only,
+does not touch any database, does not trigger the AI-agent consent gate) before `tsc`/`next build`
+will pass; `packages/engine/test/output/validation-numbers.csv` picks up harmless appended rows on
+every validation-suite run, discard before commit; LOG.md §5 dashboard counts need hand
+recomputation after merges (found and fixed two more stale rows this session — Area B and Area F —
+consider cross-checking every row's `[x]` count against its own table at the start of a session,
+not just after your own edits, since drift accumulates silently across sessions); stale
+`.tsbuildinfo` files at package roots (not inside gitignored `dist/`) can cause phantom build
+failures — `find packages -name "*.tsbuildinfo" -delete` before trusting a build verification.
+
 ## HANDOFF (2026-09-20, end of session — ninth session)
 
 **Completed this session: ledger moved 54 / 73 → 56 / 74.** Two boxes flipped: **T-74** (new task,
