@@ -3,8 +3,9 @@
 Software thermal model for area-specific passive shelter design.
 DRDO / DIHAR Leh · SIH Problem Statement 26051.
 
-See `LOG.md` for the build ledger index — task status, dependencies and which file in `log/`
-holds each task's full entry (shared contracts are in `log/CONTRACTS.md`). Start there.
+See `LOG.md` for the build ledger index — task status, dependencies and the exact
+`log/AREA-<letter>/T-<NN>.md` file that holds each task's full entry (shared contracts are split
+by topic under `log/contracts/`). Start there.
 
 ## Branch protocol
 

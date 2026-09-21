@@ -95,177 +95,6 @@ package roots (not inside gitignored `dist/`) can cause phantom build failures �
 
 ---
 
-## HANDOFF (2026-09-20, end of session — eighth session)
-
-**Completed this session: NONE.** Session 8 reached the ≥40% context stop threshold (ORCHESTRATOR.md §8) during startup ritual and initial planning, before delegating any work. No tasks were claimed, no worktrees created, no merges performed. Ledger stays at **54 / 73**, unchanged from session 7's handoff.
-
-**Session 8 startup verification (completed):**
-- Toolchain verified: Node v24.20.0, npm 11.19.0
-- Test suite: **GREEN** (45 files, 487 passed, 10 skipped, exit 0)
-- Performance: 34.4 ms/run simulate, 3.40 s 100-variant sweep
-- No open worktrees (`git worktree list` clean)
-- No uncommitted branches
-- Database: not verified this session (master's `dev.db` was properly migrated+seeded at end of session 7 per that HANDOFF's own gotcha note)
-
-**In progress:** nothing. No claims, no open worktrees.
-
-**Recommended next step (UNCHANGED from session 7):** The three follow-up gaps session 7's HANDOFF named, in priority order:
-
-1. **HIGHEST PRIORITY, explicitly called out by session 7** — Add `t()`/`registerMessages` calls into `components/inputs/SimpleForm.tsx` and `components/kpis/KpiColumn.tsx` (both already `[x]`: T-47, T-51) so T-52's locale switch actually changes their labels. This is what T-52's own acceptance test 11 is still missing. Small, well-bounded, single-Area task. Session 8 verified these two files currently have zero i18n calls (`grep` confirmed both render 100% hardcoded English JSX), exactly matching session 7's finding. **This unblocks T-52 from `[!]` → `[x]`.**
-
-2. Wire T-53's `<DayNightAnimation>` into `HouseView`/`app-shell.tsx` (no overlay slot exists yet — T-53's own Evidence block flags this). 
-
-3. T-66 (PWA/offline) — more ready than before (T-52's banner and T-71/T-73's wiring both landed), but acceptance tests 9 and 11 still need T-57 (AI template fallback) and T-50 (survival grid), neither done — expect a partial/blocked result if claimed now, same shape as T-44.
-
-**Blocked tasks (unchanged):** T-52 `[!]` (11/13, blocked on item #1 above); T-44 `[!]` (human test subject + app-shell wiring); T-50 `[!]` (originally blocked on T-47, now needs re-assessment since T-47 is done); T-54 `[!]` (warm-state speedup finding documented); T-39/T-42/T-56/T-60 transitively blocked on T-54; T-61 `[!]` (human decision on test 9 wording); T-23 `[!]` (human-owned NOAA comparison).
-
-**Gotchas (all carried forward from session 7, none new):** worktrees need fresh `npm install` + workspace `dist` rebuild; fresh worktree needs its own `dev.db` via `cd apps/web && DATABASE_PROVIDER=sqlite DATABASE_URL="file:./dev.db" npm run db:migrate` plus `npm run db:seed --workspace apps/web`; subagent rate-limit interruption → resume with `SendMessage`; `packages/engine/test/output/validation-numbers.csv` picks up harmless appended rows on every validation-suite run, discard before commit; LOG.md §5 dashboard counts need hand recomputation after merges (git can't know stale counts should sum); stale `.tsbuildinfo` files at package roots (not inside gitignored `dist/`) can cause phantom build failures — `find packages -name "*.tsbuildinfo" -delete` before trusting a build verification.
-
----
-
-## HANDOFF (2026-09-20, end of session — seventh session)
-
-**Completed this session: ledger moved 48 / 70 → 54 / 73.** Six tasks landed clean `[x]`: T-53, T-62,
-T-64, T-71, T-72, T-73. One (T-52) is honestly `[!]` BLOCKED on real cross-component gaps, not a
-failure. Three new task ids were created and closed in the same session (T-71, T-72 — both raised
-directly from last session's own HANDOFF recommendation — and T-73, raised mid-session from T-52's
-own Evidence block, the same "orchestrator creates the follow-up task" pattern T-70 established two
-sessions ago). Full suite green: **45 files, 487 passed, 10 skipped (497 total), exit 0**, measured
-fresh on master after every merge this session, with the local `dev.db` properly migrated+seeded
-first (see gotcha below — this bit the first same-session attempt). `npm run build --workspace
-apps/web` exits 0 (one pre-existing, unrelated `topLevelAwait` warning from
-`@shelter/engine/dist/serialise.js`). `npx tsc --noEmit -p apps/web/tsconfig.json`: **0 errors**.
-Every merge to master was independently reverified by the orchestrator: fresh `npm install` +
-workspace `dist` rebuild in each worktree, that worktree's own test file re-run directly, `tsc
---noEmit`, a `git diff` against the branch's true merge-base to confirm each subagent's allow-list
-was actually respected, and for two tasks (T-62, T-53) a live re-enactment of the claimed
-negative-control/finding rather than trusting the subagent's pasted numbers alone.
-
-**T-62 (energy-balance CI audit, Area I) — `[x]`:** extended `scripts/ci-energy-balance.mjs` to 29
-cases (2 fixtures + 6 presets + 18 scenarios + PCM + storage + night-window), all residuals
-`< 1.1e-4`, well inside the `1e-3` gate. All three negative controls independently re-enabled and
-re-run by the orchestrator (not just trusted): Q5-in-boundary → residual 0.0502, Q4-dropped → 0.357,
-Q9-sign-flipped → 0.0560, all correctly pushed the script to exit 1, all cleanly reverted after.
-
-**T-64 (`EQUATIONS.md`, Area I) — `[x]`:** 1190-line document, 28 sections, every one carrying a
-citation + `file:function` line (mechanically confirmed: 28/28/28). All ten named simplifications
-present with ceiling+upgrade path. `well-stratified` appears nowhere in it. Could not spawn the 3
-subagents its own guidance suggested (harness constraint — subagents can't spawn subagents); worked
-sequentially instead, same precedent T-49 set last session.
-
-**T-71 (wire the 7 done Area F components into `app-shell.tsx`) — `[x]`:** the single
-highest-leverage pickup last session's HANDOFF named, closed cleanly. `SimpleForm`, `AdvancedPanel`,
-`HouseView`, `TempChart`, `SolarPanel`, `HeatFlowPanel`, `KpiColumn` all wired to the real store;
-`slot-tab-grid`/`slot-assumptions` correctly left as placeholders (T-50/T-52 didn't exist yet at
-merge time). All 8 acceptance tests independently re-verified by the orchestrator (tsc, build,
-component-suite re-run — same pass counts).
-
-**T-72 (`eslint.config.js` apps/web coverage, Area A) — `[x]`:** the multi-session-carried gap,
-finally claimed. Added a flat-config block from `eslint-config-next`'s native flat export (no
-`FlatCompat`, no new dependency), fixed one genuine violation, scoped off one pre-existing
-false-positive rule for `apps/web/**` with a documented reason. **Real upstream bug hit and worked
-around, not silently avoided:** `eslint-plugin-react`'s `settings.react.version: 'detect'` crashes
-under this repo's installed `eslint@10.10.0` — pinned the version explicitly instead (a supported
-config knob). T-03's own four boundary-rule revert-tests re-run by the orchestrator against
-`packages/engine/src/air.ts`: unchanged, confirming the new block never widened onto `packages/**`.
-**Found but correctly left alone (not this task's job):** `npm run format:check` is already red, 115
-pre-existing files, unrelated to lint config — flagged for whichever task owns Prettier config.
-
-**T-53 (day/night animation, Area F) — `[x]`:** built `components/house/daynight/**` — real
-`sunPosition()` import from `@shelter/engine`, no independent solar trig anywhere in the directory
-(mechanically grepped). All 12 acceptance tests pass. **Honest finding, verified by the orchestrator
-directly:** the equinox altitude anchor reads 55.4° vs CONTRACTS.md's stated ±0.2° band — traced to
-`solar.test.ts`'s own `toBeCloseTo(expected, 0)`, which is actually a ±0.5° tolerance (Jest/vitest
-precision-digit semantics), a pre-existing prose-vs-test looseness this task inherited, not
-introduced. **Left un-wired into `app-shell.tsx`** (no overlay slot exists there) — flagged as a
-follow-up, not yet claimed as a task id (lower priority than T-52's own follow-up, below).
-
-**T-52 (assumptions panel, exports, offline banner, i18n, Area F) — `[!]` BLOCKED, correctly:** 11
-of 13 acceptance tests pass with real evidence — mechanical constants diff empty (17/17), CSV/JSON
-exporters byte-exact and round-trip clean, a real live-edited-constant KPI change
-(`KEROSENE_INR_PER_L` 80→120 moves `costPerYearINR` 25524→38287), print via `window.print()` only
-(no PDF library). **Two tests genuinely blocked by files outside this task's allow-list, both
-verified real by the orchestrator directly** (`grep`-confirmed `slot-assumptions` was still a bare
-placeholder and `SimpleForm.tsx`/`KpiColumn.tsx` call no `t()`/`registerMessages` anywhere): test 8
-(printed output needing the panel actually wired into the page) and test 11 (Hindi changing *every*
-basic-panel/KPI label, not just this task's own). **Test 8's gap was closed same-session by T-73**
-(below); **test 11's gap is still open** — see Recommended next step.
-
-**T-73 (NEW task, Area F — wire T-52 into `app-shell.tsx`'s `slot-assumptions`) — `[x]`:** the
-orchestrator created this the moment T-52 landed, same pattern as T-70/T-71's own origin. Five-line
-diff, one file. `AssumptionsPanel`/`LimitationsList`/`ExportPanel` now render where the placeholder
-was; `OfflineBanner`/`LocaleSwitch` render at the shell's top level (global concerns, not scoped to
-one column). All 8 acceptance tests independently re-verified (tsc, build, component-suite rerun —
-same 4-file/10-test count T-52 itself recorded).
-
-**T-53, T-64, T-72 all hit the same session-wide rate limit mid-task** (unrelated to the repo),
-resumed cleanly via `SendMessage` with instructions to re-verify uncommitted worktree state rather
-than trust the pre-interruption plan — same recovery pattern as prior sessions, zero lost work, now
-confirmed across a fourth session.
-
-**Orchestrator-caught, non-obvious issues this session (both fixed, neither a subagent's fault):**
-- **A phantom build failure from stale `.tsbuildinfo` files.** `packages/engine/tsconfig.tsbuildinfo`
-  and `packages/optimise/tsconfig.tsbuildinfo` live at the package **root**, not inside the gitignored
-  `dist/`. Deleting `dist/` for a clean verification build left these stale, and `tsc -b` then reported
-  8 fabricated type errors in `sweep.ts` that don't exist on a truly fresh checkout (confirmed via a
-  disposable worktree at the pre-session commit — clean). Fix: `find packages -name "*.tsbuildinfo"
-  -delete` alongside any `rm -rf packages/*/dist` before trusting a build result.
-- **Two stale dashboard-arithmetic drifts caught mid-merge**, same class of bug LOG.md's own §5 note
-  already warns about (two branches independently flipping different tasks against a shared stale
-  baseline auto-merges to the *smaller* of the two counts, silently). Area I's row and Area F's own
-  denominator (a fresh miscount of mine, 13 vs the true 12 at the time) were both hand-corrected —
-  see the dashboard's own inline note for the arithmetic.
-- **Master's own local `dev.db` was never migrated this session until the very last verification
-  pass** — the first full-suite run on master after all merges showed 33 false failures (Prisma
-  `findUniqueOrThrow` against a database that plain didn't exist yet in this checkout, distinct from
-  every individual worktree which each got their own). Fixed with the standard `db:migrate`+`db:seed`
-  incantation; re-run came back fully green. **Do this early next session**, before the first
-  full-suite check, not at the end.
-
-**In progress:** nothing. No open worktrees or branches (`git worktree list` / `git branch -a` both
-clean, everything lives on `master`).
-
-**Recommended next step:** Two follow-up gaps T-52 itself surfaced, neither claimed as a task id yet:
-(1) **higher priority** — add `t()`/`registerMessages` calls into `components/inputs/SimpleForm.tsx`
-and `components/kpis/KpiColumn.tsx` (both already `[x]`, both currently call no i18n API at all) so
-T-52's locale switch actually changes their labels — this is what T-52's own acceptance test 11 is
-still missing, and it is the kind of small, well-bounded, single-Area task this ledger's pattern
-handles cleanly. (2) wire T-53's `<DayNightAnimation>` into `HouseView`/`app-shell.tsx` (no overlay
-slot exists yet — T-53's own Evidence block flags this). Third, unclaimed and lower-urgency: T-66
-(PWA/offline) is more ready than before (T-52's banner and T-71/T-73's wiring both landed), but its
-acceptance tests 9 and 11 still need T-57 (AI template fallback) and T-50 (survival grid), neither
-done — expect a partial/blocked result if claimed now, same shape as T-44. Fourth, lowest urgency,
-carried from two sessions back: the opaque per-node warm-state handle for `SimulationResult`
-(T-54's finding) to let a T-54 continuation clear its 2x sweep-speedup bar. In strict ledger-scan
-order once those land: T-52 needs its own continuation once its two gaps close; T-39/T-42/T-56/T-60
-stay transitively blocked on T-54; T-63 stays blocked on T-23 (human-owned NOAA comparison).
-
-**Carried forward from prior sessions, still unaddressed (not touched this session):**
-- **T-61 (multi-day runs, Area B/H) stays `[!]`** — unchanged, still needs a human decision on
-  rewording acceptance test 9's literal 8×-10× figure (see prior HANDOFFs for full detail).
-- **Real engine bug, still live:** `transposition.ts`'s HDKR `Rb` clamp — unchanged, still needs a
-  new Area B task (full reproduction in T-14's addendum, `log/AREA-B-engine.md`).
-- `CONTRACTS.md` §7.5's `Surface.area` "NET, not gross" doc-vs-code mismatch — unchanged, still just
-  a docs fix, still not made.
-- T-23 stays `[!]` (Area B, solar validation vs NOAA) — unchanged, root cause owned by closed T-14.
-- `npm run format:check` is red (115 pre-existing files, found while verifying T-72) — unrelated to
-  lint config, nobody owns Prettier formatting as a task yet.
-
-**Gotchas (all previously documented and still true, plus two new ones from this session — see
-above): worktrees need a fresh `npm install` + a fresh build of every workspace dependency they
-touch (`dist/` is gitignored); a fresh worktree (and the main checkout itself, confirmed the hard
-way this session) needs its own local `dev.db` via `cd apps/web && DATABASE_PROVIDER=sqlite
-DATABASE_URL="file:./dev.db" npm run db:migrate` (never `prisma migrate dev` directly), plus
-`npm run db:seed --workspace apps/web`; a subagent interrupted by a rate limit is not a failed task —
-resume with `SendMessage`, tell it to re-verify its own uncommitted state; `packages/engine/test/
-output/validation-numbers.csv` picks up a harmless appended-rows diff on every `vitest run` touching
-the engine's validation suite — discard it before every commit/merge; the top-level `LOG.md` §5
-dashboard table needs its counts recomputed by hand after every merge, since git has no way to know
-two branches' stale counts should sum rather than overwrite — check it, don't just trust a clean
-auto-merge.
-
----
-
 
 **Project:** ShelterSim — software thermal model for area-specific passive shelter design
 **Sponsor:** DRDO / DIHAR Leh · **SIH Problem Statement:** 26051
@@ -281,28 +110,40 @@ auto-merge.
 
 This is the **index** into the ShelterSim build ledger. The ledger used to be a single
 7,400-line file; reading all of it to find one task burned most of a session's context before
-work even started. It is now split by the boundaries the ledger already used internally:
+work even started. It was then split into ten Area files — an improvement, but a task in
+`AREA-F-frontend.md` still meant opening 3000+ lines for a ~200-line task, and every task still
+paid for reading the full 1248-line `CONTRACTS.md`. It is now split one level further, by the
+boundaries a task actually needs:
 
 - **This file (`LOG.md`)** — the process rules (§2–§6 below) and the task index (§5): every
-  task's id, title, status and dependencies, plus which file holds its full entry.
-- **`log/CONTRACTS.md`** — the shared contracts, constants, the eleven heat pathways, the
-  architecture diagram and the deviation log. Read once per session (ritual step 3), never
-  restated per task.
-- **`log/AREA-<letter>-<name>.md`**, ten files, one per Area (A–J) — the full entry for every
-  task in that Area: why it exists, the prompt, files it may touch, acceptance tests, and its
-  Evidence block. This is where a task is actually claimed, worked and marked done.
+  task's id, title, status, dependencies, and the exact path to its one file.
+- **`log/contracts/00-core.md`** — the small, always-required core: units, sign convention,
+  the eleven heat pathways, constants, approved dependencies, the hard gate. Read in full every
+  session (ritual step 3).
+- **`log/contracts/<topic>.md`**, six more files (`engine-physics`, `io-contracts`,
+  `data-layer`, `worker-sweep`, `architecture`, `deviations`) — the rest of the old
+  `CONTRACTS.md`, split by subject. Read only the ones your task's Area README names.
+- **`log/AREA-<letter>/README.md`**, ten files, one per Area (A–J) — which `log/contracts/`
+  topic files that Area's tasks generally need, plus the Area-wide notes that used to sit at
+  the top of the old flat Area file.
+- **`log/AREA-<letter>/T-<NN>.md`**, one file per task — the full entry: why it exists, the
+  prompt, files it may touch, acceptance tests, and its Evidence block. This is where a task is
+  actually claimed, worked and marked done. §5's `File` column names it directly.
 
 An agent with no memory of any previous session must be able to: read this file, find the first
-`[ ]` task whose dependencies are all `[x]`, open **only that task's one Area file**, and start
-work — without opening the other nine Area files, and without opening `CONTRACTS.md` more than
-once per session.
+`[ ]` task whose dependencies are all `[x]`, open **only that task's one file** (`log/AREA-<X>/T-<NN>.md`,
+from §5), read that Area's `README.md` once for which contract topics apply, and start work —
+without opening any other task's file, any other Area, or any `log/contracts/` file its Area
+README didn't name.
 
-The rule from the old single-file ledger still holds **inside each Area file**: a task's entry
-restates everything it needs. What changed is scope — restated *within its file*, not
-duplicated across all 7,400 lines.
+The rule from the old single-file ledger still holds **inside each task file**: a task's entry
+restates everything it needs. What changed is scope — restated *within its own file*, not
+duplicated across a whole Area, let alone all 7,400 lines.
 
-**If a task's entry sends you hunting through another Area file, that is a defect — fix it in
-place.** A bare `§5`/`§6` reference means this file; `§7`–`§10` means `log/CONTRACTS.md`.
+**If a task's entry sends you hunting through another task's file, or a contract clause outside
+what your Area's README named, that is a defect — fix it in place** (add the reference to the
+README, or the missing content to the task file), don't just work around it silently. A bare
+`§5`/`§6` reference means this file; `§7`–`§10` means the matching file under `log/contracts/`.
 
 ---
 
@@ -318,7 +159,7 @@ own earlier work.
    npm --version
    ```
    The toolchain is **npm workspaces + vitest**. It is **not** pnpm — ignore `WORKERS.md` W-01,
-   which says pnpm. See `log/CONTRACTS.md` §9, Deviation D-2.
+   which says pnpm. See `log/contracts/deviations.md`, Deviation D-2.
 
 2. **Run the test suite and record the result.**
    ```bash
@@ -328,16 +169,21 @@ own earlier work.
    `perf.test.ts` (`full simulate() incl. spin-up: N ms/run` and `100-variant sweep: N s`).
    **If the suite is red, your session's first and only job is to find out why and report it.**
    Do not start a new task on a red suite. The last recorded green state is in
-   `log/CONTRACTS.md` §10.
+   `log/contracts/00-core.md` §10.
 
-3. **Read `log/CONTRACTS.md` in full, once.** Not the headings. The file. Most of the failure
-   modes this ledger exists to prevent are contract violations, not coding errors.
+3. **Read `log/contracts/00-core.md` in full, once.** Not the headings. The file. It is short
+   (~200 lines) on purpose — units, sign convention, the eleven pathways, constants, the hard
+   gate. Most of the failure modes this ledger exists to prevent are contract violations, not
+   coding errors, but you no longer read all seven `log/contracts/` files to find them: once
+   you've picked a task (step 5), read its Area's `README.md` for which of the other six topic
+   files apply, and read only those.
 
 4. **Read §6 — GLOBAL RULES — below, in full.** All 21 of them.
 
 5. **Scan §5 below for the first `[ ]` task whose every `Depends on` entry is `[x]`.** Open
-   *only* that task's Area file (the table tells you which one) and read that one entry top to
-   bottom.
+   *only* that task's file — the `File` column names it directly, `log/AREA-<letter>/T-<NN>.md` —
+   and read that one file top to bottom. Then open that task's `log/AREA-<letter>/README.md`
+   once, for the contract topic files it names (step 3).
 
 6. **Confirm no task on its `Conflicts with` line is `[~]` (CLAIMED).** If one is, that file is
    being edited by someone else right now. Pick a different task. Do not "just check whether their
@@ -415,16 +261,16 @@ with an Area file again, the Area file is right — fix this table.)*
 
 | Area | Name | Done / Total | File |
 |---|---|---|---|
-| A | Foundation & contracts | 8 / 8 | `log/AREA-A-foundation-contracts.md` |
-| B | Engine | 16 / 17 | `log/AREA-B-engine.md` |
-| C | Data layer | 5 / 5 | `log/AREA-C-data-layer.md` |
-| D | Database tier | 7 / 7 | `log/AREA-D-database-tier.md` |
-| E | Server tier | 5 / 7 | `log/AREA-E-server-tier.md` |
-| F | Frontend | 12 / 14 | `log/AREA-F-frontend.md` |
-| G | Decision support | 0 / 5 | `log/AREA-G-decision-support.md` |
-| H | Scenarios | 1 / 3 | `log/AREA-H-scenarios.md` |
-| I | Validation & credibility | 2 / 4 | `log/AREA-I-validation-credibility.md` |
-| J | Delivery | 0 / 4 | `log/AREA-J-delivery.md` |
+| A | Foundation & contracts | 8 / 8 | `log/AREA-A/` |
+| B | Engine | 16 / 17 | `log/AREA-B/` |
+| C | Data layer | 5 / 5 | `log/AREA-C/` |
+| D | Database tier | 7 / 7 | `log/AREA-D/` |
+| E | Server tier | 5 / 7 | `log/AREA-E/` |
+| F | Frontend | 12 / 14 | `log/AREA-F/` |
+| G | Decision support | 0 / 5 | `log/AREA-G/` |
+| H | Scenarios | 1 / 3 | `log/AREA-H/` |
+| I | Validation & credibility | 2 / 4 | `log/AREA-I/` |
+| J | Delivery | 0 / 4 | `log/AREA-J/` |
 | | **TOTAL** | **56 / 74** | |
 
 *(T-74 added and closed this session — raised from session 7/8's own HANDOFF recommendation, same
@@ -440,137 +286,137 @@ this table" rule: Area I's row had auto-merged to a stale 1/4 from two branches 
 independently flipped one task against a shared 0/4 baseline; Area F's own denominator was wrong at
 13 (miscounted when T-71 was added — the true count is 11 original + T-71 = 12).)*
 
-**THE HARD GATE: PASSED.** See `log/CONTRACTS.md` §10.
+**THE HARD GATE: PASSED.** See `log/contracts/00-core.md` §10.
 
 ### Full task list, by Area
 
-### Area A — Foundation & contracts — 8 / 8 — `log/AREA-A-foundation-contracts.md`
+### Area A — Foundation & contracts — 8 / 8 — `log/AREA-A/`
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [x] | T-01 | npm workspace root, strict TypeScript, engine package manifest | none |
-| [x] | T-02 | Put the project under version control | none |
-| [x] | T-03 | ESLint, Prettier, and the two boundary rules | T-02 |
-| [x] | T-04 | Continuous integration | T-02, T-03 |
-| [x] | T-05 | The `.work/` claim ledger and `board.sh` | T-02 |
-| [x] | T-06 | Extend the shared contract with the types the rest of the build needs | T-01 |
-| [x] | T-07 | Canonical test fixtures, including the C-01 kill-shot pair | T-06 |
-| [x] | T-72 | Cover `apps/web/**` in the root ESLint config | T-03 |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [x] | T-01 | npm workspace root, strict TypeScript, engine package manifest | none | `log/AREA-A/T-01.md` |
+| [x] | T-02 | Put the project under version control | none | `log/AREA-A/T-02.md` |
+| [x] | T-03 | ESLint, Prettier, and the two boundary rules | T-02 | `log/AREA-A/T-03.md` |
+| [x] | T-04 | Continuous integration | T-02, T-03 | `log/AREA-A/T-04.md` |
+| [x] | T-05 | The `.work/` claim ledger and `board.sh` | T-02 | `log/AREA-A/T-05.md` |
+| [x] | T-06 | Extend the shared contract with the types the rest of the build needs | T-01 | `log/AREA-A/T-06.md` |
+| [x] | T-07 | Canonical test fixtures, including the C-01 kill-shot pair | T-06 | `log/AREA-A/T-07.md` |
+| [x] | T-72 | Cover `apps/web/**` in the root ESLint config | T-03 | `log/AREA-A/T-72.md` |
 
-### Area B — Engine — 15 / 16 — `log/AREA-B-engine.md`
+### Area B — Engine — 15 / 16 — `log/AREA-B/`
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [x] | T-08 | Linear algebra: dense LU, Thomas, and the arrow/Schur factorisation | T-01 |
-| [x] | T-09 | Envelope meshing, harmonic interfaces, composite U-value | T-01 |
-| [x] | T-10 | Model assembly: node index, capacitance vector, conductance matrix | T-08, T-09 |
-| [x] | T-11 | Time integration, and the AUDIT F-1 coefficient-refresh fix | T-10 |
-| [x] | T-12 | ⚠ THE HARD GATE: analytical Test 2 (sinusoidal wave through a wall) and Test 7 | T-11 |
-| [x] | T-13 | Analytical Tests 1, 4, 6 and 8, plus the safety and validation cases | T-11 |
-| [x] | T-14 | Solar: position, decomposition, transposition | T-01 |
-| [x] | T-15 | Surface boundary conditions, altitude-corrected in both directions | T-01 |
-| [x] | T-16 | Loads, orchestrator and post-processing | T-11, T-14, T-15 |
-| [x] | T-17 | The performance budget | T-16 |
-| [x] | T-18 | Shading: mountain horizon and window overhangs | T-06 |
-| [x] | T-19 | Phase-change materials: apparent heat capacity | T-06 |
-| [x] | T-20 | Water and rock thermal storage, and the `StorageElement` node | T-06, T-19 |
-| [x] | T-21 | Couple infiltration to opening area (closes AUDIT F-6) | T-06 |
-| [x] | T-22 | Split out `post/heatFlows.ts` and add the ΔT and ground series | T-06 |
-| [!] | T-23 | Validation Test 5 against NOAA, and print every measured pair | T-07 |
-| [x] | T-70 | Warm-start hook: optional initial temperature state for `simulate()` | T-06, T-11 |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [x] | T-08 | Linear algebra: dense LU, Thomas, and the arrow/Schur factorisation | T-01 | `log/AREA-B/T-08.md` |
+| [x] | T-09 | Envelope meshing, harmonic interfaces, composite U-value | T-01 | `log/AREA-B/T-09.md` |
+| [x] | T-10 | Model assembly: node index, capacitance vector, conductance matrix | T-08, T-09 | `log/AREA-B/T-10.md` |
+| [x] | T-11 | Time integration, and the AUDIT F-1 coefficient-refresh fix | T-10 | `log/AREA-B/T-11.md` |
+| [x] | T-12 | ⚠ THE HARD GATE: analytical Test 2 (sinusoidal wave through a wall) and Test 7 | T-11 | `log/AREA-B/T-12.md` |
+| [x] | T-13 | Analytical Tests 1, 4, 6 and 8, plus the safety and validation cases | T-11 | `log/AREA-B/T-13.md` |
+| [x] | T-14 | Solar: position, decomposition, transposition | T-01 | `log/AREA-B/T-14.md` |
+| [x] | T-15 | Surface boundary conditions, altitude-corrected in both directions | T-01 | `log/AREA-B/T-15.md` |
+| [x] | T-16 | Loads, orchestrator and post-processing | T-11, T-14, T-15 | `log/AREA-B/T-16.md` |
+| [x] | T-17 | The performance budget | T-16 | `log/AREA-B/T-17.md` |
+| [x] | T-18 | Shading: mountain horizon and window overhangs | T-06 | `log/AREA-B/T-18.md` |
+| [x] | T-19 | Phase-change materials: apparent heat capacity | T-06 | `log/AREA-B/T-19.md` |
+| [x] | T-20 | Water and rock thermal storage, and the `StorageElement` node | T-06, T-19 | `log/AREA-B/T-20.md` |
+| [x] | T-21 | Couple infiltration to opening area (closes AUDIT F-6) | T-06 | `log/AREA-B/T-21.md` |
+| [x] | T-22 | Split out `post/heatFlows.ts` and add the ΔT and ground series | T-06 | `log/AREA-B/T-22.md` |
+| [!] | T-23 | Validation Test 5 against NOAA, and print every measured pair | T-07 | `log/AREA-B/T-23.md` |
+| [x] | T-70 | Warm-start hook: optional initial temperature state for `simulate()` | T-06, T-11 | `log/AREA-B/T-70.md` |
 
-### Area C — Data layer — 5 / 5 — `log/AREA-C-data-layer.md`
+### Area C — Data layer — 5 / 5 — `log/AREA-C/`
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [x] | T-24 | Material, glazing and construction catalogues, every row cited | T-06 |
-| [x] | T-25 | The weather pipeline, with the mandatory lapse-rate correction | T-24 |
-| [x] | T-26 | NASA POWER and Open-Meteo request builders and response parsers | T-25 |
-| [x] | T-27 | Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer | T-25, T-26 |
-| [x] | T-28 | Presets: the app opens on an interesting result | T-24, T-27 |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [x] | T-24 | Material, glazing and construction catalogues, every row cited | T-06 | `log/AREA-C/T-24.md` |
+| [x] | T-25 | The weather pipeline, with the mandatory lapse-rate correction | T-24 | `log/AREA-C/T-25.md` |
+| [x] | T-26 | NASA POWER and Open-Meteo request builders and response parsers | T-25 | `log/AREA-C/T-26.md` |
+| [x] | T-27 | Bundled TMY for Leh, Kargil, Drass, Nubra and Jaisalmer | T-25, T-26 | `log/AREA-C/T-27.md` |
+| [x] | T-28 | Presets: the app opens on an interesting result | T-24, T-27 | `log/AREA-C/T-28.md` |
 
-### Area D — Database tier — 7 / 7 — `log/AREA-D-database-tier.md`
+### Area D — Database tier — 7 / 7 — `log/AREA-D/`
 
 *(The header above read "0 / 7" before this edit even though T-29 was already `[x]` --
 stale, not touched by T-30. Corrected here while flipping T-30, per §5's own rule: the
 Area file's checkboxes are truth and this table is fixed to match them.)*
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [x] | T-29 | Prisma schema, the four tables, and the first migration | T-03, T-06 |
-| [x] | T-30 | The database client wrapper, and the DB-off mode that must always work | T-29 |
-| [x] | T-31 | The weather cache repository | T-26, T-30 |
-| [x] | T-32 | Design snapshots and share links | T-30 |
-| [x] | T-33 | The simulation-run cache | T-06, T-30 |
-| [x] | T-34 | The material repository and the seed script | T-24, T-30 |
-| [x] | T-35 | The DB-off integration proof | T-31, T-32, T-33, T-34 |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [x] | T-29 | Prisma schema, the four tables, and the first migration | T-03, T-06 | `log/AREA-D/T-29.md` |
+| [x] | T-30 | The database client wrapper, and the DB-off mode that must always work | T-29 | `log/AREA-D/T-30.md` |
+| [x] | T-31 | The weather cache repository | T-26, T-30 | `log/AREA-D/T-31.md` |
+| [x] | T-32 | Design snapshots and share links | T-30 | `log/AREA-D/T-32.md` |
+| [x] | T-33 | The simulation-run cache | T-06, T-30 | `log/AREA-D/T-33.md` |
+| [x] | T-34 | The material repository and the seed script | T-24, T-30 | `log/AREA-D/T-34.md` |
+| [x] | T-35 | The DB-off integration proof | T-31, T-32, T-33, T-34 | `log/AREA-D/T-35.md` |
 
-### Area E — Server tier — 5 / 7 — `log/AREA-E-server-tier.md`
+### Area E — Server tier — 5 / 7 — `log/AREA-E/`
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [x] | T-36 | Next.js scaffold, the store, the unit boundary, and the layout slots | T-03, T-06, T-28, T-29 |
-| [x] | T-37 | `/api/weather` — the CORS proxy, cached | T-26, T-31, T-36 |
-| [x] | T-38 | `/api/simulate` — one run, cached | T-33, T-36 |
-| [ ] | T-39 | `/api/optimise` and `/api/scenarios`, with streaming progress | T-40, T-54, T-59 |
-| [x] | T-40 | The worker-thread pool, one per core | T-06, T-36 |
-| [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 |
-| [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [x] | T-36 | Next.js scaffold, the store, the unit boundary, and the layout slots | T-03, T-06, T-28, T-29 | `log/AREA-E/T-36.md` |
+| [x] | T-37 | `/api/weather` — the CORS proxy, cached | T-26, T-31, T-36 | `log/AREA-E/T-37.md` |
+| [x] | T-38 | `/api/simulate` — one run, cached | T-33, T-36 | `log/AREA-E/T-38.md` |
+| [ ] | T-39 | `/api/optimise` and `/api/scenarios`, with streaming progress | T-40, T-54, T-59 | `log/AREA-E/T-39.md` |
+| [x] | T-40 | The worker-thread pool, one per core | T-06, T-36 | `log/AREA-E/T-40.md` |
+| [x] | T-41 | `/api/designs` and `/api/materials` | T-32, T-34, T-36 | `log/AREA-E/T-41.md` |
+| [ ] | T-42 | Request validation, the error taxonomy, and rate limiting | T-37, T-38, T-39, T-41 | `log/AREA-E/T-42.md` |
 
-### Area F — Frontend — 12 / 14 (T-52 reconciled `[x]` this session — T-73 and T-74 both closed its remaining gaps, re-verified end-to-end by the orchestrator, see its Evidence block's RECONCILIATION note) — `log/AREA-F-frontend.md`
+### Area F — Frontend — 12 / 14 (T-52 reconciled `[x]` this session — T-73 and T-74 both closed its remaining gaps, re-verified end-to-end by the orchestrator, see its Evidence block's RECONCILIATION note) — `log/AREA-F/`
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [x] | T-43 | The browser Web Worker and the offline fallback path | T-36 |
-| [!] | T-44 | The five-control simple form | T-28, T-36, T-41 |
-| [x] | T-45 | The Advanced panel | T-36 |
-| [x] | T-46 | The isometric house: click a wall, scrub the day | T-36 |
-| [x] | T-47 | The temperature view (PS Deliverable 1) and the 6 AM label | T-36, T-43 |
-| [x] | T-48 | The solar capture view (PS Deliverable 2) | T-36, T-43 |
-| [x] | T-49 | The heat-flow view and the Sankey (PS Deliverable 3) | T-22, T-36, T-43 |
-| [!] | T-50 | The survival grid | T-36, T-59 |
-| [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 |
-| [x] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 |
-| [x] | T-53 | The day/night animation, driven by the real solar-position code | T-46 |
-| [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 |
-| [x] | T-73 | Wire T-52's meta components into app-shell.tsx's `slot-assumptions` | T-52 |
-| [x] | T-74 | Wire i18n into `SimpleForm.tsx`/`KpiColumn.tsx` to close T-52's test 11 | T-47, T-51, T-52 |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [x] | T-43 | The browser Web Worker and the offline fallback path | T-36 | `log/AREA-F/T-43.md` |
+| [!] | T-44 | The five-control simple form | T-28, T-36, T-41 | `log/AREA-F/T-44.md` |
+| [x] | T-45 | The Advanced panel | T-36 | `log/AREA-F/T-45.md` |
+| [x] | T-46 | The isometric house: click a wall, scrub the day | T-36 | `log/AREA-F/T-46.md` |
+| [x] | T-47 | The temperature view (PS Deliverable 1) and the 6 AM label | T-36, T-43 | `log/AREA-F/T-47.md` |
+| [x] | T-48 | The solar capture view (PS Deliverable 2) | T-36, T-43 | `log/AREA-F/T-48.md` |
+| [x] | T-49 | The heat-flow view and the Sankey (PS Deliverable 3) | T-22, T-36, T-43 | `log/AREA-F/T-49.md` |
+| [!] | T-50 | The survival grid | T-36, T-59 | `log/AREA-F/T-50.md` |
+| [x] | T-51 | KPI cards, the integrity badge and the safety warning | T-36, T-43 | `log/AREA-F/T-51.md` |
+| [x] | T-52 | The assumptions panel, exports, the offline banner and bilingual labels | T-36, T-43, T-51 | `log/AREA-F/T-52.md` |
+| [x] | T-53 | The day/night animation, driven by the real solar-position code | T-46 | `log/AREA-F/T-53.md` |
+| [x] | T-71 | Wire the Area F components into app-shell.tsx's placeholders | T-43, T-45, T-46, T-47, T-48, T-49, T-51 | `log/AREA-F/T-71.md` |
+| [x] | T-73 | Wire T-52's meta components into app-shell.tsx's `slot-assumptions` | T-52 | `log/AREA-F/T-73.md` |
+| [x] | T-74 | Wire i18n into `SimpleForm.tsx`/`KpiColumn.tsx` to close T-52's test 11 | T-47, T-51, T-52 | `log/AREA-F/T-74.md` |
 
-### Area G — Decision support — 0 / 5 — `log/AREA-G-decision-support.md`
+### Area G — Decision support — 0 / 5 — `log/AREA-G/`
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [!] | T-54 | The sweep engine: expand, dispatch, collect | T-06, T-24, T-28 |
-| [ ] | T-55 | The browser worker pool and the shared spin-up cache | T-43, T-54 |
-| [ ] | T-56 | Ranking, the Pareto front, and the perturbation-stability check | T-54 |
-| [ ] | T-57 | The buildable recommendation, and the non-AI template fallback | T-24, T-56 |
-| [ ] | T-58 | The AI write-up, its two-stage separation, and the number verifier | T-42, T-57 |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [!] | T-54 | The sweep engine: expand, dispatch, collect | T-06, T-24, T-28 | `log/AREA-G/T-54.md` |
+| [ ] | T-55 | The browser worker pool and the shared spin-up cache | T-43, T-54 | `log/AREA-G/T-55.md` |
+| [ ] | T-56 | Ranking, the Pareto front, and the perturbation-stability check | T-54 | `log/AREA-G/T-56.md` |
+| [ ] | T-57 | The buildable recommendation, and the non-AI template fallback | T-24, T-56 | `log/AREA-G/T-57.md` |
+| [ ] | T-58 | The AI write-up, its two-stage separation, and the number verifier | T-42, T-57 | `log/AREA-G/T-58.md` |
 
-### Area H — Scenarios — 0 / 3 — `log/AREA-H-scenarios.md`
+### Area H — Scenarios — 0 / 3 — `log/AREA-H/`
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [x] | T-59 | The eighteen-scenario matrix, built from real recorded history | T-27, T-28 |
-| [ ] | T-60 | Run the matrix and shape the survival-grid contract | T-54, T-59 |
-| [!] | T-61 | Multi-day runs and the sunless-streak path | T-59 |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [x] | T-59 | The eighteen-scenario matrix, built from real recorded history | T-27, T-28 | `log/AREA-H/T-59.md` |
+| [ ] | T-60 | Run the matrix and shape the survival-grid contract | T-54, T-59 | `log/AREA-H/T-60.md` |
+| [!] | T-61 | Multi-day runs and the sunless-streak path | T-59 | `log/AREA-H/T-61.md` |
 
-### Area I — Validation & credibility — 2 / 4 — `log/AREA-I-validation-credibility.md`
+### Area I — Validation & credibility — 2 / 4 — `log/AREA-I/`
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [x] | T-62 | The continuous energy-balance audit in CI | T-04, T-28, T-59 |
-| [ ] | T-63 | `VALIDATION.md` | T-23, T-62 |
-| [x] | T-64 | `EQUATIONS.md` and the limitations list | T-18, T-19, T-22 |
-| [ ] | T-65 | One EnergyPlus reference case (needs a human owner) | T-27, T-62, **plus a named human owner** |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [x] | T-62 | The continuous energy-balance audit in CI | T-04, T-28, T-59 | `log/AREA-I/T-62.md` |
+| [ ] | T-63 | `VALIDATION.md` | T-23, T-62 | `log/AREA-I/T-63.md` |
+| [x] | T-64 | `EQUATIONS.md` and the limitations list | T-18, T-19, T-22 | `log/AREA-I/T-64.md` |
+| [ ] | T-65 | One EnergyPlus reference case (needs a human owner) | T-27, T-62, **plus a named human owner** | `log/AREA-I/T-65.md` |
 
-### Area J — Delivery — 0 / 4 — `log/AREA-J-delivery.md`
+### Area J — Delivery — 0 / 4 — `log/AREA-J/`
 
-| | ID | Title | Depends on |
-|---|---|---|---|
-| [ ] | T-66 | Offline: the PWA and a network-free static build | T-27, T-36, T-43 |
-| [ ] | T-67 | Deployment | T-29, T-42, T-66 |
-| [ ] | T-68 | The demo script and hostile-question preparation | T-63, T-66 |
-| [ ] | T-69 | The PPT | T-46, T-47, T-63, T-68 |
+| | ID | Title | Depends on | File |
+|---|---|---|---|---|
+| [ ] | T-66 | Offline: the PWA and a network-free static build | T-27, T-36, T-43 | `log/AREA-J/T-66.md` |
+| [ ] | T-67 | Deployment | T-29, T-42, T-66 | `log/AREA-J/T-67.md` |
+| [ ] | T-68 | The demo script and hostile-question preparation | T-63, T-66 | `log/AREA-J/T-68.md` |
+| [ ] | T-69 | The PPT | T-46, T-47, T-63, T-68 | `log/AREA-J/T-69.md` |
 
 
 ---
@@ -580,9 +426,11 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 These bind every task. Rules 1–16 are adapted from `WORKERS.md` §7.1; rules 17–21 are new and
 govern the database tier that §9 introduces.
 
-1. **Read `log/CONTRACTS.md` (the shared contracts) in full before starting any task.** The
-   contracts are the thing six parallel workers agree on. Violating one is worse than writing no
-   code at all.
+1. **Read `log/contracts/00-core.md` in full before starting any task, plus whichever other
+   `log/contracts/<topic>.md` files your task's Area README names.** The contracts are the thing
+   six parallel workers agree on. Violating one is worse than writing no code at all. If a task
+   turns out to need a contract clause outside the files its Area README named, that is a ledger
+   defect — report it and fix the README, don't silently work around the gap.
 
 2. **Check the `Conflicts with` line before you start.** If a conflicting task is `[~]`, stop and
    pick another. "It is only one small edit to their file" is how a parallel build becomes a merge
@@ -686,11 +534,17 @@ govern the database tier that §9 introduces.
 ritual.** The first unchecked box in §5 whose dependencies are all `[x]` is yours — its file is
 named in the same row.
 
-**If you just finished a task:** paste your measured numbers into its Evidence block **in its Area
-file**, fill in *Completed by* and *Date* there, flip its box to `[x]` there, mirror the flip in
-§5 **in this file**, and commit with the task id as the first token of the message.
+**If you just finished a task:** paste your measured numbers into its Evidence block **in its own
+task file**, fill in *Completed by* and *Date* there, flip its box to `[x]` there, mirror the flip
+in §5 **in this file**, and commit with the task id as the first token of the message.
 
 **If you changed something this ledger says, change it in the file that actually says it** — the
-Area file for a task's own content, `log/CONTRACTS.md` for a shared contract, this file for the
-index or the rules. A ledger that disagrees with the disk, or with itself, is worse than no ledger,
-because the next agent will trust it.
+task's own file (`log/AREA-<letter>/T-<NN>.md`) for its own content, the matching
+`log/contracts/<topic>.md` for a shared contract, this file for the index or the rules. A ledger
+that disagrees with the disk, or with itself, is worse than no ledger, because the next agent will
+trust it.
+
+**Only one HANDOFF section lives in this file at a time.** When you write a new one (§8 in
+`ORCHESTRATOR.md`), move whatever HANDOFF was here before yours into `log/HANDOFF-ARCHIVE.md`,
+inserted at that file's top. Old HANDOFFs are historical record, never required reading — that is
+what keeps this file's fixed per-session cost from growing session over session.

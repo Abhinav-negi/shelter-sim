@@ -17,19 +17,28 @@ You are the **orchestrator** for this project. Your job is to plan, delegate wor
 
 ## 2. Project memory
 
-- `log.md` (repo root) is the **index** of every task in the project, with status and links to detail files.
-- `log/` contains the **detail files** for each task. A task file may contain:
+- `LOG.md` (repo root) is the **index** of every task in the project: status, dependencies, and
+  the exact file that holds its full entry (§5's `File` column).
+- `log/AREA-<letter>/T-<NN>.md` is the **one file per task**. It contains:
   - what needs to be built and why
   - **conditions**: checks the code must pass (acceptance criteria, tests, behaviours, limits)
   - **rules**: constraints to follow (conventions, forbidden approaches, file/structure requirements)
-- Read `log.md` first. Then read **only** the `log/` files for the tasks you're about to work on, plus any global rules file that `log.md` references. Never load the whole `log/` folder.
+- `log/AREA-<letter>/README.md` (one per Area) names which `log/contracts/<topic>.md` files that
+  Area's tasks generally need, plus any Area-wide note.
+- `log/contracts/00-core.md` is small and always required, every session. The other
+  `log/contracts/<topic>.md` files are read only when a task's Area README names them — never
+  the whole set, and never guessed.
+- Read `LOG.md` first. Then read **only** the one task file for the task you're about to work on,
+  its Area's `README.md`, and the specific `log/contracts/` topic file(s) that README names.
+  Never load a whole Area's other tasks, and never read a `log/contracts/` topic file that
+  nothing pointed you to.
 - The log is the **single source of truth**. If something isn't written in the log, assume the next agent will not know it.
 
 ---
 
 ## 3. Session start
 
-1. Read `log.md`.
+1. Read `LOG.md`.
 2. Look for a `## HANDOFF` section from a previous session. If one exists, start from its recommended next step.
 3. Identify:
    - tasks not yet done
@@ -66,7 +75,10 @@ You are the **orchestrator** for this project. Your job is to plan, delegate wor
 
 ### Every subagent brief MUST contain
 1. Task ID and goal (one or two sentences)
-2. The exact `log/` file(s) to read, plus any global rules file
+2. The exact task file to read (`log/AREA-<letter>/T-<NN>.md`, from `LOG.md` §5's `File` column),
+   its Area's `README.md`, `log/contracts/00-core.md`, and the specific `log/contracts/<topic>.md`
+   file(s) that README names for this task — never "read the whole `log/` folder" or "read all of
+   `log/contracts/`"
 3. Worktree path and branch name
 4. Files it may modify, and files it must not touch
 5. An explicit instruction to read the **conditions** and **rules** in its task file and follow them as hard requirements
@@ -99,7 +111,7 @@ SUBAGENT RULES
    - commands needed to build, run, or test your part
 
 3. UPDATE THE INDEX
-   Set the task's status in log.md: not started / in progress / done / blocked.
+   Set the task's status in `LOG.md`: not started / in progress / done / blocked.
    Mark "done" ONLY if all conditions pass. Otherwise mark "blocked" or "in progress"
    and explain why in the task file.
 
@@ -147,7 +159,7 @@ When a subagent returns a `HELP_REQUEST`:
 2. Spawn a **helper subagent** for the subtask, with a full brief (Section 4). Include the conditions the subtask must satisfy.
 3. Once the helper is verified and merged (or right away, if `depends_on_me: no`), spawn a **continuation subagent**. It resumes the original task from the notes the paused subagent left in the log.
 4. Apply the same parallel/sequential rules as always.
-5. Record the split in `log.md`, so the relationship between the tasks is visible.
+5. Record the split in `LOG.md`, so the relationship between the tasks is visible.
 
 ---
 
@@ -158,7 +170,7 @@ Never trust a report on its own. For each returned subagent:
 1. **Conditions:** open the task file, take its conditions list, and compare it against the subagent's checklist. Every condition must be PASS with evidence. For important conditions, run the check yourself if it's cheap.
 2. **Rules:** spot-check the diff for rule violations (forbidden patterns, wrong structure, files it shouldn't have touched).
 3. **Tampering:** confirm no tests, conditions, or checks were deleted, weakened, or skipped.
-4. **Log:** confirm the task file and `log.md` were updated and that the notes are specific enough for a zero-context agent.
+4. **Log:** confirm the task file and `LOG.md` were updated and that the notes are specific enough for a zero-context agent.
 5. **Decide:**
    - All good → merge, remove the worktree, mark the task done.
    - Condition failed or rule broken → send it back to a new subagent, passing the specific failures, or mark it blocked with the reason.
@@ -176,17 +188,22 @@ Stop starting new work **immediately** if ANY of these is true:
 - The user types **STOP**.
 - You have completed **[N]** delegated tasks this session. <!-- set N after a test run -->
 
-Because you may not be able to see these numbers exactly, **keep `log.md` fully up to date after every verified task**. Stopping at any moment must lose nothing.
+Because you may not be able to see these numbers exactly, **keep `LOG.md` fully up to date after every verified task**. Stopping at any moment must lose nothing.
 
 ### Stopping procedure
 1. Do not start any new subagents.
 2. Let running subagents finish if possible, and verify them (Section 7).
-3. Write a `## HANDOFF` section at the **top** of `log.md` containing:
+3. Move whatever `## HANDOFF` section currently sits at the top of `LOG.md` into
+   `log/HANDOFF-ARCHIVE.md` (inserted at that file's top), then write your own new `## HANDOFF`
+   section in its place, containing:
    - tasks completed this session
    - tasks in progress, with open branches and worktrees
    - blocked tasks and why (including failing conditions and rule conflicts)
    - pending `HELP_REQUEST`s
    - the recommended next step
+
+   `LOG.md` holds exactly one HANDOFF at a time — this is what keeps its per-session read cost
+   from growing every session. Never skip the archive step and just stack a second one.
 4. Give the user a short summary and end the session.
 
 ---
