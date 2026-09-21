@@ -50,8 +50,23 @@
 // `resolve.extensionAlias` is webpack 5's own documented answer to exactly
 // this NodeNext/bundler mismatch, so the fix lives here instead.
 
+// T-66 (log/AREA-J/T-66.md) -- the static-export build. Gated behind an env
+// var so `next dev`/`next start`/the ordinary `next build` (used by every
+// other task and by the PWA path) are completely unaffected -- this line
+// only takes effect when `apps/web/scripts/build-static.mjs` sets
+// SHELTER_STATIC_EXPORT=1 for its own private, throw-away build in
+// `.export-scratch/`. See that script's header comment for why a *copy* of
+// the app is built rather than the real `app/page.tsx` in place: page.tsx's
+// own `dynamic = 'force-dynamic'` (needed for the reason its own comment
+// gives) is unconditionally incompatible with `output: 'export'` --
+// verified directly: Next refuses with "Page with `dynamic = 'force-dynamic'`
+// ... cannot be used with output: export" -- and `app/page.tsx` is outside
+// this task's allow-list to change.
+const STATIC_EXPORT = process.env.SHELTER_STATIC_EXPORT === '1';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  ...(STATIC_EXPORT ? { output: 'export' } : {}),
   serverExternalPackages: ['@shelter/data'],
   webpack: (config, { isServer, webpack }) => {
     config.resolve.symlinks = false;

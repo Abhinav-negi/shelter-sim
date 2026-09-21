@@ -12,3 +12,10 @@ apps/web/prisma/schema.generated.prisma
 .work/BOARD.md
 coverage/
 test-output/
+
+# T-66 (log/AREA-J/T-66.md) -- apps/web/scripts/build-static.mjs's own
+# throwaway build directory and its generated output. Regenerate with
+# `node apps/web/scripts/build-static.mjs`; never hand-edited or committed,
+# same convention as dist/ and .next/ above.
+apps/web/.export-scratch/
+apps/web/static-export/
