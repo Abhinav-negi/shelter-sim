@@ -305,7 +305,7 @@ with an Area file again, the Area file is right — fix this table.)*
 
 | Area | Name | Done / Total | File |
 |---|---|---|---|
-| A | Foundation & contracts | 8 / 8 | `log/AREA-A/` |
+| A | Foundation & contracts | 8 / 10 | `log/AREA-A/` |
 | B | Engine | 17 / 18 | `log/AREA-B/` |
 | C | Data layer | 5 / 5 | `log/AREA-C/` |
 | D | Database tier | 7 / 7 | `log/AREA-D/` |
@@ -314,8 +314,8 @@ with an Area file again, the Area file is right — fix this table.)*
 | G | Decision support | 0 / 5 | `log/AREA-G/` |
 | H | Scenarios | 1 / 3 | `log/AREA-H/` |
 | I | Validation & credibility | 2 / 4 | `log/AREA-I/` |
-| J | Delivery | 0 / 4 | `log/AREA-J/` |
-| | **TOTAL** | **58 / 76** | |
+| J | Delivery | 0 / 5 | `log/AREA-J/` |
+| | **TOTAL** | **58 / 79** | |
 
 *(T-74 added and closed this session — raised from session 7/8's own HANDOFF recommendation, same
 pattern as T-71/T-72/T-73. T-52 reconciled `[x]` this session too, once T-74 closed its last
@@ -345,7 +345,7 @@ independently flipped one task against a shared 0/4 baseline; Area F's own denom
 
 ### Full task list, by Area
 
-### Area A — Foundation & contracts — 8 / 8 — `log/AREA-A/`
+### Area A — Foundation & contracts — 8 / 10 — `log/AREA-A/`
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
@@ -357,6 +357,8 @@ independently flipped one task against a shared 0/4 baseline; Area F's own denom
 | [x] | T-06 | Extend the shared contract with the types the rest of the build needs | T-01 | `log/AREA-A/T-06.md` |
 | [x] | T-07 | Canonical test fixtures, including the C-01 kill-shot pair | T-06 | `log/AREA-A/T-07.md` |
 | [x] | T-72 | Cover `apps/web/**` in the root ESLint config | T-03 | `log/AREA-A/T-72.md` |
+| [x] | T-78 | Exclude test files from `apps/web/tsconfig.json` | T-03 | `log/AREA-A/T-78.md` |
+| [ ] | T-79 | Prettier formatting sweep | T-03 | `log/AREA-A/T-79.md` |
 
 ### Area B — Engine — 17 / 18 (header count was stale at 15/16 — the true count from the entries
 themselves was 16 done of 17 pre-existing tasks, already matching the §5 dashboard row; T-76 added
@@ -469,7 +471,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-64 | `EQUATIONS.md` and the limitations list | T-18, T-19, T-22 | `log/AREA-I/T-64.md` |
 | [ ] | T-65 | One EnergyPlus reference case (needs a human owner) | T-27, T-62, **plus a named human owner** | `log/AREA-I/T-65.md` |
 
-### Area J — Delivery — 0 / 4 — `log/AREA-J/`
+### Area J — Delivery — 0 / 5 — `log/AREA-J/`
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
@@ -477,6 +479,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [ ] | T-67 | Deployment | T-29, T-42, T-66 | `log/AREA-J/T-67.md` |
 | [ ] | T-68 | The demo script and hostile-question preparation | T-63, T-66 | `log/AREA-J/T-68.md` |
 | [ ] | T-69 | The PPT | T-46, T-47, T-63, T-68 | `log/AREA-J/T-69.md` |
+| [~] | T-77 | Wire PWA registration into `app/layout.tsx` | T-66 | `log/AREA-J/T-77.md` |
 
 
 ---
