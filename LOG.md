@@ -305,7 +305,7 @@ with an Area file again, the Area file is right — fix this table.)*
 
 | Area | Name | Done / Total | File |
 |---|---|---|---|
-| A | Foundation & contracts | 8 / 10 | `log/AREA-A/` |
+| A | Foundation & contracts | 10 / 10 | `log/AREA-A/` |
 | B | Engine | 17 / 18 | `log/AREA-B/` |
 | C | Data layer | 5 / 5 | `log/AREA-C/` |
 | D | Database tier | 7 / 7 | `log/AREA-D/` |
@@ -314,8 +314,24 @@ with an Area file again, the Area file is right — fix this table.)*
 | G | Decision support | 0 / 5 | `log/AREA-G/` |
 | H | Scenarios | 1 / 3 | `log/AREA-H/` |
 | I | Validation & credibility | 2 / 4 | `log/AREA-I/` |
-| J | Delivery | 0 / 5 | `log/AREA-J/` |
-| | **TOTAL** | **58 / 79** | |
+| J | Delivery | 1 / 6 | `log/AREA-J/` |
+| | **TOTAL** | **61 / 80** | |
+
+*(T-79 added and closed this session (Area A, Prettier formatting sweep — raised two sessions ago
+from a red `npm run format:check`, drafted then abandoned uncommitted by an interrupted earlier
+session, re-claimed and actually run this session, 210 files reformatted, verified regression-free
+by the orchestrator: `npx vitest run` hits the exact known-green 45/492/10 baseline both before and
+after the reformat once the worktree's database is set up). Two stale dashboard drifts found and
+fixed while verifying it, per this file's own "the Area file is right, fix this table" rule: Area
+A's true count was already 9/10 before T-79 (not the 8/10 shown here — T-72 and T-78 had landed
+without this table being updated), 10/10 after; Area J's true count was already 1/5 (T-77 landed
+without this table being updated), before T-80 (below) added a 6th task. Grand total corrected
+58 -> 61 (the pre-existing drift) -> stays 61 once T-80 is added as not-yet-done, denominator
+79 -> 80.)*
+
+*(T-80 added this session, Area J — raised from T-66's own Evidence block (the one live-app gap
+neither T-77 nor T-78 closed): `dispatchSimulation()` in `lib/store.ts` never checks real
+connectivity, so `store.online` never leaves its `true` default in the live app. Not yet claimed.)*
 
 *(T-74 added and closed this session — raised from session 7/8's own HANDOFF recommendation, same
 pattern as T-71/T-72/T-73. T-52 reconciled `[x]` this session too, once T-74 closed its last
@@ -345,7 +361,10 @@ independently flipped one task against a shared 0/4 baseline; Area F's own denom
 
 ### Full task list, by Area
 
-### Area A — Foundation & contracts — 9 / 10 — `log/AREA-A/`
+### Area A — Foundation & contracts — 10 / 10 — `log/AREA-A/` (header was left at 9/10 by
+T-79's own commit — it should have read 10/10, since T-79 was Area A's last remaining task;
+fixed here by the orchestrator per this file's own "the Area file is right, fix this table" rule,
+using the actual box characters below, which are correct)
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
@@ -471,7 +490,9 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [x] | T-64 | `EQUATIONS.md` and the limitations list | T-18, T-19, T-22 | `log/AREA-I/T-64.md` |
 | [ ] | T-65 | One EnergyPlus reference case (needs a human owner) | T-27, T-62, **plus a named human owner** | `log/AREA-I/T-65.md` |
 
-### Area J — Delivery — 0 / 5 — `log/AREA-J/`
+### Area J — Delivery — 1 / 6 — `log/AREA-J/` (header was left at 0/5 by T-77's own commit — it
+should have read 1/5, since T-77 itself was done; fixed here by the orchestrator, T-80 also added,
+moving the denominator to 6)
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
@@ -480,6 +501,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | [ ] | T-68 | The demo script and hostile-question preparation | T-63, T-66 | `log/AREA-J/T-68.md` |
 | [ ] | T-69 | The PPT | T-46, T-47, T-63, T-68 | `log/AREA-J/T-69.md` |
 | [x] | T-77 | Wire PWA registration into `app/layout.tsx` | T-66 | `log/AREA-J/T-77.md` |
+| [ ] | T-80 | Wire real connectivity detection into `dispatchSimulation()` | T-66 | `log/AREA-J/T-80.md` |
 
 
 ---
