@@ -105,7 +105,7 @@ export function simulate(req: SimulationRequest): SimulationResult {
   const couplingReq: SimulationRequest = { ...req, operation: { ...req.operation, achSchedule } };
 
   const model = buildModel(couplingReq.building, couplingReq.materials, couplingReq.glazings, couplingReq.options.meshTargetDx);
-  const { records, initialT, warnings, spinUpDaysUsed } = integrate(couplingReq, model);
+  const { records, initialT, finalT, warnings, spinUpDaysUsed } = integrate(couplingReq, model);
 
   if (records.length === 0) {
     throw new Error('The integrator produced no timesteps; check simulationDays and timestepSeconds.');
@@ -240,6 +240,7 @@ export function simulate(req: SimulationRequest): SimulationResult {
     },
     heatFlows,
     kpis,
+    ...(req.options.keepWarmState ? { warmState: finalT } : {}),
   };
 }
 

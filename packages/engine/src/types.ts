@@ -263,6 +263,20 @@ export interface SimOptions {
    * outside this task's own allow-list, so this task proves the hook in isolation only.
    */
   initialTemperatureK?: Float64Array;
+  /**
+   * Set true to include `warmState` in the result: the raw per-node converged
+   * temperature vector (length = the built model's node count, in the engine's
+   * OWN internal order, which is NOT part of this contract and may change).
+   * OPAQUE to every caller: store it and hand it straight back via
+   * `options.initialTemperatureK` on a later call with the SAME node topology
+   * (same constructions/thicknesses/storage elements/volume) -- never index,
+   * reorder or otherwise interpret its entries. Off by default: every extra
+   * Float64Array costs JSON payload and DB storage nobody asked for. Added
+   * for @shelter/optimise's spin-up-sharing cache (T-54 Evidence, 2026-09-19
+   * continuation) -- packages/optimise/** is outside this task's own
+   * allow-list, so this task proves the field in isolation only.
+   */
+  keepWarmState?: boolean;
 }
 
 export interface SimulationRequest {
@@ -393,6 +407,8 @@ export interface SimulationResult {
   };
   heatFlows: HeatFlows;
   kpis: SimulationKpis;
+  /** Present only when `options.keepWarmState` is true. See `SimOptions.keepWarmState`. */
+  warmState?: Float64Array;
 }
 
 // ============================== ERRORS ==============================
