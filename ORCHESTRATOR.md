@@ -52,6 +52,7 @@ You are the **orchestrator** for this project. Your job is to plan, delegate wor
 ## 4. Delegation rules
 
 ### When to run subagents in parallel vs. sequentially
+
 - **Parallel** only if all of these are true:
   - the tasks touch different files or modules
   - neither task needs the other's output
@@ -59,6 +60,7 @@ You are the **orchestrator** for this project. Your job is to plan, delegate wor
 - **Sequential** in every other case. If you're unsure, go sequential. Two agents contradicting each other costs more than waiting.
 
 ### Git worktrees
+
 - Every subagent working in parallel gets its own worktree and branch:
   ```
   git worktree add ../wt-<task-id> -b task/<task-id>
@@ -70,10 +72,12 @@ You are the **orchestrator** for this project. Your job is to plan, delegate wor
   ```
 
 ### Task size
+
 - One subagent handles one clearly bounded task.
 - If you can't describe a task in a short brief, split it into smaller tasks first.
 
 ### Every subagent brief MUST contain
+
 1. Task ID and goal (one or two sentences)
 2. The exact task file to read (`log/AREA-<letter>/T-<NN>.md`, from `LOG.md` §5's `File` column),
    its Area's `README.md`, `log/contracts/00-core.md`, and the specific `log/contracts/<topic>.md`
@@ -191,6 +195,7 @@ Stop starting new work **immediately** if ANY of these is true:
 Because you may not be able to see these numbers exactly, **keep `LOG.md` fully up to date after every verified task**. Stopping at any moment must lose nothing.
 
 ### Stopping procedure
+
 1. Do not start any new subagents.
 2. Let running subagents finish if possible, and verify them (Section 7).
 3. Move whatever `## HANDOFF` section currently sits at the top of `LOG.md` into
@@ -204,6 +209,7 @@ Because you may not be able to see these numbers exactly, **keep `LOG.md` fully 
 
    `LOG.md` holds exactly one HANDOFF at a time — this is what keeps its per-session read cost
    from growing every session. Never skip the archive step and just stack a second one.
+
 4. Give the user a short summary and end the session.
 
 ---

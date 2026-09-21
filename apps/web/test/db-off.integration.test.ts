@@ -38,8 +38,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
 import { simulate } from '@shelter/engine';
-import type { Material, Glazing, SimulationRequest, SimulationKpis, WeatherSeries } from '@shelter/engine';
-import { materialById, glazingById, tmyById, PRESETS, buildScenarios, scenarioWeather } from '@shelter/data';
+import type {
+  Material,
+  Glazing,
+  SimulationRequest,
+  SimulationKpis,
+  WeatherSeries,
+} from '@shelter/engine';
+import {
+  materialById,
+  glazingById,
+  tmyById,
+  PRESETS,
+  buildScenarios,
+  scenarioWeather,
+} from '@shelter/data';
 import type { WeatherKey } from '../lib/repo/weather.js';
 
 const BOGUS_DATABASE_URL = 'file:/nonexistent-t35-test-dir-9c2e7/dev.db';
@@ -81,13 +94,18 @@ async function freshRepos() {
  * reimplemented here, copied because it lives in a file this test may not
  * import (test files are not part of any package's public surface either).
  */
-function resolveRequest(preset: (typeof PRESETS)[number], weatherOverride?: WeatherSeries): SimulationRequest {
+function resolveRequest(
+  preset: (typeof PRESETS)[number],
+  weatherOverride?: WeatherSeries,
+): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return {
     ...preset.request,
     weather: weatherOverride ?? tmyById(preset.locationId),
@@ -174,13 +192,20 @@ async function runSixExercises(mode: string, hardLimitMs: number | null): Promis
   };
   await guarded('readWeatherCache(before write)', () => weather.readWeatherCache(weatherKey));
   await guarded('writeWeatherCache', () =>
-    weather.writeWeatherCache(weatherKey, tmyById('leh'), { fixture: 'T-35 db-off integration' }, 3500),
+    weather.writeWeatherCache(
+      weatherKey,
+      tmyById('leh'),
+      { fixture: 'T-35 db-off integration' },
+      3500,
+    ),
   );
   await guarded('readWeatherCache(after write)', () => weather.readWeatherCache(weatherKey));
 
   // ---- 4. saveDesign / loadDesign -- must resolve (possibly null), never throw.
   const designRequest = resolveRequest(LEH_PRESET);
-  const saveResult = await guarded('saveDesign', () => designs.saveDesign(designRequest, `T-35 db-off ${mode}`));
+  const saveResult = await guarded('saveDesign', () =>
+    designs.saveDesign(designRequest, `T-35 db-off ${mode}`),
+  );
   await guarded('loadDesign', () => designs.loadDesign(saveResult?.shareId ?? 'ZZZZZZZZZZ'));
 
   // ---- 5. readRun / writeRun -- must resolve, never throw.
@@ -324,12 +349,15 @@ describe('T-35 acceptance tests 6 and 7 -- cross-mode equality', () => {
     const unreachable = reports.unreachable!.kpis;
     const mismatches: string[] = [];
     for (const key of Object.keys(live) as (keyof SimulationKpis)[]) {
-      if (!Object.is(live[key], unset[key])) mismatches.push(`${key}: live=${live[key]} unset=${unset[key]}`);
+      if (!Object.is(live[key], unset[key]))
+        mismatches.push(`${key}: live=${live[key]} unset=${unset[key]}`);
       if (!Object.is(live[key], unreachable[key]))
         mismatches.push(`${key}: live=${live[key]} unreachable=${unreachable[key]}`);
     }
     // eslint-disable-next-line no-console -- test evidence, LOG.md rule 15.
-    console.log(`T-35 test 7 mismatches (must be none): ${mismatches.length === 0 ? 'none' : mismatches.join('; ')}`);
+    console.log(
+      `T-35 test 7 mismatches (must be none): ${mismatches.length === 0 ? 'none' : mismatches.join('; ')}`,
+    );
     expect(mismatches).toEqual([]);
     expect(unset).toEqual(live);
     expect(unreachable).toEqual(live);

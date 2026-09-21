@@ -67,7 +67,8 @@ export const GLAZING: readonly Glazing[] = [
     tauVis: 0.7,
     b0: 0.06,
     source: `${GLAZING_TABLE_SOURCE}; ${TAU_VIS_NOTE}`,
-    blurb: 'Double glazing with argon gas and a low-emissivity coating: keeps in much more heat than plain double glazing.',
+    blurb:
+      'Double glazing with argon gas and a low-emissivity coating: keeps in much more heat than plain double glazing.',
   },
   {
     id: 'tripleGlazing',
@@ -77,7 +78,8 @@ export const GLAZING: readonly Glazing[] = [
     tauVis: 0.6,
     b0: 0.07,
     source: `${GLAZING_TABLE_SOURCE}; ${TAU_VIS_NOTE}`,
-    blurb: 'Triple glazing: three panes, the warmest window available here, but also the most expensive.',
+    blurb:
+      'Triple glazing: three panes, the warmest window available here, but also the most expensive.',
   },
   {
     id: 'polycarbonateTwinWall',
@@ -87,7 +89,8 @@ export const GLAZING: readonly Glazing[] = [
     tauVis: 0.78,
     b0: 0.05,
     source: `${GLAZING_TABLE_SOURCE}; typical structured-polycarbonate sheet datasheet range (e.g. Danpalon / Palram twin-wall polycarbonate technical data sheet)`,
-    blurb: 'Twin-wall polycarbonate: a light plastic sheeting material, cheaper and tougher than glass for a Trombe wall or greenhouse face.',
+    blurb:
+      'Twin-wall polycarbonate: a light plastic sheeting material, cheaper and tougher than glass for a Trombe wall or greenhouse face.',
   },
   {
     // Headline anchor, LOG.md 7.10 "Windows": single glazing with a closed
@@ -105,7 +108,8 @@ export const GLAZING: readonly Glazing[] = [
     tauVis: 0.9,
     b0: 0.04,
     source: `${GLAZING_TABLE_SOURCE}. U from LOG.md 7.10: U_eff = 1/(1/U + R_shutter), R_shutter = 0.4 m^2*K/W (midpoint of the table's 0.3-0.5 range); SHGC/tauVis/b0 copied unchanged from singleGlazing per the table's own "unchanged" note.`,
-    blurb: 'Single glazing with a wooden night shutter closed: shuts most of the heat loss without buying new glass.',
+    blurb:
+      'Single glazing with a wooden night shutter closed: shuts most of the heat loss without buying new glass.',
   },
 ] as const;
 

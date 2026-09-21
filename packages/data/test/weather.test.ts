@@ -52,7 +52,13 @@ function buildSeriesForValidate(GHI: number[], dayOfYear: number, tAmbK = 250): 
     T_amb: new Float64Array(n).fill(tAmbK),
     GHI: new Float64Array(GHI),
     v_wind: new Float64Array(n).fill(2),
-    provenance: { source: 'synthetic', label: 'validate test', sourceElevation: null, lapseCorrectionK: 0, notes: [] },
+    provenance: {
+      source: 'synthetic',
+      label: 'validate test',
+      sourceElevation: null,
+      lapseCorrectionK: 0,
+      notes: [],
+    },
   };
 }
 
@@ -60,11 +66,18 @@ describe('T-25 acceptance test 1 -- TECH.md 9.3 worked example, lapse-rate corre
   it('a source at 4120 m used for a 3500 m site raises every T by 6.5 * 0.62 = 4.03 K', () => {
     const n = 4;
     const raw = hourlyRaw({ sourceElevation: 4120, T_amb: new Array(n).fill(260) }, n);
-    const opts: NormaliseOptions = { site: LEH_SITE, targetStepSeconds: 3600, source: 'nasa-power', label: 'test1' };
+    const opts: NormaliseOptions = {
+      site: LEH_SITE,
+      targetStepSeconds: 3600,
+      source: 'nasa-power',
+      label: 'test1',
+    };
     const series = normaliseWeather(raw, opts);
     const expectedOffset = 6.5 * 0.62; // 4.03 K, TECH.md 9.3
     // eslint-disable-next-line no-console
-    console.log(`TEST1 lapseCorrectionK measured=${series.provenance.lapseCorrectionK} expected=${expectedOffset}`);
+    console.log(
+      `TEST1 lapseCorrectionK measured=${series.provenance.lapseCorrectionK} expected=${expectedOffset}`,
+    );
     expect(series.provenance.lapseCorrectionK).toBeCloseTo(expectedOffset, 2);
     for (let i = 0; i < n; i++) {
       expect(series.T_amb[i]).toBeCloseTo(260 + expectedOffset, 2);
@@ -79,9 +92,16 @@ describe('T-25 acceptance test 2 -- user CSV skips the lapse-rate correction ent
     // sourceElevation deliberately non-null here: the isUserCsv branch must
     // override it regardless of what the raw record carries.
     const raw = hourlyRaw({ sourceElevation: 4120, T_amb }, n);
-    const opts: NormaliseOptions = { site: LEH_SITE, targetStepSeconds: 3600, source: 'user-csv', label: 'csv upload' };
+    const opts: NormaliseOptions = {
+      site: LEH_SITE,
+      targetStepSeconds: 3600,
+      source: 'user-csv',
+      label: 'csv upload',
+    };
     const series = normaliseWeather(raw, opts);
-    console.log(`TEST2 lapseCorrectionK=${series.provenance.lapseCorrectionK} sourceElevation=${series.provenance.sourceElevation}`);
+    console.log(
+      `TEST2 lapseCorrectionK=${series.provenance.lapseCorrectionK} sourceElevation=${series.provenance.sourceElevation}`,
+    );
     expect(series.provenance.lapseCorrectionK).toBe(0);
     expect(series.provenance.sourceElevation).toBeNull();
     for (let i = 0; i < n; i++) {
@@ -168,17 +188,37 @@ describe('T-25 acceptance test 5 -- Erbs closure identity when DNI/DHI are deriv
     // -- that is decompose()'s own correct behaviour on implausible data, not
     // a pipeline defect, so the test fixture must stay physically plausible.
     const GHI = Array.from({ length: n }, (_, h) => {
-      const sun = sunPosition(LEH_SITE.latitude, LEH_SITE.longitude, LEH_SITE.standardMeridian, dayOfYear, h);
+      const sun = sunPosition(
+        LEH_SITE.latitude,
+        LEH_SITE.longitude,
+        LEH_SITE.standardMeridian,
+        dayOfYear,
+        h,
+      );
       return sun.cosZenith > 0 ? 0.75 * extraterrestrialNormal(dayOfYear) * sun.cosZenith : 0;
     });
-    const raw = hourlyRaw({ GHI, T_amb: new Array(n).fill(260), sourceElevation: null, startDayOfYear: dayOfYear }, n);
-    const opts: NormaliseOptions = { site: LEH_SITE, targetStepSeconds: raw.stepSeconds, source: 'synthetic', label: 'closure' };
+    const raw = hourlyRaw(
+      { GHI, T_amb: new Array(n).fill(260), sourceElevation: null, startDayOfYear: dayOfYear },
+      n,
+    );
+    const opts: NormaliseOptions = {
+      site: LEH_SITE,
+      targetStepSeconds: raw.stepSeconds,
+      source: 'synthetic',
+      label: 'closure',
+    };
     const series = normaliseWeather(raw, opts);
 
     let maxErr = 0;
     let checked = 0;
     for (let i = 0; i < n; i++) {
-      const sun = sunPosition(LEH_SITE.latitude, LEH_SITE.longitude, LEH_SITE.standardMeridian, raw.startDayOfYear, i);
+      const sun = sunPosition(
+        LEH_SITE.latitude,
+        LEH_SITE.longitude,
+        LEH_SITE.standardMeridian,
+        raw.startDayOfYear,
+        i,
+      );
       if (sun.zenith >= 87) continue;
       checked++;
       const closure = series.DNI![i]! * sun.cosZenith + series.DHI![i]!;
@@ -197,7 +237,12 @@ describe('T-25 acceptance test 6 -- LW_down: Swinbank fallback vs the measured p
     const rawNoLw = hourlyRaw({ T_amb, sourceElevation: null }, n);
     const measuredLw = [180, 185, 190, 195]; // deliberately offset from the Swinbank estimate
     const rawWithLw = hourlyRaw({ T_amb, LW_down: measuredLw, sourceElevation: null }, n);
-    const opts: NormaliseOptions = { site: LEH_SITE, targetStepSeconds: 3600, source: 'synthetic', label: 'lw test' };
+    const opts: NormaliseOptions = {
+      site: LEH_SITE,
+      targetStepSeconds: 3600,
+      source: 'synthetic',
+      label: 'lw test',
+    };
 
     const seriesNoLw = normaliseWeather(rawNoLw, opts);
     const seriesWithLw = normaliseWeather(rawWithLw, opts);
@@ -221,7 +266,13 @@ describe('T-25 acceptance test 7 -- the AUDIT.md night-GHI false positive is a w
     const dayOfYear = 15; // mid-January, short Leh winter day
     let sunriseHour = -1;
     for (let h = 0; h < 24; h++) {
-      const alt = sunPosition(LEH_SITE.latitude, LEH_SITE.longitude, LEH_SITE.standardMeridian, dayOfYear, h).altitude;
+      const alt = sunPosition(
+        LEH_SITE.latitude,
+        LEH_SITE.longitude,
+        LEH_SITE.standardMeridian,
+        dayOfYear,
+        h,
+      ).altitude;
       if (alt > 0) {
         sunriseHour = h;
         break;
@@ -232,13 +283,21 @@ describe('T-25 acceptance test 7 -- the AUDIT.md night-GHI false positive is a w
 
     const GHI1 = new Array(24).fill(0);
     GHI1[preSunriseHour] = 40;
-    const warningsPreSunrise = validateWeatherSeries(buildSeriesForValidate(GHI1, dayOfYear), LEH_SITE);
-    console.log(`TEST7 sunriseHour=${sunriseHour} preSunriseHour=${preSunriseHour} GHI=40 warnings=${JSON.stringify(warningsPreSunrise)}`);
+    const warningsPreSunrise = validateWeatherSeries(
+      buildSeriesForValidate(GHI1, dayOfYear),
+      LEH_SITE,
+    );
+    console.log(
+      `TEST7 sunriseHour=${sunriseHour} preSunriseHour=${preSunriseHour} GHI=40 warnings=${JSON.stringify(warningsPreSunrise)}`,
+    );
     expect(warningsPreSunrise.length).toBe(0);
 
     const GHI2 = new Array(24).fill(0);
     GHI2[2] = 300; // 02:00, deep winter night
-    const warningsDeepNight = validateWeatherSeries(buildSeriesForValidate(GHI2, dayOfYear), LEH_SITE);
+    const warningsDeepNight = validateWeatherSeries(
+      buildSeriesForValidate(GHI2, dayOfYear),
+      LEH_SITE,
+    );
     console.log(`TEST7 02:00 GHI=300 warnings=${JSON.stringify(warningsDeepNight)}`);
     expect(warningsDeepNight.length).toBe(1);
     expect(warningsDeepNight[0]).toContain('GHI[2]');
@@ -348,8 +407,13 @@ describe('T-25 acceptance test 12 -- no fetch anywhere in this package', () => {
 describe('T-25 acceptance test 13 -- normaliseWeather output feeds straight into simulate()', () => {
   it('meta.energyBalanceResidual < 1e-3', () => {
     const n = 24;
-    const T_amb_C = Array.from({ length: n }, (_, h) => -8 + 6 * Math.sin(((h - 15) / 24) * 2 * Math.PI));
-    const GHI = Array.from({ length: n }, (_, h) => (h >= 8 && h <= 16 ? 500 * Math.sin(((h - 8) / 8) * Math.PI) : 0));
+    const T_amb_C = Array.from(
+      { length: n },
+      (_, h) => -8 + 6 * Math.sin(((h - 15) / 24) * 2 * Math.PI),
+    );
+    const GHI = Array.from({ length: n }, (_, h) =>
+      h >= 8 && h <= 16 ? 500 * Math.sin(((h - 8) / 8) * Math.PI) : 0,
+    );
     const v_wind = new Array(n).fill(2);
     const raw: RawWeather = {
       stepSeconds: 3600,

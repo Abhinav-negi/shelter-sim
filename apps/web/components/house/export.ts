@@ -36,9 +36,14 @@ export function computeExportPixelSize(
  * resolves a PNG data URL a caller can hand to `<a download>` or attach to
  * the PPT deck directly.
  */
-export function exportSvgToPngDataUrl(svgEl: SVGSVGElement, targetWidthPx: number = PRESENTATION_EXPORT_WIDTH_PX): Promise<string> {
+export function exportSvgToPngDataUrl(
+  svgEl: SVGSVGElement,
+  targetWidthPx: number = PRESENTATION_EXPORT_WIDTH_PX,
+): Promise<string> {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return Promise.reject(new Error('exportSvgToPngDataUrl needs a browser (Image + canvas); none is available here.'));
+    return Promise.reject(
+      new Error('exportSvgToPngDataUrl needs a browser (Image + canvas); none is available here.'),
+    );
   }
   const viewBox = (svgEl.getAttribute('viewBox') ?? '0 0 1 1').split(/\s+/).map(Number);
   const [, , vbW, vbH] = viewBox;

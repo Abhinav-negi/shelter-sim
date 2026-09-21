@@ -10,7 +10,13 @@
 // above zero when its value is >= 0 at that timestep, and entirely below
 // zero when it is < 0 -- CONTRACTS.md §7.2's sign convention, made visual.
 
-import { area as d3area, stack as d3stack, stackOffsetDiverging, type Series, type SeriesPoint } from 'd3-shape';
+import {
+  area as d3area,
+  stack as d3stack,
+  stackOffsetDiverging,
+  type Series,
+  type SeriesPoint,
+} from 'd3-shape';
 import { scaleLinear } from 'd3-scale';
 import type { HeatFlows } from '@shelter/engine';
 import { PATHWAY_KEYS, type PathwayKey } from './pathways';
@@ -74,7 +80,12 @@ export interface StackedAreaLayout {
  * `StackedAreaChart.tsx` picks a fixed viewBox and lets CSS scale it, the
  * same pattern `HouseView.tsx` (T-46) already uses for a legible 400px view
  * (acceptance test 11). */
-export function buildStackedAreaLayout(heatFlows: HeatFlows, time: Float64Array, width: number, height: number): StackedAreaLayout {
+export function buildStackedAreaLayout(
+  heatFlows: HeatFlows,
+  time: Float64Array,
+  width: number,
+  height: number,
+): StackedAreaLayout {
   const data = toStackData(heatFlows, time);
   const series = computeStack(data);
   const xDomain: [number, number] = [data[0]?.hour ?? 0, data[data.length - 1]?.hour ?? 24];

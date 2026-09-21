@@ -21,13 +21,25 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { glazingById, materialById, PRESETS, tmyById } from '@shelter/data';
 import { asK, simulate, toK } from '@shelter/engine';
-import type { Building, Glazing, Material, Preset, SimulationRequest, Surface } from '@shelter/engine';
+import type {
+  Building,
+  Glazing,
+  Material,
+  Preset,
+  SimulationRequest,
+  Surface,
+} from '@shelter/engine';
 import { formatTempC } from '../../../lib/units';
 import { TempChart, type TempChartVariant } from './TempChart';
 import { dayMaxIndoor, dayMinIndoor, dayPoints, indoorAt0600 } from './series';
 import { buildXScale, buildYScale } from './scales';
 import { formatHourLabel } from './format';
-import { nearestPointIndex, toggleVariantVisibility, tooltipDataAt, type VariantSeries } from './interaction';
+import {
+  nearestPointIndex,
+  toggleVariantVisibility,
+  tooltipDataAt,
+  type VariantSeries,
+} from './interaction';
 import { VARIANT_COLORS } from './colors';
 
 // ---- shared fixture: the real bundled Leh preset, resolved and simulated
@@ -37,10 +49,12 @@ import { VARIANT_COLORS } from './colors';
 function resolvePreset(preset: Preset): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
 }
 
@@ -48,7 +62,12 @@ const lehPreset = PRESETS.find((p) => p.locationId === 'leh')!;
 const lehRequest = resolvePreset(lehPreset);
 const lehResult = simulate(lehRequest);
 
-function variant(id: string, label: string, req: SimulationRequest, result = simulate(req)): TempChartVariant {
+function variant(
+  id: string,
+  label: string,
+  req: SimulationRequest,
+  result = simulate(req),
+): TempChartVariant {
   return { id, label, result, weatherStartHour: req.weather.startHour };
 }
 
@@ -65,12 +84,18 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
 
   it('condition 2 -- the Leh preset comfort band is 15-24 °C, not 18-26', () => {
     const markup = renderToStaticMarkup(
-      <TempChart variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]} comfortBand={lehRequest.operation.comfortBand} />,
+      <TempChart
+        variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]}
+        comfortBand={lehRequest.operation.comfortBand}
+      />,
     );
     expect(markup).toContain('15.0 °C');
     expect(markup).toContain('24.0 °C');
     expect(markup).not.toContain('18.0 °C');
-    console.log('T-47 test 2 evidence -- comfort band label markup:', /Comfort band:[^<]*/.exec(markup)?.[0]);
+    console.log(
+      'T-47 test 2 evidence -- comfort band label markup:',
+      /Comfort band:[^<]*/.exec(markup)?.[0],
+    );
   });
 
   it('condition 3 -- the 06:00 annotation reads the same value as the tempAt0600 KPI card, to displayed precision', () => {
@@ -80,10 +105,18 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
     expect(chartText).toBe(kpiText);
 
     const markup = renderToStaticMarkup(
-      <TempChart variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]} comfortBand={lehRequest.operation.comfortBand} />,
+      <TempChart
+        variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]}
+        comfortBand={lehRequest.operation.comfortBand}
+      />,
     );
     expect(markup).toContain(`06:00: ${chartText}`);
-    console.log('T-47 test 3 evidence -- chart 06:00 value:', chartText, '| kpis.tempAt0600:', kpiText);
+    console.log(
+      'T-47 test 3 evidence -- chart 06:00 value:',
+      chartText,
+      '| kpis.tempAt0600:',
+      kpiText,
+    );
   });
 
   it('condition 4 -- four overlaid variants are distinguishable and individually toggleable', () => {
@@ -91,7 +124,10 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
       id: `v${i}`,
       label: `Variant ${i}`,
       color: VARIANT_COLORS[i]!,
-      points: dayPoints(lehResult, lehRequest.weather.startHour).map((p) => ({ ...p, indoorC: p.indoorC + i })),
+      points: dayPoints(lehResult, lehRequest.weather.startHour).map((p) => ({
+        ...p,
+        indoorC: p.indoorC + i,
+      })),
     }));
     // Distinguishable: 4 distinct colours, 1 per variant, in fixed order.
     expect(new Set(variants.map((v) => v.color)).size).toBe(4);
@@ -117,7 +153,10 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
     expect(vis.size).toBe(3);
     vis = toggleVariantVisibility(vis, 'v2');
     expect(vis.has('v2')).toBe(true);
-    console.log('T-47 test 4 evidence -- 4 variant colours:', variants.map((v) => v.color));
+    console.log(
+      'T-47 test 4 evidence -- 4 variant colours:',
+      variants.map((v) => v.color),
+    );
   });
 
   it('condition 5 -- K-03 shape check: heavy-mass night curve is not a plain exponential vs steel+PUF', () => {
@@ -131,7 +170,10 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
     const hours = [21, 0, 3, 6];
     const heavyVals = hours.map((h) => valAt(heavyResult, h));
     const lightVals = hours.map((h) => valAt(lightResult, h));
-    console.log('T-47 test 5 evidence -- heavy-mass (dense concrete) @21:00,00:00,03:00,06:00:', heavyVals);
+    console.log(
+      'T-47 test 5 evidence -- heavy-mass (dense concrete) @21:00,00:00,03:00,06:00:',
+      heavyVals,
+    );
     console.log('T-47 test 5 evidence -- steel+PUF @21:00,00:00,03:00,06:00:', lightVals);
 
     // Shape, not offset: compare NORMALISED hour-over-hour drops (each leg's
@@ -155,14 +197,22 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
 
   it('condition 6 -- the panel title contains the literal string "PS Deliverable 1"', () => {
     const markup = renderToStaticMarkup(
-      <TempChart variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]} comfortBand={lehRequest.operation.comfortBand} />,
+      <TempChart
+        variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]}
+        comfortBand={lehRequest.operation.comfortBand}
+      />,
     );
     expect(markup).toContain('PS Deliverable 1');
   });
 
   it('condition 7 -- hovering shows a tooltip with the time and both temperatures', () => {
     const points = dayPoints(lehResult, lehRequest.weather.startHour);
-    const series: VariantSeries = { id: 'leh', label: 'Leh baseline', color: VARIANT_COLORS[0]!, points };
+    const series: VariantSeries = {
+      id: 'leh',
+      label: 'Leh baseline',
+      color: VARIANT_COLORS[0]!,
+      points,
+    };
     const data = tooltipDataAt([series], 6);
     expect(data).not.toBeNull();
     expect(formatHourLabel(data!.hour)).toMatch(/^\d{2}:\d{2}$/);
@@ -170,12 +220,19 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
     expect(data!.entries[0]!.indoorC).not.toBeNaN();
 
     const markup = renderToStaticMarkup(
-      <TempChart variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]} comfortBand={lehRequest.operation.comfortBand} />,
+      <TempChart
+        variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]}
+        comfortBand={lehRequest.operation.comfortBand}
+      />,
     );
     // Structural: the hover-capture layer TempChart.tsx wires onMouseMove to
     // exists (real pointer events need a browser; see this file's header).
     expect(markup).toContain('data-testid="temp-hover-layer"');
-    console.log('T-47 test 7 evidence -- tooltip at hour 6:', { hourLabel: formatHourLabel(data!.hour), ambientC: data!.ambientC, indoorC: data!.entries[0]!.indoorC });
+    console.log('T-47 test 7 evidence -- tooltip at hour 6:', {
+      hourLabel: formatHourLabel(data!.hour),
+      ambientC: data!.ambientC,
+      indoorC: data!.entries[0]!.indoorC,
+    });
   });
 
   it('condition 8 -- renders a single-timestep result without dividing by zero', () => {
@@ -200,7 +257,9 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
   });
 
   it('condition 9 -- renders an empty state, not NaN, when there is no result', () => {
-    const markup = renderToStaticMarkup(<TempChart variants={[]} comfortBand={{ lower: toK(15) as any, upper: toK(24) as any }} />);
+    const markup = renderToStaticMarkup(
+      <TempChart variants={[]} comfortBand={{ lower: toK(15) as any, upper: toK(24) as any }} />,
+    );
     expect(markup).toContain('data-testid="temp-chart-empty"');
     expect(markup).not.toContain('NaN');
     console.log('T-47 test 9 evidence -- empty-state markup snippet:', markup.slice(0, 120));
@@ -208,7 +267,10 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
 
   it('condition 10/11 -- viewBox is sized to 400 (native pixels at the 400px breakpoint) and x/y ticks do not collide', () => {
     const markup = renderToStaticMarkup(
-      <TempChart variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]} comfortBand={lehRequest.operation.comfortBand} />,
+      <TempChart
+        variants={[variant('leh', 'Leh baseline', lehRequest, lehResult)]}
+        comfortBand={lehRequest.operation.comfortBand}
+      />,
     );
     expect(markup).toMatch(/viewBox="0 0 400 220"/);
     expect(markup).not.toMatch(/<svg[^>]*\swidth="\d/);
@@ -225,19 +287,35 @@ describe('T-47 temperature chart: series/scale/interaction logic', () => {
     for (let i = 1; i < yTickPositions.length; i++) {
       expect(yTickPositions[i]! - yTickPositions[i - 1]!).toBeGreaterThan(10); // >> an 8px label's height
     }
-    console.log('T-47 test 10/11 evidence -- x tick pixel positions:', xTickPositions, 'y tick pixel positions:', yTickPositions);
+    console.log(
+      'T-47 test 10/11 evidence -- x tick pixel positions:',
+      xTickPositions,
+      'y tick pixel positions:',
+      yTickPositions,
+    );
   });
 });
 
 // ============================== fixtures ==============================
 
-function toCFromResult(result: ReturnType<typeof simulate>, weatherStartHour: number, hour: number): number {
+function toCFromResult(
+  result: ReturnType<typeof simulate>,
+  weatherStartHour: number,
+  hour: number,
+): number {
   const points = dayPoints(result, weatherStartHour);
   const idx = nearestPointIndex(points, hour);
   return points[idx]!.indoorC;
 }
 
-function buildSurfaceWith(id: string, type: Surface['type'], tilt: number, azimuth: number, materialId: string, thickness: number): Surface {
+function buildSurfaceWith(
+  id: string,
+  type: Surface['type'],
+  tilt: number,
+  azimuth: number,
+  materialId: string,
+  thickness: number,
+): Surface {
   return {
     id,
     type,
@@ -317,7 +395,13 @@ function buildK03Fixtures(): { heavy: SimulationRequest; light: SimulationReques
     T_amb,
     GHI,
     v_wind,
-    provenance: { source: 'synthetic', label: 'T-47 K-03 test fixture', sourceElevation: null, lapseCorrectionK: 0, notes: [] },
+    provenance: {
+      source: 'synthetic',
+      label: 'T-47 K-03 test fixture',
+      sourceElevation: null,
+      lapseCorrectionK: 0,
+      notes: [],
+    },
   };
 
   function building(materialId: string, thickness: number): Building {

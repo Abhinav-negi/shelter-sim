@@ -9,7 +9,7 @@
 > **How this document was built:** by reading `log/CONTRACTS.md` §7.10 ("The
 > physics, restated" — the primary source, already anchored and cited) and then
 > every exported function in `packages/engine/src/{solar,surfaces,loads,envelope,
-> storage,solve}/`, plus `packages/engine/src/constants.ts`, `air.ts` and
+storage,solve}/`, plus `packages/engine/src/constants.ts`, `air.ts` and
 > `units.ts`. Where the code and `BLUEPRINT.md`/`ENGINE_BLUEPRINT.md` disagree,
 > **this document follows the code** (`log/CONTRACTS.md` §9, and see "Three
 > spot-checks" near the end of this file).
@@ -25,7 +25,7 @@
 
 - **Temperatures** are Kelvin everywhere inside `packages/engine`; Celsius exists
   only at the `toK`/`toC` seam (`units.ts`), used by `apps/web/lib/units.ts`.
-  Temperature *differences* are plain, unbranded `number` in Kelvin-degrees
+  Temperature _differences_ are plain, unbranded `number` in Kelvin-degrees
   (identical to Celsius-degrees, so branding a ΔT would invite a wrong conversion).
 - **Angles** are degrees at every function boundary; a function converts to
   radians internally via `rad()` and back via `deg()`. Any local variable holding
@@ -41,64 +41,64 @@
 
 ## 2. Symbol glossary
 
-**Citation:** symbols follow Duffie & Beckman, *Solar Engineering of Thermal
-Processes* (for all solar-geometry and irradiance symbols) and standard heat-
-transfer notation (Incropera & DeWitt, *Fundamentals of Heat and Mass Transfer*)
+**Citation:** symbols follow Duffie & Beckman, _Solar Engineering of Thermal
+Processes_ (for all solar-geometry and irradiance symbols) and standard heat-
+transfer notation (Incropera & DeWitt, _Fundamentals of Heat and Mass Transfer_)
 elsewhere; SI units per `LOG.md` §6 rule 5.
 **Implements:** `packages/engine/src/units.ts:rad`, `packages/engine/src/constants.ts`.
 
-| Symbol | Meaning | Unit |
-|---|---|---|
-| `T`, `T_amb`, `T_sky`, `T_surf`, `T_air`, `T_star`/`T_mrt`, `T_ground` | Temperature (node, ambient, sky, surface, indoor air, mean-radiant star node, ground) | K |
-| `Q1`…`Q11`, `Qaux` | The eleven heat pathways + auxiliary heating (§4) | W |
-| `dt`, `Δt` | Integration timestep | s |
-| `n` | Number of mesh nodes (a wall chain) or (in `luFactor`) matrix size | – |
-| `C`, `C_j` | Node capacitance (per node, or per unit area before multiplying by area) | J/K (or J/(m²·K)) |
-| `U` | Conductance (edge, interface, or whole-construction) | W/(m²·K) or W/K |
-| `k` | Thermal conductivity | W/(m·K) |
-| `ρ` (`rho`) | Density | kg/m³ |
-| `c` | Specific heat capacity | J/(kg·K) |
-| `a` | Thermal diffusivity, `a = k/(ρc)` | m²/s |
-| `d` | Penetration/damping depth | m |
-| `P` | Period of a periodic driver (86400 s daily, 365 d annual) | s |
-| `ω` (`omega`) | Angular frequency, `ω = 2π/P` | rad/s |
-| `f` | Decrement factor (amplitude ratio) | dimensionless, 0–1 |
-| `φ` (`phi`) | Time lag | h or s |
-| `σ` (`SIGMA`) | Stefan-Boltzmann constant | W/(m²·K⁴) |
-| `ε` (`epsilon`/`emissivity`) | Surface emissivity | 0–1 |
-| `α_s` (`alphaSolar`/`exteriorAbsorptivity`) | Solar absorptivity | 0–1 |
-| `h_o`, `h_i`, `h_r,sky`, `h_r,i` | Exterior convective, interior convective, sky-radiative, interior-radiative coefficients | W/(m²·K) |
-| `θ` (`theta`) | Angle of incidence (sun to surface normal) | deg (rad internally) |
-| `θ_z` (`thetaZ`, `sun.zenith`) | Solar zenith angle | deg |
-| `α_s`, `α` (altitude) | Solar altitude above the horizon | deg |
-| `β` (`beta`) | Surface tilt from horizontal | deg |
-| `γ_s`, `γ` (`gamma`) | Solar azimuth, surface azimuth (south = 0) | deg |
-| `δ` (`delta`, `declination`) | Solar declination | deg |
-| `φ` (`phi`, latitude) | Site latitude | deg N |
-| `ω` (`omega`, hour angle) | Solar hour angle, 15°/h from solar noon | deg |
-| `E` | Equation of time | min |
-| `GHI`, `DNI`, `DHI` | Global horizontal, direct normal, diffuse horizontal irradiance | W/m² |
-| `I0`, `I0n`, `I0h` | Extraterrestrial irradiance (normal, horizontal) | W/m² |
-| `k_t` | Clearness index, `GHI/I0h` | 0–1 |
-| `ρ_ground` (`groundAlbedo`) | Ground albedo | 0–1 |
-| `M` | Air-capacitance calibration multiplier | dimensionless (§9.9) |
-| `ACH` | Air changes per hour | h⁻¹ |
-| `ṁ` (`massFlow`) | Air mass flow rate | kg/s |
-| `U` (window), `SHGC`, `b0`, `IAM` | Glazing U-value, solar heat gain coefficient, IAM coefficient, incidence angle modifier | W/(m²·K), 0–1, dimensionless, 0–1 |
-| `z` | Depth below grade | m |
-| `T_mean`, `A_s` | Mean-annual soil temperature, annual amplitude | K |
-| `L_f` (`latentHeat`) | PCM latent heat of fusion | J/kg |
-| `c_apparent` | PCM apparent specific heat | J/(kg·K) |
-| `g(τ)` | PCM enthalpy antiderivative | J/kg |
-| `p(h)` | Atmospheric pressure at altitude `h` | Pa |
-| `h` (altitude context) | Site elevation | m |
-| `residual`, `E_net`, `E_gross`, `ΔStored` | Energy-balance terms (§4) | dimensionless, J, J, J |
-| `L_loc`, `L_st` | Site longitude, standard-meridian longitude | deg E |
-| `v` (windSpeed) | Wind speed | m/s |
-| `t_clock`, `t_solar` | Local clock time, solar time | h |
-| `n` (mesh context) | Diffuse fraction / clearness-index exponent variable is `k_t`; `n` in §7–§9 means day-of-year unless stated as node count (envelope/solve context) | 1–365, or count |
-| `Bi` | Biot number (lumped-capacitance validity criterion, §20) | dimensionless |
-| `K`, `B`, `D`, `S`, `y`, `z` | Block-matrix labels for the arrow/Schur factorisation (§22) — `K` block-diagonal chain conductance, `B`/`Bᵀ` chain-to-boundary coupling, `D` boundary self-coupling, `S` the 2×2 Schur complement, `y`/`z` the chain and boundary unknown vectors. Locally scoped to §22 only, not used elsewhere in this document. | W/K (matrix entries), K (solution vectors) |
+| Symbol                                                                 | Meaning                                                                                                                                                                                                                                                                                                             | Unit                                       |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `T`, `T_amb`, `T_sky`, `T_surf`, `T_air`, `T_star`/`T_mrt`, `T_ground` | Temperature (node, ambient, sky, surface, indoor air, mean-radiant star node, ground)                                                                                                                                                                                                                               | K                                          |
+| `Q1`…`Q11`, `Qaux`                                                     | The eleven heat pathways + auxiliary heating (§4)                                                                                                                                                                                                                                                                   | W                                          |
+| `dt`, `Δt`                                                             | Integration timestep                                                                                                                                                                                                                                                                                                | s                                          |
+| `n`                                                                    | Number of mesh nodes (a wall chain) or (in `luFactor`) matrix size                                                                                                                                                                                                                                                  | –                                          |
+| `C`, `C_j`                                                             | Node capacitance (per node, or per unit area before multiplying by area)                                                                                                                                                                                                                                            | J/K (or J/(m²·K))                          |
+| `U`                                                                    | Conductance (edge, interface, or whole-construction)                                                                                                                                                                                                                                                                | W/(m²·K) or W/K                            |
+| `k`                                                                    | Thermal conductivity                                                                                                                                                                                                                                                                                                | W/(m·K)                                    |
+| `ρ` (`rho`)                                                            | Density                                                                                                                                                                                                                                                                                                             | kg/m³                                      |
+| `c`                                                                    | Specific heat capacity                                                                                                                                                                                                                                                                                              | J/(kg·K)                                   |
+| `a`                                                                    | Thermal diffusivity, `a = k/(ρc)`                                                                                                                                                                                                                                                                                   | m²/s                                       |
+| `d`                                                                    | Penetration/damping depth                                                                                                                                                                                                                                                                                           | m                                          |
+| `P`                                                                    | Period of a periodic driver (86400 s daily, 365 d annual)                                                                                                                                                                                                                                                           | s                                          |
+| `ω` (`omega`)                                                          | Angular frequency, `ω = 2π/P`                                                                                                                                                                                                                                                                                       | rad/s                                      |
+| `f`                                                                    | Decrement factor (amplitude ratio)                                                                                                                                                                                                                                                                                  | dimensionless, 0–1                         |
+| `φ` (`phi`)                                                            | Time lag                                                                                                                                                                                                                                                                                                            | h or s                                     |
+| `σ` (`SIGMA`)                                                          | Stefan-Boltzmann constant                                                                                                                                                                                                                                                                                           | W/(m²·K⁴)                                  |
+| `ε` (`epsilon`/`emissivity`)                                           | Surface emissivity                                                                                                                                                                                                                                                                                                  | 0–1                                        |
+| `α_s` (`alphaSolar`/`exteriorAbsorptivity`)                            | Solar absorptivity                                                                                                                                                                                                                                                                                                  | 0–1                                        |
+| `h_o`, `h_i`, `h_r,sky`, `h_r,i`                                       | Exterior convective, interior convective, sky-radiative, interior-radiative coefficients                                                                                                                                                                                                                            | W/(m²·K)                                   |
+| `θ` (`theta`)                                                          | Angle of incidence (sun to surface normal)                                                                                                                                                                                                                                                                          | deg (rad internally)                       |
+| `θ_z` (`thetaZ`, `sun.zenith`)                                         | Solar zenith angle                                                                                                                                                                                                                                                                                                  | deg                                        |
+| `α_s`, `α` (altitude)                                                  | Solar altitude above the horizon                                                                                                                                                                                                                                                                                    | deg                                        |
+| `β` (`beta`)                                                           | Surface tilt from horizontal                                                                                                                                                                                                                                                                                        | deg                                        |
+| `γ_s`, `γ` (`gamma`)                                                   | Solar azimuth, surface azimuth (south = 0)                                                                                                                                                                                                                                                                          | deg                                        |
+| `δ` (`delta`, `declination`)                                           | Solar declination                                                                                                                                                                                                                                                                                                   | deg                                        |
+| `φ` (`phi`, latitude)                                                  | Site latitude                                                                                                                                                                                                                                                                                                       | deg N                                      |
+| `ω` (`omega`, hour angle)                                              | Solar hour angle, 15°/h from solar noon                                                                                                                                                                                                                                                                             | deg                                        |
+| `E`                                                                    | Equation of time                                                                                                                                                                                                                                                                                                    | min                                        |
+| `GHI`, `DNI`, `DHI`                                                    | Global horizontal, direct normal, diffuse horizontal irradiance                                                                                                                                                                                                                                                     | W/m²                                       |
+| `I0`, `I0n`, `I0h`                                                     | Extraterrestrial irradiance (normal, horizontal)                                                                                                                                                                                                                                                                    | W/m²                                       |
+| `k_t`                                                                  | Clearness index, `GHI/I0h`                                                                                                                                                                                                                                                                                          | 0–1                                        |
+| `ρ_ground` (`groundAlbedo`)                                            | Ground albedo                                                                                                                                                                                                                                                                                                       | 0–1                                        |
+| `M`                                                                    | Air-capacitance calibration multiplier                                                                                                                                                                                                                                                                              | dimensionless (§9.9)                       |
+| `ACH`                                                                  | Air changes per hour                                                                                                                                                                                                                                                                                                | h⁻¹                                        |
+| `ṁ` (`massFlow`)                                                       | Air mass flow rate                                                                                                                                                                                                                                                                                                  | kg/s                                       |
+| `U` (window), `SHGC`, `b0`, `IAM`                                      | Glazing U-value, solar heat gain coefficient, IAM coefficient, incidence angle modifier                                                                                                                                                                                                                             | W/(m²·K), 0–1, dimensionless, 0–1          |
+| `z`                                                                    | Depth below grade                                                                                                                                                                                                                                                                                                   | m                                          |
+| `T_mean`, `A_s`                                                        | Mean-annual soil temperature, annual amplitude                                                                                                                                                                                                                                                                      | K                                          |
+| `L_f` (`latentHeat`)                                                   | PCM latent heat of fusion                                                                                                                                                                                                                                                                                           | J/kg                                       |
+| `c_apparent`                                                           | PCM apparent specific heat                                                                                                                                                                                                                                                                                          | J/(kg·K)                                   |
+| `g(τ)`                                                                 | PCM enthalpy antiderivative                                                                                                                                                                                                                                                                                         | J/kg                                       |
+| `p(h)`                                                                 | Atmospheric pressure at altitude `h`                                                                                                                                                                                                                                                                                | Pa                                         |
+| `h` (altitude context)                                                 | Site elevation                                                                                                                                                                                                                                                                                                      | m                                          |
+| `residual`, `E_net`, `E_gross`, `ΔStored`                              | Energy-balance terms (§4)                                                                                                                                                                                                                                                                                           | dimensionless, J, J, J                     |
+| `L_loc`, `L_st`                                                        | Site longitude, standard-meridian longitude                                                                                                                                                                                                                                                                         | deg E                                      |
+| `v` (windSpeed)                                                        | Wind speed                                                                                                                                                                                                                                                                                                          | m/s                                        |
+| `t_clock`, `t_solar`                                                   | Local clock time, solar time                                                                                                                                                                                                                                                                                        | h                                          |
+| `n` (mesh context)                                                     | Diffuse fraction / clearness-index exponent variable is `k_t`; `n` in §7–§9 means day-of-year unless stated as node count (envelope/solve context)                                                                                                                                                                  | 1–365, or count                            |
+| `Bi`                                                                   | Biot number (lumped-capacitance validity criterion, §20)                                                                                                                                                                                                                                                            | dimensionless                              |
+| `K`, `B`, `D`, `S`, `y`, `z`                                           | Block-matrix labels for the arrow/Schur factorisation (§22) — `K` block-diagonal chain conductance, `B`/`Bᵀ` chain-to-boundary coupling, `D` boundary self-coupling, `S` the 2×2 Schur complement, `y`/`z` the chain and boundary unknown vectors. Locally scoped to §22 only, not used elsewhere in this document. | W/K (matrix entries), K (solution vectors) |
 
 ---
 
@@ -134,21 +134,21 @@ computed with this sign, every timestep).
 computed in `packages/engine/src/solve/integrator.ts:integrate`'s internal
 `record()` step):
 
-| # | Field name (as implemented) | Pathway | Sign |
-|---|---|---|---|
-| Q1 | `Q1_solarOpaque` | Solar absorbed on opaque exterior surfaces | ≥ 0 |
-| Q2 | `Q2_solarGlazed` | Solar transmitted through glazing | ≥ 0 |
-| Q3 | `Q3_extConvection` | Exterior surface ↔ ambient air convection | ± |
-| Q4 | `Q4_skyRadiation` | Exterior surface ↔ sky longwave | ≤ 0 normally |
-| Q5 | `Q5_envelopeConduction` | Conduction through the opaque envelope | ± internal |
-| Q6 | `Q6_intConvection` | Interior surface ↔ indoor air convection | ± internal |
-| Q7 | `Q7_interiorLongwave` | Interior surface ↔ interior surface longwave | ± internal |
-| Q8 | `Q8_windowConduction` | Conduction through glazing | ± |
-| Q9 | `Q9_infiltration` | Infiltration / ventilation air exchange | ± |
-| Q10 | `Q10_ground` | Conduction to ground through the floor | ± |
-| Q11 | `Q11_internalGains` | Internal gains (people, stove, livestock) | ≥ 0 |
-| — | `Qaux` | Auxiliary heating actually delivered | ≥ 0 |
-| — | `storageRate` | Rate of change of energy stored in the fabric | ± |
+| #   | Field name (as implemented) | Pathway                                       | Sign         |
+| --- | --------------------------- | --------------------------------------------- | ------------ |
+| Q1  | `Q1_solarOpaque`            | Solar absorbed on opaque exterior surfaces    | ≥ 0          |
+| Q2  | `Q2_solarGlazed`            | Solar transmitted through glazing             | ≥ 0          |
+| Q3  | `Q3_extConvection`          | Exterior surface ↔ ambient air convection     | ±            |
+| Q4  | `Q4_skyRadiation`           | Exterior surface ↔ sky longwave               | ≤ 0 normally |
+| Q5  | `Q5_envelopeConduction`     | Conduction through the opaque envelope        | ± internal   |
+| Q6  | `Q6_intConvection`          | Interior surface ↔ indoor air convection      | ± internal   |
+| Q7  | `Q7_interiorLongwave`       | Interior surface ↔ interior surface longwave  | ± internal   |
+| Q8  | `Q8_windowConduction`       | Conduction through glazing                    | ±            |
+| Q9  | `Q9_infiltration`           | Infiltration / ventilation air exchange       | ±            |
+| Q10 | `Q10_ground`                | Conduction to ground through the floor        | ±            |
+| Q11 | `Q11_internalGains`         | Internal gains (people, stove, livestock)     | ≥ 0          |
+| —   | `Qaux`                      | Auxiliary heating actually delivered          | ≥ 0          |
+| —   | `storageRate`               | Rate of change of energy stored in the fabric | ±            |
 
 ---
 
@@ -232,25 +232,25 @@ not a `C(T_end)·ΔT` approximation.
 **Implements:** `packages/engine/src/constants.ts` (every export below is
 `constants.ts:<NAME>`).
 
-| Constant | Value | Unit | Meaning |
-|---|---|---|---|
-| `SIGMA` | 5.670374419 × 10⁻⁸ | W/(m²·K⁴) | Stefan-Boltzmann constant |
-| `G_SC` | 1367 | W/m² | Solar constant |
-| `C_P_AIR` | 1005 | J/(kg·K) | Specific heat of air at constant pressure |
-| `R_AIR` | 287.05 | J/(kg·K) | Specific gas constant, dry air |
-| `P0` | 101325 | Pa | Sea-level standard atmospheric pressure |
-| `ACH_MIN` | 0.35 | h⁻¹ | Hard ventilation safety floor (never negotiable — `LOG.md` §6 rule 10) |
-| `LAPSE_RATE` | 6.5 × 10⁻³ | K/m | Environmental lapse rate (note: **per metre**, not per km) |
-| `T_MIN_PLAUSIBLE` | 173 | K (−100 °C) | Solver-divergence lower guard |
-| `T_MAX_PLAUSIBLE` | 373 | K (+100 °C) | Solver-divergence upper guard |
-| `PRIMARY_METRIC` | `'auxEnergyKWhPerDay'` | identifier | Primary ranking metric name; lower is better |
-| `SECONDARY_METRIC` | `'tempAt0600'` | identifier | Tie-break metric name; higher is better |
-| `RANK_NOISE_FLOOR` | 0.05 | kWh/day | Variants closer than this on the primary metric are TIED, never ordered |
-| `ACH_MIN_COMBUSTION_ALLOWANCE` | 0.35 | h⁻¹ | Added to `ACH_MIN` when a design has unvented combustion (floors the bukhari case at 0.70 ACH) |
-| `KEROSENE_KWH_PER_L` | 10.4 | kWh/L | Chemical energy per litre of kerosene (~37.6 MJ/L) |
-| `KEROSENE_STOVE_EFFICIENCY` | 0.55 | dimensionless, 0–1 | Typical unvented kerosene heater, delivered/chemical |
-| `KEROSENE_CO2_KG_PER_L` | 2.5 | kgCO₂/L | CO₂ emitted per litre of kerosene burned |
-| `KEROSENE_INR_PER_L` | 80 | INR/L | **Assumption, not a sourced figure** — no source document states a kerosene price; must stay editable in the UI and cited wherever quoted |
+| Constant                       | Value                  | Unit               | Meaning                                                                                                                                   |
+| ------------------------------ | ---------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `SIGMA`                        | 5.670374419 × 10⁻⁸     | W/(m²·K⁴)          | Stefan-Boltzmann constant                                                                                                                 |
+| `G_SC`                         | 1367                   | W/m²               | Solar constant                                                                                                                            |
+| `C_P_AIR`                      | 1005                   | J/(kg·K)           | Specific heat of air at constant pressure                                                                                                 |
+| `R_AIR`                        | 287.05                 | J/(kg·K)           | Specific gas constant, dry air                                                                                                            |
+| `P0`                           | 101325                 | Pa                 | Sea-level standard atmospheric pressure                                                                                                   |
+| `ACH_MIN`                      | 0.35                   | h⁻¹                | Hard ventilation safety floor (never negotiable — `LOG.md` §6 rule 10)                                                                    |
+| `LAPSE_RATE`                   | 6.5 × 10⁻³             | K/m                | Environmental lapse rate (note: **per metre**, not per km)                                                                                |
+| `T_MIN_PLAUSIBLE`              | 173                    | K (−100 °C)        | Solver-divergence lower guard                                                                                                             |
+| `T_MAX_PLAUSIBLE`              | 373                    | K (+100 °C)        | Solver-divergence upper guard                                                                                                             |
+| `PRIMARY_METRIC`               | `'auxEnergyKWhPerDay'` | identifier         | Primary ranking metric name; lower is better                                                                                              |
+| `SECONDARY_METRIC`             | `'tempAt0600'`         | identifier         | Tie-break metric name; higher is better                                                                                                   |
+| `RANK_NOISE_FLOOR`             | 0.05                   | kWh/day            | Variants closer than this on the primary metric are TIED, never ordered                                                                   |
+| `ACH_MIN_COMBUSTION_ALLOWANCE` | 0.35                   | h⁻¹                | Added to `ACH_MIN` when a design has unvented combustion (floors the bukhari case at 0.70 ACH)                                            |
+| `KEROSENE_KWH_PER_L`           | 10.4                   | kWh/L              | Chemical energy per litre of kerosene (~37.6 MJ/L)                                                                                        |
+| `KEROSENE_STOVE_EFFICIENCY`    | 0.55                   | dimensionless, 0–1 | Typical unvented kerosene heater, delivered/chemical                                                                                      |
+| `KEROSENE_CO2_KG_PER_L`        | 2.5                    | kgCO₂/L            | CO₂ emitted per litre of kerosene burned                                                                                                  |
+| `KEROSENE_INR_PER_L`           | 80                     | INR/L              | **Assumption, not a sourced figure** — no source document states a kerosene price; must stay editable in the UI and cited wherever quoted |
 
 ---
 
@@ -263,12 +263,12 @@ made mandatory for both `h_o` and `h_i`, not an optional refinement).
 `packages/engine/src/air.ts:airDensity`, `packages/engine/src/air.ts:densityRatio`,
 `packages/engine/src/air.ts:convectionAltitudeFactor`.
 
-*Note: `air.ts` sits outside the six directories this task's acceptance test 2
+_Note: `air.ts` sits outside the six directories this task's acceptance test 2
 diffs against (`solar/`, `surfaces/`, `loads/`, `envelope/`, `storage/`,
 `solve/`), but it is cited by name in `CONTRACTS.md` §7.10 as the first physics
 module and is a direct dependency of `surfaces/exterior.ts`, `surfaces/
 interior.ts` and `loads/infiltration.ts`, so it is documented here for
-completeness.*
+completeness._
 
 ```
 p(h)   = P0 · (1 − 2.25577e-5 · h)^5.25588              [Pa]           pressureAtAltitude
@@ -294,7 +294,7 @@ becomes available, and recalibrate the exponent.
 
 ## 7. Solar position — `packages/engine/src/solar/geometry.ts`
 
-**Citation:** Duffie & Beckman, *Solar Engineering of Thermal Processes*, ch. 1
+**Citation:** Duffie & Beckman, _Solar Engineering of Thermal Processes_, ch. 1
 (eq. 1.5.3 equation of time via Spencer 1971; eq. 1.6.3 incidence angle);
 Cooper (1969) declination; `BLUEPRINT.md` 5.3, `ENGINE_BLUEPRINT.md` 5.3.
 **Implements:** `packages/engine/src/solar/geometry.ts:equationOfTime`,
@@ -323,7 +323,7 @@ L_loc) + E`. That sign is inverted for this project's east-positive-longitude
 convention. Converting Duffie & Beckman's own west-positive form to east-
 positive gives `t_solar = t_clock + 4·(L_loc − L_st) + E`, which is what the
 code implements and what the worked example (Leh sits west of the 82.5°E IST
-meridian, so solar noon is ~12:20 IST, ~19.7 min *after* clock noon) requires.
+meridian, so solar noon is ~12:20 IST, ~19.7 min _after_ clock noon) requires.
 The "peak altitude = 32.4° on 21 Dec" self-check cannot catch this sign error
 (it is evaluated at solar noon either way); `solarNoonClockHour()` and the
 sunrise/sunset tests do.
@@ -432,13 +432,13 @@ project's one `// SIMPLIFICATION:` source marker
 (`packages/engine/src/solar/shading.ts:20`), quoted in full:
 
 > `SIMPLIFICATION: both functions gate the BEAM component only. Diffuse and
-> ground-reflected irradiance are left untouched by design (global rule 13).
-> Ceiling: this overestimates gain on a deeply overhung or steeply
-> horizon-blocked surface, because a blocked horizon or a deep overhang also
-> blocks part of the sky dome the surface would otherwise see, not just the
-> sun's disc. Upgrade path: a sky-dome view-factor reduction applied to the
-> diffuse term (e.g. a horizon-corrected isotropic sky-view factor), tracked
-> for EQUATIONS.md / the limitations list (T-64).`
+ground-reflected irradiance are left untouched by design (global rule 13).
+Ceiling: this overestimates gain on a deeply overhung or steeply
+horizon-blocked surface, because a blocked horizon or a deep overhang also
+blocks part of the sky dome the surface would otherwise see, not just the
+sun's disc. Upgrade path: a sky-dome view-factor reduction applied to the
+diffuse term (e.g. a horizon-corrected isotropic sky-view factor), tracked
+for EQUATIONS.md / the limitations list (T-64).`
 
 Note also (per the file's own header comment): neither `horizonBlockFactor` nor
 `overhangSunlitFraction` is wired into `solve/integrator.ts`'s forcing vector
@@ -450,8 +450,8 @@ simplification, and is out of scope for this document.
 
 ## 11. Envelope meshing and transient conduction — `packages/engine/src/envelope/mesh.ts`
 
-**Citation:** finite-volume heat-conduction discretisation (Patankar, *Numerical
-Heat Transfer and Fluid Flow*; Incropera & DeWitt ch. 4–5); `BLUEPRINT.md` 5.6,
+**Citation:** finite-volume heat-conduction discretisation (Patankar, _Numerical
+Heat Transfer and Fluid Flow_; Incropera & DeWitt ch. 4–5); `BLUEPRINT.md` 5.6,
 5.6.4, 5.6.5; `ENGINE_BLUEPRINT.md` 5.5.
 **Implements:** `packages/engine/src/envelope/mesh.ts:diffusivity`,
 `:penetrationDepth`, `:sliceCount`, `:buildWallMesh`, `:constructionUValue`,
@@ -471,7 +471,7 @@ construction U    1 / (1/h_o + 1/fabricU + 1/h_i)                               
 **Documented deviation from `CONTRACTS.md` §7.10's restated formula (spot-check
 #2, §11 below), matching the code:** `CONTRACTS.md` §7.10 restates the
 interface conductance as **harmonic**, `1 / (dx_A/(2k_A) + dx_B/(2k_B))`, which
-is the correct rule for a mesh whose nodes sit at *control-volume centres*. The
+is the correct rule for a mesh whose nodes sit at _control-volume centres_. The
 code on disk (`envelope/mesh.ts`, lines 11–27) places nodes **on** every layer
 interface and both outer faces instead, so every edge lies wholly inside one
 material: its conductance is simply `k/dx`, and the harmonic-mean formula is
@@ -481,7 +481,7 @@ then analytically exact (`fabricU = 1/Σ(1/U_i) = 1/Σ(L/k)` exactly) rather tha
 approximated, and the arithmetic-vs-harmonic bug that validation Test 3
 targets is impossible by construction, not merely guarded against. This
 document states the code's actual mechanism; `CONTRACTS.md` §7.10's harmonic
-phrasing describes the *effect* correctly (no arithmetic-mean bug reaches the
+phrasing describes the _effect_ correctly (no arithmetic-mean bug reaches the
 result) but not the literal per-edge formula the code evaluates.
 
 **Anchors** (`CONTRACTS.md` §7.10): dense concrete `a = 8.29e-7 m²/s`,
@@ -499,7 +499,7 @@ simplifications.
 
 ## 12. Analytical validation apparatus — `packages/engine/src/envelope/response.ts`
 
-**Citation:** Carslaw & Jaeger, *Conduction of Heat in Solids*, semi-infinite
+**Citation:** Carslaw & Jaeger, _Conduction of Heat in Solids_, semi-infinite
 solid driven by a periodic surface temperature (the closed-form solution
 `buildWallMesh`'s numerical scheme is checked against); `BLUEPRINT.md` 5.6.5 /
 validation Test 2.
@@ -522,12 +522,12 @@ Numerical reproduction:
                    a wave arriving LATER has a MORE NEGATIVE phase.
 ```
 
-| Material | a [m²/s] | d [m] | f @ 0.20 m | φ [h] | f @ 0.40 m | φ [h] |
-|---|---|---|---|---|---|---|
-| Dense concrete | 8.29e-7 | 0.151 | 0.266 | 5.1 | 0.070 | 10.1 |
-| Rammed earth | 5.98e-7 | 0.128 | 0.209 | 6.0 | 0.044 | 11.9 |
-| Fired brick | 4.49e-7 | 0.111 | 0.164 | 6.9 | 0.027 | 13.7 |
-| EPS | 1.29e-6 | 0.188 | 0.344 | 4.1 | 0.118 | 8.1 |
+| Material       | a [m²/s] | d [m] | f @ 0.20 m | φ [h] | f @ 0.40 m | φ [h] |
+| -------------- | -------- | ----- | ---------- | ----- | ---------- | ----- |
+| Dense concrete | 8.29e-7  | 0.151 | 0.266      | 5.1   | 0.070      | 10.1  |
+| Rammed earth   | 5.98e-7  | 0.128 | 0.209      | 6.0   | 0.044      | 11.9  |
+| Fired brick    | 4.49e-7  | 0.111 | 0.164      | 6.9   | 0.027      | 13.7  |
+| EPS            | 1.29e-6  | 0.188 | 0.344      | 4.1   | 0.118      | 8.1   |
 
 **Pass gate:** numerical `f` within **2 %** of analytical, `φ` within **10
 minutes** (`CONTRACTS.md` §7.10). This is not a simplification — it is the
@@ -554,11 +554,11 @@ h_r,sky(ε, T_s, T_sky) = 4·ε·σ·((T_s+T_sky)/2)³                       [W/
 **Documented deviation from McAdams (spot-check candidate, matches
 `CONTRACTS.md` §7.10 exactly):** `h_o` is **convective-only**, deliberately
 **not** the McAdams combined coefficient `5.7 + 3.8v`. McAdams bundles
-convection *and* radiation into one number; this engine models longwave
+convection _and_ radiation into one number; this engine models longwave
 radiation to the sky explicitly and separately via `hRadSky`, so using McAdams
 here would double-count `Q4`. The altitude factor `f_conv` (`air.ts:
 convectionAltitudeFactor`) is **mandatory, not a refinement** (`AUDIT.md` F-5):
-convection is heat carried away *by air*, and at 3500 m there is 35% less air
+convection is heat carried away _by air_, and at 3500 m there is 35% less air
 to carry it.
 
 **Anchors** (`CONTRACTS.md` §7.10): `skyTemperature(258 K) = 228.7 K ± 0.5`
@@ -695,8 +695,8 @@ exterior envelope area (opaque + glazed, summed once — see the function's own
 doc comment for the exact caller contract this coupling depends on).
 **Ceiling:** not derived from any measured blower-door data for a real Ladakhi
 shelter — it is chosen so the glazing sweep produces the non-monotonic optimum
-`CHALLENGE.md` C-06/K-05 requires, i.e. it is a *plausible* coupling, not a
-*calibrated* one. **Upgrade path:** the constant's own doc comment states it
+`CHALLENGE.md` C-06/K-05 requires, i.e. it is a _plausible_ coupling, not a
+_calibrated_ one. **Upgrade path:** the constant's own doc comment states it
 directly — "TUNE THIS if a measured blower-door figure for a real Ladakhi
 shelter ever becomes available."
 
@@ -761,8 +761,8 @@ values (`T_mean = 279.15 K`, `A_s = 12 K`) the January value is **above** a
 is why semi-buried/earth-bermed shelters perform well at altitude.
 
 **Simplification** (`SLAB_SOIL_CONDUCTANCE`, inline `ponytail:` comment,
-quoted): *"fixed equivalent soil resistance; upgrade to the full ISO 13370
-perimeter/area method if ground losses ever dominate a result."* This is
+quoted): _"fixed equivalent soil resistance; upgrade to the full ISO 13370
+perimeter/area method if ground losses ever dominate a result."_ This is
 distinct from the ten named simplifications (§12) because its own comment
 already states the ceiling and upgrade path inline and it is a single scalar,
 not a modelling choice with independent product consequences; it is recorded
@@ -846,15 +846,15 @@ water tank can stratify (hot water floats), which this single node cannot
 represent." **Upgrade path:** "a vertical stack of 2–4 lumped nodes coupled by
 conduction, if a design ever needs it."
 
-*(Note: this module already correctly uses "well-mixed"; see §27 for the
+_(Note: this module already correctly uses "well-mixed"; see §27 for the
 repo-wide confirmation that this document never reuses `BLUEPRINT.md` 1.4's
-opposite, incorrect word either.)*
+opposite, incorrect word either.)_
 
 ---
 
 ## 21. Linear algebra: dense LU and the Thomas algorithm — `packages/engine/src/solve/linalg.ts`
 
-**Citation:** Golub & Van Loan, *Matrix Computations* — LU factorisation with
+**Citation:** Golub & Van Loan, _Matrix Computations_ — LU factorisation with
 partial pivoting; the Thomas algorithm for tridiagonal systems (standard
 numerical linear algebra, not a project-specific method); `WORKERS.md` W-05.
 **Implements:** `packages/engine/src/solve/linalg.ts:luFactor`,
@@ -939,7 +939,7 @@ their host surface.
 ## 24. Time integration: backward Euler and the coefficient-refresh contract — `packages/engine/src/solve/integrator.ts`
 
 **Citation:** implicit (backward) Euler, a standard unconditionally-stable ODE
-method (Press, Teukolsky, Vetterling & Flannery, *Numerical Recipes*, ch. 17);
+method (Press, Teukolsky, Vetterling & Flannery, _Numerical Recipes_, ch. 17);
 `BLUEPRINT.md` Part 6; `CHALLENGE.md` C-08 (the 1 mm steel-skin case that rules
 out any explicit scheme); `CHALLENGE.md` C-10 (convergence-based spin-up).
 **Implements:** `packages/engine/src/solve/integrator.ts:integrate` (the only
@@ -966,8 +966,8 @@ temperature-linearised (§13), and `h_i`/`h_r,i` flip by flow direction (§14) �
 all three live inside the matrix and all three genuinely change every step.
 Refactorising a dense system every timestep costs `O(n³) × ~1440 steps/day`
 (~20 s per run, the defect `AUDIT.md` F-1 found). **Ceiling, measured, quoted
-from the source:** *"within one hour the surface temperatures move a degree or
-two, which perturbs the T³ radiation linearisation by well under 2%."*
+from the source:** _"within one hour the surface temperatures move a degree or
+two, which perturbs the T³ radiation linearisation by well under 2%."_
 **Upgrade path:** refresh more often (e.g. every N minutes instead of every
 hour) if a future case — a very light, fast-responding fabric such as bare tin
 — is ever shown to need it; the O(n) arrow/Schur factorisation (§22) makes
@@ -1025,7 +1025,7 @@ interior.ts, solar/shading.ts, loads/infiltration.ts}`.
 2. **Uniform surface temperatures.**
    Implements: `envelope/mesh.ts:buildWallMesh` (one 1-D through-thickness
    chain per `Surface`, at a single azimuth/tilt); `solve/assemble.ts:
-   buildModel`. Ceiling: a differently-shaded or partially-glazed region of one
+buildModel`. Ceiling: a differently-shaded or partially-glazed region of one
    nominal wall is invisible to the model — the whole surface area shares one
    temperature field. Upgrade path: the caller can already subdivide a
    physical wall into multiple `Surface` entries with today's schema (no
@@ -1049,10 +1049,10 @@ interior.ts, solar/shading.ts, loads/infiltration.ts}`.
 
 5. **Lumped thermal-bridge factor instead of 3-D corner conduction.**
    Implements: `solve/integrator.ts:freezeCoefficients` (`bridge =
-   building.thermalBridgeFactor`, multiplying fabric conductance `U_i` at
+building.thermalBridgeFactor`, multiplying fabric conductance `U_i` at
    every mesh edge, `u = sn.mesh.U[i] · area · bridge`). Ceiling: a single
    scalar inflates the whole-surface conductance uniformly; it cannot locate
-   *where* the extra loss concentrates (a corner, a lintel, a parapet — the
+   _where_ the extra loss concentrates (a corner, a lintel, a parapet — the
    junctions where bridging actually occurs), and different junction types get
    the same multiplier. Upgrade path: explicit 3-D (or 2-D cross-section) FEA
    of individual junction details, producing a per-junction-type correction
@@ -1081,7 +1081,7 @@ interior.ts, solar/shading.ts, loads/infiltration.ts}`.
 
 8. **Coefficients frozen per weather-hour, with the measured error.** (Full
    text and the quoted ≤2% figure in §24.) Implements: `solve/integrator.ts:
-   freezeCoefficients` (called from the internal `runOneDay`, itself called
+freezeCoefficients` (called from the internal `runOneDay`, itself called
    from the exported `integrate`). Ceiling: perturbs the `T³` sky-radiation
    linearisation by "well under 2%" within one hour (measured, quoted from the
    source). Upgrade path: refresh more often for a fast-responding fabric if a
@@ -1117,11 +1117,11 @@ Per this task's acceptance test 9 ("confirm the document matches the code, not
 the blueprint, where the two differ"):
 
 1. **Solar time sign** (§7). `ENGINE_BLUEPRINT.md` 5.3 prints `t_solar =
-   t_clock + 4·(L_st − L_loc) + E`. The code
+t_clock + 4·(L_st − L_loc) + E`. The code
    (`solar/geometry.ts:solarTimeHours`) implements `t_solar = t_clock +
-   4·(L_loc − L_st) + E` — the opposite sign — and this document states the
+4·(L_loc − L_st) + E` — the opposite sign — and this document states the
    code's formula, because it is the one that gives Leh (west of the 82.5°E
-   IST meridian) a solar noon ~19.7 minutes *after* clock noon, matching both
+   IST meridian) a solar noon ~19.7 minutes _after_ clock noon, matching both
    documents' own worked example.
 
 2. **Envelope interface conductance** (§11). `CONTRACTS.md` §7.10 restates the
@@ -1131,7 +1131,7 @@ the blueprint, where the two differ"):
    material and its conductance is simply `k/dx` — the harmonic-mean formula
    is never actually evaluated because there is never a two-material edge for
    it to average. This document states the code's literal per-edge mechanism
-   (§11) in addition to noting that the *effect* CONTRACTS.md describes (no
+   (§11) in addition to noting that the _effect_ CONTRACTS.md describes (no
    arithmetic-mean bug reaches the result) still holds.
 
 3. **Interior convection coefficients** (§14). `BLUEPRINT.md` also describes a

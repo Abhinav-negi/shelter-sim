@@ -76,7 +76,9 @@ describe('T-34 lib/repo/materials.ts', () => {
     expect(rows.length).toBe(MATERIALS.length);
     for (const r of rows) expect(r.source.trim().length).toBeGreaterThan(0);
     // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-    console.log(`T-34 test 5: listMaterials(live) returned ${rows.length} rows, all with non-empty source`);
+    console.log(
+      `T-34 test 5: listMaterials(live) returned ${rows.length} rows, all with non-empty source`,
+    );
   });
 
   it('6. DB OFF: listMaterials() returns the code catalogue, same length and ids', async () => {
@@ -86,24 +88,22 @@ describe('T-34 lib/repo/materials.ts', () => {
     expect(rows.length).toBe(MATERIALS.length);
     expect(rows.map((r) => r.id).sort()).toEqual(MATERIALS.map((m) => m.id).sort());
     // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-    console.log(`T-34 test 6: listMaterials(DB off) returned ${rows.length} rows, ids match the code catalogue`);
+    console.log(
+      `T-34 test 6: listMaterials(DB off) returned ${rows.length} rows, ids match the code catalogue`,
+    );
   });
 
-  it(
-    '7. DB UNREACHABLE: listMaterials() falls back to the code catalogue within 5s',
-    async () => {
-      process.env.DATABASE_URL = BOGUS_DATABASE_URL;
-      const { listMaterials } = await freshRepo();
-      const start = Date.now();
-      const rows = await listMaterials();
-      const elapsedMs = Date.now() - start;
-      expect(rows.length).toBe(MATERIALS.length);
-      expect(elapsedMs).toBeLessThan(5000);
-      // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-      console.log(`T-34 test 7: listMaterials(unreachable) fell back in ${elapsedMs}ms`);
-    },
-    7000,
-  );
+  it('7. DB UNREACHABLE: listMaterials() falls back to the code catalogue within 5s', async () => {
+    process.env.DATABASE_URL = BOGUS_DATABASE_URL;
+    const { listMaterials } = await freshRepo();
+    const start = Date.now();
+    const rows = await listMaterials();
+    const elapsedMs = Date.now() - start;
+    expect(rows.length).toBe(MATERIALS.length);
+    expect(elapsedMs).toBeLessThan(5000);
+    // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
+    console.log(`T-34 test 7: listMaterials(unreachable) fell back in ${elapsedMs}ms`);
+  }, 7000);
 
   it('8. getMaterial("nope") returns null in all three modes', async () => {
     process.env.DATABASE_URL = LIVE_DATABASE_URL;

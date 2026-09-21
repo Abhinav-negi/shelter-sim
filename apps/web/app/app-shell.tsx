@@ -137,13 +137,18 @@ export function AppShell({ initialRequest, initialResult, initialPresetId }: App
         <div className="tab-content" role="tabpanel">
           {appState.activeTab === 'temp' &&
             (appState.result ? (
-              <TempChart variants={tempVariants} comfortBand={appState.request.operation.comfortBand} />
+              <TempChart
+                variants={tempVariants}
+                comfortBand={appState.request.operation.comfortBand}
+              />
             ) : (
               <Placeholder label="No result yet" testId="slot-tab-temp-empty" />
             ))}
           {appState.activeTab === 'solar' && <SolarPanel />}
           {appState.activeTab === 'heatflow' && <HeatFlowPanel result={appState.result} />}
-          {appState.activeTab === 'grid' && <Placeholder label="Survival grid (T-50)" testId="slot-tab-grid" />}
+          {appState.activeTab === 'grid' && (
+            <Placeholder label="Survival grid (T-50)" testId="slot-tab-grid" />
+          )}
         </div>
       </main>
 

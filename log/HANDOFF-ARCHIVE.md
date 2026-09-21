@@ -104,6 +104,7 @@ package roots (not inside gitignored `dist/`) can cause phantom build failures �
 **Completed this session: NONE.** Session 8 reached the ≥40% context stop threshold (ORCHESTRATOR.md §8) during startup ritual and initial planning, before delegating any work. No tasks were claimed, no worktrees created, no merges performed. Ledger stays at **54 / 73**, unchanged from session 7's handoff.
 
 **Session 8 startup verification (completed):**
+
 - Toolchain verified: Node v24.20.0, npm 11.19.0
 - Test suite: **GREEN** (45 files, 487 passed, 10 skipped, exit 0)
 - Performance: 34.4 ms/run simulate, 3.40 s 100-variant sweep
@@ -117,7 +118,7 @@ package roots (not inside gitignored `dist/`) can cause phantom build failures �
 
 1. **HIGHEST PRIORITY, explicitly called out by session 7** — Add `t()`/`registerMessages` calls into `components/inputs/SimpleForm.tsx` and `components/kpis/KpiColumn.tsx` (both already `[x]`: T-47, T-51) so T-52's locale switch actually changes their labels. This is what T-52's own acceptance test 11 is still missing. Small, well-bounded, single-Area task. Session 8 verified these two files currently have zero i18n calls (`grep` confirmed both render 100% hardcoded English JSX), exactly matching session 7's finding. **This unblocks T-52 from `[!]` → `[x]`.**
 
-2. Wire T-53's `<DayNightAnimation>` into `HouseView`/`app-shell.tsx` (no overlay slot exists yet — T-53's own Evidence block flags this). 
+2. Wire T-53's `<DayNightAnimation>` into `HouseView`/`app-shell.tsx` (no overlay slot exists yet — T-53's own Evidence block flags this).
 
 3. T-66 (PWA/offline) — more ready than before (T-52's banner and T-71/T-73's wiring both landed), but acceptance tests 9 and 11 still need T-57 (AI template fallback) and T-50 (survival grid), neither done — expect a partial/blocked result if claimed now, same shape as T-44.
 
@@ -191,7 +192,7 @@ exporters byte-exact and round-trip clean, a real live-edited-constant KPI chang
 (no PDF library). **Two tests genuinely blocked by files outside this task's allow-list, both
 verified real by the orchestrator directly** (`grep`-confirmed `slot-assumptions` was still a bare
 placeholder and `SimpleForm.tsx`/`KpiColumn.tsx` call no `t()`/`registerMessages` anywhere): test 8
-(printed output needing the panel actually wired into the page) and test 11 (Hindi changing *every*
+(printed output needing the panel actually wired into the page) and test 11 (Hindi changing _every_
 basic-panel/KPI label, not just this task's own). **Test 8's gap was closed same-session by T-73**
 (below); **test 11's gap is still open** — see Recommended next step.
 
@@ -208,15 +209,16 @@ than trust the pre-interruption plan — same recovery pattern as prior sessions
 confirmed across a fourth session.
 
 **Orchestrator-caught, non-obvious issues this session (both fixed, neither a subagent's fault):**
+
 - **A phantom build failure from stale `.tsbuildinfo` files.** `packages/engine/tsconfig.tsbuildinfo`
   and `packages/optimise/tsconfig.tsbuildinfo` live at the package **root**, not inside the gitignored
   `dist/`. Deleting `dist/` for a clean verification build left these stale, and `tsc -b` then reported
   8 fabricated type errors in `sweep.ts` that don't exist on a truly fresh checkout (confirmed via a
   disposable worktree at the pre-session commit — clean). Fix: `find packages -name "*.tsbuildinfo"
-  -delete` alongside any `rm -rf packages/*/dist` before trusting a build result.
+-delete` alongside any `rm -rf packages/*/dist` before trusting a build result.
 - **Two stale dashboard-arithmetic drifts caught mid-merge**, same class of bug LOG.md's own §5 note
   already warns about (two branches independently flipping different tasks against a shared stale
-  baseline auto-merges to the *smaller* of the two counts, silently). Area I's row and Area F's own
+  baseline auto-merges to the _smaller_ of the two counts, silently). Area I's row and Area F's own
   denominator (a fresh miscount of mine, 13 vs the true 12 at the time) were both hand-corrected —
   see the dashboard's own inline note for the arithmetic.
 - **Master's own local `dev.db` was never migrated this session until the very last verification
@@ -245,6 +247,7 @@ order once those land: T-52 needs its own continuation once its two gaps close; 
 stay transitively blocked on T-54; T-63 stays blocked on T-23 (human-owned NOAA comparison).
 
 **Carried forward from prior sessions, still unaddressed (not touched this session):**
+
 - **T-61 (multi-day runs, Area B/H) stays `[!]`** — unchanged, still needs a human decision on
   rewording acceptance test 9's literal 8×-10× figure (see prior HANDOFFs for full detail).
 - **Real engine bug, still live:** `transposition.ts`'s HDKR `Rb` clamp — unchanged, still needs a

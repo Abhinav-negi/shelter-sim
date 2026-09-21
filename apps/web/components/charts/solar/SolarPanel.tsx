@@ -23,7 +23,9 @@ export function SolarPanel() {
 
   return (
     <section data-testid="solar-panel">
-      <h2 style={{ fontSize: '1.1rem', margin: '0 0 0.75rem' }}>PS Deliverable 2 — Solar thermal energy captured</h2>
+      <h2 style={{ fontSize: '1.1rem', margin: '0 0 0.75rem' }}>
+        PS Deliverable 2 — Solar thermal energy captured
+      </h2>
       {result === null ? (
         <p data-testid="solar-empty-state" style={{ color: '#64748b' }}>
           No simulation result yet — run a simulation to see solar capture.

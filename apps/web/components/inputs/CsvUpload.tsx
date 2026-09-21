@@ -40,7 +40,9 @@ export function CsvUpload({ startDayOfYear, site, onWeatherParsed }: CsvUploadPr
 
   return (
     <div data-testid="csv-upload">
-      <label htmlFor={inputId}>Or upload your own weather CSV (columns: T_amb_C, GHI, v_wind)</label>
+      <label htmlFor={inputId}>
+        Or upload your own weather CSV (columns: T_amb_C, GHI, v_wind)
+      </label>
       <input
         id={inputId}
         ref={fileRef}
@@ -51,12 +53,14 @@ export function CsvUpload({ startDayOfYear, site, onWeatherParsed }: CsvUploadPr
           if (file) void handleFile(file);
         }}
       />
-      {fileName && rowErrors.length === 0 && <p style={{ fontSize: 12, color: '#166534' }}>Loaded {fileName}.</p>}
+      {fileName && rowErrors.length === 0 && (
+        <p style={{ fontSize: 12, color: '#166534' }}>Loaded {fileName}.</p>
+      )}
       {rowErrors.length > 0 && (
         <div role="alert" data-testid="csv-errors" style={{ fontSize: 12, color: '#991b1b' }}>
           <p>
-            {fileName} could not be used ({rowErrors.length} problem{rowErrors.length === 1 ? '' : 's'}). The weather already loaded is
-            unchanged.
+            {fileName} could not be used ({rowErrors.length} problem
+            {rowErrors.length === 1 ? '' : 's'}). The weather already loaded is unchanged.
           </p>
           <ul>
             {rowErrors.slice(0, 20).map((e, i) => (

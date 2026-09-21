@@ -42,10 +42,7 @@ describe('T-59 acceptance test 1 -- exactly 18 scenarios with unique ids', () =>
     expect(scenarios.length).toBe(18);
     const ids = scenarios.map((s) => s.id);
     expect(new Set(ids).size).toBe(18);
-    console.log(
-      'TEST1',
-      JSON.stringify(scenarios.map((s) => ({ id: s.id, name: s.name }))),
-    );
+    console.log('TEST1', JSON.stringify(scenarios.map((s) => ({ id: s.id, name: s.name }))));
   });
 });
 
@@ -60,7 +57,16 @@ describe('T-59 acceptance test 2 -- the twelve monthly scenarios cover all twelv
     }
     const months = monthly.map((s) => monthOf(s.startDayOfYear));
     expect(new Set(months).size).toBe(12);
-    console.log('TEST2', JSON.stringify(monthly.map((s) => ({ id: s.id, dayOfYear: s.startDayOfYear, month: monthOf(s.startDayOfYear) + 1 }))));
+    console.log(
+      'TEST2',
+      JSON.stringify(
+        monthly.map((s) => ({
+          id: s.id,
+          dayOfYear: s.startDayOfYear,
+          month: monthOf(s.startDayOfYear) + 1,
+        })),
+      ),
+    );
   });
 });
 
@@ -73,7 +79,9 @@ describe('T-59 acceptance test 3 -- the coldest day is exhaustively the coldest'
     for (let d = 0; d < meanT.length; d++) {
       expect(meanT[d]!).toBeGreaterThanOrEqual(claimedMean);
     }
-    console.log(`TEST3 coldest dayOfYear=${coldest.startDayOfYear} meanC=${(claimedMean - 273.15).toFixed(2)}`);
+    console.log(
+      `TEST3 coldest dayOfYear=${coldest.startDayOfYear} meanC=${(claimedMean - 273.15).toFixed(2)}`,
+    );
   });
 });
 
@@ -86,7 +94,9 @@ describe('T-59 acceptance test 4 -- the hottest day is exhaustively the hottest'
     for (let d = 0; d < meanT.length; d++) {
       expect(meanT[d]!).toBeLessThanOrEqual(claimedMean);
     }
-    console.log(`TEST4 hottest dayOfYear=${hottest.startDayOfYear} meanC=${(claimedMean - 273.15).toFixed(2)}`);
+    console.log(
+      `TEST4 hottest dayOfYear=${hottest.startDayOfYear} meanC=${(claimedMean - 273.15).toFixed(2)}`,
+    );
   });
 });
 
@@ -145,15 +155,21 @@ describe('T-59 acceptance test 6 -- the sunless streak is genuinely the longest 
 });
 
 describe('T-59 acceptance test 7 -- the clear cold night is colder in sky terms than the coldest day', () => {
-  it('daytime k_t exceeds the clear-sky threshold, and sky temp at 03:00 is lower than the coldest day\'s', () => {
+  it("daytime k_t exceeds the clear-sky threshold, and sky temp at 03:00 is lower than the coldest day's", () => {
     const clearNight = scenarios.find((s) => s.kind === 'clearColdNight')!;
     const coldest = scenarios.find((s) => s.kind === 'coldest')!;
 
     const clearNightIdx = (clearNight.startDayOfYear - lehSeries.startDayOfYear) * 24;
     const coldestIdx = (coldest.startDayOfYear - lehSeries.startDayOfYear) * 24;
 
-    const skyClearNightAt3 = skyTemperature(lehSeries.T_amb[clearNightIdx + 3]!, lehSeries.LW_down?.[clearNightIdx + 3]);
-    const skyColdestAt3 = skyTemperature(lehSeries.T_amb[coldestIdx + 3]!, lehSeries.LW_down?.[coldestIdx + 3]);
+    const skyClearNightAt3 = skyTemperature(
+      lehSeries.T_amb[clearNightIdx + 3]!,
+      lehSeries.LW_down?.[clearNightIdx + 3],
+    );
+    const skyColdestAt3 = skyTemperature(
+      lehSeries.T_amb[coldestIdx + 3]!,
+      lehSeries.LW_down?.[coldestIdx + 3],
+    );
 
     expect(skyClearNightAt3).toBeLessThan(skyColdestAt3);
 
@@ -171,7 +187,10 @@ describe('T-59 acceptance test 8 -- every sourceNote is non-empty and names its 
       expect(s.sourceNote.length).toBeGreaterThan(20);
       expect(s.sourceNote).toMatch(/leh\.json|record|nasa-power|bundled-tmy/i);
     }
-    console.log('TEST8', JSON.stringify(scenarios.map((s) => ({ id: s.id, sourceNoteLen: s.sourceNote.length }))));
+    console.log(
+      'TEST8',
+      JSON.stringify(scenarios.map((s) => ({ id: s.id, sourceNoteLen: s.sourceNote.length }))),
+    );
   });
 });
 
@@ -185,15 +204,18 @@ describe('T-59 acceptance test 9 -- every threshold constant is exported with a 
       JSON.stringify({
         OVERCAST_GHI_THRESHOLD_WHM2: {
           value: OVERCAST_GHI_THRESHOLD_WHM2,
-          comment: 'overcast classification for the sunless streak -- separates genuinely cloudy (low k_t) days from cloudless low-sun-angle winter days; raise/lower per src/scenarios.ts comment',
+          comment:
+            'overcast classification for the sunless streak -- separates genuinely cloudy (low k_t) days from cloudless low-sun-angle winter days; raise/lower per src/scenarios.ts comment',
         },
         CLEAR_SKY_KT_THRESHOLD: {
           value: CLEAR_SKY_KT_THRESHOLD,
-          comment: 'daytime clearness index above which a day counts "clear" for the clear-cold-night scenario; sits mid-plateau (0.55-0.65 all select the same night in the Leh record)',
+          comment:
+            'daytime clearness index above which a day counts "clear" for the clear-cold-night scenario; sits mid-plateau (0.55-0.65 all select the same night in the Leh record)',
         },
         DESIGN_WINTER_PERCENTILE: {
           value: DESIGN_WINTER_PERCENTILE,
-          comment: '1-in-100 design winter day = 1st percentile (nearest-rank) of daily mean temperature; standard professional practice for a cold-but-not-freak design condition',
+          comment:
+            '1-in-100 design winter day = 1st percentile (nearest-rank) of daily mean temperature; standard professional practice for a cold-but-not-freak design condition',
         },
       }),
     );
@@ -212,7 +234,11 @@ describe('T-59 acceptance test 10 -- scenarioWeather output length matches days 
     console.log(
       'TEST10',
       JSON.stringify(
-        scenarios.map((s) => ({ id: s.id, days: s.days, expectedLen: (s.days * 24) / (lehSeries.stepSeconds / 3600) })),
+        scenarios.map((s) => ({
+          id: s.id,
+          days: s.days,
+          expectedLen: (s.days * 24) / (lehSeries.stepSeconds / 3600),
+        })),
       ),
     );
   });
@@ -230,7 +256,10 @@ describe('T-59 acceptance test 11 -- scenarioWeather preserves provenance and ap
     // Original series must not be mutated by any slice.
     const originalNoteCount = lehSeries.provenance.notes.length;
     expect(lehSeries.provenance.notes.length).toBe(originalNoteCount);
-    console.log('TEST11 sample note=' + JSON.stringify(scenarioWeather(lehSeries, scenarios[0]!).provenance.notes.slice(-1)));
+    console.log(
+      'TEST11 sample note=' +
+        JSON.stringify(scenarioWeather(lehSeries, scenarios[0]!).provenance.notes.slice(-1)),
+    );
   });
 });
 

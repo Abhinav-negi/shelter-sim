@@ -15,7 +15,13 @@
 import os from 'node:os';
 import { describe, it, expect, afterEach } from 'vitest';
 import { simulate, toK, EngineError } from '@shelter/engine';
-import type { Material, Glazing, Surface, SimulationRequest, SimulationResult } from '@shelter/engine';
+import type {
+  Material,
+  Glazing,
+  Surface,
+  SimulationRequest,
+  SimulationResult,
+} from '@shelter/engine';
 import { createPool, getPool, PoolWorkerCrashError, type PoolWithDebug } from '../lib/pool.js';
 
 const MATERIAL: Material = {
@@ -110,7 +116,13 @@ function baseRequest(opts: { gains?: number; tol?: number; cap?: number } = {}):
       T_amb,
       GHI,
       v_wind,
-      provenance: { source: 'synthetic', label: 'T-40 test fixture', sourceElevation: null, lapseCorrectionK: 0, notes: [] },
+      provenance: {
+        source: 'synthetic',
+        label: 'T-40 test fixture',
+        sourceElevation: null,
+        lapseCorrectionK: 0,
+        notes: [],
+      },
     },
     materials: { [MATERIAL.id]: MATERIAL },
     glazings: { [GLAZING.id]: GLAZING },
@@ -182,7 +194,9 @@ describe('T-40 worker-thread pool', () => {
     expect(viaPool.temperatures.indoorAir).toBeInstanceOf(Float64Array);
     expect(viaPool.temperatures.ambient).toBeInstanceOf(Float64Array);
     expect(viaPool.heatFlows.Q1_solarOpaque).toBeInstanceOf(Float64Array);
-    console.log('  [test 2] deep-equal to in-process simulate(), all series arrived as Float64Array: PASS');
+    console.log(
+      '  [test 2] deep-equal to in-process simulate(), all series arrived as Float64Array: PASS',
+    );
   });
 
   it('3. runMany(100) beats 100 sequential run() calls by at least size*0.5', async () => {
@@ -194,7 +208,9 @@ describe('T-40 worker-thread pool', () => {
     // a noisy one dominated by fixed per-call overhead.
     const size = 4;
     const p = pool(size);
-    const reqs = Array.from({ length: 100 }, (_, i) => baseRequest({ gains: 100 + i, tol: 0.02, cap: 30 }));
+    const reqs = Array.from({ length: 100 }, (_, i) =>
+      baseRequest({ gains: 100 + i, tol: 0.02, cap: 30 }),
+    );
 
     // JIT warm-up, evenly across every worker, BEFORE either timed phase.
     // pump() always fills the first free slot it finds, so a purely sequential
@@ -211,7 +227,9 @@ describe('T-40 worker-thread pool', () => {
     // runMany's own round-robin dispatch (pump() fills every free slot before
     // any of them frees up again) touches every worker, unlike a sequential loop.
     await p.runMany(
-      Array.from({ length: size * 8 }, (_, i) => baseRequest({ gains: 100 + i, tol: 0.02, cap: 30 })),
+      Array.from({ length: size * 8 }, (_, i) =>
+        baseRequest({ gains: 100 + i, tol: 0.02, cap: 30 }),
+      ),
       () => {},
     );
 
@@ -237,7 +255,9 @@ describe('T-40 worker-thread pool', () => {
     const reqs = Array.from({ length: 100 }, (_, i) => baseRequest({ gains: 100 + i }));
 
     await p.runMany(reqs, () => {});
-    console.log(`  [test 4] pool size = ${size}, workersCreated after 100-variant runMany = ${p.workersCreated}`);
+    console.log(
+      `  [test 4] pool size = ${size}, workersCreated after 100-variant runMany = ${p.workersCreated}`,
+    );
     expect(p.workersCreated).toBe(size);
   });
 
@@ -248,7 +268,9 @@ describe('T-40 worker-thread pool', () => {
 
     await p.runMany(reqs, (done) => calls.push(done));
 
-    console.log(`  [test 5] onProgress call count = ${calls.length}, last value = ${calls[calls.length - 1]}`);
+    console.log(
+      `  [test 5] onProgress call count = ${calls.length}, last value = ${calls[calls.length - 1]}`,
+    );
     expect(calls.length).toBe(100);
     for (let i = 1; i < calls.length; i++) expect(calls[i]).toBeGreaterThan(calls[i - 1]!);
     expect(calls[calls.length - 1]).toBe(100);
@@ -274,7 +296,9 @@ describe('T-40 worker-thread pool', () => {
     clearInterval(timer);
 
     const onTimePercent = ticks > 0 ? (100 * (ticks - late)) / ticks : 100;
-    console.log(`  [test 6] timer ticks = ${ticks}, late (> ${LATE_THRESHOLD_MS}ms) = ${late}, on-time = ${onTimePercent.toFixed(1)}%`);
+    console.log(
+      `  [test 6] timer ticks = ${ticks}, late (> ${LATE_THRESHOLD_MS}ms) = ${late}, on-time = ${onTimePercent.toFixed(1)}%`,
+    );
     expect(ticks).toBeGreaterThan(0);
     expect(onTimePercent).toBeGreaterThanOrEqual(95);
   });
@@ -295,7 +319,9 @@ describe('T-40 worker-thread pool', () => {
       await new Promise((r) => setTimeout(r, 5));
     }
     const elapsedMs = performance.now() - t0;
-    console.log(`  [test 7] active workers after abort settle = ${p.active}, elapsed = ${elapsedMs.toFixed(1)} ms`);
+    console.log(
+      `  [test 7] active workers after abort settle = ${p.active}, elapsed = ${elapsedMs.toFixed(1)} ms`,
+    );
     expect(p.active).toBe(0);
     expect(elapsedMs).toBeLessThan(2000);
   });
@@ -333,7 +359,9 @@ describe('T-40 worker-thread pool', () => {
     const result = await p.run(baseRequest());
     const after = p.size;
 
-    console.log(`  [test 9] size before = ${before}, during = ${during}, after = ${after}; recovery run succeeded = ${result.meta.timesteps > 0}`);
+    console.log(
+      `  [test 9] size before = ${before}, during = ${during}, after = ${after}; recovery run succeeded = ${result.meta.timesteps > 0}`,
+    );
     expect(before).toBe(3);
     expect(during).toBe(3);
     expect(after).toBe(3);
@@ -353,9 +381,12 @@ describe('T-40 worker-thread pool', () => {
     // ever resolves the task whose `id` equals the response's `id`.
     let mismatches = 0;
     for (let i = 1; i < N; i++) {
-      if (results[i]!.kpis.auxEnergyKWhPerDay > results[i - 1]!.kpis.auxEnergyKWhPerDay + 1e-6) mismatches++;
+      if (results[i]!.kpis.auxEnergyKWhPerDay > results[i - 1]!.kpis.auxEnergyKWhPerDay + 1e-6)
+        mismatches++;
     }
-    console.log(`  [test 10] ${N} requests threaded through the pool, non-monotonic (mismatched) adjacent pairs = ${mismatches}`);
+    console.log(
+      `  [test 10] ${N} requests threaded through the pool, non-monotonic (mismatched) adjacent pairs = ${mismatches}`,
+    );
     expect(results.length).toBe(N);
     expect(mismatches).toBe(0);
   }, 60_000);

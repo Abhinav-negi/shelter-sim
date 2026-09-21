@@ -25,12 +25,7 @@ import type { Material, SimulationRequest, WeatherSeries } from '@shelter/engine
 import { actions, useStore } from '../../lib/store';
 import { t, type Locale } from '../../lib/i18n';
 import './messages';
-import {
-  GLAZINGS,
-  OCCUPANCY_PRESETS,
-  PRESET_SUMMARIES,
-  TMY_LOCATIONS,
-} from './catalog';
+import { GLAZINGS, OCCUPANCY_PRESETS, PRESET_SUMMARIES, TMY_LOCATIONS } from './catalog';
 import { useMaterialsCatalogue } from './materialsApi';
 import {
   ORIENTATIONS,
@@ -116,7 +111,9 @@ function MaterialSelect({
       </label>
       <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
         {materials.length === 0 && (
-          <option value={value}>{value || t('inputs.simpleForm.materialSelect.loading', locale)}</option>
+          <option value={value}>
+            {value || t('inputs.simpleForm.materialSelect.loading', locale)}
+          </option>
         )}
         {materials.map((m) => (
           <option key={m.id} value={m.id}>
@@ -124,7 +121,9 @@ function MaterialSelect({
           </option>
         ))}
       </select>
-      {selected?.blurb && <p style={{ fontSize: 12, color: '#475569', margin: '2px 0' }}>{selected.blurb}</p>}
+      {selected?.blurb && (
+        <p style={{ fontSize: 12, color: '#475569', margin: '2px 0' }}>{selected.blurb}</p>
+      )}
       {selected?.source && (
         <details>
           <summary style={{ cursor: 'pointer', fontSize: 12 }}>
@@ -161,14 +160,21 @@ export function SimpleForm() {
   const size = currentSize(request.building);
 
   return (
-    <form aria-label="Simple design form" style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: '100%' }}>
+    <form
+      aria-label="Simple design form"
+      style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: '100%' }}
+    >
       {/* Error state (AREA F header rule: every component renders correctly in
        * loading/empty/error/offline). A bad combination of basic-panel values
        * (an extreme thickness, an oversized window) can make the physics
        * genuinely diverge or fail validation -- this says so plainly instead
        * of leaving the rest of the app silently stuck on stale numbers. */}
       {state.status === 'error' && state.error && (
-        <p role="alert" data-testid="simple-form-error" style={{ fontSize: 13, color: '#991b1b', margin: 0 }}>
+        <p
+          role="alert"
+          data-testid="simple-form-error"
+          style={{ fontSize: 13, color: '#991b1b', margin: 0 }}
+        >
           {t('inputs.simpleForm.error', locale).replace('{message}', state.error.message)}
         </p>
       )}
@@ -227,14 +233,19 @@ export function SimpleForm() {
             if (!e.target.value) return;
             const dayOfYear = isoDateToDayOfYear(e.target.value);
             const full = fullYearWeatherRef.current;
-            update({ ...request, weather: sliceWeatherToDay(full, dayOfYear, request.options.simulationDays) });
+            update({
+              ...request,
+              weather: sliceWeatherToDay(full, dayOfYear, request.options.simulationDays),
+            });
           }}
         />
       </div>
 
       {/* 3. SIZE */}
       <fieldset data-testid="control-size">
-        <legend title={t('inputs.simpleForm.size.title', locale)}>{t('inputs.simpleForm.size.legend', locale)}</legend>
+        <legend title={t('inputs.simpleForm.size.title', locale)}>
+          {t('inputs.simpleForm.size.legend', locale)}
+        </legend>
         <label htmlFor="input-length">{t('inputs.simpleForm.size.length', locale)}</label>
         <input
           id="input-length"
@@ -439,6 +450,8 @@ export function SimpleForm() {
  * SOME valid value, never a blank one (acceptance test 4). */
 function inferOccupancyPresetId(request: SimulationRequest): string {
   const gains = request.operation.internalGainsSchedule;
-  const match = OCCUPANCY_PRESETS.find((o) => o.internalGainsSchedule.every((v, i) => v === gains[i]));
+  const match = OCCUPANCY_PRESETS.find((o) =>
+    o.internalGainsSchedule.every((v, i) => v === gains[i]),
+  );
   return match?.id ?? OCCUPANCY_PRESETS[0]!.id;
 }

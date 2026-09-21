@@ -80,7 +80,8 @@ const NASA_SOURCE_ELEVATION_M = 4120;
 
 function buildNasaPowerFixture() {
   const hours = ['00', '01', '02', '03', '04', '05'];
-  const mkField = (values: number[]) => Object.fromEntries(hours.map((h, i) => [`20230601${h}`, values[i]]));
+  const mkField = (values: number[]) =>
+    Object.fromEntries(hours.map((h, i) => [`20230601${h}`, values[i]]));
   return {
     header: { fill_value: -999 },
     geometry: { coordinates: [TEST_BODY.longitude, TEST_BODY.latitude, NASA_SOURCE_ELEVATION_M] },
@@ -100,14 +101,19 @@ function buildNasaPowerFixture() {
 }
 
 function okJsonResponse(json: unknown): Response {
-  return new Response(JSON.stringify(json), { status: 200, headers: { 'content-type': 'application/json' } });
+  return new Response(JSON.stringify(json), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  });
 }
 
 beforeEach(async () => {
   process.env.NEXT_PUBLIC_ENABLE_LIVE_WEATHER = 'true';
   process.env.DATABASE_URL = LIVE_DATABASE_URL;
   await disconnectStash();
-  await raw.weatherCache.deleteMany({ where: { latitude: TEST_BODY.latitude, longitude: TEST_BODY.longitude } });
+  await raw.weatherCache.deleteMany({
+    where: { latitude: TEST_BODY.latitude, longitude: TEST_BODY.longitude },
+  });
   vi.restoreAllMocks();
 });
 
@@ -127,7 +133,9 @@ describe('T-37 /api/weather', () => {
     const res = await POST(postRequest(TEST_BODY));
     const body = await res.json();
     const after = await countWeatherRows();
-    console.log(`TEST1_STATUS=${res.status} TEST1_CODE=${body.code} rows_before=${before} rows_after=${after} fetch_calls=${fetchSpy.mock.calls.length}`);
+    console.log(
+      `TEST1_STATUS=${res.status} TEST1_CODE=${body.code} rows_before=${before} rows_after=${after} fetch_calls=${fetchSpy.mock.calls.length}`,
+    );
     expect(res.status).toBe(501);
     expect(body.code).toBe('LIVE_WEATHER_DISABLED');
     expect(after).toBe(before);
@@ -174,7 +182,9 @@ describe('T-37 /api/weather', () => {
   });
 
   it('4: cache hit makes zero additional upstream calls', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okJsonResponse(buildNasaPowerFixture()));
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(okJsonResponse(buildNasaPowerFixture()));
     const { POST: POST1 } = await freshRoute();
     await POST1(postRequest(TEST_BODY));
     const callsAfterFirst = fetchSpy.mock.calls.length;
@@ -240,7 +250,9 @@ describe('T-37 /api/weather', () => {
     const res = await POST(postRequest({}));
     const body = await res.json();
     const after = await countWeatherRows();
-    console.log(`TEST8_status=${res.status} TEST8_code=${body.code} TEST8_detail_len=${body.detail?.length} rows_before=${before} rows_after=${after}`);
+    console.log(
+      `TEST8_status=${res.status} TEST8_code=${body.code} TEST8_detail_len=${body.detail?.length} rows_before=${before} rows_after=${after}`,
+    );
     expect(res.status).toBe(400);
     expect(body.code).toBe('INVALID_INPUT');
     expect(Array.isArray(body.detail)).toBe(true);
@@ -272,12 +284,18 @@ describe('T-37 /api/weather', () => {
   });
 
   it('11: no secrets -- grep finds only the two base-URL vars and the flag', () => {
-    const output = execFileSync('grep', ['-n', 'api_key\\|apiKey\\|Bearer\\|process.env', ROUTE_FILE], { encoding: 'utf-8' });
+    const output = execFileSync(
+      'grep',
+      ['-n', 'api_key\\|apiKey\\|Bearer\\|process.env', ROUTE_FILE],
+      { encoding: 'utf-8' },
+    );
     const lines = output.trim().split('\n');
     console.log(`TEST11_lines=\n${output}`);
     for (const line of lines) {
       expect(line).not.toMatch(/api_key|apiKey|Bearer/);
-      expect(line).toMatch(/NASA_POWER_BASE_URL|OPEN_METEO_BASE_URL|NEXT_PUBLIC_ENABLE_LIVE_WEATHER/);
+      expect(line).toMatch(
+        /NASA_POWER_BASE_URL|OPEN_METEO_BASE_URL|NEXT_PUBLIC_ENABLE_LIVE_WEATHER/,
+      );
     }
   });
 });

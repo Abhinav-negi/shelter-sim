@@ -27,7 +27,11 @@ const J_TO_KWH = 1 / 3.6e6;
  * because this function does not know which real Surface (if any) it is
  * being asked about.
  */
-export function groundReflectedKWhPerM2(request: SimulationRequest, tiltDeg: number, groundAlbedo: number): number {
+export function groundReflectedKWhPerM2(
+  request: SimulationRequest,
+  tiltDeg: number,
+  groundAlbedo: number,
+): number {
   const { weather, options } = request;
   const samplesPerDay = Math.round(86400 / weather.stepSeconds); // scenarioWeather's own convention, @shelter/data
   const windowSamples = Math.min(weather.GHI.length, options.simulationDays * samplesPerDay);

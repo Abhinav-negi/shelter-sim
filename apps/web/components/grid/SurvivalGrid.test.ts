@@ -20,11 +20,24 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import { simulate, toK, asK } from '@shelter/engine';
-import type { Material, Glazing, Surface, SimulationRequest, SimulationResult } from '@shelter/engine';
+import type {
+  Material,
+  Glazing,
+  Surface,
+  SimulationRequest,
+  SimulationResult,
+} from '@shelter/engine';
 import { tmyById, buildScenarios, scenarioWeather, type Scenario } from '@shelter/data';
 import type { ScenarioResult } from '../../lib/store';
 import { bandFor, MIN_ACCEPTABLE_K, SURVIVAL_THRESHOLD_K, BAND_LABEL } from './band';
-import { buildRow, buildRows, deriveGridState, offlineNote, progressText, EMPTY_STATE_TEXT } from './rows';
+import {
+  buildRow,
+  buildRows,
+  deriveGridState,
+  offlineNote,
+  progressText,
+  EMPTY_STATE_TEXT,
+} from './rows';
 import { scenarioMetaFor, SCENARIO_COUNT } from './scenario-meta';
 
 // ============================== fixture (mirrors apps/web/test/api-simulate.test.ts's baseRequest) ==============================
@@ -70,7 +83,10 @@ function buildSurface(id: string, type: Surface['type'], tilt: number, azimuth: 
 /** A small, physically valid request around a real TMY-derived scenario
  * window. Loose-ish spin-up (tol/cap) so eighteen real runs stay fast in
  * CI -- same pattern as apps/web/test/pool.test.ts's baseRequest(). */
-function requestForScenario(weather: SimulationRequest['weather'], days: number): SimulationRequest {
+function requestForScenario(
+  weather: SimulationRequest['weather'],
+  days: number,
+): SimulationRequest {
   return {
     site: {
       id: 't50-leh',
@@ -134,7 +150,9 @@ beforeAll(() => {
     const result = simulate(requestForScenario(weather, s.days));
     return { scenarioId: s.id, kpis: result.kpis, meta: result.meta };
   });
-  sampleFullResult = simulate(requestForScenario(scenarioWeather(lehSeries, scenarios[0]!), scenarios[0]!.days));
+  sampleFullResult = simulate(
+    requestForScenario(scenarioWeather(lehSeries, scenarios[0]!), scenarios[0]!.days),
+  );
 }, 60_000);
 
 describe('T-50 survival grid', () => {
@@ -174,13 +192,23 @@ describe('T-50 survival grid', () => {
 
   it('condition 5: rows fill incrementally, halfway point observed', () => {
     const half = scenarioResults.slice(0, 9);
-    const halfState = deriveGridState({ online: true, scenarios: half, offlineResult: null, presetId: 'leh' });
+    const halfState = deriveGridState({
+      online: true,
+      scenarios: half,
+      offlineResult: null,
+      presetId: 'leh',
+    });
     expect(halfState.rows.length).toBe(9);
     expect(halfState.showEmptyState).toBe(false);
     expect(halfState.showProgress).toBe(true);
     expect(progressText(9)).toBe('9 of 18 scenarios computed');
 
-    const fullState = deriveGridState({ online: true, scenarios: scenarioResults, offlineResult: null, presetId: 'leh' });
+    const fullState = deriveGridState({
+      online: true,
+      scenarios: scenarioResults,
+      offlineResult: null,
+      presetId: 'leh',
+    });
     expect(fullState.rows.length).toBe(18);
     expect(fullState.showProgress).toBe(false);
 
@@ -195,11 +223,20 @@ describe('T-50 survival grid', () => {
     expect(rows.every((r) => r.status === 'ok')).toBe(true);
     expect(max).toBeLessThan(0.001);
     // eslint-disable-next-line no-console
-    console.log('Max energy-balance residual across all 18 scenarios:', max, `(${(max * 100).toFixed(4)}%)`);
+    console.log(
+      'Max energy-balance residual across all 18 scenarios:',
+      max,
+      `(${(max * 100).toFixed(4)}%)`,
+    );
   });
 
   it('condition 7: offline shows exactly one row plus an explicit note', () => {
-    const state = deriveGridState({ online: false, scenarios: scenarioResults, offlineResult: sampleFullResult, presetId: 'leh' });
+    const state = deriveGridState({
+      online: false,
+      scenarios: scenarioResults,
+      offlineResult: sampleFullResult,
+      presetId: 'leh',
+    });
     expect(state.rows.length).toBe(1);
     expect(state.rows[0]!.status).toBe('ok');
     expect(state.note).toBeTruthy();
@@ -210,14 +247,24 @@ describe('T-50 survival grid', () => {
 
     // Even with no local result yet (edge case around hydration), it is
     // never a blank table -- the note doubles as the empty-state text.
-    const noResultYet = deriveGridState({ online: false, scenarios: null, offlineResult: null, presetId: 'leh' });
+    const noResultYet = deriveGridState({
+      online: false,
+      scenarios: null,
+      offlineResult: null,
+      presetId: 'leh',
+    });
     expect(noResultYet.rows.length).toBe(0);
     expect(noResultYet.showEmptyState).toBe(true);
     expect(noResultYet.emptyText).toBeTruthy();
   });
 
   it('condition 8: scenarios === null shows an empty state, never NaN, never blank', () => {
-    const state = deriveGridState({ online: true, scenarios: null, offlineResult: null, presetId: 'leh' });
+    const state = deriveGridState({
+      online: true,
+      scenarios: null,
+      offlineResult: null,
+      presetId: 'leh',
+    });
     expect(state.rows).toEqual([]);
     expect(state.showEmptyState).toBe(true);
     expect(state.emptyText).toBe(EMPTY_STATE_TEXT);
@@ -229,7 +276,10 @@ describe('T-50 survival grid', () => {
     // no failure variant (see rows.ts's header comment) -- constructed here
     // to prove the grid's own defensive rendering path, independent of
     // whether any real producer sends this shape yet.
-    const malformed = { scenarioId: 'coldest-day', error: { code: 'SOLVER_DIVERGED', message: 'node left plausible range' } } as unknown as ScenarioResult;
+    const malformed = {
+      scenarioId: 'coldest-day',
+      error: { code: 'SOLVER_DIVERGED', message: 'node left plausible range' },
+    } as unknown as ScenarioResult;
     const row = buildRow(malformed);
     expect(row.status).toBe('error');
     if (row.status === 'error') {

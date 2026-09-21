@@ -44,7 +44,12 @@ import {
   REF_0600_COLOR,
   VARIANT_COLORS,
 } from './colors';
-import { nearestPointIndex, toggleVariantVisibility, tooltipDataAt, type VariantSeries } from './interaction';
+import {
+  nearestPointIndex,
+  toggleVariantVisibility,
+  tooltipDataAt,
+  type VariantSeries,
+} from './interaction';
 import styles from './TempChart.module.css';
 
 export interface TempChartVariant {
@@ -156,7 +161,10 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
     .filter((v) => visible.has(v.id))
     .map((v) => ({ id: v.id, label: v.label, color: v.color, points: v.points }));
 
-  const tooltip = hoverHour === null ? null : tooltipDataAt(visibleSeries.length > 0 ? visibleSeries : renderable, hoverHour);
+  const tooltip =
+    hoverHour === null
+      ? null
+      : tooltipDataAt(visibleSeries.length > 0 ? visibleSeries : renderable, hoverHour);
 
   function hourFromClientX(clientX: number): number {
     const svg = svgRef.current;
@@ -197,8 +205,22 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
             {/* y gridlines + ticks, recessive per dataviz guidance */}
             {yTicks.map((t) => (
               <g key={`y-${t}`}>
-                <line x1={0} x2={PLOT_WIDTH} y1={yScale(t)} y2={yScale(t)} stroke="#e5e5e0" strokeWidth={1} />
-                <text x={-4} y={yScale(t)} textAnchor="end" dominantBaseline="middle" fontSize={8} fill="#52514e">
+                <line
+                  x1={0}
+                  x2={PLOT_WIDTH}
+                  y1={yScale(t)}
+                  y2={yScale(t)}
+                  stroke="#e5e5e0"
+                  strokeWidth={1}
+                />
+                <text
+                  x={-4}
+                  y={yScale(t)}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  fontSize={8}
+                  fill="#52514e"
+                >
                   {Math.round(t)}
                 </text>
               </g>
@@ -214,7 +236,14 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
 
             {/* x ticks */}
             {X_TICKS.map((h) => (
-              <text key={`x-${h}`} x={xScale(h)} y={PLOT_HEIGHT + 14} textAnchor="middle" fontSize={8} fill="#52514e">
+              <text
+                key={`x-${h}`}
+                x={xScale(h)}
+                y={PLOT_HEIGHT + 14}
+                textAnchor="middle"
+                fontSize={8}
+                fill="#52514e"
+              >
                 {formatHourLabel(h)}
               </text>
             ))}
@@ -233,7 +262,12 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
             {renderable.map((v) =>
               visible.has(v.id) ? (
                 <g key={v.id} data-testid={`temp-variant-lines-${v.id}`}>
-                  <path d={linePath(v.points, (p) => p.indoorC)} fill="none" stroke={v.color} strokeWidth={2} />
+                  <path
+                    d={linePath(v.points, (p) => p.indoorC)}
+                    fill="none"
+                    stroke={v.color}
+                    strokeWidth={2}
+                  />
                   {showMeanRadiant && (
                     <path
                       d={linePath(v.points, (p) => p.meanRadiantC)}
@@ -269,7 +303,12 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
             </text>
 
             {/* daily min / max annotations */}
-            <circle cx={xScale(minPoint.hour)} cy={yScale(minPoint.indoorC)} r={3} fill={MIN_MARKER_COLOR} />
+            <circle
+              cx={xScale(minPoint.hour)}
+              cy={yScale(minPoint.indoorC)}
+              r={3}
+              fill={MIN_MARKER_COLOR}
+            />
             <text
               data-testid="temp-annotation-min"
               x={clamp(xScale(minPoint.hour) + 4, 0, PLOT_WIDTH - 60)}
@@ -279,7 +318,12 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
             >
               {`Min ${minPoint.indoorC.toFixed(1)} °C`}
             </text>
-            <circle cx={xScale(maxPoint.hour)} cy={yScale(maxPoint.indoorC)} r={3} fill={MAX_MARKER_COLOR} />
+            <circle
+              cx={xScale(maxPoint.hour)}
+              cy={yScale(maxPoint.indoorC)}
+              r={3}
+              fill={MAX_MARKER_COLOR}
+            />
             <text
               data-testid="temp-annotation-max"
               x={clamp(xScale(maxPoint.hour) + 4, 0, PLOT_WIDTH - 60)}

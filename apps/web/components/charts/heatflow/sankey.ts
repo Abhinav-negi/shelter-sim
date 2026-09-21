@@ -29,7 +29,13 @@
 // "inflow total = outflow total" hold by construction, up to the same
 // residual the energy-balance test already bounds -- see `checkBalance`.
 
-import { sankey, sankeyLinkHorizontal, type SankeyGraph, type SankeyLink, type SankeyNode } from 'd3-sankey';
+import {
+  sankey,
+  sankeyLinkHorizontal,
+  type SankeyGraph,
+  type SankeyLink,
+  type SankeyNode,
+} from 'd3-sankey';
 import { BOUNDARY_KEYS, PATHWAY_META, type BoundaryKey } from './pathways';
 
 /** Below this, a term is indistinguishable from float noise (kWh) and is
@@ -52,7 +58,10 @@ export interface FlowTerm {
  * test file (and `SankeyDiagram.tsx`'s tooltip text) can label a term
  * "released from the walls overnight" vs "stored in the walls" from the
  * same one source of truth as the diagram itself. */
-export function classifyFlows(dailyTotalsKWh: Record<string, number>): { gains: FlowTerm[]; losses: FlowTerm[] } {
+export function classifyFlows(dailyTotalsKWh: Record<string, number>): {
+  gains: FlowTerm[];
+  losses: FlowTerm[];
+} {
   const gains: FlowTerm[] = [];
   const losses: FlowTerm[] = [];
 
@@ -68,7 +77,11 @@ export function classifyFlows(dailyTotalsKWh: Record<string, number>): { gains: 
   // fabric was a net SOURCE that day (drawn on the gain/left side as
   // "released from the walls").
   const storage = dailyTotalsKWh.storageRate ?? 0;
-  push('storageRate', -storage, storage >= 0 ? 'Stored in the walls' : 'Released from the wall storage');
+  push(
+    'storageRate',
+    -storage,
+    storage >= 0 ? 'Stored in the walls' : 'Released from the wall storage',
+  );
 
   return { gains, losses };
 }
@@ -80,7 +93,11 @@ export function classifyFlows(dailyTotalsKWh: Record<string, number>): { gains: 
  * puts it on, so "inflow = outflow" here already IS "inflow = outflow +
  * storage change" (storage is on one side or the other, never double
  * counted). */
-export function checkBalance(dailyTotalsKWh: Record<string, number>): { inflowKWh: number; outflowKWh: number; deviation: number } {
+export function checkBalance(dailyTotalsKWh: Record<string, number>): {
+  inflowKWh: number;
+  outflowKWh: number;
+  deviation: number;
+} {
   const { gains, losses } = classifyFlows(dailyTotalsKWh);
   const inflowKWh = gains.reduce((s, g) => s + g.kWh, 0);
   const outflowKWh = losses.reduce((s, l) => s + l.kWh, 0);
@@ -109,7 +126,11 @@ export type LaidOutLink = SankeyLink<SankeyNodeDatum, SankeyLinkDatum>;
 /** Builds the {gain sources} -> hub -> {loss sinks} graph and runs d3-sankey's
  * layout. Returns plain laid-out nodes/links (x0/x1/y0/y1, all finite
  * numbers) -- acceptance test 7 ("no NaN node"). */
-export function buildSankeyLayout(dailyTotalsKWh: Record<string, number>, width: number, height: number): SankeyGraph<SankeyNodeDatum, SankeyLinkDatum> {
+export function buildSankeyLayout(
+  dailyTotalsKWh: Record<string, number>,
+  width: number,
+  height: number,
+): SankeyGraph<SankeyNodeDatum, SankeyLinkDatum> {
   const { gains, losses } = classifyFlows(dailyTotalsKWh);
 
   const nodes: SankeyNodeDatum[] = [
@@ -119,8 +140,22 @@ export function buildSankeyLayout(dailyTotalsKWh: Record<string, number>, width:
   ];
 
   const links: SankeyLinkDatum[] = [
-    ...gains.map((g) => ({ source: g.key, target: HUB_ID, value: g.kWh, color: PATHWAY_META[g.key].color, label: g.label, kWh: g.kWh })),
-    ...losses.map((l) => ({ source: HUB_ID, target: l.key, value: l.kWh, color: PATHWAY_META[l.key].color, label: l.label, kWh: l.kWh })),
+    ...gains.map((g) => ({
+      source: g.key,
+      target: HUB_ID,
+      value: g.kWh,
+      color: PATHWAY_META[g.key].color,
+      label: g.label,
+      kWh: g.kWh,
+    })),
+    ...losses.map((l) => ({
+      source: HUB_ID,
+      target: l.key,
+      value: l.kWh,
+      color: PATHWAY_META[l.key].color,
+      label: l.label,
+      kWh: l.kWh,
+    })),
   ];
 
   const layout = sankey<SankeyNodeDatum, SankeyLinkDatum>()

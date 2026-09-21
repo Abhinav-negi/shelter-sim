@@ -28,7 +28,13 @@ import type { SimulationRequest, Site, Surface, Layer } from '@shelter/engine';
 import { materialById } from '../src/materials.js';
 import { glazingById } from '../src/glazing.js';
 import { normaliseWeather, type NormaliseOptions } from '../src/weather/pipeline.js';
-import { nasaPowerUrl, parseNasaPower, openMeteoUrl, parseOpenMeteo, type WeatherQuery } from '../src/weather/sources.js';
+import {
+  nasaPowerUrl,
+  parseNasaPower,
+  openMeteoUrl,
+  parseOpenMeteo,
+  type WeatherQuery,
+} from '../src/weather/sources.js';
 
 const LEH_SITE = { latitude: 34.15, longitude: 77.58, elevation: 3500, standardMeridian: 82.5 };
 
@@ -46,15 +52,39 @@ function expectedHourCount(q: WeatherQuery): number {
   return days * 24;
 }
 
-const NASA_CLEAN_QUERY: WeatherQuery = { latitude: 34.15, longitude: 77.58, startDate: '2023-06-01', endDate: '2023-06-02' };
-const NASA_GAPS_QUERY: WeatherQuery = { latitude: 34.15, longitude: 77.58, startDate: '2026-09-11', endDate: '2026-09-13' };
-const OPEN_METEO_QUERY: WeatherQuery = { latitude: 34.15, longitude: 77.58, startDate: '2023-06-01', endDate: '2023-06-02' };
+const NASA_CLEAN_QUERY: WeatherQuery = {
+  latitude: 34.15,
+  longitude: 77.58,
+  startDate: '2023-06-01',
+  endDate: '2023-06-02',
+};
+const NASA_GAPS_QUERY: WeatherQuery = {
+  latitude: 34.15,
+  longitude: 77.58,
+  startDate: '2026-09-11',
+  endDate: '2026-09-13',
+};
+const OPEN_METEO_QUERY: WeatherQuery = {
+  latitude: 34.15,
+  longitude: 77.58,
+  startDate: '2023-06-01',
+  endDate: '2023-06-02',
+};
 
 describe('T-26 acceptance test 1 -- nasaPowerUrl contains all 8 parameters, coordinates, temporal/hourly', () => {
   it('builds the expected public URL', () => {
     const url = nasaPowerUrl(NASA_CLEAN_QUERY);
     console.log(`TEST1 url=${url}`);
-    for (const p of ['T2M', 'ALLSKY_SFC_SW_DWN', 'ALLSKY_SFC_SW_DNI', 'ALLSKY_SFC_SW_DIFF', 'ALLSKY_SFC_LW_DWN', 'WS2M', 'RH2M', 'PS']) {
+    for (const p of [
+      'T2M',
+      'ALLSKY_SFC_SW_DWN',
+      'ALLSKY_SFC_SW_DNI',
+      'ALLSKY_SFC_SW_DIFF',
+      'ALLSKY_SFC_LW_DWN',
+      'WS2M',
+      'RH2M',
+      'PS',
+    ]) {
       expect(url).toContain(p);
     }
     expect(url).toContain('34.15');
@@ -69,7 +99,13 @@ describe('T-26 acceptance test 2 -- openMeteoUrl contains coordinates and the ho
     console.log(`TEST2 url=${url}`);
     expect(url).toContain('34.15');
     expect(url).toContain('77.58');
-    for (const v of ['temperature_2m', 'windspeed_10m', 'shortwave_radiation', 'direct_normal_irradiance', 'diffuse_radiation']) {
+    for (const v of [
+      'temperature_2m',
+      'windspeed_10m',
+      'shortwave_radiation',
+      'direct_normal_irradiance',
+      'diffuse_radiation',
+    ]) {
       expect(url).toContain(v);
     }
   });
@@ -224,7 +260,9 @@ describe('T-26 acceptance test 10 -- no fetch/XMLHttpRequest/axios in packages/d
     const dataDir = fileURLToPath(new URL('../src', import.meta.url));
     let out = '';
     try {
-      out = execFileSync('grep', ['-rn', 'fetch(\\|XMLHttpRequest\\|axios', dataDir], { encoding: 'utf-8' });
+      out = execFileSync('grep', ['-rn', 'fetch(\\|XMLHttpRequest\\|axios', dataDir], {
+        encoding: 'utf-8',
+      });
     } catch (err) {
       const e = err as { status?: number };
       if (e.status !== 1) throw err; // grep exit code 1 = no matches found, the PASS case
@@ -240,7 +278,9 @@ describe('T-26 acceptance test 11 -- no api_key/apiKey/Bearer in packages/data/s
     const dataDir = fileURLToPath(new URL('../src', import.meta.url));
     let out = '';
     try {
-      out = execFileSync('grep', ['-rn', 'api_key\\|apiKey\\|Bearer', dataDir], { encoding: 'utf-8' });
+      out = execFileSync('grep', ['-rn', 'api_key\\|apiKey\\|Bearer', dataDir], {
+        encoding: 'utf-8',
+      });
     } catch (err) {
       const e = err as { status?: number };
       if (e.status !== 1) throw err;
@@ -322,7 +362,12 @@ describe('T-26 acceptance test 12 -- either parser feeds normaliseWeather -> sim
 
   it('parseNasaPower output', () => {
     const raw = parseNasaPower(loadFixture('nasa-power-leh-clean.json'), NASA_CLEAN_QUERY);
-    const opts: NormaliseOptions = { site: LEH_SITE, targetStepSeconds: 300, source: 'nasa-power', label: 'T-26 test 12 NASA fixture' };
+    const opts: NormaliseOptions = {
+      site: LEH_SITE,
+      targetStepSeconds: 300,
+      source: 'nasa-power',
+      label: 'T-26 test 12 NASA fixture',
+    };
     const weather = normaliseWeather(raw, opts);
     const result = simulate(buildRequest(weather));
     console.log(`TEST12 nasaResidual=${result.meta.energyBalanceResidual}`);
@@ -331,7 +376,12 @@ describe('T-26 acceptance test 12 -- either parser feeds normaliseWeather -> sim
 
   it('parseOpenMeteo output', () => {
     const raw = parseOpenMeteo(loadFixture('open-meteo-leh.json'), OPEN_METEO_QUERY);
-    const opts: NormaliseOptions = { site: LEH_SITE, targetStepSeconds: 300, source: 'open-meteo', label: 'T-26 test 12 Open-Meteo fixture' };
+    const opts: NormaliseOptions = {
+      site: LEH_SITE,
+      targetStepSeconds: 300,
+      source: 'open-meteo',
+      label: 'T-26 test 12 Open-Meteo fixture',
+    };
     const weather = normaliseWeather(raw, opts);
     const result = simulate(buildRequest(weather));
     console.log(`TEST12 openMeteoResidual=${result.meta.energyBalanceResidual}`);

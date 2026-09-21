@@ -135,13 +135,26 @@ function validateBody(body: unknown): { value: WeatherRequestBody } | { problems
   }
 
   const latitude = b.latitude;
-  if (typeof latitude !== 'number' || !Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+  if (
+    typeof latitude !== 'number' ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90
+  ) {
     problems.push({ path: 'latitude', message: 'latitude must be a finite number in [-90, 90]' });
   }
 
   const longitude = b.longitude;
-  if (typeof longitude !== 'number' || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
-    problems.push({ path: 'longitude', message: 'longitude must be a finite number in [-180, 180]' });
+  if (
+    typeof longitude !== 'number' ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    problems.push({
+      path: 'longitude',
+      message: 'longitude must be a finite number in [-180, 180]',
+    });
   }
 
   const startDate = b.startDate;
@@ -153,13 +166,22 @@ function validateBody(body: unknown): { value: WeatherRequestBody } | { problems
   if (typeof endDate !== 'string' || !ISO_DATE_RE.test(endDate)) {
     problems.push({ path: 'endDate', message: "endDate must be an ISO 'YYYY-MM-DD' string" });
   }
-  if (typeof startDate === 'string' && typeof endDate === 'string' && ISO_DATE_RE.test(startDate) && ISO_DATE_RE.test(endDate) && endDate < startDate) {
+  if (
+    typeof startDate === 'string' &&
+    typeof endDate === 'string' &&
+    ISO_DATE_RE.test(startDate) &&
+    ISO_DATE_RE.test(endDate) &&
+    endDate < startDate
+  ) {
     problems.push({ path: 'endDate', message: 'endDate must not be before startDate' });
   }
 
   const siteElevation = b.siteElevation;
   if (typeof siteElevation !== 'number' || !Number.isFinite(siteElevation)) {
-    problems.push({ path: 'siteElevation', message: 'siteElevation must be a finite number, metres' });
+    problems.push({
+      path: 'siteElevation',
+      message: 'siteElevation must be a finite number, metres',
+    });
   }
 
   if (problems.length > 0) return { problems };
@@ -199,7 +221,9 @@ function weatherSeriesToResponseJson(series: WeatherSeries): Record<string, unkn
   return out;
 }
 
-async function fetchUpstream(url: string): Promise<{ ok: true; json: unknown } | { ok: false; response: NextResponse }> {
+async function fetchUpstream(
+  url: string,
+): Promise<{ ok: true; json: unknown } | { ok: false; response: NextResponse }> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
   let res: Response;
@@ -209,14 +233,21 @@ async function fetchUpstream(url: string): Promise<{ ok: true; json: unknown } |
     const timedOut = err instanceof Error && err.name === 'AbortError';
     return {
       ok: false,
-      response: upstreamUnavailable(timedOut ? `upstream request timed out after ${UPSTREAM_TIMEOUT_MS}ms` : `upstream request failed: ${(err as Error).message}`),
+      response: upstreamUnavailable(
+        timedOut
+          ? `upstream request timed out after ${UPSTREAM_TIMEOUT_MS}ms`
+          : `upstream request failed: ${(err as Error).message}`,
+      ),
     };
   } finally {
     clearTimeout(timeoutId);
   }
 
   if (!res.ok) {
-    return { ok: false, response: upstreamUnavailable(`upstream responded with status ${res.status}`) };
+    return {
+      ok: false,
+      response: upstreamUnavailable(`upstream responded with status ${res.status}`),
+    };
   }
 
   let json: unknown;
@@ -269,22 +300,32 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     let raw: RawWeather;
     try {
-      raw = source === 'nasa-power' ? parseNasaPower(fetched.json, query) : parseOpenMeteo(fetched.json, query);
+      raw =
+        source === 'nasa-power'
+          ? parseNasaPower(fetched.json, query)
+          : parseOpenMeteo(fetched.json, query);
     } catch (err) {
-      if (err instanceof EngineError && err.code === 'WEATHER_INVALID') return weatherInvalid(err.message);
+      if (err instanceof EngineError && err.code === 'WEATHER_INVALID')
+        return weatherInvalid(err.message);
       throw err;
     }
 
     try {
       series = normaliseWeather(raw, {
-        site: { latitude, longitude, elevation: siteElevation, standardMeridian: DEFAULT_STANDARD_MERIDIAN },
+        site: {
+          latitude,
+          longitude,
+          elevation: siteElevation,
+          standardMeridian: DEFAULT_STANDARD_MERIDIAN,
+        },
         targetStepSeconds: TARGET_STEP_SECONDS,
         source: source as WeatherSource,
         label: `${source === 'nasa-power' ? 'NASA POWER' : 'Open-Meteo'} (${startDate} to ${endDate})`,
         fetchedAt: new Date().toISOString(),
       });
     } catch (err) {
-      if (err instanceof EngineError && err.code === 'WEATHER_INVALID') return weatherInvalid(err.message);
+      if (err instanceof EngineError && err.code === 'WEATHER_INVALID')
+        return weatherInvalid(err.message);
       throw err;
     }
 

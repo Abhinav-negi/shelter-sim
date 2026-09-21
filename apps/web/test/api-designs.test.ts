@@ -88,7 +88,13 @@ function makeFixtureRequest(overrides?: Partial<SimulationRequest>): SimulationR
       T_amb: Float64Array.from({ length: 24 }, (_, i) => 260 + i),
       GHI: Float64Array.from({ length: 24 }, () => 200),
       v_wind: Float64Array.from({ length: 24 }, () => 2),
-      provenance: { source: 'synthetic', label: 'Test fixture', sourceElevation: 3500, lapseCorrectionK: 0, notes: [] },
+      provenance: {
+        source: 'synthetic',
+        label: 'Test fixture',
+        sourceElevation: 3500,
+        lapseCorrectionK: 0,
+        notes: [],
+      },
     },
     materials: {
       'mat-1': {
@@ -129,7 +135,9 @@ function postRequest(body: unknown): NextRequest {
 }
 
 function getRequest(shareId: string): Promise<Response> {
-  return getDesign(new Request(`${ORIGIN}/api/designs/${shareId}`), { params: Promise.resolve({ shareId }) });
+  return getDesign(new Request(`${ORIGIN}/api/designs/${shareId}`), {
+    params: Promise.resolve({ shareId }),
+  });
 }
 
 beforeEach(async () => {
@@ -157,7 +165,9 @@ describe('T-41 /api/designs and /api/materials', () => {
     const roundTripped = requestFromJson(await getRes.json());
     expect(roundTripped).toEqual(req);
     // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-    console.log(`T-41 test 1: POST 201 shareId=${postBody.shareId} url=${postBody.url}; GET 200 deep-equal PASS`);
+    console.log(
+      `T-41 test 1: POST 201 shareId=${postBody.shareId} url=${postBody.url}; GET 200 deep-equal PASS`,
+    );
   });
 
   it('2. POST {} returns 400 or 422 with a typed code and writes no row', async () => {
@@ -246,43 +256,45 @@ describe('T-41 /api/designs and /api/materials', () => {
     );
   });
 
-  it(
-    '6. DB UNREACHABLE: same behaviour within 5s',
-    async () => {
-      process.env.DATABASE_URL = BOGUS_DATABASE_URL;
-      const req = makeFixtureRequest();
+  it('6. DB UNREACHABLE: same behaviour within 5s', async () => {
+    process.env.DATABASE_URL = BOGUS_DATABASE_URL;
+    const req = makeFixtureRequest();
 
-      const postStart = Date.now();
-      const postRes = await postDesign(postRequest({ request: requestToJson(req) }));
-      const postElapsedMs = Date.now() - postStart;
-      const postBody = (await postRes.json()) as { code: string };
+    const postStart = Date.now();
+    const postRes = await postDesign(postRequest({ request: requestToJson(req) }));
+    const postElapsedMs = Date.now() - postStart;
+    const postBody = (await postRes.json()) as { code: string };
 
-      const getStart = Date.now();
-      const getRes = await getRequest('anything');
-      const getElapsedMs = Date.now() - getStart;
+    const getStart = Date.now();
+    const getRes = await getRequest('anything');
+    const getElapsedMs = Date.now() - getStart;
 
-      expect(postRes.status).toBe(503);
-      expect(postBody.code).toBe('SHARE_UNAVAILABLE');
-      expect(postElapsedMs).toBeLessThan(5000);
-      expect(getRes.status).toBe(404);
-      expect(getElapsedMs).toBeLessThan(5000);
-      // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-      console.log(
-        `T-41 test 6 (DB UNREACHABLE): POST status=${postRes.status} in ${postElapsedMs}ms; GET status=${getRes.status} in ${getElapsedMs}ms`,
-      );
-    },
-    7000,
-  );
+    expect(postRes.status).toBe(503);
+    expect(postBody.code).toBe('SHARE_UNAVAILABLE');
+    expect(postElapsedMs).toBeLessThan(5000);
+    expect(getRes.status).toBe(404);
+    expect(getElapsedMs).toBeLessThan(5000);
+    // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
+    console.log(
+      `T-41 test 6 (DB UNREACHABLE): POST status=${postRes.status} in ${postElapsedMs}ms; GET status=${getRes.status} in ${getElapsedMs}ms`,
+    );
+  }, 7000);
 
   it('7. GET /api/materials with a live database returns servedFrom "database" and the full length', async () => {
     process.env.DATABASE_URL = LIVE_DATABASE_URL;
     const res = await getMaterials();
-    const body = (await res.json()) as { materials: unknown[]; servedFrom: string; schemaVersion: number };
+    const body = (await res.json()) as {
+      materials: unknown[];
+      servedFrom: string;
+      schemaVersion: number;
+    };
     expect(res.status).toBe(200);
     expect(body.servedFrom).toBe('database');
     expect(body.materials.length).toBe(MATERIALS.length);
     // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-    console.log(`T-41 test 7: servedFrom=${body.servedFrom} materials.length=${body.materials.length}`);
+    console.log(
+      `T-41 test 7: servedFrom=${body.servedFrom} materials.length=${body.materials.length}`,
+    );
   });
 
   it('8. DB OFF: GET /api/materials returns 200, servedFrom "code", same length', async () => {
@@ -292,7 +304,9 @@ describe('T-41 /api/designs and /api/materials', () => {
     expect(body.servedFrom).toBe('code');
     expect(body.materials.length).toBe(MATERIALS.length);
     // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-    console.log(`T-41 test 8 (DB OFF): status=${res.status} servedFrom=${body.servedFrom} materials.length=${body.materials.length}`);
+    console.log(
+      `T-41 test 8 (DB OFF): status=${res.status} servedFrom=${body.servedFrom} materials.length=${body.materials.length}`,
+    );
   });
 
   it('9. every returned material has a non-empty source', async () => {
@@ -327,11 +341,15 @@ describe('T-41 /api/designs and /api/materials', () => {
       Array.from({ length: 20 }, () => postDesign(postRequest({ request: requestToJson(req) }))),
     );
     expect(responses.every((r) => r.status === 201)).toBe(true);
-    const bodies = (await Promise.all(responses.map((r) => r.json()))) as Array<{ shareId: string }>;
+    const bodies = (await Promise.all(responses.map((r) => r.json()))) as Array<{
+      shareId: string;
+    }>;
     const ids = new Set(bodies.map((b) => b.shareId));
     expect(ids.size).toBe(20);
     // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-    console.log(`T-41 test 11: 20 concurrent POSTs, statuses all 201, ${ids.size} distinct share ids`);
+    console.log(
+      `T-41 test 11: 20 concurrent POSTs, statuses all 201, ${ids.size} distinct share ids`,
+    );
   });
 
   it('12. no response in this task is HTML; every response is JSON', async () => {

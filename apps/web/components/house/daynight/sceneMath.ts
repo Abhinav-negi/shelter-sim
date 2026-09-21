@@ -89,7 +89,10 @@ export interface ShadowResult {
 }
 
 function toPath(points: Point2[]): string {
-  return points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(4)},${p.y.toFixed(4)}`).join(' ') + ' Z';
+  return (
+    points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(4)},${p.y.toFixed(4)}`).join(' ') +
+    ' Z'
+  );
 }
 
 /** Convex hull, monotone chain (Andrew's algorithm). No dependency --
@@ -101,13 +104,15 @@ function convexHull(pts: Array<[number, number]>): Array<[number, number]> {
     (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
   const lower: Array<[number, number]> = [];
   for (const p of sorted) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2]!, lower[lower.length - 1]!, p) <= 0) lower.pop();
+    while (lower.length >= 2 && cross(lower[lower.length - 2]!, lower[lower.length - 1]!, p) <= 0)
+      lower.pop();
     lower.push(p);
   }
   const upper: Array<[number, number]> = [];
   for (let i = sorted.length - 1; i >= 0; i--) {
     const p = sorted[i]!;
-    while (upper.length >= 2 && cross(upper[upper.length - 2]!, upper[upper.length - 1]!, p) <= 0) upper.pop();
+    while (upper.length >= 2 && cross(upper[upper.length - 2]!, upper[upper.length - 1]!, p) <= 0)
+      upper.pop();
     upper.push(p);
   }
   lower.pop();
@@ -158,7 +163,11 @@ export function computeShadow(sun: SunPosition, geom: HouseGeometry): ShadowResu
 
 // ============================== SKY ==============================
 
-function lerp3(a: [number, number, number], b: [number, number, number], t: number): [number, number, number] {
+function lerp3(
+  a: [number, number, number],
+  b: [number, number, number],
+  t: number,
+): [number, number, number] {
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 

@@ -13,7 +13,7 @@
 
 # AREA I — VALIDATION & CREDIBILITY
 
-> *"Every team will demo a chart. Almost none will hand the judges a validation report. That
-> asymmetry is the strongest differentiator and it costs nothing but discipline."*
+> _"Every team will demo a chart. Almost none will hand the judges a validation report. That
+> asymmetry is the strongest differentiator and it costs nothing but discipline."_
 > **Global rule 9 applies to everything in this area: no claim without a number and a named test,
 > and no ANSYS claim anywhere, ever.**

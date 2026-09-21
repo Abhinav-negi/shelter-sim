@@ -70,9 +70,7 @@ export function SurvivalGrid() {
           {note}
         </p>
       )}
-      {showProgress && (
-        <p data-testid="grid-progress">{progressText(rows.length)}</p>
-      )}
+      {showProgress && <p data-testid="grid-progress">{progressText(rows.length)}</p>}
       {showEmptyState ? (
         <p className={styles.empty} data-testid="grid-empty-state">
           {emptyText}
@@ -96,7 +94,11 @@ export function SurvivalGrid() {
             <tbody>
               {rows.map((row) =>
                 row.status === 'error' ? (
-                  <tr key={row.scenarioId} className={styles.errorRow} data-testid={`grid-row-${row.scenarioId}`}>
+                  <tr
+                    key={row.scenarioId}
+                    className={styles.errorRow}
+                    data-testid={`grid-row-${row.scenarioId}`}
+                  >
                     <td>{row.name}</td>
                     <td colSpan={8}>
                       Failed to compute ({row.code}): {row.message}
@@ -105,7 +107,11 @@ export function SurvivalGrid() {
                 ) : (
                   <tr
                     key={row.scenarioId}
-                    className={[styles.row, styles[row.band], selectedId === row.scenarioId ? styles.rowSelected : ''].join(' ')}
+                    className={[
+                      styles.row,
+                      styles[row.band],
+                      selectedId === row.scenarioId ? styles.rowSelected : '',
+                    ].join(' ')}
                     data-testid={`grid-row-${row.scenarioId}`}
                     data-band={row.band}
                     tabIndex={0}

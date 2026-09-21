@@ -15,10 +15,12 @@ import { PRESETS, presetById } from '../src/presets.js';
 function resolve(preset: (typeof PRESETS)[number]): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return {
     ...preset.request,
     weather: tmyById(preset.locationId),
@@ -47,7 +49,7 @@ describe('T-28 acceptance test 2 -- every preset has meta.energyBalanceResidual 
   });
 });
 
-describe('T-28 acceptance test 3 -- every materialId/glazingId resolves in T-24\'s catalogues', () => {
+describe("T-28 acceptance test 3 -- every materialId/glazingId resolves in T-24's catalogues", () => {
   it('materialById/glazingById throw for none of the ids referenced by any preset', () => {
     let materialCount = 0;
     let glazingCount = 0;
@@ -63,7 +65,9 @@ describe('T-28 acceptance test 3 -- every materialId/glazingId resolves in T-24\
         glazingCount++;
       }
     }
-    console.log(`TEST3 materialId references checked=${materialCount}, glazingId references checked=${glazingCount}`);
+    console.log(
+      `TEST3 materialId references checked=${materialCount}, glazingId references checked=${glazingCount}`,
+    );
   });
 });
 
@@ -110,9 +114,13 @@ describe('T-28 acceptance test 6 -- preset 2 (steel barrack) has the largest pea
     }
     console.log(`TEST6 peakToPeakSwing (K): ${JSON.stringify(swings)}`);
     const barrackSwing = swings['armyBroBarrack']!;
-    const maxOther = Math.max(...ladakhIds.filter((id) => id !== 'armyBroBarrack').map((id) => swings[id]!));
+    const maxOther = Math.max(
+      ...ladakhIds.filter((id) => id !== 'armyBroBarrack').map((id) => swings[id]!),
+    );
     if (barrackSwing > maxOther) {
-      console.log('TEST6 result: barrack IS the largest swing, as expected from a thin lightweight envelope.');
+      console.log(
+        'TEST6 result: barrack IS the largest swing, as expected from a thin lightweight envelope.',
+      );
     } else {
       console.log(
         `TEST6 result: barrack (${barrackSwing.toFixed(3)} K) is NOT the largest swing (max other = ${maxOther.toFixed(3)} K) -- ` +
@@ -137,15 +145,21 @@ describe('T-28 acceptance test 8 -- preset 5 is never silently presented as an o
   it('approximations carries the explicit placeholder marker', () => {
     const optimised = presetById('optimisedPassivePlaceholder');
     console.log(`TEST8 approximations=${JSON.stringify(optimised.approximations)}`);
-    expect(optimised.approximations).toContain('placeholder -- to be replaced by a real sweep winner, see T-56');
+    expect(optimised.approximations).toContain(
+      'placeholder -- to be replaced by a real sweep winner, see T-56',
+    );
   });
 });
 
 describe('T-28 acceptance test 9 -- preset 6 uses a non-Ladakh site and a different locationId, and runs clean', () => {
   it('Jaisalmer preset has a distinct locationId/site and a clean energyBalanceResidual', () => {
     const jaisalmer = presetById('jaisalmerHotDryContrast');
-    const ladakhLocationIds = new Set(PRESETS.filter((p) => p.id !== jaisalmer.id).map((p) => p.locationId));
-    console.log(`TEST9 jaisalmer.locationId=${jaisalmer.locationId}, siteId=${jaisalmer.request.site.id}, otherLocationIds=${JSON.stringify([...ladakhLocationIds])}`);
+    const ladakhLocationIds = new Set(
+      PRESETS.filter((p) => p.id !== jaisalmer.id).map((p) => p.locationId),
+    );
+    console.log(
+      `TEST9 jaisalmer.locationId=${jaisalmer.locationId}, siteId=${jaisalmer.request.site.id}, otherLocationIds=${JSON.stringify([...ladakhLocationIds])}`,
+    );
     expect(jaisalmer.locationId).toBe('jaisalmer');
     expect(ladakhLocationIds.has(jaisalmer.locationId)).toBe(false);
     const result = simulate(resolve(jaisalmer));
@@ -166,7 +180,7 @@ describe('T-28 acceptance test 10 -- comfortBand.lower === 288.15 in every Ladak
   });
 });
 
-describe('T-28 acceptance test 11 -- preset 1\'s internalGainsSchedule reflects the livestock contribution', () => {
+describe("T-28 acceptance test 11 -- preset 1's internalGainsSchedule reflects the livestock contribution", () => {
   it('gains include the 500 W/animal livestock floor, and the description says so in plain language', () => {
     const traditional = presetById('traditionalLadakhiByre');
     const gains = traditional.request.operation.internalGainsSchedule;

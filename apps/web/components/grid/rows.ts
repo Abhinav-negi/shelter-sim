@@ -69,7 +69,12 @@ function isWellFormed(entry: unknown): entry is ScenarioResult {
 function extractError(entry: unknown): { code: string; message: string } {
   const e = (entry ?? {}) as Record<string, unknown>;
   const nested = (e.error ?? {}) as Record<string, unknown>;
-  const code = typeof nested.code === 'string' ? nested.code : typeof e.code === 'string' ? e.code : 'UNKNOWN_ERROR';
+  const code =
+    typeof nested.code === 'string'
+      ? nested.code
+      : typeof e.code === 'string'
+        ? e.code
+        : 'UNKNOWN_ERROR';
   const message =
     typeof nested.message === 'string'
       ? nested.message
@@ -80,7 +85,10 @@ function extractError(entry: unknown): { code: string; message: string } {
 }
 
 export function buildRow(entry: ScenarioResult): GridRow {
-  const scenarioId = typeof (entry as { scenarioId?: unknown }).scenarioId === 'string' ? (entry as { scenarioId: string }).scenarioId : 'unknown';
+  const scenarioId =
+    typeof (entry as { scenarioId?: unknown }).scenarioId === 'string'
+      ? (entry as { scenarioId: string }).scenarioId
+      : 'unknown';
   const meta = scenarioMetaFor(scenarioId);
 
   if (!isWellFormed(entry)) {
@@ -114,7 +122,8 @@ export function progressText(rowCount: number, total = SCENARIO_COUNT): string {
 }
 
 /** Acceptance test 8. */
-export const EMPTY_STATE_TEXT = 'No scenario run yet — run the eighteen-scenario matrix to populate the survival grid.';
+export const EMPTY_STATE_TEXT =
+  'No scenario run yet — run the eighteen-scenario matrix to populate the survival grid.';
 
 const OFFLINE_ID = 'current-design';
 
@@ -175,7 +184,13 @@ export function deriveGridState(params: {
   }
 
   if (scenarios === null) {
-    return { rows: [], note: null, showEmptyState: true, emptyText: EMPTY_STATE_TEXT, showProgress: false };
+    return {
+      rows: [],
+      note: null,
+      showEmptyState: true,
+      emptyText: EMPTY_STATE_TEXT,
+      showProgress: false,
+    };
   }
 
   const rows = buildRows(scenarios);

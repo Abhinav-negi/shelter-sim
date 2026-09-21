@@ -96,7 +96,12 @@ function domainOf(values: number[]): [number, number] {
 /** Pixel-space points plus a fitted-line path, inside a `width`x`height`
  * viewBox -- same fixed-viewBox-plus-CSS-scaling pattern as the other two
  * views (acceptance test 11). */
-export function buildScatterLayout(heatFlows: HeatFlows, key: keyof HeatFlows & string, width: number, height: number): ScatterLayout {
+export function buildScatterLayout(
+  heatFlows: HeatFlows,
+  key: keyof HeatFlows & string,
+  width: number,
+  height: number,
+): ScatterLayout {
   const raw = scatterPoints(heatFlows, key);
   const fit = linearFit(raw);
   const xDomain = domainOf(raw.map((p) => p.deltaT));

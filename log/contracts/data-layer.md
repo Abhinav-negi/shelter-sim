@@ -8,27 +8,32 @@
 
 ```ts
 export interface Material {
-  id: string; name: string; nameHi?: string;
+  id: string;
+  name: string;
+  nameHi?: string;
   category: 'structural' | 'insulation' | 'finish' | 'storage';
-  k: number;            // W/(m*K)
-  rho: number;          // kg/m^3
-  c: number;            // J/(kg*K)
-  alphaSolar: number;   // 0-1
-  emissivity: number;   // 0-1
-  costPerM3?: number;   // INR
+  k: number; // W/(m*K)
+  rho: number; // kg/m^3
+  c: number; // J/(kg*K)
+  alphaSolar: number; // 0-1
+  emissivity: number; // 0-1
+  costPerM3?: number; // INR
   locallyAvailableLadakh: boolean;
-  embodiedCarbon?: number;   // kgCO2e/m^3
-  source: string;            // MANDATORY, non-empty, a real citation
-  blurb?: string;            // one plain sentence for the UI card. No physics jargon
+  embodiedCarbon?: number; // kgCO2e/m^3
+  source: string; // MANDATORY, non-empty, a real citation
+  blurb?: string; // one plain sentence for the UI card. No physics jargon
 }
 
 export interface Glazing {
-  id: string; name: string; nameHi?: string;
-  U: number;        // W/(m^2*K)   -- note the CAPITAL U on disk
-  SHGC: number;     // 0-1          -- note the CAPITALS on disk
-  tauVis: number; b0: number;
+  id: string;
+  name: string;
+  nameHi?: string;
+  U: number; // W/(m^2*K)   -- note the CAPITAL U on disk
+  SHGC: number; // 0-1          -- note the CAPITALS on disk
+  tauVis: number;
+  b0: number;
   costPerM2?: number;
-  source: string;   // MANDATORY
+  source: string; // MANDATORY
   blurb?: string;
 }
 ```
@@ -39,76 +44,79 @@ export interface Glazing {
 
 ```ts
 export interface Preset {
-  id: string; name: string; nameHi?: string; description: string;
-  approximations?: string[];       // e.g. the Trombe caveat -- surfaced in the UI, never hidden
-  locationId: string;              // resolves to a bundled TMY file
+  id: string;
+  name: string;
+  nameHi?: string;
+  description: string;
+  approximations?: string[]; // e.g. the Trombe caveat -- surfaced in the UI, never hidden
+  locationId: string; // resolves to a bundled TMY file
   request: Omit<SimulationRequest, 'weather' | 'materials' | 'glazings'>;
 }
 ```
 
 **Material property values (`BLUEPRINT.md` Appendix B) — the catalogue T-24 must load in full.**
 
-*Structural & mass:*
+_Structural & mass:_
 
-| Material | k W/(m·K) | ρ kg/m³ | c J/(kg·K) | a ×10⁻⁷ m²/s |
-|---|---|---|---|---|
-| Mud brick / adobe | 0.75 | 1700 | 880 | 5.01 |
-| Rammed earth | 1.00 | 1900 | 880 | 5.98 |
-| Stone masonry (granite) | 2.80 | 2600 | 820 | 13.1 |
-| Fired clay brick | 0.72 | 1920 | 835 | 4.49 |
-| Dense concrete | 1.75 | 2400 | 880 | 8.29 |
-| RCC | 2.10 | 2400 | 880 | 9.94 |
-| AAC block | 0.16 | 600 | 1000 | 2.67 |
-| Timber (poplar/willow) | 0.14 | 500 | 1600 | 1.75 |
-| Compressed earth block | 0.90 | 1800 | 880 | 5.68 |
-| Mud plaster | 0.75 | 1600 | 880 | 5.33 |
-| Cement plaster | 0.72 | 1860 | 840 | 4.61 |
+| Material                | k W/(m·K) | ρ kg/m³ | c J/(kg·K) | a ×10⁻⁷ m²/s |
+| ----------------------- | --------- | ------- | ---------- | ------------ |
+| Mud brick / adobe       | 0.75      | 1700    | 880        | 5.01         |
+| Rammed earth            | 1.00      | 1900    | 880        | 5.98         |
+| Stone masonry (granite) | 2.80      | 2600    | 820        | 13.1         |
+| Fired clay brick        | 0.72      | 1920    | 835        | 4.49         |
+| Dense concrete          | 1.75      | 2400    | 880        | 8.29         |
+| RCC                     | 2.10      | 2400    | 880        | 9.94         |
+| AAC block               | 0.16      | 600     | 1000       | 2.67         |
+| Timber (poplar/willow)  | 0.14      | 500     | 1600       | 1.75         |
+| Compressed earth block  | 0.90      | 1800    | 880        | 5.68         |
+| Mud plaster             | 0.75      | 1600    | 880        | 5.33         |
+| Cement plaster          | 0.72      | 1860    | 840        | 4.61         |
 
-*Insulation:*
+_Insulation:_
 
-| Material | k | ρ | c |
-|---|---|---|---|
-| EPS (thermocol) | 0.036 | 20 | 1400 |
-| XPS | 0.033 | 35 | 1400 |
-| PUF / PIR | 0.025 | 35 | 1400 |
-| Glass wool | 0.040 | 24 | 840 |
-| Rock wool | 0.038 | 100 | 840 |
-| Straw bale | 0.060 | 110 | 2000 |
-| Sheep wool | 0.040 | 25 | 1800 |
-| Air gap, 25 mm unventilated | R ≈ 0.18 m²K/W (pure resistance) | – | – |
+| Material                    | k                                | ρ   | c    |
+| --------------------------- | -------------------------------- | --- | ---- |
+| EPS (thermocol)             | 0.036                            | 20  | 1400 |
+| XPS                         | 0.033                            | 35  | 1400 |
+| PUF / PIR                   | 0.025                            | 35  | 1400 |
+| Glass wool                  | 0.040                            | 24  | 840  |
+| Rock wool                   | 0.038                            | 100 | 840  |
+| Straw bale                  | 0.060                            | 110 | 2000 |
+| Sheep wool                  | 0.040                            | 25  | 1800 |
+| Air gap, 25 mm unventilated | R ≈ 0.18 m²K/W (pure resistance) | –   | –    |
 
-*Other:*
+_Other:_
 
-| Material | k | ρ | c |
-|---|---|---|---|
-| Steel (CGI sheet) | 50 | 7800 | 480 |
-| Water (drum storage) | 0.60 | 1000 | 4186 |
-| Gravel / soil fill | 1.40 | 2050 | 1840 |
-| PCM paraffin RT25 | 0.20 | 880 | 2000 (L_f ≈ 200 kJ/kg, melts ~25 °C) |
+| Material             | k    | ρ    | c                                    |
+| -------------------- | ---- | ---- | ------------------------------------ |
+| Steel (CGI sheet)    | 50   | 7800 | 480                                  |
+| Water (drum storage) | 0.60 | 1000 | 4186                                 |
+| Gravel / soil fill   | 1.40 | 2050 | 1840                                 |
+| PCM paraffin RT25    | 0.20 | 880  | 2000 (L_f ≈ 200 kJ/kg, melts ~25 °C) |
 
-*Surface optical properties:*
+_Surface optical properties:_
 
-| Finish | α_s | ε |
-|---|---|---|
-| Black paint | 0.95 | 0.90 |
-| Dark mud / earth | 0.70 | 0.90 |
-| Red brick | 0.68 | 0.90 |
-| Grey concrete | 0.65 | 0.88 |
+| Finish                      | α_s  | ε    |
+| --------------------------- | ---- | ---- |
+| Black paint                 | 0.95 | 0.90 |
+| Dark mud / earth            | 0.70 | 0.90 |
+| Red brick                   | 0.68 | 0.90 |
+| Grey concrete               | 0.65 | 0.88 |
 | Galvanised steel, weathered | 0.60 | 0.28 |
-| Galvanised steel, bright | 0.35 | 0.13 |
-| Whitewash / lime | 0.25 | 0.90 |
-| White paint | 0.20 | 0.90 |
+| Galvanised steel, bright    | 0.35 | 0.13 |
+| Whitewash / lime            | 0.25 | 0.90 |
+| White paint                 | 0.20 | 0.90 |
 
-*Glazing:*
+_Glazing:_
 
-| Type | U W/(m²·K) | SHGC | b₀ |
-|---|---|---|---|
-| Single glazing | 5.80 | 0.86 | 0.04 |
-| Double, air-filled | 2.80 | 0.76 | 0.05 |
-| Double, argon + low-E | 1.60 | 0.60 | 0.06 |
-| Triple glazing | 0.90 | 0.50 | 0.07 |
-| Polycarbonate twin-wall | 3.00 | 0.70 | 0.05 |
-| + night shutter | `1/(1/U + R_sh)`, R_sh ≈ 0.3–0.5 m²K/W | unchanged | – |
+| Type                    | U W/(m²·K)                             | SHGC      | b₀   |
+| ----------------------- | -------------------------------------- | --------- | ---- |
+| Single glazing          | 5.80                                   | 0.86      | 0.04 |
+| Double, air-filled      | 2.80                                   | 0.76      | 0.05 |
+| Double, argon + low-E   | 1.60                                   | 0.60      | 0.06 |
+| Triple glazing          | 0.90                                   | 0.50      | 0.07 |
+| Polycarbonate twin-wall | 3.00                                   | 0.70      | 0.05 |
+| + night shutter         | `1/(1/U + R_sh)`, R_sh ≈ 0.3–0.5 m²K/W | unchanged | –    |
 
 **Ladakh default parameter set (`BLUEPRINT.md` Appendix C):**
 
@@ -126,13 +134,13 @@ climate reference (from the problem statement itself):
 comfort:  survival threshold 278.15 K (5 degC);  minimum acceptable 288.15 K (15 degC);
           comfortable 291.15-297.15 K (18-24 degC)
 ```
+
 ⚠ **Do NOT default the comfort band to a 22 °C ASHRAE office band.** For a passive Ladakh shelter
 the meaningful KPI is the 06:00 minimum and hours above 15 °C. Every Ladakh preset uses
 `comfortBand.lower = 288.15 K`.
 
 **Locations to bundle:** Leh, Kargil, Drass, Nubra, plus **Jaisalmer** (hot-dry contrast) to
 demonstrate the generality the problem statement explicitly asks for.
-
 
 ### 7.12 The Prisma schema — the four tables
 

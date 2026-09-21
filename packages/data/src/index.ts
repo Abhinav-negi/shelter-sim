@@ -2,7 +2,11 @@
  * @shelter/data public surface: the material, glazing and construction
  * catalogues. LOG.md 7.11 / T-24.
  */
-export { MATERIALS, materialById, SCHEMA_VERSION as MATERIALS_SCHEMA_VERSION } from './materials.js';
+export {
+  MATERIALS,
+  materialById,
+  SCHEMA_VERSION as MATERIALS_SCHEMA_VERSION,
+} from './materials.js';
 export type { Material } from './materials.js';
 
 export { GLAZING, glazingById, SCHEMA_VERSION as GLAZING_SCHEMA_VERSION } from './glazing.js';

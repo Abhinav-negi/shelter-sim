@@ -50,7 +50,13 @@ export function activateSurface(id: string): void {
   actions.setSelectedSurfaceId(id);
 }
 
-function Legend({ result, domain }: { result: SimulationResult | null; domain: [Kelvin, Kelvin] | null }) {
+function Legend({
+  result,
+  domain,
+}: {
+  result: SimulationResult | null;
+  domain: [Kelvin, Kelvin] | null;
+}) {
   if (!result || !domain) {
     return (
       <div className="house-legend" data-testid="house-legend">
@@ -116,7 +122,12 @@ export function HouseView() {
           is the only sizing source. The CSS below (not an SVG attribute) is
           what makes it actually shrink to fit a narrow container instead of
           falling back to the SVG spec's 300x150 default intrinsic size. */}
-      <svg viewBox={viewBox} role="group" aria-label="Shelter isometric view" style={{ width: '100%', height: 'auto', display: 'block' }}>
+      <svg
+        viewBox={viewBox}
+        role="group"
+        aria-label="Shelter isometric view"
+        style={{ width: '100%', height: 'auto', display: 'block' }}
+      >
         {quads.map((q) => (
           <path
             key={q.id}

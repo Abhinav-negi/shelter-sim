@@ -128,7 +128,13 @@ function baseRequest(): SimulationRequest {
       T_amb,
       GHI,
       v_wind,
-      provenance: { source: 'synthetic', label: 'T-45 test fixture', sourceElevation: null, lapseCorrectionK: 0, notes: [] },
+      provenance: {
+        source: 'synthetic',
+        label: 'T-45 test fixture',
+        sourceElevation: null,
+        lapseCorrectionK: 0,
+        notes: [],
+      },
     },
     materials: { [MATERIAL.id]: MATERIAL },
     glazings: { [GLAZING.id]: GLAZING },
@@ -178,7 +184,9 @@ describe('T-45 acceptance test 1 -- collapsed on first paint', () => {
     const openHtml = renderToStaticMarkup(createElement(AdvancedPanel, { initialOpen: true }));
     expect(openHtml).toContain('advanced-panel-body');
     expect(openHtml).toContain('<input');
-    console.log('TEST 1 evidence: closed markup has no <input> and no advanced-panel-body; open markup has both.');
+    console.log(
+      'TEST 1 evidence: closed markup has no <input> and no advanced-panel-body; open markup has both.',
+    );
   });
 });
 
@@ -214,7 +222,11 @@ describe('T-45 acceptance test 2 -- every SimOptions field present and editable'
 
     for (const key of CONTRACTS_7_5_FIELDS) {
       expect(html).toContain(`field-${key}`);
-      expect(html).toMatch(new RegExp(`(<input[^>]*id="advanced-input-${key}"|<select[^>]*id="advanced-input-${key}")`));
+      expect(html).toMatch(
+        new RegExp(
+          `(<input[^>]*id="advanced-input-${key}"|<select[^>]*id="advanced-input-${key}")`,
+        ),
+      );
     }
   });
 });
@@ -233,7 +245,9 @@ describe('T-45 acceptance test 3 -- default, unit and valid range shown', () => 
     for (const f of [ts, theta, ground]) {
       const hintMatch = html.match(new RegExp(`hint-${f.key}"[^>]*>([^<]*)`));
       expect(hintMatch, `hint for ${f.key} should be present`).toBeTruthy();
-      console.log(`TEST 3 evidence: ${f.key} -> default=${f.defaultValue}, unit="${f.unit}", range=[${f.range.min},${f.range.max}], hint text="${hintMatch![1].trim()}"`);
+      console.log(
+        `TEST 3 evidence: ${f.key} -> default=${f.defaultValue}, unit="${f.unit}", range=[${f.range.min},${f.range.max}], hint text="${hintMatch![1].trim()}"`,
+      );
       expect(hintMatch![1]).toContain(String(f.defaultValue));
       expect(hintMatch![1]).toContain(`${f.range.min}`);
       expect(hintMatch![1]).toContain(`${f.range.max}`);
@@ -286,10 +300,14 @@ describe('T-45 acceptance test 5 -- reset to default restores exactly the §7.5 
       // simulationDays' range.min === its own default, 1), then reset.
       const perturbTo = field.range.min !== field.defaultValue ? field.range.min : field.range.max;
       req = field.set(req, perturbTo);
-      expect(field.get(req)).not.toBe(DEFAULT_SIM_OPTIONS[field.key as keyof typeof DEFAULT_SIM_OPTIONS]);
+      expect(field.get(req)).not.toBe(
+        DEFAULT_SIM_OPTIONS[field.key as keyof typeof DEFAULT_SIM_OPTIONS],
+      );
       req = field.set(req, field.defaultValue);
       const restored = field.get(req);
-      console.log(`TEST 5 evidence: ${field.key} reset -> ${restored} (contract default ${DEFAULT_SIM_OPTIONS[field.key as keyof typeof DEFAULT_SIM_OPTIONS]})`);
+      console.log(
+        `TEST 5 evidence: ${field.key} reset -> ${restored} (contract default ${DEFAULT_SIM_OPTIONS[field.key as keyof typeof DEFAULT_SIM_OPTIONS]})`,
+      );
       expect(restored).toBe(DEFAULT_SIM_OPTIONS[field.key as keyof typeof DEFAULT_SIM_OPTIONS]);
     }
 
@@ -304,11 +322,14 @@ describe('T-45 acceptance test 5 -- reset to default restores exactly the §7.5 
     req = fieldDefs.setAllowUnsafeVentilation(req, true);
     req = fieldDefs.setAllowUnsafeVentilation(req, fieldDefs.ALLOW_UNSAFE_VENTILATION_DEFAULT);
     expect(req.options.allowUnsafeVentilation).toBe(DEFAULT_SIM_OPTIONS.allowUnsafeVentilation);
-    console.log('TEST 5 evidence: skyModel/keepSurfaceProfiles/allowUnsafeVentilation all reset to', {
-      skyModel: req.options.skyModel,
-      keepSurfaceProfiles: req.options.keepSurfaceProfiles,
-      allowUnsafeVentilation: req.options.allowUnsafeVentilation,
-    });
+    console.log(
+      'TEST 5 evidence: skyModel/keepSurfaceProfiles/allowUnsafeVentilation all reset to',
+      {
+        skyModel: req.options.skyModel,
+        keepSurfaceProfiles: req.options.keepSurfaceProfiles,
+        allowUnsafeVentilation: req.options.allowUnsafeVentilation,
+      },
+    );
   });
 });
 
@@ -332,8 +353,20 @@ describe('T-45 acceptance test 6 -- changing skyModel changes the result and doe
     expect(after.error).toBeNull();
     const tempAt0600_isotropic = after.result!.kpis.tempAt0600;
 
-    console.log('TEST 6 evidence: tempAt0600(hdkr)      =', tempAt0600_hdkr, 'K =', toC(tempAt0600_hdkr).toFixed(3), 'degC');
-    console.log('TEST 6 evidence: tempAt0600(isotropic)  =', tempAt0600_isotropic, 'K =', toC(tempAt0600_isotropic).toFixed(3), 'degC');
+    console.log(
+      'TEST 6 evidence: tempAt0600(hdkr)      =',
+      tempAt0600_hdkr,
+      'K =',
+      toC(tempAt0600_hdkr).toFixed(3),
+      'degC',
+    );
+    console.log(
+      'TEST 6 evidence: tempAt0600(isotropic)  =',
+      tempAt0600_isotropic,
+      'K =',
+      toC(tempAt0600_isotropic).toFixed(3),
+      'degC',
+    );
     expect(tempAt0600_isotropic).not.toBe(tempAt0600_hdkr);
   });
 });
@@ -354,9 +387,7 @@ describe('T-45 acceptance test 7 -- allowUnsafeVentilation requires confirmation
     // The badge only renders while the value is actually true (persistent visible badge).
     expect(html).not.toContain('badge-unsafe-ventilation');
 
-    const enabledHtml = renderToStaticMarkup(
-      createElement(AdvancedPanel, { initialOpen: true }),
-    );
+    const enabledHtml = renderToStaticMarkup(createElement(AdvancedPanel, { initialOpen: true }));
     // Component-level proof the badge appears once the underlying value is true:
     // the badge markup is gated on `value` (request.options.allowUnsafeVentilation),
     // confirmed by rendering against a store hydrated with allowUnsafeVentilation: true.
@@ -375,7 +406,10 @@ describe('T-45 acceptance test 7 -- allowUnsafeVentilation requires confirmation
     const html = renderToStaticMarkup(createElement(AdvancedPanel, { initialOpen: true }));
     expect(html).toContain('badge-unsafe-ventilation');
     expect(html).toContain('Unsafe ventilation floor disabled');
-    console.log('TEST 7 evidence: badge markup present when allowUnsafeVentilation=true: badge-unsafe-ventilation found =', html.includes('badge-unsafe-ventilation'));
+    console.log(
+      'TEST 7 evidence: badge markup present when allowUnsafeVentilation=true: badge-unsafe-ventilation found =',
+      html.includes('badge-unsafe-ventilation'),
+    );
   });
 });
 
@@ -392,7 +426,10 @@ describe('T-45 acceptance test 8 -- collapsing does not revert values', () => {
     // (AdvancedPanel.tsx) -- it never touches the store, so the committed
     // value is untouched regardless of collapse state.
     expect(getStoreState().request.building.thermalBridgeFactor).toBe(1.5);
-    console.log('TEST 8 evidence: thermalBridgeFactor after commit + (simulated) collapse =', getStoreState().request.building.thermalBridgeFactor);
+    console.log(
+      'TEST 8 evidence: thermalBridgeFactor after commit + (simulated) collapse =',
+      getStoreState().request.building.thermalBridgeFactor,
+    );
   });
 });
 
@@ -405,7 +442,9 @@ describe('T-45 acceptance test 9 -- timestepSeconds 300 -> 60 changes tempAt0600
     expect(before.request.options.timestepSeconds).toBe(300);
     const tempAt0600_300 = before.result!.kpis.tempAt0600;
 
-    const timestepField = fieldDefs.NUMERIC_SIM_OPTION_FIELDS.find((f) => f.key === 'timestepSeconds')!;
+    const timestepField = fieldDefs.NUMERIC_SIM_OPTION_FIELDS.find(
+      (f) => f.key === 'timestepSeconds',
+    )!;
     actions.setRequest((r) => timestepField.set(r, 60));
     await wait(300);
     const after = getStoreState();
@@ -413,7 +452,15 @@ describe('T-45 acceptance test 9 -- timestepSeconds 300 -> 60 changes tempAt0600
     const tempAt0600_60 = after.result!.kpis.tempAt0600;
 
     const diffK = Math.abs(tempAt0600_60 - tempAt0600_300);
-    console.log('TEST 9 evidence: tempAt0600(300s) =', tempAt0600_300, 'K, tempAt0600(60s) =', tempAt0600_60, 'K, |diff| =', diffK, 'K');
+    console.log(
+      'TEST 9 evidence: tempAt0600(300s) =',
+      tempAt0600_300,
+      'K, tempAt0600(60s) =',
+      tempAt0600_60,
+      'K, |diff| =',
+      diffK,
+      'K',
+    );
     expect(diffK).toBeLessThan(0.1);
   });
 });

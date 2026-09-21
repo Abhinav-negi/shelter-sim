@@ -13,7 +13,12 @@
 
 import { randomBytes } from 'node:crypto';
 import { Prisma } from '@prisma/client';
-import { EngineError, requestFromJson, requestToJson, type SimulationRequest } from '@shelter/engine';
+import {
+  EngineError,
+  requestFromJson,
+  requestToJson,
+  type SimulationRequest,
+} from '@shelter/engine';
 import { withDb } from '../db.js';
 import { logError } from '../log.js';
 
@@ -67,7 +72,10 @@ function toValidatedJson(request: SimulationRequest): unknown | null {
   }
 }
 
-export async function saveDesign(request: SimulationRequest, label?: string): Promise<{ shareId: string } | null> {
+export async function saveDesign(
+  request: SimulationRequest,
+  label?: string,
+): Promise<{ shareId: string } | null> {
   const json = toValidatedJson(request);
   if (json === null) return null;
 

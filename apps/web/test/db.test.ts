@@ -64,21 +64,17 @@ describe('T-30 db.ts', () => {
     expect(result).toBeNull();
   });
 
-  it(
-    '3. withDb() resolves to null within 5s for a bogus DATABASE_URL',
-    async () => {
-      process.env.DATABASE_URL = BOGUS_DATABASE_URL;
-      const { withDb } = await freshDb();
-      const start = Date.now();
-      const result = await withDb(async (db) => db.material.count());
-      const elapsedMs = Date.now() - start;
-      expect(result).toBeNull();
-      expect(elapsedMs).toBeLessThan(5000);
-      // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-      console.log(`T-30 test 3: withDb(bogus) resolved null in ${elapsedMs}ms`);
-    },
-    7000,
-  );
+  it('3. withDb() resolves to null within 5s for a bogus DATABASE_URL', async () => {
+    process.env.DATABASE_URL = BOGUS_DATABASE_URL;
+    const { withDb } = await freshDb();
+    const start = Date.now();
+    const result = await withDb(async (db) => db.material.count());
+    const elapsedMs = Date.now() - start;
+    expect(result).toBeNull();
+    expect(elapsedMs).toBeLessThan(5000);
+    // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
+    console.log(`T-30 test 3: withDb(bogus) resolved null in ${elapsedMs}ms`);
+  }, 7000);
 
   it('4. withDb() resolves to a number when DATABASE_URL is set correctly', async () => {
     process.env.DATABASE_URL = LIVE_DATABASE_URL;
@@ -89,32 +85,28 @@ describe('T-30 db.ts', () => {
     console.log(`T-30 test 4: withDb(live) material.count() = ${result}`);
   });
 
-  it(
-    '5. dbHealthy() is false unset, false within 3s bogus, true live',
-    async () => {
-      {
-        const { dbHealthy } = await freshDb();
-        expect(await dbHealthy()).toBe(false);
-      }
-      {
-        process.env.DATABASE_URL = BOGUS_DATABASE_URL;
-        const { dbHealthy } = await freshDb();
-        const start = Date.now();
-        const healthy = await dbHealthy();
-        const elapsedMs = Date.now() - start;
-        expect(healthy).toBe(false);
-        expect(elapsedMs).toBeLessThan(3000);
-        // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
-        console.log(`T-30 test 5: dbHealthy(bogus) resolved false in ${elapsedMs}ms`);
-      }
-      {
-        process.env.DATABASE_URL = LIVE_DATABASE_URL;
-        const { dbHealthy } = await freshDb();
-        expect(await dbHealthy()).toBe(true);
-      }
-    },
-    7000,
-  );
+  it('5. dbHealthy() is false unset, false within 3s bogus, true live', async () => {
+    {
+      const { dbHealthy } = await freshDb();
+      expect(await dbHealthy()).toBe(false);
+    }
+    {
+      process.env.DATABASE_URL = BOGUS_DATABASE_URL;
+      const { dbHealthy } = await freshDb();
+      const start = Date.now();
+      const healthy = await dbHealthy();
+      const elapsedMs = Date.now() - start;
+      expect(healthy).toBe(false);
+      expect(elapsedMs).toBeLessThan(3000);
+      // eslint-disable-next-line no-console -- test evidence, per LOG.md rule 15.
+      console.log(`T-30 test 5: dbHealthy(bogus) resolved false in ${elapsedMs}ms`);
+    }
+    {
+      process.env.DATABASE_URL = LIVE_DATABASE_URL;
+      const { dbHealthy } = await freshDb();
+      expect(await dbHealthy()).toBe(true);
+    }
+  }, 7000);
 
   it('6. getDb() called 100 times creates exactly one client (identity)', async () => {
     process.env.DATABASE_URL = LIVE_DATABASE_URL;

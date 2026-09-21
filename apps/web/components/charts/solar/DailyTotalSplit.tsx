@@ -27,29 +27,62 @@ export function DailyTotalSplit({ solar }: { solar: SimulationResult['solar'] })
     <div data-testid="solar-daily-split">
       <h3 style={{ fontSize: '0.95rem', margin: '0 0 0.5rem' }}>Daily solar total (kWh)</h3>
       <div
-        style={{ display: 'flex', width: '100%', height: '1.5rem', borderRadius: '4px', overflow: 'hidden', border: '1px solid #ccc' }}
+        style={{
+          display: 'flex',
+          width: '100%',
+          height: '1.5rem',
+          borderRadius: '4px',
+          overflow: 'hidden',
+          border: '1px solid #ccc',
+        }}
         role="img"
         aria-label={`Useful ${formatEnergy(useful)}, rejected ${formatEnergy(rejected)}`}
       >
         <div
           data-testid="solar-split-useful"
-          style={{ width: `${usefulPct}%`, background: '#e0a933', minWidth: useful > 0 ? '2px' : 0 }}
+          style={{
+            width: `${usefulPct}%`,
+            background: '#e0a933',
+            minWidth: useful > 0 ? '2px' : 0,
+          }}
           title={`Useful (through glazing): ${formatEnergy(useful)}`}
         />
         <div
           data-testid="solar-split-rejected"
-          style={{ width: `${rejectedPct}%`, background: '#6b7280', minWidth: rejected > 0 ? '2px' : 0 }}
+          style={{
+            width: `${rejectedPct}%`,
+            background: '#6b7280',
+            minWidth: rejected > 0 ? '2px' : 0,
+          }}
           title={`Rejected (absorbed opaque): ${formatEnergy(rejected)}`}
         />
       </div>
       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', marginTop: '0.35rem' }}>
         <span>
-          <span style={{ display: 'inline-block', width: '0.7em', height: '0.7em', background: '#e0a933', marginRight: '0.3em' }} />
-          Useful (glazing, direct gain): <strong data-testid="solar-useful-value">{formatEnergy(useful)}</strong>
+          <span
+            style={{
+              display: 'inline-block',
+              width: '0.7em',
+              height: '0.7em',
+              background: '#e0a933',
+              marginRight: '0.3em',
+            }}
+          />
+          Useful (glazing, direct gain):{' '}
+          <strong data-testid="solar-useful-value">{formatEnergy(useful)}</strong>
         </span>
         <span>
-          <span style={{ display: 'inline-block', width: '0.7em', height: '0.7em', background: '#6b7280', marginRight: '0.3em' }} />
-          Rejected (opaque absorption): <strong data-testid="solar-rejected-value">{formatEnergy(rejected)}</strong>
+          <span
+            style={{
+              display: 'inline-block',
+              width: '0.7em',
+              height: '0.7em',
+              background: '#6b7280',
+              marginRight: '0.3em',
+            }}
+          />
+          Rejected (opaque absorption):{' '}
+          <strong data-testid="solar-rejected-value">{formatEnergy(rejected)}</strong>
         </span>
         <span>
           Total: <strong data-testid="solar-total-value">{formatEnergy(total)}</strong>

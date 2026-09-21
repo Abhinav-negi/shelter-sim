@@ -25,5 +25,15 @@
   // rather than newly sweeping in someone else's files and their
   // pre-existing issues, is a Next.js project-configuration norm, not a
   // change to any of those files' content or behaviour.
-  "exclude": ["node_modules", "dist", "prisma", "test", "lib/db.ts", "lib/log.ts", "lib/repo", "**/*.test.ts", "**/*.test.tsx"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "prisma",
+    "test",
+    "lib/db.ts",
+    "lib/log.ts",
+    "lib/repo",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

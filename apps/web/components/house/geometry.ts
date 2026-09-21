@@ -87,8 +87,10 @@ export function deriveGeometry(building: Building): HouseGeometry {
   const ewWalls = walls.filter((w) => !isSouthNorthFacing(w.azimuth));
   const fallback = Math.sqrt(building.floorArea); // square-footprint fallback when a wall is missing
 
-  const widthEW = snWalls.length > 0 ? average(snWalls.map((w) => wallLength(w, height))) : fallback;
-  const depthNS = ewWalls.length > 0 ? average(ewWalls.map((w) => wallLength(w, height))) : fallback;
+  const widthEW =
+    snWalls.length > 0 ? average(snWalls.map((w) => wallLength(w, height))) : fallback;
+  const depthNS =
+    ewWalls.length > 0 ? average(ewWalls.map((w) => wallLength(w, height))) : fallback;
 
   return { widthEW, depthNS, height };
 }
@@ -194,7 +196,12 @@ export function surfaceQuads(building: Building): SurfaceQuad[] {
 
 /** Screen-space bounding box of the whole drawing, for the SVG `viewBox`
  * (acceptance test 7: no fixed pixel width/height, `viewBox` only). */
-export function boundingBox(building: Building): { minX: number; minY: number; maxX: number; maxY: number } {
+export function boundingBox(building: Building): {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+} {
   const { widthEW, depthNS, height } = deriveGeometry(building);
   const hw = (widthEW / 2) * FLOOR_MARGIN;
   const hd = (depthNS / 2) * FLOOR_MARGIN;

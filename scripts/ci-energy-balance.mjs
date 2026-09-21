@@ -134,29 +134,65 @@ function analyseCase(name, request) {
 
 const MAT = {
   stone: {
-    id: 'stone', name: 'Stone masonry (granite)', category: 'structural',
-    k: 2.8, rho: 2600, c: 820, alphaSolar: 0.65, emissivity: 0.88,
-    locallyAvailableLadakh: true, source: 'BLUEPRINT.md Appendix B / ASHRAE Handbook of Fundamentals Ch. 26 (CI fixture, mirrors packages/engine/test/fixtures.ts MAT.stone)',
+    id: 'stone',
+    name: 'Stone masonry (granite)',
+    category: 'structural',
+    k: 2.8,
+    rho: 2600,
+    c: 820,
+    alphaSolar: 0.65,
+    emissivity: 0.88,
+    locallyAvailableLadakh: true,
+    source:
+      'BLUEPRINT.md Appendix B / ASHRAE Handbook of Fundamentals Ch. 26 (CI fixture, mirrors packages/engine/test/fixtures.ts MAT.stone)',
   },
   steel: {
-    id: 'steel', name: 'Steel (CGI sheet)', category: 'structural',
-    k: 50, rho: 7800, c: 480, alphaSolar: 0.6, emissivity: 0.28,
-    locallyAvailableLadakh: false, source: 'BLUEPRINT.md Appendix B (weathered galvanised steel optical row) (CI fixture, mirrors fixtures.ts MAT.steel)',
+    id: 'steel',
+    name: 'Steel (CGI sheet)',
+    category: 'structural',
+    k: 50,
+    rho: 7800,
+    c: 480,
+    alphaSolar: 0.6,
+    emissivity: 0.28,
+    locallyAvailableLadakh: false,
+    source:
+      'BLUEPRINT.md Appendix B (weathered galvanised steel optical row) (CI fixture, mirrors fixtures.ts MAT.steel)',
   },
   puf: {
-    id: 'puf', name: 'PUF / PIR', category: 'insulation',
-    k: 0.025, rho: 35, c: 1400, alphaSolar: 0.6, emissivity: 0.9,
-    locallyAvailableLadakh: false, source: 'BLUEPRINT.md Appendix B (CI fixture, mirrors fixtures.ts MAT.puf)',
+    id: 'puf',
+    name: 'PUF / PIR',
+    category: 'insulation',
+    k: 0.025,
+    rho: 35,
+    c: 1400,
+    alphaSolar: 0.6,
+    emissivity: 0.9,
+    locallyAvailableLadakh: false,
+    source: 'BLUEPRINT.md Appendix B (CI fixture, mirrors fixtures.ts MAT.puf)',
   },
 };
-const G_SINGLE = { id: 'single', name: 'Single glazing', U: 5.8, SHGC: 0.86, tauVis: 0.9, b0: 0.04, source: 'BLUEPRINT.md Appendix B (CI fixture, mirrors fixtures.ts G.single)' };
+const G_SINGLE = {
+  id: 'single',
+  name: 'Single glazing',
+  U: 5.8,
+  SHGC: 0.86,
+  tauVis: 0.9,
+  b0: 0.04,
+  source: 'BLUEPRINT.md Appendix B (CI fixture, mirrors fixtures.ts G.single)',
+};
 
 /** Mirrors `fixtures.ts`'s `buildC01Shelter` exactly. */
 function buildC01Shelter(construction) {
   const side = 4;
   const area = side * side;
   const opaque = (id, type, tilt, azimuth) => ({
-    id, type, area, tilt, azimuth, construction,
+    id,
+    type,
+    area,
+    tilt,
+    azimuth,
+    construction,
     boundary: 'exterior',
     exteriorAbsorptivity: 0.7,
     exteriorEmissivity: 0.9,
@@ -182,12 +218,20 @@ function buildC01Shelter(construction) {
 
   return {
     site: {
-      id: 'c01', name: 'C-01 kill-shot test site',
-      latitude: 34.15, longitude: 77.58, elevation: 3500, standardMeridian: 82.5,
-      groundAlbedo: 0.3, groundTempMeanAnnual: toK(6),
+      id: 'c01',
+      name: 'C-01 kill-shot test site',
+      latitude: 34.15,
+      longitude: 77.58,
+      elevation: 3500,
+      standardMeridian: 82.5,
+      groundAlbedo: 0.3,
+      groundTempMeanAnnual: toK(6),
     },
     building: {
-      floorArea: area, volume: area * side, azimuth: 0, surfaces,
+      floorArea: area,
+      volume: area * side,
+      azimuth: 0,
+      surfaces,
       windows: [{ id: 'southWindow', hostSurfaceId: 'south', area: 1.5, glazingId: 'single' }],
       thermalBridgeFactor: 1.1,
     },
@@ -198,16 +242,32 @@ function buildC01Shelter(construction) {
       comfortBand: { lower: toK(15), upper: toK(24) },
     },
     weather: {
-      stepSeconds: 3600, startDayOfYear: 15, startHour: 0,
-      T_amb, GHI, v_wind,
-      provenance: { source: 'synthetic', label: 'C-01 kill-shot synthetic weather (CI mirror)', sourceElevation: null, lapseCorrectionK: 0, notes: [] },
+      stepSeconds: 3600,
+      startDayOfYear: 15,
+      startHour: 0,
+      T_amb,
+      GHI,
+      v_wind,
+      provenance: {
+        source: 'synthetic',
+        label: 'C-01 kill-shot synthetic weather (CI mirror)',
+        sourceElevation: null,
+        lapseCorrectionK: 0,
+        notes: [],
+      },
     },
     materials: MAT,
     glazings: { single: G_SINGLE },
     options: {
-      timestepSeconds: 300, meshTargetDx: 0.02, simulationDays: 2,
-      spinUpToleranceK: 0.02, maxSpinUpDays: 30, skyModel: 'isotropic',
-      integrationTheta: 1, keepSurfaceProfiles: false, allowUnsafeVentilation: false,
+      timestepSeconds: 300,
+      meshTargetDx: 0.02,
+      simulationDays: 2,
+      spinUpToleranceK: 0.02,
+      maxSpinUpDays: 30,
+      skyModel: 'isotropic',
+      integrationTheta: 1,
+      keepSurfaceProfiles: false,
+      allowUnsafeVentilation: false,
     },
   };
 }
@@ -229,10 +289,12 @@ const shelterB_steelPuf = buildC01Shelter(STEEL_PUF_CONSTRUCTION);
 function resolvePreset(preset) {
   const materials = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
 }
 
@@ -265,19 +327,42 @@ function scenarioRequest(scenario) {
 function withStorage(base, storageElements) {
   return { ...base, building: { ...base.building, storageElements } };
 }
-const WATER_ELEMENT = { id: 'drum', kind: 'water', materialId: 'water', massKg: 500, surfaceAreaToRoom: 3, conductanceToRoom: 30 };
+const WATER_ELEMENT = {
+  id: 'drum',
+  kind: 'water',
+  materialId: 'water',
+  massKg: 500,
+  surfaceAreaToRoom: 3,
+  conductanceToRoom: 30,
+};
 const PCM_ELEMENT = {
-  id: 'pcmPack', kind: 'pcm', materialId: 'pcmParaffinRT25', massKg: 300,
-  surfaceAreaToRoom: 2, conductanceToRoom: 40,
-  meltPoint: toK(-2), meltRangeK: 3, latentHeat: 200000,
+  id: 'pcmPack',
+  kind: 'pcm',
+  materialId: 'pcmParaffinRT25',
+  massKg: 300,
+  surfaceAreaToRoom: 2,
+  conductanceToRoom: 40,
+  meltPoint: toK(-2),
+  meltRangeK: 3,
+  latentHeat: 200000,
 };
 // storage.test.ts's storage elements reference `water`/`pcmRt25` in the
 // engine test-only MAT catalogue; the REAL @shelter/data catalogue (T-24)
 // uses the ids `water`/`pcmParaffinRT25` -- resolve from there so
 // `materialById` never throws (mirrors what a real caller would do).
-const storageMaterials = { ...MAT, water: materialById('water'), pcmParaffinRT25: materialById('pcmParaffinRT25') };
-const shelterB_withWater = { ...withStorage(shelterB_steelPuf, [WATER_ELEMENT]), materials: storageMaterials };
-const shelterB_withPcm = { ...withStorage(shelterB_steelPuf, [PCM_ELEMENT]), materials: storageMaterials };
+const storageMaterials = {
+  ...MAT,
+  water: materialById('water'),
+  pcmParaffinRT25: materialById('pcmParaffinRT25'),
+};
+const shelterB_withWater = {
+  ...withStorage(shelterB_steelPuf, [WATER_ELEMENT]),
+  materials: storageMaterials,
+};
+const shelterB_withPcm = {
+  ...withStorage(shelterB_steelPuf, [PCM_ELEMENT]),
+  materials: storageMaterials,
+};
 
 // ============================================================================
 // CASE 29 -- the night-only / near-zero-gain reporting window, CONTRACTS.md
@@ -410,7 +495,15 @@ const csvLines = ['case,residual,netBoundaryJ,deltaStoredJ,throughputJ'];
 for (const r of rows) {
   csvLines.push(`${r.name},${r.residual},${r.netBoundaryJ},${r.deltaStoredJ},${r.throughputJ}`);
 }
-const csvPath = path.join(__dirname, '..', 'packages', 'engine', 'test', 'output', 'energy-balance.csv');
+const csvPath = path.join(
+  __dirname,
+  '..',
+  'packages',
+  'engine',
+  'test',
+  'output',
+  'energy-balance.csv',
+);
 mkdirSync(path.dirname(csvPath), { recursive: true });
 writeFileSync(csvPath, csvLines.join('\n') + '\n');
 console.log(`Wrote ${rows.length} rows to ${path.relative(process.cwd(), csvPath)}`);
@@ -421,7 +514,9 @@ for (const r of rows) {
   const rhs = r.residual * r.throughputJ;
   const diff = Math.abs(lhs - rhs);
   if (diff > 1e-9 * Math.max(1, Math.abs(rhs))) {
-    console.error(`SELF-CONSISTENCY FAILED for ${r.name}: netBoundaryJ-deltaStoredJ=${lhs} residual*throughputJ=${rhs} diff=${diff}`);
+    console.error(
+      `SELF-CONSISTENCY FAILED for ${r.name}: netBoundaryJ-deltaStoredJ=${lhs} residual*throughputJ=${rhs} diff=${diff}`,
+    );
     failed = true;
   }
 }
@@ -430,6 +525,8 @@ const elapsedS = (Date.now() - started) / 1000;
 console.log(`ci-energy-balance: ${rows.length} cases in ${elapsedS.toFixed(2)} s`);
 
 if (failed) {
-  console.error(`Energy-balance gate FAILED: a case's residual reached or exceeded ${THRESHOLD}, or a negative control was live, or a self-consistency check failed.`);
+  console.error(
+    `Energy-balance gate FAILED: a case's residual reached or exceeded ${THRESHOLD}, or a negative control was live, or a self-consistency check failed.`,
+  );
   process.exit(1);
 }

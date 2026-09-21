@@ -29,7 +29,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     body = (await req.json()) as PostBody;
   } catch {
-    return NextResponse.json({ code: 'INVALID_INPUT', message: 'request body must be JSON' }, { status: 400 });
+    return NextResponse.json(
+      { code: 'INVALID_INPUT', message: 'request body must be JSON' },
+      { status: 400 },
+    );
   }
 
   let validated: SimulationRequest;
@@ -64,7 +67,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   if (saved === null) {
     return NextResponse.json(
-      { code: 'SHARE_UNAVAILABLE', message: 'Sharing needs the server. Download the design as a file instead.' },
+      {
+        code: 'SHARE_UNAVAILABLE',
+        message: 'Sharing needs the server. Download the design as a file instead.',
+      },
       { status: 503 },
     );
   }

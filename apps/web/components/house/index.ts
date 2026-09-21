@@ -4,4 +4,8 @@ export { deriveGeometry, deriveHeight, surfaceQuads, boundingBox, project } from
 export type { HouseGeometry, SurfaceQuad, Vec3, Point2 } from './geometry';
 export { colorForTemp, tempDomainForIndex, NEUTRAL_FILL } from './color';
 export { hourToTimeIndex } from './time';
-export { computeExportPixelSize, exportSvgToPngDataUrl, PRESENTATION_EXPORT_WIDTH_PX } from './export';
+export {
+  computeExportPixelSize,
+  exportSvgToPngDataUrl,
+  PRESENTATION_EXPORT_WIDTH_PX,
+} from './export';

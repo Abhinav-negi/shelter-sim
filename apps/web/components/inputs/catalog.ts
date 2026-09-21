@@ -52,7 +52,13 @@ export const TMY_LOCATIONS: readonly TmyLocationSummary[] = [
   { id: 'leh', name: 'Leh', latitude: 34.15, longitude: 77.58, elevation: 3500 },
   { id: 'kargil', name: 'Kargil', latitude: 34.5539, longitude: 76.1349, elevation: 2676 },
   { id: 'drass', name: 'Drass', latitude: 34.4239, longitude: 75.7666, elevation: 3230 },
-  { id: 'nubra', name: 'Nubra Valley (Diskit)', latitude: 34.5443, longitude: 77.5584, elevation: 3144 },
+  {
+    id: 'nubra',
+    name: 'Nubra Valley (Diskit)',
+    latitude: 34.5443,
+    longitude: 77.5584,
+    elevation: 3144,
+  },
   { id: 'jaisalmer', name: 'Jaisalmer', latitude: 26.9157, longitude: 70.9083, elevation: 225 },
 ] as const;
 
@@ -105,7 +111,8 @@ export const GLAZINGS: readonly GlazingSummary[] = [
     tauVis: 0.7,
     b0: 0.06,
     source: GLAZING_TABLE_SOURCE,
-    blurb: 'Double glazing with argon gas and a low-emissivity coating: keeps in much more heat than plain double glazing.',
+    blurb:
+      'Double glazing with argon gas and a low-emissivity coating: keeps in much more heat than plain double glazing.',
   },
   {
     id: 'tripleGlazing',
@@ -115,7 +122,8 @@ export const GLAZINGS: readonly GlazingSummary[] = [
     tauVis: 0.6,
     b0: 0.07,
     source: GLAZING_TABLE_SOURCE,
-    blurb: 'Triple glazing: three panes, the warmest window available here, but also the most expensive.',
+    blurb:
+      'Triple glazing: three panes, the warmest window available here, but also the most expensive.',
   },
   {
     id: 'polycarbonateTwinWall',
@@ -125,7 +133,8 @@ export const GLAZINGS: readonly GlazingSummary[] = [
     tauVis: 0.78,
     b0: 0.05,
     source: `${GLAZING_TABLE_SOURCE}; typical structured-polycarbonate sheet datasheet range (e.g. Danpalon / Palram twin-wall polycarbonate technical data sheet)`,
-    blurb: 'Twin-wall polycarbonate: a light plastic sheeting material, cheaper and tougher than glass for a Trombe wall or greenhouse face.',
+    blurb:
+      'Twin-wall polycarbonate: a light plastic sheeting material, cheaper and tougher than glass for a Trombe wall or greenhouse face.',
   },
 ] as const;
 
@@ -211,7 +220,8 @@ export const PRESET_SUMMARIES: readonly PresetSummary[] = [
   {
     id: 'traditionalLadakhiByre',
     name: 'Traditional Ladakhi house (with livestock byre)',
-    blurb: 'Thick rammed-earth walls, a mud-and-poplar roof, small windows, animals stabled below for their body heat.',
+    blurb:
+      'Thick rammed-earth walls, a mud-and-poplar roof, small windows, animals stabled below for their body heat.',
     locationId: 'leh',
     wallLayers: [{ materialId: 'rammedEarth', thickness: 0.4 }],
     roofLayers: [
@@ -231,7 +241,8 @@ export const PRESET_SUMMARIES: readonly PresetSummary[] = [
   {
     id: 'armyBroBarrack',
     name: 'Army / BRO barrack (CGI sheet)',
-    blurb: 'Bare corrugated-galvanised-iron sheet walls and roof, no board insulation, large single-glazed windows.',
+    blurb:
+      'Bare corrugated-galvanised-iron sheet walls and roof, no board insulation, large single-glazed windows.',
     locationId: 'leh',
     wallLayers: [{ materialId: 'steelCGI', thickness: 0.0006 }],
     roofLayers: [{ materialId: 'steelCGI', thickness: 0.0006 }],
@@ -245,7 +256,8 @@ export const PRESET_SUMMARIES: readonly PresetSummary[] = [
   {
     id: 'modernRccNoInsulation',
     name: 'Modern RCC house (no insulation)',
-    blurb: 'Reinforced-concrete walls, roof and floor slab, reasonable double glazing, but no insulation anywhere.',
+    blurb:
+      'Reinforced-concrete walls, roof and floor slab, reasonable double glazing, but no insulation anywhere.',
     locationId: 'leh',
     wallLayers: [{ materialId: 'rcc', thickness: 0.15 }],
     roofLayers: [{ materialId: 'rcc', thickness: 0.15 }],
@@ -259,11 +271,10 @@ export const PRESET_SUMMARIES: readonly PresetSummary[] = [
   {
     id: 'geresTrombeRetrofit',
     name: 'GERES Trombe-wall retrofit (approximated)',
-    blurb: 'A massive, black-painted solar-absorber south wall behind a glazed cavity (approximated), rest unchanged.',
+    blurb:
+      'A massive, black-painted solar-absorber south wall behind a glazed cavity (approximated), rest unchanged.',
     locationId: 'leh',
-    wallLayers: [
-      { materialId: 'denseConcrete', thickness: 0.3 },
-    ],
+    wallLayers: [{ materialId: 'denseConcrete', thickness: 0.3 }],
     roofLayers: [
       { materialId: 'mudPlaster', thickness: 0.08 },
       { materialId: 'timberPoplarWillow', thickness: 0.05 },
@@ -281,7 +292,8 @@ export const PRESET_SUMMARIES: readonly PresetSummary[] = [
   {
     id: 'optimisedPassivePlaceholder',
     name: 'Optimised passive design (placeholder)',
-    blurb: 'Rammed earth wrapped in outer insulation, insulated roof and floor, argon low-E glazing with a night shutter.',
+    blurb:
+      'Rammed earth wrapped in outer insulation, insulated roof and floor, argon low-E glazing with a night shutter.',
     locationId: 'leh',
     wallLayers: [
       { materialId: 'eps', thickness: 0.1 },
@@ -304,7 +316,8 @@ export const PRESET_SUMMARIES: readonly PresetSummary[] = [
   {
     id: 'jaisalmerHotDryContrast',
     name: 'Jaisalmer hot-dry desert house',
-    blurb: 'Thick stone walls, whitewashed exterior, small shaded windows -- the same tool applied outside Ladakh.',
+    blurb:
+      'Thick stone walls, whitewashed exterior, small shaded windows -- the same tool applied outside Ladakh.',
     locationId: 'jaisalmer',
     wallLayers: [{ materialId: 'stoneMasonryGranite', thickness: 0.4 }],
     roofLayers: [{ materialId: 'rcc', thickness: 0.15 }],
@@ -394,7 +407,8 @@ export const OCCUPANCY_PRESETS: readonly OccupancyPreset[] = [
   {
     id: 'heatedOffice',
     name: 'Heated post / office (auxiliary heater on)',
-    blurb: 'Staffed through the day with an electric auxiliary heater keeping the room above 15 degC.',
+    blurb:
+      'Staffed through the day with an electric auxiliary heater keeping the room above 15 degC.',
     internalGainsSchedule: hourly(210, [[9, 18, 350]]),
     auxHeatingEnabled: true,
     auxHeatingSetpointC: 15,
@@ -409,7 +423,10 @@ export function occupancyPresetById(id: string): OccupancyPreset {
   return p;
 }
 
-export function defaultWindowSpecFor(hostSurfaceId: string, window: PresetSummary['window']): WindowSpec {
+export function defaultWindowSpecFor(
+  hostSurfaceId: string,
+  window: PresetSummary['window'],
+): WindowSpec {
   return window.nightShutter
     ? {
         id: `${hostSurfaceId}Window`,
@@ -419,5 +436,10 @@ export function defaultWindowSpecFor(hostSurfaceId: string, window: PresetSummar
         shadingSchedule: Array.from({ length: 24 }, (_, h) => h >= 20 || h < 6),
         shutterResistance: NIGHT_SHUTTER_RESISTANCE,
       }
-    : { id: `${hostSurfaceId}Window`, hostSurfaceId, area: window.areaM2, glazingId: window.glazingId };
+    : {
+        id: `${hostSurfaceId}Window`,
+        hostSurfaceId,
+        area: window.areaM2,
+        glazingId: window.glazingId,
+      };
 }

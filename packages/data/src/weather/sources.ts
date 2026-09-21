@@ -64,7 +64,10 @@ const NASA_POWER_PARAMETERS = [
   'PS',
 ] as const;
 
-export function nasaPowerUrl(q: WeatherQuery, baseUrl: string = NASA_POWER_DEFAULT_BASE_URL): string {
+export function nasaPowerUrl(
+  q: WeatherQuery,
+  baseUrl: string = NASA_POWER_DEFAULT_BASE_URL,
+): string {
   const params = new URLSearchParams({
     parameters: NASA_POWER_PARAMETERS.join(','),
     community: 'RE',
@@ -77,10 +80,15 @@ export function nasaPowerUrl(q: WeatherQuery, baseUrl: string = NASA_POWER_DEFAU
   return `${baseUrl}?${params.toString()}`;
 }
 
-function nasaField(parameter: Record<string, Record<string, number>>, name: string): Record<string, number> {
+function nasaField(
+  parameter: Record<string, Record<string, number>>,
+  name: string,
+): Record<string, number> {
   const field = parameter[name];
   if (!field) {
-    throw new EngineError('WEATHER_INVALID', `NASA POWER response is missing parameter "${name}"`, { field: name });
+    throw new EngineError('WEATHER_INVALID', `NASA POWER response is missing parameter "${name}"`, {
+      field: name,
+    });
   }
   return field;
 }
@@ -90,7 +98,12 @@ function nasaField(parameter: Record<string, Record<string, number>>, name: stri
  * header) -- lexical sort order is chronological order for a fixed-width
  * numeric string, so `Object.keys(field).sort()` is enough.
  */
-function parseNasaTimestamp(key: string): { year: number; month: number; day: number; hour: number } {
+function parseNasaTimestamp(key: string): {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+} {
   return {
     year: Number(key.slice(0, 4)),
     month: Number(key.slice(4, 6)),
@@ -107,9 +120,13 @@ export function parseNasaPower(json: unknown, _q: WeatherQuery): RawWeather {
   };
   const parameter = root?.properties?.parameter;
   if (!parameter) {
-    throw new EngineError('WEATHER_INVALID', 'NASA POWER response is missing properties.parameter', {
-      field: 'properties.parameter',
-    });
+    throw new EngineError(
+      'WEATHER_INVALID',
+      'NASA POWER response is missing properties.parameter',
+      {
+        field: 'properties.parameter',
+      },
+    );
   }
 
   const t2m = nasaField(parameter, 'T2M');
@@ -136,7 +153,9 @@ export function parseNasaPower(json: unknown, _q: WeatherQuery): RawWeather {
     return keys.map((k) => {
       const v = field[k];
       if (v === undefined) {
-        throw new EngineError('WEATHER_INVALID', `${name} is missing timestamp ${k}`, { field: name });
+        throw new EngineError('WEATHER_INVALID', `${name} is missing timestamp ${k}`, {
+          field: name,
+        });
       }
       return isFill(v) ? NaN : v;
     });
@@ -184,7 +203,10 @@ const OPEN_METEO_HOURLY_VARIABLES = [
   'direct_normal_irradiance',
 ] as const;
 
-export function openMeteoUrl(q: WeatherQuery, baseUrl: string = OPEN_METEO_DEFAULT_BASE_URL): string {
+export function openMeteoUrl(
+  q: WeatherQuery,
+  baseUrl: string = OPEN_METEO_DEFAULT_BASE_URL,
+): string {
   const params = new URLSearchParams({
     latitude: String(q.latitude),
     longitude: String(q.longitude),
@@ -198,7 +220,9 @@ export function openMeteoUrl(q: WeatherQuery, baseUrl: string = OPEN_METEO_DEFAU
 function openMeteoField(hourly: Record<string, unknown>, name: string, n: number): number[] {
   const field = hourly[name];
   if (!Array.isArray(field)) {
-    throw new EngineError('WEATHER_INVALID', `Open-Meteo response is missing hourly.${name}`, { field: name });
+    throw new EngineError('WEATHER_INVALID', `Open-Meteo response is missing hourly.${name}`, {
+      field: name,
+    });
   }
   if (field.length !== n) {
     throw new EngineError(
@@ -213,7 +237,12 @@ function openMeteoField(hourly: Record<string, unknown>, name: string, n: number
   return field.map((v) => (v === null ? NaN : (v as number)));
 }
 
-function parseOpenMeteoTimestamp(iso: string): { year: number; month: number; day: number; hour: number } {
+function parseOpenMeteoTimestamp(iso: string): {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+} {
   const [datePart, timePart] = iso.split('T');
   const [year, month, day] = datePart!.split('-').map(Number) as [number, number, number];
   const hour = Number(timePart!.slice(0, 2));
@@ -228,11 +257,15 @@ export function parseOpenMeteo(json: unknown, _q: WeatherQuery): RawWeather {
   };
   const hourly = root?.hourly;
   if (!hourly) {
-    throw new EngineError('WEATHER_INVALID', 'Open-Meteo response is missing hourly', { field: 'hourly' });
+    throw new EngineError('WEATHER_INVALID', 'Open-Meteo response is missing hourly', {
+      field: 'hourly',
+    });
   }
   const time = hourly.time;
   if (!Array.isArray(time)) {
-    throw new EngineError('WEATHER_INVALID', 'Open-Meteo response is missing hourly.time', { field: 'time' });
+    throw new EngineError('WEATHER_INVALID', 'Open-Meteo response is missing hourly.time', {
+      field: 'time',
+    });
   }
   const n = time.length;
 

@@ -16,7 +16,11 @@ import type { SimulationResult } from '@shelter/engine';
  * (CONTRACTS.md §7.7: a genuine multi-day run reports the last day), aligned
  * to `weatherStartHour` (`request.weather.startHour`) the way the engine
  * itself aligns 06:00. */
-export function hourToTimeIndex(result: SimulationResult, weatherStartHour: number, hour: number): number {
+export function hourToTimeIndex(
+  result: SimulationResult,
+  weatherStartHour: number,
+  hour: number,
+): number {
   const n = result.time.length;
   if (n === 0) return 0;
   const dt = n > 1 ? result.time[1]! - result.time[0]! : 3600;

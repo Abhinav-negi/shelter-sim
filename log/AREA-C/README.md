@@ -15,4 +15,4 @@
 
 > Everything here lives in a new package `packages/data` (`@shelter/data`), which has **zero runtime
 > dependencies** — TMY payloads are JSON files in the repository. It must never import
-> `@prisma/client` (global rule 17); the database *serves* this data, it does not *own* it.
+> `@prisma/client` (global rule 17); the database _serves_ this data, it does not _own_ it.

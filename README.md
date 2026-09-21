@@ -76,13 +76,13 @@ and runs Next's own `output: 'export'` against that copy. Nothing under `app/`, 
 `components/**` or `app/api/**` is ever edited in place. The result: a self-contained
 `apps/web/static-export/` directory (44 files, ~4.0 MB, all five TMY files included, zero
 `localhost`/`127.0.0.1` references) that shows the Leh result immediately, offline, on a fresh
-machine, with the offline banner correctly reading *"Offline — showing 1 scenario, AI advice
-unavailable."* from the first client-side effect.
+machine, with the offline banner correctly reading _"Offline — showing 1 scenario, AI advice
+unavailable."_ from the first client-side effect.
 
 **Known ledger defect, unrelated to either mechanism above:** deleting `apps/web/app/api/`
 entirely and running the ordinary `npm run build --workspace apps/web` currently fails —
 `apps/web/components/inputs/inputs.test.ts` does `await import('../../app/api/materials/route')`,
 which Next's build-time TypeScript pass cannot resolve once that directory is gone. That file is
 outside this task's allow-list (`components/**`); `apps/web/scripts/build-static.mjs` sidesteps it
-by never copying test files into its own throwaway build, but the *ordinary* build is still
+by never copying test files into its own throwaway build, but the _ordinary_ build is still
 affected. See `log/AREA-J/T-66.md` acceptance test 5.
