@@ -194,6 +194,7 @@ export function resultFromJson(j: unknown): SimulationResult {
     },
     heatFlows: heatFlows as unknown as HeatFlows,
     kpis: j.kpis as SimulationKpis,
+    ...(j.warmState !== undefined ? { warmState: seriesFromJson(j.warmState as number[]) } : {}),
   };
 }
 
