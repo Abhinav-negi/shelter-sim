@@ -73,11 +73,17 @@ export function MaterialStackEditor({
           return (
             <li
               key={`${layer.materialId}-${i}`}
-              style={{ border: '1px solid var(--color-border-subtle)', borderRadius: 6, padding: 8 }}
+              style={{
+                border: '1px solid var(--color-border-subtle)',
+                borderRadius: 6,
+                padding: 8,
+              }}
             >
               <div style={{ fontWeight: 600 }}>{material?.name ?? layer.materialId}</div>
               {material?.blurb && (
-                <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{material.blurb}</div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                  {material.blurb}
+                </div>
               )}
               <label htmlFor={inputId} style={{ display: 'block', marginTop: 4 }}>
                 Thickness: {thicknessMm} mm
@@ -99,7 +105,9 @@ export function MaterialStackEditor({
                   <summary style={{ cursor: 'pointer', fontSize: 12 }}>
                     Where this number comes from
                   </summary>
-                  <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{material.source}</p>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                    {material.source}
+                  </p>
                 </details>
               )}
             </li>

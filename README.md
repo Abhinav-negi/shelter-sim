@@ -43,11 +43,11 @@ npm run dev --workspace @shelter/web
 
 Open **http://localhost:3000** (redirects to `/results`).
 
-| Route | Purpose |
-|---|---|
+| Route      | Purpose                                             |
+| ---------- | --------------------------------------------------- |
 | `/results` | Temperature, solar, heat-flow charts and house view |
-| `/setup` | Edit geometry, materials, glazing, weather, options |
-| `/compare` | Eighteen-scenario survival / comparison grid |
+| `/setup`   | Edit geometry, materials, glazing, weather, options |
+| `/compare` | Eighteen-scenario survival / comparison grid        |
 
 Changes on Setup re-run the thermal model (debounced) and update Results.
 
@@ -96,12 +96,12 @@ npm run start --workspace @shelter/web
 
 ### Troubleshooting
 
-| Symptom | Fix |
-|---|---|
-| Module / import errors from `@shelter/engine` or `@shelter/data` | Run the package builds in step 2 |
-| Stale UI or odd webpack warnings after a package change | `rm -rf apps/web/.next` then restart `dev` |
-| Port 3000 already in use | Stop the other process, or `npx next dev --webpack -p 3001` from `apps/web` |
-| Node version errors | Upgrade to Node 20+ |
+| Symptom                                                          | Fix                                                                         |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Module / import errors from `@shelter/engine` or `@shelter/data` | Run the package builds in step 2                                            |
+| Stale UI or odd webpack warnings after a package change          | `rm -rf apps/web/.next` then restart `dev`                                  |
+| Port 3000 already in use                                         | Stop the other process, or `npx next dev --webpack -p 3001` from `apps/web` |
+| Node version errors                                              | Upgrade to Node 20+                                                         |
 
 ## Branch protocol
 

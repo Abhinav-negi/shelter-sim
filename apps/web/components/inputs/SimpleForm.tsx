@@ -122,14 +122,19 @@ function MaterialSelect({
         ))}
       </select>
       {selected?.blurb && (
-        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: '2px 0' }}>{selected.blurb}</p>
+        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: '2px 0' }}>
+          {selected.blurb}
+        </p>
       )}
       {selected?.source && (
         <details>
           <summary style={{ cursor: 'pointer', fontSize: 12 }}>
             {t('inputs.simpleForm.materialSelect.sourceSummary', locale)}
           </summary>
-          <p data-testid={`citation-${id}`} style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+          <p
+            data-testid={`citation-${id}`}
+            style={{ fontSize: 12, color: 'var(--color-text-muted)' }}
+          >
             {selected.source}
           </p>
         </details>
