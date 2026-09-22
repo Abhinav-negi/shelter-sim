@@ -122,14 +122,14 @@ function MaterialSelect({
         ))}
       </select>
       {selected?.blurb && (
-        <p style={{ fontSize: 12, color: '#475569', margin: '2px 0' }}>{selected.blurb}</p>
+        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: '2px 0' }}>{selected.blurb}</p>
       )}
       {selected?.source && (
         <details>
           <summary style={{ cursor: 'pointer', fontSize: 12 }}>
             {t('inputs.simpleForm.materialSelect.sourceSummary', locale)}
           </summary>
-          <p data-testid={`citation-${id}`} style={{ fontSize: 12, color: '#475569' }}>
+          <p data-testid={`citation-${id}`} style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
             {selected.source}
           </p>
         </details>
@@ -173,7 +173,7 @@ export function SimpleForm() {
         <p
           role="alert"
           data-testid="simple-form-error"
-          style={{ fontSize: 13, color: '#991b1b', margin: 0 }}
+          style={{ fontSize: 13, color: 'var(--color-negative)', margin: 0 }}
         >
           {t('inputs.simpleForm.error', locale).replace('{message}', state.error.message)}
         </p>
@@ -302,14 +302,18 @@ export function SimpleForm() {
               style={{
                 textAlign: 'left',
                 width: 160,
-                border: state.presetId === p.id ? '2px solid #0f172a' : '1px solid #cbd5e1',
+                border:
+                  state.presetId === p.id
+                    ? '2px solid var(--color-accent)'
+                    : '1px solid var(--color-border)',
                 borderRadius: 8,
                 padding: 8,
-                background: 'white',
+                background: 'var(--color-surface)',
+                color: 'var(--color-text)',
               }}
             >
               <div style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</div>
-              <div style={{ fontSize: 11, color: '#475569' }}>{p.blurb}</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{p.blurb}</div>
             </button>
           ))}
         </div>
@@ -394,7 +398,7 @@ export function SimpleForm() {
             </option>
           ))}
         </select>
-        <p style={{ fontSize: 12, color: '#475569', margin: '2px 0' }}>
+        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: '2px 0' }}>
           {GLAZINGS.find((g) => g.id === currentGlazingId(request.building))?.blurb}
         </p>
         <label htmlFor="input-night-shutter">
@@ -424,7 +428,7 @@ export function SimpleForm() {
             </option>
           ))}
         </select>
-        <p style={{ fontSize: 12, color: '#475569', margin: '2px 0' }}>
+        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: '2px 0' }}>
           {OCCUPANCY_PRESETS.find((o) => o.id === inferOccupancyPresetId(request))?.blurb}
         </p>
       </div>

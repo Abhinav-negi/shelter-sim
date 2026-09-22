@@ -1,0 +1,2434 @@
+{
+  ".claude/settings.local.json": {
+    "size": 72,
+    "mtime_ns": 1789388385189435715,
+    "indexed_at_ns": 1790002726221014831,
+    "word_count": 11,
+    "hashes": {
+      ".claude/settings.local.json": "a058d7723758e56080498baa847b88e2a7bdc9229526ada638e8bba3f56966e3"
+    }
+  },
+  ".github/workflows/ci.yml": {
+    "size": 732,
+    "mtime_ns": 1789369298468245755,
+    "indexed_at_ns": 1790002737279333718,
+    "word_count": 82,
+    "hashes": {
+      ".github/workflows/ci.yml": "96abb54aeb8942871b697ab637d4d7f1b51faed507f2f94713176d2e9a517f7a"
+    }
+  },
+  ".work/README.md": {
+    "size": 646,
+    "mtime_ns": 1789369234946526854,
+    "indexed_at_ns": 1790002737279722260,
+    "word_count": 105,
+    "hashes": {
+      ".work/readme.md": "dfca349d1274fb38c386f17d4ee0348678dc1e6b54966a647093115def0eb47a"
+    }
+  },
+  ".work/T-07.md": {
+    "size": 5528,
+    "mtime_ns": 1789388978062952758,
+    "indexed_at_ns": 1790002737279926974,
+    "word_count": 719,
+    "hashes": {
+      ".work/t-07.md": "c1a597eb9d351fdf6e3d1acb50e57a04d81599ea17d84700b396b598d95c0414"
+    }
+  },
+  ".work/T-18.md": {
+    "size": 3963,
+    "mtime_ns": 1789388492890785296,
+    "indexed_at_ns": 1790002737280116511,
+    "word_count": 597,
+    "hashes": {
+      ".work/t-18.md": "f5022fe302f60287bbaaf3f8e846f0e4a9f97a68878880f799410f467fc02d90"
+    }
+  },
+  ".work/T-19.md": {
+    "size": 4504,
+    "mtime_ns": 1789383809106524562,
+    "indexed_at_ns": 1790002737280297515,
+    "word_count": 632,
+    "hashes": {
+      ".work/t-19.md": "b28ea8b2e026f2bd73763a5bf7248d50c2a7c5f79cc80256bf4d66f0a831090b"
+    }
+  },
+  ".work/T-21.md": {
+    "size": 9845,
+    "mtime_ns": 1789485259346981578,
+    "indexed_at_ns": 1790002737280473678,
+    "word_count": 1346,
+    "hashes": {
+      ".work/t-21.md": "fecb658c2d42dced1374fac6bb1f2bca1678e9bd8ef90c5735bcce99a70c83b4"
+    }
+  },
+  ".work/T-23.md": {
+    "size": 4656,
+    "mtime_ns": 1789496478605655403,
+    "indexed_at_ns": 1790002737280652493,
+    "word_count": 625,
+    "hashes": {
+      ".work/t-23.md": "77bd42c8d73c6fe1aa93fbe8c32edcd52505b2ffd101578cdec9739d7f359fc6"
+    }
+  },
+  ".work/T-24.md": {
+    "size": 12633,
+    "mtime_ns": 1789484294215655386,
+    "indexed_at_ns": 1790002737280837297,
+    "word_count": 1655,
+    "hashes": {
+      ".work/t-24.md": "11dc2bf06e2e5b8b247dd7aae05860026de3a900e19bef9d4bbee6a519fd8a70"
+    }
+  },
+  ".work/T-28.md": {
+    "size": 3676,
+    "mtime_ns": 1789555498138939860,
+    "indexed_at_ns": 1790002737281020722,
+    "word_count": 509,
+    "hashes": {
+      ".work/t-28.md": "823a6cc8d32660dd1b34d9653d9b2abd57c85530c3d29e0de375cc1a6b59a00a"
+    }
+  },
+  ".work/TEMPLATE.md": {
+    "size": 417,
+    "mtime_ns": 1789913903167218782,
+    "indexed_at_ns": 1790002737281196619,
+    "word_count": 65,
+    "hashes": {
+      ".work/template.md": "df7300b0c79beb1f754fa4f72850946cf0eae5197e91b1024f78c8d4d8320d03"
+    }
+  },
+  ".work/board.sh": {
+    "size": 757,
+    "mtime_ns": 1789369234946688366,
+    "indexed_at_ns": 1790002726221355060,
+    "word_count": 125,
+    "hashes": {
+      ".work/board.sh": "83ca0830a8284a3c42e429da3ebc01e2df0eae6fcb14a4162799626e296b5bed"
+    }
+  },
+  ".work/claim.sh": {
+    "size": 373,
+    "mtime_ns": 1789369234946688366,
+    "indexed_at_ns": 1790002726221537917,
+    "word_count": 57,
+    "hashes": {
+      ".work/claim.sh": "e715010c12b519a4c9036fdd9cceced489b216433014429e931561c50c480cd5"
+    }
+  },
+  "ENGINE_BLUEPRINT.md": {
+    "size": 82782,
+    "mtime_ns": 1788793724152963060,
+    "indexed_at_ns": 1790002737281360570,
+    "word_count": 12791,
+    "hashes": {
+      "engine_blueprint.md": "f6667076ecb6fb9510304d48c2da4cbef946b831fc22e2cbb42bade81a713098"
+    }
+  },
+  "EQUATIONS.md": {
+    "size": 86983,
+    "mtime_ns": 1790001669743755910,
+    "indexed_at_ns": 1790002737281675808,
+    "word_count": 8785,
+    "hashes": { "equations.md": "26cf862d4722114a387d84ae9ab587af9fe252e17ad91354bd928e1d3bd85ca9" }
+  },
+  "LOG.md": {
+    "size": 38708,
+    "mtime_ns": 1790002329675429087,
+    "indexed_at_ns": 1790002737281990183,
+    "word_count": 6402,
+    "hashes": { "log.md": "fe0198a1492a2f88f07f6f4383ddff9a7642fc6584e501f63cf6c646e4021989" }
+  },
+  "ORCHESTRATOR.md": {
+    "size": 10137,
+    "mtime_ns": 1790001669744359228,
+    "indexed_at_ns": 1790002737282261995,
+    "word_count": 1638,
+    "hashes": {
+      "orchestrator.md": "c84c705b9a757b575d609219dfb9c07002d2ad7c0b1da1e718b578033a6145bb"
+    }
+  },
+  "README.md": {
+    "size": 5455,
+    "mtime_ns": 1790001669744486728,
+    "indexed_at_ns": 1790002737282447130,
+    "word_count": 753,
+    "hashes": { "readme.md": "607589eb0f6d7237ccb016e89dcf2d3586c578ca73eb1e82c3a1620c6de0043c" }
+  },
+  "apps/web/app/_pwa-register.tsx": {
+    "size": 246,
+    "mtime_ns": 1789996754513907844,
+    "indexed_at_ns": 1790002700645428414,
+    "word_count": 27
+  },
+  "apps/web/app/api/designs/[shareId]/route.ts": {
+    "size": 1388,
+    "mtime_ns": 1789675876019291824,
+    "indexed_at_ns": 1790002700645768440,
+    "word_count": 192
+  },
+  "apps/web/app/api/designs/route.ts": {
+    "size": 2999,
+    "mtime_ns": 1790001669744755352,
+    "indexed_at_ns": 1790002700646063640,
+    "word_count": 423
+  },
+  "apps/web/app/api/materials/route.ts": {
+    "size": 1777,
+    "mtime_ns": 1789675876019458425,
+    "indexed_at_ns": 1790002700646378341,
+    "word_count": 251
+  },
+  "apps/web/app/api/simulate/route.ts": {
+    "size": 4939,
+    "mtime_ns": 1790001669744872425,
+    "indexed_at_ns": 1790002700646714276,
+    "word_count": 674
+  },
+  "apps/web/app/api/weather/route.ts": {
+    "size": 12953,
+    "mtime_ns": 1790001669745014864,
+    "indexed_at_ns": 1790002700647120425,
+    "word_count": 1591
+  },
+  "apps/web/app/app-shell.tsx": {
+    "size": 7053,
+    "mtime_ns": 1790001669745132676,
+    "indexed_at_ns": 1790002700647468936,
+    "word_count": 762
+  },
+  "apps/web/app/layout.tsx": {
+    "size": 560,
+    "mtime_ns": 1790001669745209422,
+    "indexed_at_ns": 1790002700647947666,
+    "word_count": 69
+  },
+  "apps/web/app/page.tsx": {
+    "size": 3220,
+    "mtime_ns": 1790001669745401925,
+    "indexed_at_ns": 1790002700648189218,
+    "word_count": 418
+  },
+  "apps/web/components/advanced/AdvancedPanel.tsx": {
+    "size": 17963,
+    "mtime_ns": 1790001669745544868,
+    "indexed_at_ns": 1790002700648470853,
+    "word_count": 1450
+  },
+  "apps/web/components/advanced/fieldDefs.ts": {
+    "size": 15840,
+    "mtime_ns": 1790001669745691248,
+    "indexed_at_ns": 1790002700648817169,
+    "word_count": 1948
+  },
+  "apps/web/components/charts/heatflow/DeltaTScatter.tsx": {
+    "size": 1319,
+    "mtime_ns": 1790001669745941860,
+    "indexed_at_ns": 1790002700649205501,
+    "word_count": 120
+  },
+  "apps/web/components/charts/heatflow/HeatFlowPanel.tsx": {
+    "size": 1651,
+    "mtime_ns": 1789837580724424291,
+    "indexed_at_ns": 1790002700649736519,
+    "word_count": 175
+  },
+  "apps/web/components/charts/heatflow/SankeyDiagram.tsx": {
+    "size": 2070,
+    "mtime_ns": 1790001669745941860,
+    "indexed_at_ns": 1790002700650029503,
+    "word_count": 194
+  },
+  "apps/web/components/charts/heatflow/StackedAreaChart.tsx": {
+    "size": 2171,
+    "mtime_ns": 1790001669745941860,
+    "indexed_at_ns": 1790002700650318616,
+    "word_count": 193
+  },
+  "apps/web/components/charts/heatflow/heatflow.test.ts": {
+    "size": 14590,
+    "mtime_ns": 1790001669746225257,
+    "indexed_at_ns": 1790002700650604381,
+    "word_count": 1527
+  },
+  "apps/web/components/charts/heatflow/index.ts": {
+    "size": 671,
+    "mtime_ns": 1790001669746225257,
+    "indexed_at_ns": 1790002700650941821,
+    "word_count": 69
+  },
+  "apps/web/components/charts/heatflow/pathways.ts": {
+    "size": 4588,
+    "mtime_ns": 1790001669746225257,
+    "indexed_at_ns": 1790002700651221885,
+    "word_count": 623
+  },
+  "apps/web/components/charts/heatflow/sankey.ts": {
+    "size": 7431,
+    "mtime_ns": 1790001669746225257,
+    "indexed_at_ns": 1790002700651526020,
+    "word_count": 1075
+  },
+  "apps/web/components/charts/heatflow/scatter.ts": {
+    "size": 3879,
+    "mtime_ns": 1790001669746573167,
+    "indexed_at_ns": 1790002700651842119,
+    "word_count": 630
+  },
+  "apps/web/components/charts/heatflow/stackedArea.ts": {
+    "size": 4745,
+    "mtime_ns": 1790001669746573167,
+    "indexed_at_ns": 1790002700652137349,
+    "word_count": 705
+  },
+  "apps/web/components/charts/solar/AlbedoComparison.tsx": {
+    "size": 5853,
+    "mtime_ns": 1790001669746941671,
+    "indexed_at_ns": 1790002700652437355,
+    "word_count": 635
+  },
+  "apps/web/components/charts/solar/CaptureCurve.tsx": {
+    "size": 4409,
+    "mtime_ns": 1790001669746941671,
+    "indexed_at_ns": 1790002700652738874,
+    "word_count": 476
+  },
+  "apps/web/components/charts/solar/DailyTotalSplit.tsx": {
+    "size": 3299,
+    "mtime_ns": 1790001669746941671,
+    "indexed_at_ns": 1790002700653044369,
+    "word_count": 319
+  },
+  "apps/web/components/charts/solar/OrientationBars.tsx": {
+    "size": 5692,
+    "mtime_ns": 1790001669746941671,
+    "indexed_at_ns": 1790002700653353813,
+    "word_count": 676
+  },
+  "apps/web/components/charts/solar/SolarPanel.tsx": {
+    "size": 1771,
+    "mtime_ns": 1790001669746941671,
+    "indexed_at_ns": 1790002700653660315,
+    "word_count": 214
+  },
+  "apps/web/components/charts/solar/groundAlbedo.ts": {
+    "size": 2152,
+    "mtime_ns": 1790001669746941671,
+    "indexed_at_ns": 1790002700653985678,
+    "word_count": 293
+  },
+  "apps/web/components/charts/solar/orientation.ts": {
+    "size": 7467,
+    "mtime_ns": 1790001669746941671,
+    "indexed_at_ns": 1790002700654267206,
+    "word_count": 1093
+  },
+  "apps/web/components/charts/solar/solar.test.ts": {
+    "size": 13244,
+    "mtime_ns": 1790001669747530487,
+    "indexed_at_ns": 1790002700654576378,
+    "word_count": 1503
+  },
+  "apps/web/components/charts/temp/TempChart.test.tsx": {
+    "size": 18621,
+    "mtime_ns": 1790001669747688060,
+    "indexed_at_ns": 1790002700655161349,
+    "word_count": 1977
+  },
+  "apps/web/components/charts/temp/TempChart.tsx": {
+    "size": 15107,
+    "mtime_ns": 1790001669747837309,
+    "indexed_at_ns": 1790002700655516260,
+    "word_count": 1354
+  },
+  "apps/web/components/charts/temp/colors.ts": {
+    "size": 1387,
+    "mtime_ns": 1789820045165613385,
+    "indexed_at_ns": 1790002700655865570,
+    "word_count": 198
+  },
+  "apps/web/components/charts/temp/format.ts": {
+    "size": 745,
+    "mtime_ns": 1789820045165613385,
+    "indexed_at_ns": 1790002700656152887,
+    "word_count": 105
+  },
+  "apps/web/components/charts/temp/interaction.ts": {
+    "size": 2812,
+    "mtime_ns": 1790001669747837309,
+    "indexed_at_ns": 1790002700656436639,
+    "word_count": 387
+  },
+  "apps/web/components/charts/temp/scales.ts": {
+    "size": 1494,
+    "mtime_ns": 1790001669747837309,
+    "indexed_at_ns": 1790002700656726132,
+    "word_count": 233
+  },
+  "apps/web/components/charts/temp/series.ts": {
+    "size": 4253,
+    "mtime_ns": 1789820045165613385,
+    "indexed_at_ns": 1790002700657007252,
+    "word_count": 624
+  },
+  "apps/web/components/grid/SurvivalGrid.test.ts": {
+    "size": 10987,
+    "mtime_ns": 1790001669748128726,
+    "indexed_at_ns": 1790002700657514846,
+    "word_count": 1109
+  },
+  "apps/web/components/grid/SurvivalGrid.tsx": {
+    "size": 5400,
+    "mtime_ns": 1790001669748128726,
+    "indexed_at_ns": 1790002700657819547,
+    "word_count": 474
+  },
+  "apps/web/components/grid/band.ts": {
+    "size": 1470,
+    "mtime_ns": 1789749680298824528,
+    "indexed_at_ns": 1790002700658098897,
+    "word_count": 215
+  },
+  "apps/web/components/grid/rows.ts": {
+    "size": 7346,
+    "mtime_ns": 1790001669748314620,
+    "indexed_at_ns": 1790002700658358943,
+    "word_count": 880
+  },
+  "apps/web/components/grid/scenario-meta.ts": {
+    "size": 5336,
+    "mtime_ns": 1790001669748399625,
+    "indexed_at_ns": 1790002700658650174,
+    "word_count": 700
+  },
+  "apps/web/components/house/HouseView.tsx": {
+    "size": 6852,
+    "mtime_ns": 1790001669748603245,
+    "indexed_at_ns": 1790002700658938541,
+    "word_count": 773
+  },
+  "apps/web/components/house/color.ts": {
+    "size": 2676,
+    "mtime_ns": 1789749553203075351,
+    "indexed_at_ns": 1790002700659218051,
+    "word_count": 438
+  },
+  "apps/web/components/house/daynight/DayNightAnimation.tsx": {
+    "size": 10852,
+    "mtime_ns": 1790001669748736390,
+    "indexed_at_ns": 1790002700659515511,
+    "word_count": 1255
+  },
+  "apps/web/components/house/daynight/daynight.test.tsx": {
+    "size": 20828,
+    "mtime_ns": 1790001669748882701,
+    "indexed_at_ns": 1790002700659862938,
+    "word_count": 2349
+  },
+  "apps/web/components/house/daynight/index.ts": {
+    "size": 593,
+    "mtime_ns": 1790001669748882701,
+    "indexed_at_ns": 1790002700660235752,
+    "word_count": 60
+  },
+  "apps/web/components/house/daynight/loop.ts": {
+    "size": 2502,
+    "mtime_ns": 1790001669748882701,
+    "indexed_at_ns": 1790002700660521539,
+    "word_count": 349
+  },
+  "apps/web/components/house/daynight/progress.ts": {
+    "size": 2291,
+    "mtime_ns": 1789875284667502180,
+    "indexed_at_ns": 1790002700660827300,
+    "word_count": 337
+  },
+  "apps/web/components/house/daynight/sceneMath.ts": {
+    "size": 9398,
+    "mtime_ns": 1790001669748882701,
+    "indexed_at_ns": 1790002700661127977,
+    "word_count": 1372
+  },
+  "apps/web/components/house/export.ts": {
+    "size": 3218,
+    "mtime_ns": 1790001669748882701,
+    "indexed_at_ns": 1790002700661438681,
+    "word_count": 418
+  },
+  "apps/web/components/house/geometry.ts": {
+    "size": 9016,
+    "mtime_ns": 1790001669749316636,
+    "indexed_at_ns": 1790002700661715015,
+    "word_count": 1411
+  },
+  "apps/web/components/house/house.test.tsx": {
+    "size": 11367,
+    "mtime_ns": 1790001669749429079,
+    "indexed_at_ns": 1790002700662033638,
+    "word_count": 1258
+  },
+  "apps/web/components/house/index.ts": {
+    "size": 512,
+    "mtime_ns": 1790001669749429079,
+    "indexed_at_ns": 1790002700662345247,
+    "word_count": 52
+  },
+  "apps/web/components/house/time.ts": {
+    "size": 1490,
+    "mtime_ns": 1790001669749429079,
+    "indexed_at_ns": 1790002700662603912,
+    "word_count": 203
+  },
+  "apps/web/components/inputs/CsvUpload.tsx": {
+    "size": 2752,
+    "mtime_ns": 1790001669749429079,
+    "indexed_at_ns": 1790002700662889686,
+    "word_count": 307
+  },
+  "apps/web/components/inputs/MaterialStackEditor.tsx": {
+    "size": 4006,
+    "mtime_ns": 1790001669749429079,
+    "indexed_at_ns": 1790002700663157411,
+    "word_count": 391
+  },
+  "apps/web/components/inputs/SimpleForm.tsx": {
+    "size": 16941,
+    "mtime_ns": 1790001669749839207,
+    "indexed_at_ns": 1790002700663434074,
+    "word_count": 1454
+  },
+  "apps/web/components/inputs/catalog.ts": {
+    "size": 16291,
+    "mtime_ns": 1790001669749975908,
+    "indexed_at_ns": 1790002700663780557,
+    "word_count": 1948
+  },
+  "apps/web/components/inputs/csv.ts": {
+    "size": 7678,
+    "mtime_ns": 1790001669750076239,
+    "indexed_at_ns": 1790002700664109480,
+    "word_count": 968
+  },
+  "apps/web/components/inputs/index.ts": {
+    "size": 637,
+    "mtime_ns": 1789857060773898638,
+    "indexed_at_ns": 1790002700664399619,
+    "word_count": 64
+  },
+  "apps/web/components/inputs/inputs.test.ts": {
+    "size": 21394,
+    "mtime_ns": 1790001669750211192,
+    "indexed_at_ns": 1790002700664655982,
+    "word_count": 2109
+  },
+  "apps/web/components/inputs/materialsApi.ts": {
+    "size": 2672,
+    "mtime_ns": 1790001669750211192,
+    "indexed_at_ns": 1790002700665035012,
+    "word_count": 346
+  },
+  "apps/web/components/inputs/messages.ts": {
+    "size": 8040,
+    "mtime_ns": 1790001669750403569,
+    "indexed_at_ns": 1790002700665303810,
+    "word_count": 622
+  },
+  "apps/web/components/inputs/requestOps.ts": {
+    "size": 19497,
+    "mtime_ns": 1790001669750526745,
+    "indexed_at_ns": 1790002700665604264,
+    "word_count": 2258
+  },
+  "apps/web/components/kpis/KpiColumn.test.tsx": {
+    "size": 14426,
+    "mtime_ns": 1790001669750694521,
+    "indexed_at_ns": 1790002700666270138,
+    "word_count": 1578
+  },
+  "apps/web/components/kpis/KpiColumn.tsx": {
+    "size": 6490,
+    "mtime_ns": 1790001669750694521,
+    "indexed_at_ns": 1790002700666636208,
+    "word_count": 546
+  },
+  "apps/web/components/kpis/badge.ts": {
+    "size": 928,
+    "mtime_ns": 1789820184373070824,
+    "indexed_at_ns": 1790002700666945955,
+    "word_count": 132
+  },
+  "apps/web/components/kpis/cards.ts": {
+    "size": 2102,
+    "mtime_ns": 1789820184373284019,
+    "indexed_at_ns": 1790002700667220212,
+    "word_count": 299
+  },
+  "apps/web/components/kpis/messages.ts": {
+    "size": 4126,
+    "mtime_ns": 1789909604140368804,
+    "indexed_at_ns": 1790002700667491078,
+    "word_count": 325
+  },
+  "apps/web/components/meta/assumptions/AssumptionsPanel.tsx": {
+    "size": 8991,
+    "mtime_ns": 1789877419649108023,
+    "indexed_at_ns": 1790002700668038478,
+    "word_count": 578
+  },
+  "apps/web/components/meta/assumptions/LimitationsList.tsx": {
+    "size": 1169,
+    "mtime_ns": 1789877419649108023,
+    "indexed_at_ns": 1790002700668358932,
+    "word_count": 116
+  },
+  "apps/web/components/meta/assumptions/assumptions.test.tsx": {
+    "size": 6099,
+    "mtime_ns": 1789877419649196085,
+    "indexed_at_ns": 1790002700668649524,
+    "word_count": 619
+  },
+  "apps/web/components/meta/assumptions/constants.data.test.ts": {
+    "size": 2765,
+    "mtime_ns": 1789877419649196085,
+    "indexed_at_ns": 1790002700668975878,
+    "word_count": 310
+  },
+  "apps/web/components/meta/assumptions/constants.data.ts": {
+    "size": 12567,
+    "mtime_ns": 1789877419649196085,
+    "indexed_at_ns": 1790002700669271470,
+    "word_count": 1469
+  },
+  "apps/web/components/meta/assumptions/fuelCost.ts": {
+    "size": 1214,
+    "mtime_ns": 1789877419649196085,
+    "indexed_at_ns": 1790002700669603866,
+    "word_count": 151
+  },
+  "apps/web/components/meta/assumptions/limitations.data.ts": {
+    "size": 4560,
+    "mtime_ns": 1789877419649196085,
+    "indexed_at_ns": 1790002700669902269,
+    "word_count": 630
+  },
+  "apps/web/components/meta/export/ExportPanel.tsx": {
+    "size": 3066,
+    "mtime_ns": 1789877419649196085,
+    "indexed_at_ns": 1790002700670204231,
+    "word_count": 263
+  },
+  "apps/web/components/meta/export/csv.ts": {
+    "size": 1831,
+    "mtime_ns": 1789877419650323539,
+    "indexed_at_ns": 1790002700670489587,
+    "word_count": 231
+  },
+  "apps/web/components/meta/export/download.ts": {
+    "size": 1083,
+    "mtime_ns": 1789877419650323539,
+    "indexed_at_ns": 1790002700670780553,
+    "word_count": 133
+  },
+  "apps/web/components/meta/export/export.test.ts": {
+    "size": 4224,
+    "mtime_ns": 1789877419650652859,
+    "indexed_at_ns": 1790002700671057854,
+    "word_count": 450
+  },
+  "apps/web/components/meta/export/json.ts": {
+    "size": 1146,
+    "mtime_ns": 1789877419650652859,
+    "indexed_at_ns": 1790002700671360566,
+    "word_count": 135
+  },
+  "apps/web/components/meta/export/print.ts": {
+    "size": 680,
+    "mtime_ns": 1789877419650652859,
+    "indexed_at_ns": 1790002700671645749,
+    "word_count": 93
+  },
+  "apps/web/components/meta/export/share.ts": {
+    "size": 1752,
+    "mtime_ns": 1789877419650652859,
+    "indexed_at_ns": 1790002700671927531,
+    "word_count": 243
+  },
+  "apps/web/components/meta/index.ts": {
+    "size": 651,
+    "mtime_ns": 1789877419650652859,
+    "indexed_at_ns": 1790002700672191628,
+    "word_count": 72
+  },
+  "apps/web/components/meta/locale/LocaleSwitch.tsx": {
+    "size": 1068,
+    "mtime_ns": 1789877419650652859,
+    "indexed_at_ns": 1790002700672477845,
+    "word_count": 107
+  },
+  "apps/web/components/meta/locale/OfflineBanner.tsx": {
+    "size": 912,
+    "mtime_ns": 1789877419651260257,
+    "indexed_at_ns": 1790002700672779764,
+    "word_count": 120
+  },
+  "apps/web/components/meta/locale/aggregator.ts": {
+    "size": 1478,
+    "mtime_ns": 1789909604140368804,
+    "indexed_at_ns": 1790002700673075706,
+    "word_count": 211
+  },
+  "apps/web/components/meta/locale/locale.test.tsx": {
+    "size": 4522,
+    "mtime_ns": 1789877419651714796,
+    "indexed_at_ns": 1790002700673362220,
+    "word_count": 456
+  },
+  "apps/web/components/meta/messages.ts": {
+    "size": 5751,
+    "mtime_ns": 1789877419651714796,
+    "indexed_at_ns": 1790002700673642238,
+    "word_count": 437
+  },
+  "apps/web/lib/db.ts": {
+    "size": 3088,
+    "mtime_ns": 1789577300932434844,
+    "indexed_at_ns": 1790002700673916605,
+    "word_count": 455
+  },
+  "apps/web/lib/i18n.ts": {
+    "size": 1570,
+    "mtime_ns": 1789661783977266527,
+    "indexed_at_ns": 1790002700674173524,
+    "word_count": 236
+  },
+  "apps/web/lib/log.ts": {
+    "size": 858,
+    "mtime_ns": 1789577300932737952,
+    "indexed_at_ns": 1790002700674427128,
+    "word_count": 114
+  },
+  "apps/web/lib/pool.ts": {
+    "size": 9400,
+    "mtime_ns": 1790001669750908251,
+    "indexed_at_ns": 1790002700674674964,
+    "word_count": 1191
+  },
+  "apps/web/lib/repo/designs.ts": {
+    "size": 4882,
+    "mtime_ns": 1790001669750908251,
+    "indexed_at_ns": 1790002700674976640,
+    "word_count": 707
+  },
+  "apps/web/lib/repo/materials.ts": {
+    "size": 3544,
+    "mtime_ns": 1789593499991180118,
+    "indexed_at_ns": 1790002700675257305,
+    "word_count": 512
+  },
+  "apps/web/lib/repo/runs.ts": {
+    "size": 7606,
+    "mtime_ns": 1790001669751626265,
+    "indexed_at_ns": 1790002700675536659,
+    "word_count": 1049
+  },
+  "apps/web/lib/repo/weather.ts": {
+    "size": 6846,
+    "mtime_ns": 1790001669751745515,
+    "indexed_at_ns": 1790002700675830930,
+    "word_count": 900
+  },
+  "apps/web/lib/store.ts": {
+    "size": 10178,
+    "mtime_ns": 1790001669751900333,
+    "indexed_at_ns": 1790002700676101832,
+    "word_count": 1360
+  },
+  "apps/web/lib/units.ts": {
+    "size": 2344,
+    "mtime_ns": 1789661783977266527,
+    "indexed_at_ns": 1790002700676399509,
+    "word_count": 347
+  },
+  "apps/web/lib/workerClient.ts": {
+    "size": 14181,
+    "mtime_ns": 1790001669752041520,
+    "indexed_at_ns": 1790002700676657543,
+    "word_count": 1826
+  },
+  "apps/web/next-env.d.ts": {
+    "size": 296,
+    "mtime_ns": 1790002039824812367,
+    "indexed_at_ns": 1790002700676944666,
+    "word_count": 26
+  },
+  "apps/web/next.config.mjs": {
+    "size": 6771,
+    "mtime_ns": 1790001669752144304,
+    "indexed_at_ns": 1790002700677169795,
+    "word_count": 941
+  },
+  "apps/web/package.json": {
+    "size": 1424,
+    "mtime_ns": 1789661783977364335,
+    "indexed_at_ns": 1790002726221896357,
+    "word_count": 106,
+    "hashes": {
+      "apps/web/package.json": "13747915488012c911cadaef0674b7d922f2c3c1031257268f984463cbdae84b"
+    }
+  },
+  "apps/web/prisma/README.md": {
+    "size": 1046,
+    "mtime_ns": 1789560363871326808,
+    "indexed_at_ns": 1790002737282643927,
+    "word_count": 132,
+    "hashes": {
+      "apps/web/prisma/readme.md": "9c7bf99d150c9922b0f03a17f2062e2917e1528f794f2cf0e03fe27a2e4a09e2"
+    }
+  },
+  "apps/web/prisma/generate-schema.mjs": {
+    "size": 1365,
+    "mtime_ns": 1789560363871458349,
+    "indexed_at_ns": 1790002700678448447,
+    "word_count": 159
+  },
+  "apps/web/prisma/migrations/20260916110054_init/migration.sql": {
+    "size": 2336,
+    "mtime_ns": 1789560363871540801,
+    "indexed_at_ns": 1790002726222255342,
+    "word_count": 248,
+    "hashes": {
+      "apps/web/prisma/migrations/20260916110054_init/migration.sql": "2fb2e9bdf613e5018a846265405e190f4b5a61286263f240fca9b8fffefc3de3"
+    }
+  },
+  "apps/web/prisma/seed.ts": {
+    "size": 2468,
+    "mtime_ns": 1790001669752314257,
+    "indexed_at_ns": 1790002700679906471,
+    "word_count": 355
+  },
+  "apps/web/public/icon.svg": {
+    "size": 281,
+    "mtime_ns": 1789969410886645120,
+    "indexed_at_ns": 1790002737304068544,
+    "word_count": 39,
+    "hashes": {
+      "apps/web/public/icon.svg": "93745430443dce4791ea83bbed32589715da81258dba2ccba8e23c2b2301ccc8"
+    }
+  },
+  "apps/web/public/sw.js": {
+    "size": 4927,
+    "mtime_ns": 1790001669752373273,
+    "indexed_at_ns": 1790002700680604726,
+    "word_count": 672
+  },
+  "apps/web/public/tmy/drass.json": {
+    "size": 496902,
+    "mtime_ns": 1790001669754012301,
+    "indexed_at_ns": 1790002726222583652,
+    "word_count": 70171,
+    "hashes": {
+      "apps/web/public/tmy/drass.json": "f56c6a5b8fbf7b74498e8c3ee5a77df9b5cf807cfcba9777b6baff5f11176678"
+    }
+  },
+  "apps/web/public/tmy/jaisalmer.json": {
+    "size": 497171,
+    "mtime_ns": 1790001669755701860,
+    "indexed_at_ns": 1790002726223257794,
+    "word_count": 70171,
+    "hashes": {
+      "apps/web/public/tmy/jaisalmer.json": "2ca1e88b154af8f47632c5784eddd2cd9563edd4a6c5754a7268b530ebf331ec"
+    }
+  },
+  "apps/web/public/tmy/kargil.json": {
+    "size": 498491,
+    "mtime_ns": 1790001669757350596,
+    "indexed_at_ns": 1790002726224008072,
+    "word_count": 70171,
+    "hashes": {
+      "apps/web/public/tmy/kargil.json": "f257c191bbf64734019a5bc1ea648bca9575552c23ee9bd2f8a870a7811252ab"
+    }
+  },
+  "apps/web/public/tmy/leh.json": {
+    "size": 496546,
+    "mtime_ns": 1790001669759358847,
+    "indexed_at_ns": 1790002726224768073,
+    "word_count": 70171,
+    "hashes": {
+      "apps/web/public/tmy/leh.json": "5c09b2fcbe048bf51030b93821a170d53c145d008eee4805ad067e74c54e11a5"
+    }
+  },
+  "apps/web/public/tmy/nubra.json": {
+    "size": 509227,
+    "mtime_ns": 1790001669761048318,
+    "indexed_at_ns": 1790002726225484388,
+    "word_count": 70173,
+    "hashes": {
+      "apps/web/public/tmy/nubra.json": "6d1ca5a9d070273d3715fa7d842463101e226625bb243e76b632d8f3d174c167"
+    }
+  },
+  "apps/web/scripts/build-static.mjs": {
+    "size": 20756,
+    "mtime_ns": 1790001669761200710,
+    "indexed_at_ns": 1790002700692172005,
+    "word_count": 2541
+  },
+  "apps/web/scripts/check-db-off.mjs": {
+    "size": 3065,
+    "mtime_ns": 1790001669761253388,
+    "indexed_at_ns": 1790002700692498042,
+    "word_count": 460
+  },
+  "apps/web/test/advanced-panel.test.ts": {
+    "size": 21220,
+    "mtime_ns": 1790001669761368933,
+    "indexed_at_ns": 1790002700692766125,
+    "word_count": 2077
+  },
+  "apps/web/test/api-designs.test.ts": {
+    "size": 15111,
+    "mtime_ns": 1790001669761449537,
+    "indexed_at_ns": 1790002700693124181,
+    "word_count": 1536
+  },
+  "apps/web/test/api-simulate.test.ts": {
+    "size": 15149,
+    "mtime_ns": 1790001669761534408,
+    "indexed_at_ns": 1790002700693409379,
+    "word_count": 1623
+  },
+  "apps/web/test/api-weather.test.ts": {
+    "size": 12636,
+    "mtime_ns": 1790001669761612770,
+    "indexed_at_ns": 1790002700693700303,
+    "word_count": 1221
+  },
+  "apps/web/test/db-off.integration.test.ts": {
+    "size": 16211,
+    "mtime_ns": 1790001669761709627,
+    "indexed_at_ns": 1790002700694066339,
+    "word_count": 1766
+  },
+  "apps/web/test/db.test.ts": {
+    "size": 5851,
+    "mtime_ns": 1790001669761765583,
+    "indexed_at_ns": 1790002700694402402,
+    "word_count": 697
+  },
+  "apps/web/test/pool.test.ts": {
+    "size": 16376,
+    "mtime_ns": 1790001669761857645,
+    "indexed_at_ns": 1790002700694692345,
+    "word_count": 2098
+  },
+  "apps/web/test/repo-designs.test.ts": {
+    "size": 10390,
+    "mtime_ns": 1790001669761927749,
+    "indexed_at_ns": 1790002700695012892,
+    "word_count": 1112
+  },
+  "apps/web/test/repo-materials.test.ts": {
+    "size": 6701,
+    "mtime_ns": 1790001669761983079,
+    "indexed_at_ns": 1790002700695301431,
+    "word_count": 769
+  },
+  "apps/web/test/repo-runs.test.ts": {
+    "size": 18614,
+    "mtime_ns": 1790001669762067990,
+    "indexed_at_ns": 1790002700695590727,
+    "word_count": 1975
+  },
+  "apps/web/test/repo-weather.test.ts": {
+    "size": 15344,
+    "mtime_ns": 1790001669762149526,
+    "indexed_at_ns": 1790002700695944641,
+    "word_count": 1628
+  },
+  "apps/web/test/worker.test.ts": {
+    "size": 20728,
+    "mtime_ns": 1790001669762244556,
+    "indexed_at_ns": 1790002700696303310,
+    "word_count": 2318
+  },
+  "apps/web/tsconfig.json": {
+    "size": 1281,
+    "mtime_ns": 1790001669762308408,
+    "indexed_at_ns": 1790002726226205989,
+    "word_count": 149,
+    "hashes": {
+      "apps/web/tsconfig.json": "bb523a36c884764d3b7abc6a99ae70a06718c503ada4f50fb605dc1a4319522b"
+    }
+  },
+  "apps/web/workers/sim.node.worker.mjs": {
+    "size": 2541,
+    "mtime_ns": 1789745997183441837,
+    "indexed_at_ns": 1790002700697048244,
+    "word_count": 361
+  },
+  "apps/web/workers/sim.worker.ts": {
+    "size": 4646,
+    "mtime_ns": 1790001669762365579,
+    "indexed_at_ns": 1790002700697333306,
+    "word_count": 651
+  },
+  "eslint.config.js": {
+    "size": 4834,
+    "mtime_ns": 1789875195449569466,
+    "indexed_at_ns": 1790002700697549520,
+    "word_count": 607
+  },
+  "log/AREA-A/README.md": {
+    "size": 739,
+    "mtime_ns": 1789913565745533070,
+    "indexed_at_ns": 1790002737282923493,
+    "word_count": 122,
+    "hashes": {
+      "log/area-a/readme.md": "1348f77fe15188b321c8de7a0a12588ce0593ad88d50c46e106f48299ac685ec"
+    }
+  },
+  "log/AREA-A/T-01.md": {
+    "size": 2965,
+    "mtime_ns": 1790001669762424187,
+    "indexed_at_ns": 1790002737283099887,
+    "word_count": 378,
+    "hashes": {
+      "log/area-a/t-01.md": "23b366196c7af8c430f7bb190d40a99e31751da2cd86cd99a486bbf9ed6fda64"
+    }
+  },
+  "log/AREA-A/T-02.md": {
+    "size": 4599,
+    "mtime_ns": 1790001669762472200,
+    "indexed_at_ns": 1790002737283278905,
+    "word_count": 699,
+    "hashes": {
+      "log/area-a/t-02.md": "581c47169145ae77337302235c7c3c7d0fc095f5d9bde66f55f08355ec98e061"
+    }
+  },
+  "log/AREA-A/T-03.md": {
+    "size": 7277,
+    "mtime_ns": 1790001669762532025,
+    "indexed_at_ns": 1790002737283455742,
+    "word_count": 1031,
+    "hashes": {
+      "log/area-a/t-03.md": "60a22883da93c12189596be28399d788126839ef5a3ab1135feb9ea5469b376f"
+    }
+  },
+  "log/AREA-A/T-04.md": {
+    "size": 7802,
+    "mtime_ns": 1790001669762593595,
+    "indexed_at_ns": 1790002737283634888,
+    "word_count": 1087,
+    "hashes": {
+      "log/area-a/t-04.md": "3e5a2ebd715b9c463277aea8bb524569da7e77c577254fb718d1b83888332d07"
+    }
+  },
+  "log/AREA-A/T-05.md": {
+    "size": 7916,
+    "mtime_ns": 1790001669762656306,
+    "indexed_at_ns": 1790002737283837838,
+    "word_count": 1229,
+    "hashes": {
+      "log/area-a/t-05.md": "ec0620322a6ccad0ee1c41979205698a9cdb1519d9cd6c5a34967c3ef90e72d3"
+    }
+  },
+  "log/AREA-A/T-06.md": {
+    "size": 13212,
+    "mtime_ns": 1790001669762743245,
+    "indexed_at_ns": 1790002737284022733,
+    "word_count": 1740,
+    "hashes": {
+      "log/area-a/t-06.md": "19c28aee78c5b41b8ab5470f78b4754d20937b1292ee3a596e1f5118bf56bc60"
+    }
+  },
+  "log/AREA-A/T-07.md": {
+    "size": 11145,
+    "mtime_ns": 1790001669762824837,
+    "indexed_at_ns": 1790002737284210047,
+    "word_count": 1530,
+    "hashes": {
+      "log/area-a/t-07.md": "a4ebbd0c1136eea00a7b2cb55183a636be4f5e7710692a2a4a3a1dbf68c8ebf6"
+    }
+  },
+  "log/AREA-A/T-72.md": {
+    "size": 14373,
+    "mtime_ns": 1790001669762911988,
+    "indexed_at_ns": 1790002737284398319,
+    "word_count": 2008,
+    "hashes": {
+      "log/area-a/t-72.md": "7fc0c959f7ca9e70f776fc59aaca6501c9311529f78f8ae9cb8671bc38b1d2ea"
+    }
+  },
+  "log/AREA-A/T-78.md": {
+    "size": 6472,
+    "mtime_ns": 1790001669762968951,
+    "indexed_at_ns": 1790002737284586072,
+    "word_count": 906,
+    "hashes": {
+      "log/area-a/t-78.md": "36746d137c45e59b07210b2edce13092cad2689a3afe7cad4d73c617a14e831e"
+    }
+  },
+  "log/AREA-A/T-79.md": {
+    "size": 6716,
+    "mtime_ns": 1790001669763021354,
+    "indexed_at_ns": 1790002737284776322,
+    "word_count": 958,
+    "hashes": {
+      "log/area-a/t-79.md": "dfbc3836d2ddf49974c22ee8c6a738d0cd943be81365ecd5e426b822920a7d15"
+    }
+  },
+  "log/AREA-B/README.md": {
+    "size": 1036,
+    "mtime_ns": 1789913565745705303,
+    "indexed_at_ns": 1790002737284957986,
+    "word_count": 176,
+    "hashes": {
+      "log/area-b/readme.md": "ac6b597676d59c5669f7ba42628b59f20ed45e92d343e012f9e4b3e8433f1b8d"
+    }
+  },
+  "log/AREA-B/T-08.md": {
+    "size": 2094,
+    "mtime_ns": 1790001669763064999,
+    "indexed_at_ns": 1790002737285134730,
+    "word_count": 289,
+    "hashes": {
+      "log/area-b/t-08.md": "bd90f43605b2b0affdcc544b48d69d60cba0df24a7099a4b79e9d8a4de1b8455"
+    }
+  },
+  "log/AREA-B/T-09.md": {
+    "size": 2987,
+    "mtime_ns": 1790001669763105042,
+    "indexed_at_ns": 1790002737285312470,
+    "word_count": 432,
+    "hashes": {
+      "log/area-b/t-09.md": "3d962b449423b3791813fea3d8065adb965ecf5c539070860f8b54437f05f443"
+    }
+  },
+  "log/AREA-B/T-10.md": {
+    "size": 1898,
+    "mtime_ns": 1790001669763105042,
+    "indexed_at_ns": 1790002737285488391,
+    "word_count": 265,
+    "hashes": {
+      "log/area-b/t-10.md": "ced67cf46464d059078fd52d0386a85ef6f1479a87cf55722b35588cda002232"
+    }
+  },
+  "log/AREA-B/T-11.md": {
+    "size": 3380,
+    "mtime_ns": 1790001669763182873,
+    "indexed_at_ns": 1790002737285661981,
+    "word_count": 490,
+    "hashes": {
+      "log/area-b/t-11.md": "fe9503a70680227ba16fc5bff2740ddf4526ea4eeb90d69256196617dfe36d3e"
+    }
+  },
+  "log/AREA-B/T-12.md": {
+    "size": 2740,
+    "mtime_ns": 1790001669763222614,
+    "indexed_at_ns": 1790002737285840921,
+    "word_count": 434,
+    "hashes": {
+      "log/area-b/t-12.md": "ba3332c1d45a6930ec7a572afb61e113a43fc4af35cd9f8caf61e3ab364862c5"
+    }
+  },
+  "log/AREA-B/T-13.md": {
+    "size": 3057,
+    "mtime_ns": 1790001669763267446,
+    "indexed_at_ns": 1790002737286015965,
+    "word_count": 476,
+    "hashes": {
+      "log/area-b/t-13.md": "e6789b61a0a22876c617163e29454a16dd9cff36c50df98c1530bce7a3006b38"
+    }
+  },
+  "log/AREA-B/T-14.md": {
+    "size": 5828,
+    "mtime_ns": 1790001669763344130,
+    "indexed_at_ns": 1790002737286190343,
+    "word_count": 877,
+    "hashes": {
+      "log/area-b/t-14.md": "a4ad3224fa6f90b5022ae622803729bff7a95a0dcc5d46d9b48814abc2228cdb"
+    }
+  },
+  "log/AREA-B/T-15.md": {
+    "size": 3203,
+    "mtime_ns": 1790001669763403231,
+    "indexed_at_ns": 1790002737286370216,
+    "word_count": 443,
+    "hashes": {
+      "log/area-b/t-15.md": "daba9975d18b058d9619313ccbbeac0e5dfc535ac8a44f81e20f79d8ef057527"
+    }
+  },
+  "log/AREA-B/T-16.md": {
+    "size": 2897,
+    "mtime_ns": 1790001669763457015,
+    "indexed_at_ns": 1790002737286547640,
+    "word_count": 382,
+    "hashes": {
+      "log/area-b/t-16.md": "f85693a1ef2260ca3cde2244f417dfbf9b1b83fab057e18c9c801d6fbe888717"
+    }
+  },
+  "log/AREA-B/T-17.md": {
+    "size": 1805,
+    "mtime_ns": 1790001669763503402,
+    "indexed_at_ns": 1790002737286729047,
+    "word_count": 273,
+    "hashes": {
+      "log/area-b/t-17.md": "42a2168c2684edce67326a4bf9eb3ac1c0d1bab2f25d58bc072a98dc0e4e5ce6"
+    }
+  },
+  "log/AREA-B/T-18.md": {
+    "size": 9875,
+    "mtime_ns": 1790001669763581274,
+    "indexed_at_ns": 1790002737286905565,
+    "word_count": 1529,
+    "hashes": {
+      "log/area-b/t-18.md": "6a88e727d5d73aa6cb9504dbd7bf336c330eec72edc98c020300469467e0668d"
+    }
+  },
+  "log/AREA-B/T-19.md": {
+    "size": 8192,
+    "mtime_ns": 1790001669763646633,
+    "indexed_at_ns": 1790002737287085283,
+    "word_count": 1186,
+    "hashes": {
+      "log/area-b/t-19.md": "c69a3c8fdd6a4ab702e8499f8f951825ba8c7391f715aa36f6ebd61d0c836c69"
+    }
+  },
+  "log/AREA-B/T-20.md": {
+    "size": 13891,
+    "mtime_ns": 1790001669763742524,
+    "indexed_at_ns": 1790002737287265230,
+    "word_count": 1987,
+    "hashes": {
+      "log/area-b/t-20.md": "8a5f8179b5a5fff4f1d5e0a7baa0ef56e6ae32d1ef1bb9a0da2dffde5a60b8f4"
+    }
+  },
+  "log/AREA-B/T-21.md": {
+    "size": 13691,
+    "mtime_ns": 1790001669763841998,
+    "indexed_at_ns": 1790002737287447319,
+    "word_count": 1957,
+    "hashes": {
+      "log/area-b/t-21.md": "990afe1d02d5e63f3ee7faf430aaea6d82f4f01e7d0c5e9e206f019acd52f3a4"
+    }
+  },
+  "log/AREA-B/T-22.md": {
+    "size": 13255,
+    "mtime_ns": 1790001669763933488,
+    "indexed_at_ns": 1790002737287629328,
+    "word_count": 1912,
+    "hashes": {
+      "log/area-b/t-22.md": "8e194ed3cd83ebf29012bf2da740ca3ac7608b2ec9bbd5ae5c8ec623aacb9254"
+    }
+  },
+  "log/AREA-B/T-23.md": {
+    "size": 9958,
+    "mtime_ns": 1790001669764008547,
+    "indexed_at_ns": 1790002737287814502,
+    "word_count": 1484,
+    "hashes": {
+      "log/area-b/t-23.md": "9a9dee4f26dbcea0b6e2c600d59cc02c060551a43cee112e5e6a3050493a73b2"
+    }
+  },
+  "log/AREA-B/T-70.md": {
+    "size": 12345,
+    "mtime_ns": 1790001669764088635,
+    "indexed_at_ns": 1790002737287991979,
+    "word_count": 1597,
+    "hashes": {
+      "log/area-b/t-70.md": "19c62deebf3087c29065560bf019dea3e8c2313c00743e246b0804ead3890874"
+    }
+  },
+  "log/AREA-B/T-76.md": {
+    "size": 16478,
+    "mtime_ns": 1790001669764188678,
+    "indexed_at_ns": 1790002737288173906,
+    "word_count": 2163,
+    "hashes": {
+      "log/area-b/t-76.md": "bd98ab262182f8ba04c11e3c64d268b3a5e24ec4dbd26e5e542b7f245653cc2f"
+    }
+  },
+  "log/AREA-C/README.md": {
+    "size": 953,
+    "mtime_ns": 1790001669764188678,
+    "indexed_at_ns": 1790002737288368598,
+    "word_count": 154,
+    "hashes": {
+      "log/area-c/readme.md": "dd93b8a94099264deb3a95aa6c25d1ac7d088fe93d0f33cccefac33672de9979"
+    }
+  },
+  "log/AREA-C/T-24.md": {
+    "size": 10592,
+    "mtime_ns": 1790001669764307587,
+    "indexed_at_ns": 1790002737288541138,
+    "word_count": 1454,
+    "hashes": {
+      "log/area-c/t-24.md": "5efd6c40846ff11075c56af6ee7868b4f28590bf7f85682084dc1929909b4ced"
+    }
+  },
+  "log/AREA-C/T-25.md": {
+    "size": 15491,
+    "mtime_ns": 1790001669764403936,
+    "indexed_at_ns": 1790002737288721319,
+    "word_count": 2190,
+    "hashes": {
+      "log/area-c/t-25.md": "dcac63b749ecad9716f94e1a4bc61c5930ac5a7b4e892ba5d1f7f08843dd985a"
+    }
+  },
+  "log/AREA-C/T-26.md": {
+    "size": 12799,
+    "mtime_ns": 1790001669764487887,
+    "indexed_at_ns": 1790002737288904840,
+    "word_count": 1662,
+    "hashes": {
+      "log/area-c/t-26.md": "2c98666cf43dc9cd1094809e55256120cf3abb6d876370e8363426bec730c3f5"
+    }
+  },
+  "log/AREA-C/T-27.md": {
+    "size": 10559,
+    "mtime_ns": 1790001669764565373,
+    "indexed_at_ns": 1790002737289088104,
+    "word_count": 1596,
+    "hashes": {
+      "log/area-c/t-27.md": "c7df9adf68a04f4d9df7af63388aac980484f243260a4b42f2448fe662a9571a"
+    }
+  },
+  "log/AREA-C/T-28.md": {
+    "size": 10740,
+    "mtime_ns": 1790001669764642432,
+    "indexed_at_ns": 1790002737289267756,
+    "word_count": 1541,
+    "hashes": {
+      "log/area-c/t-28.md": "7fb3a3cd1346b0957be6fb2026f5ce44fbce4ab8f9397b5b44cd1c267b5fc84a"
+    }
+  },
+  "log/AREA-D/README.md": {
+    "size": 1470,
+    "mtime_ns": 1790001669764690015,
+    "indexed_at_ns": 1790002737289448943,
+    "word_count": 252,
+    "hashes": {
+      "log/area-d/readme.md": "a3faef1e17977df0569be300dc768ba1754a08cae47a56fb733c1966c342a343"
+    }
+  },
+  "log/AREA-D/T-29.md": {
+    "size": 14865,
+    "mtime_ns": 1790001669764778338,
+    "indexed_at_ns": 1790002737289621197,
+    "word_count": 1905,
+    "hashes": {
+      "log/area-d/t-29.md": "304bf672a6ca7f225bf682a0e3a602439092f907d4fab7fc2a1a413a19e4d79b"
+    }
+  },
+  "log/AREA-D/T-30.md": {
+    "size": 12211,
+    "mtime_ns": 1790001669764860736,
+    "indexed_at_ns": 1790002737289806422,
+    "word_count": 1779,
+    "hashes": {
+      "log/area-d/t-30.md": "c5aaf18546d92781cd952fb76523d00f1e9d7d990eba7fcf5ba77b4d7954c448"
+    }
+  },
+  "log/AREA-D/T-31.md": {
+    "size": 14748,
+    "mtime_ns": 1790001669764951061,
+    "indexed_at_ns": 1790002737289987969,
+    "word_count": 2038,
+    "hashes": {
+      "log/area-d/t-31.md": "8cda4d21c963dc1ac75d1eae8c755bffb78d855efe2565705845757374ea80e2"
+    }
+  },
+  "log/AREA-D/T-32.md": {
+    "size": 14410,
+    "mtime_ns": 1790001669765042098,
+    "indexed_at_ns": 1790002737290175048,
+    "word_count": 2049,
+    "hashes": {
+      "log/area-d/t-32.md": "fb6e1b1636eb170bf60b3969b4da4a6b1c5fa857085e762ef33ac86359fd2522"
+    }
+  },
+  "log/AREA-D/T-33.md": {
+    "size": 11411,
+    "mtime_ns": 1790001669765120931,
+    "indexed_at_ns": 1790002737290362680,
+    "word_count": 1594,
+    "hashes": {
+      "log/area-d/t-33.md": "dd2944ad846f7b13780ea424950b4b123f099ac4f1239b9ffb8190812a3560fe"
+    }
+  },
+  "log/AREA-D/T-34.md": {
+    "size": 14231,
+    "mtime_ns": 1790001669765208942,
+    "indexed_at_ns": 1790002737290545546,
+    "word_count": 1936,
+    "hashes": {
+      "log/area-d/t-34.md": "97414ddbd7d9e106157b6d9161223c1ab278e484af7002d7c2af22f17452f03c"
+    }
+  },
+  "log/AREA-D/T-35.md": {
+    "size": 10330,
+    "mtime_ns": 1790001669765282547,
+    "indexed_at_ns": 1790002737290752998,
+    "word_count": 1433,
+    "hashes": {
+      "log/area-d/t-35.md": "c41ba687d5f52369020ab53dbdb02fa02062cb6e5380d94e3ac0b53d210fa177"
+    }
+  },
+  "log/AREA-E/README.md": {
+    "size": 1008,
+    "mtime_ns": 1789913565746032618,
+    "indexed_at_ns": 1790002737290940689,
+    "word_count": 166,
+    "hashes": {
+      "log/area-e/readme.md": "b6f06403016dbfca40b102bb23ced1ae92050740c17e2aac3086e56b442eafea"
+    }
+  },
+  "log/AREA-E/T-36.md": {
+    "size": 17495,
+    "mtime_ns": 1790001669765388565,
+    "indexed_at_ns": 1790002737291097400,
+    "word_count": 2252,
+    "hashes": {
+      "log/area-e/t-36.md": "1bebc0440fe73960d4e52c4b8466e0517231f79716d184ccfcdf3db3f8d8b861"
+    }
+  },
+  "log/AREA-E/T-37.md": {
+    "size": 12354,
+    "mtime_ns": 1790001669765476769,
+    "indexed_at_ns": 1790002737291263815,
+    "word_count": 1540,
+    "hashes": {
+      "log/area-e/t-37.md": "35ab71252c3ee5c734af8405a1a73d5e733a74244ed0776327c410f92724c79d"
+    }
+  },
+  "log/AREA-E/T-38.md": {
+    "size": 10001,
+    "mtime_ns": 1790001669765551921,
+    "indexed_at_ns": 1790002737291426711,
+    "word_count": 1373,
+    "hashes": {
+      "log/area-e/t-38.md": "671d81399731e2763f0e959af2c11e71ea761ce89d56db572d5a6fea28662b90"
+    }
+  },
+  "log/AREA-E/T-39.md": {
+    "size": 4550,
+    "mtime_ns": 1790001669765600983,
+    "indexed_at_ns": 1790002737291590438,
+    "word_count": 689,
+    "hashes": {
+      "log/area-e/t-39.md": "fc9bed03a708864ea22ab8d43d9299cce9353ce4491d6df377af16d8edfb4531"
+    }
+  },
+  "log/AREA-E/T-40.md": {
+    "size": 16873,
+    "mtime_ns": 1790001669765704185,
+    "indexed_at_ns": 1790002737291766864,
+    "word_count": 2473,
+    "hashes": {
+      "log/area-e/t-40.md": "f7bc627471f20b4b30c8247214e7a397c1c18613c750e71834af82cf9354c0d5"
+    }
+  },
+  "log/AREA-E/T-41.md": {
+    "size": 14759,
+    "mtime_ns": 1790001669765800882,
+    "indexed_at_ns": 1790002737291941631,
+    "word_count": 1992,
+    "hashes": {
+      "log/area-e/t-41.md": "f018df3772063a546ab0b50bfbb36da09baa8dc0fa313eb66db82fd17146c0b2"
+    }
+  },
+  "log/AREA-E/T-42.md": {
+    "size": 4969,
+    "mtime_ns": 1790001669765855770,
+    "indexed_at_ns": 1790002737292103173,
+    "word_count": 732,
+    "hashes": {
+      "log/area-e/t-42.md": "401a5e571be357fc336d61aa8b426977401a6728d9c0ad077f8bac1dd7edbf3c"
+    }
+  },
+  "log/AREA-F/README.md": {
+    "size": 1297,
+    "mtime_ns": 1789913565746133012,
+    "indexed_at_ns": 1790002737292258831,
+    "word_count": 204,
+    "hashes": {
+      "log/area-f/readme.md": "f940bca6b146d8a965bacb3486d2149e28d1e9ff6b1ec6e97d4dd9b942f083a1"
+    }
+  },
+  "log/AREA-F/T-43.md": {
+    "size": 11756,
+    "mtime_ns": 1790001669765939879,
+    "indexed_at_ns": 1790002737292408813,
+    "word_count": 1661,
+    "hashes": {
+      "log/area-f/t-43.md": "715d3963c370e8e7b463d289785396d19a673b471a20ae2948cbfc9225c166eb"
+    }
+  },
+  "log/AREA-F/T-44.md": {
+    "size": 18737,
+    "mtime_ns": 1790001669766043552,
+    "indexed_at_ns": 1790002737292567966,
+    "word_count": 2604,
+    "hashes": {
+      "log/area-f/t-44.md": "7654a4c0ad015b5e32f5fd109d974b5e7f945d96445b13c0406cb7d0a57d2477"
+    }
+  },
+  "log/AREA-F/T-45.md": {
+    "size": 13653,
+    "mtime_ns": 1790001669766144081,
+    "indexed_at_ns": 1790002737292736174,
+    "word_count": 1787,
+    "hashes": {
+      "log/area-f/t-45.md": "2f65e6ef9f3e31c07da6e5e1c57bc48f052c32555e36c1e0f69035cf51bb82d6"
+    }
+  },
+  "log/AREA-F/T-46.md": {
+    "size": 14261,
+    "mtime_ns": 1790001669766239716,
+    "indexed_at_ns": 1790002737292899500,
+    "word_count": 2020,
+    "hashes": {
+      "log/area-f/t-46.md": "92d0152c62af9e2442100bbaa84d42a629682c49645564b3c109f5e39b2392d3"
+    }
+  },
+  "log/AREA-F/T-47.md": {
+    "size": 12868,
+    "mtime_ns": 1790001669766330989,
+    "indexed_at_ns": 1790002737293061412,
+    "word_count": 1752,
+    "hashes": {
+      "log/area-f/t-47.md": "4690c662b3dd8570f02c7ba62703006fb063db9f943c2c3d47dcab33389e5aa9"
+    }
+  },
+  "log/AREA-F/T-48.md": {
+    "size": 15418,
+    "mtime_ns": 1790001669766426492,
+    "indexed_at_ns": 1790002737293220769,
+    "word_count": 2169,
+    "hashes": {
+      "log/area-f/t-48.md": "96d135c7cb283012d10e4aedaac8747cb78d82e1a7ed351cb061b93844856520"
+    }
+  },
+  "log/AREA-F/T-49.md": {
+    "size": 14046,
+    "mtime_ns": 1790001669766515262,
+    "indexed_at_ns": 1790002737293381527,
+    "word_count": 1913,
+    "hashes": {
+      "log/area-f/t-49.md": "163dc9397d25a1f6e2e419780f9104b94d37a0946eda1a66c7f373f13c390cb2"
+    }
+  },
+  "log/AREA-F/T-50.md": {
+    "size": 16151,
+    "mtime_ns": 1790001669766612557,
+    "indexed_at_ns": 1790002737293541466,
+    "word_count": 2278,
+    "hashes": {
+      "log/area-f/t-50.md": "e929e31a04d98b43a5f9083bb6e02dd66ffac9f957c4d72facf5fad839f36f2f"
+    }
+  },
+  "log/AREA-F/T-51.md": {
+    "size": 13470,
+    "mtime_ns": 1790001669766702789,
+    "indexed_at_ns": 1790002737293706457,
+    "word_count": 1861,
+    "hashes": {
+      "log/area-f/t-51.md": "89c44aa8e2a5b4fa8a754aede9f90daf0de495d3941f825d5ca177815134a1bf"
+    }
+  },
+  "log/AREA-F/T-52.md": {
+    "size": 20045,
+    "mtime_ns": 1790001669766827009,
+    "indexed_at_ns": 1790002737293868091,
+    "word_count": 2606,
+    "hashes": {
+      "log/area-f/t-52.md": "5396956c2df094646ac1c0d316c8737af8e51caee0c25507317e8a6f9b27b59c"
+    }
+  },
+  "log/AREA-F/T-53.md": {
+    "size": 18447,
+    "mtime_ns": 1790001669766925244,
+    "indexed_at_ns": 1790002737294032367,
+    "word_count": 2548,
+    "hashes": {
+      "log/area-f/t-53.md": "fcf1c782aea0d2542bc2f811715bc33ea85621528c67982ec698dea05f054a7c"
+    }
+  },
+  "log/AREA-F/T-71.md": {
+    "size": 14914,
+    "mtime_ns": 1790001669767026563,
+    "indexed_at_ns": 1790002737294204767,
+    "word_count": 1958,
+    "hashes": {
+      "log/area-f/t-71.md": "1752b56ad64ddd7327d0eb33fb5bdc015f5f7388e4804f15d0cea0226e46f771"
+    }
+  },
+  "log/AREA-F/T-73.md": {
+    "size": 12337,
+    "mtime_ns": 1790001669767107742,
+    "indexed_at_ns": 1790002737294366034,
+    "word_count": 1603,
+    "hashes": {
+      "log/area-f/t-73.md": "38ac96c5678b95616fc9e468e9b8ae5d018ab94c164b9d197107d0627e40d425"
+    }
+  },
+  "log/AREA-F/T-74.md": {
+    "size": 15615,
+    "mtime_ns": 1790001669767200028,
+    "indexed_at_ns": 1790002737294524527,
+    "word_count": 1963,
+    "hashes": {
+      "log/area-f/t-74.md": "d3a98bfed44ea3a8a52d11569b965187f34857b7c8ee3f50ec4db1ee66de77c7"
+    }
+  },
+  "log/AREA-F/T-75.md": {
+    "size": 10122,
+    "mtime_ns": 1790001669767275713,
+    "indexed_at_ns": 1790002737294690104,
+    "word_count": 1296,
+    "hashes": {
+      "log/area-f/t-75.md": "580b0b793a63255949fa1c7b4533a62c35385614a8e9f9d552a6400989532d9e"
+    }
+  },
+  "log/AREA-G/README.md": {
+    "size": 1140,
+    "mtime_ns": 1790001669767317774,
+    "indexed_at_ns": 1790002737294849164,
+    "word_count": 173,
+    "hashes": {
+      "log/area-g/readme.md": "a8a04a86b170c5d6ed0ccb31549ad3b90d041b1fa3a20643cf871344b85693ae"
+    }
+  },
+  "log/AREA-G/T-54.md": {
+    "size": 38620,
+    "mtime_ns": 1790001669767521010,
+    "indexed_at_ns": 1790002737294998760,
+    "word_count": 5258,
+    "hashes": {
+      "log/area-g/t-54.md": "4d7eac80742a4552a2423a5700e354b7d7d1a9297dc62c266f1c60b5d700959b"
+    }
+  },
+  "log/AREA-G/T-55.md": {
+    "size": 3417,
+    "mtime_ns": 1790001669767571690,
+    "indexed_at_ns": 1790002737295192099,
+    "word_count": 506,
+    "hashes": {
+      "log/area-g/t-55.md": "072443cd185df22a6be7c4dce895e26e87f9d4b88595b30912f5cf3706491c36"
+    }
+  },
+  "log/AREA-G/T-56.md": {
+    "size": 5949,
+    "mtime_ns": 1790001669767629018,
+    "indexed_at_ns": 1790002737295346145,
+    "word_count": 855,
+    "hashes": {
+      "log/area-g/t-56.md": "41ba95b75dae14e4a241bade7952a7e88e4b00f38925b5914b10e4a406329755"
+    }
+  },
+  "log/AREA-G/T-57.md": {
+    "size": 5720,
+    "mtime_ns": 1790001669767689981,
+    "indexed_at_ns": 1790002737295505824,
+    "word_count": 857,
+    "hashes": {
+      "log/area-g/t-57.md": "a81e0cde5ab496fea08fa9029e9511b51b8a3ad30af93cd01648b0ad3c6d2bc0"
+    }
+  },
+  "log/AREA-G/T-58.md": {
+    "size": 6417,
+    "mtime_ns": 1790001669767747983,
+    "indexed_at_ns": 1790002737295676140,
+    "word_count": 1006,
+    "hashes": {
+      "log/area-g/t-58.md": "874cc20c1084e437e9189056d4c1ee803541eeb08ca9b396d3c25ff3b3eab45a"
+    }
+  },
+  "log/AREA-H/README.md": {
+    "size": 1099,
+    "mtime_ns": 1790001669767788338,
+    "indexed_at_ns": 1790002737295831242,
+    "word_count": 177,
+    "hashes": {
+      "log/area-h/readme.md": "e2bdd1c30b2d265cd81ea06a9ad0a746bc8ee07518f84340ea9fec846c430864"
+    }
+  },
+  "log/AREA-H/T-59.md": {
+    "size": 12026,
+    "mtime_ns": 1790001669767867116,
+    "indexed_at_ns": 1790002737295981919,
+    "word_count": 1789,
+    "hashes": {
+      "log/area-h/t-59.md": "ca31705a7ede793cadc27a16cc5250e7f10522fcbdb5f5dca6e9b22ff1b3e5c1"
+    }
+  },
+  "log/AREA-H/T-60.md": {
+    "size": 4987,
+    "mtime_ns": 1790001669767921400,
+    "indexed_at_ns": 1790002737296142072,
+    "word_count": 751,
+    "hashes": {
+      "log/area-h/t-60.md": "4455210c2f58fccefb41e71b5bb2f6a77d01cc1c5f1376bf5838965817d0e060"
+    }
+  },
+  "log/AREA-H/T-61.md": {
+    "size": 10234,
+    "mtime_ns": 1790001669767995750,
+    "indexed_at_ns": 1790002737296295573,
+    "word_count": 1423,
+    "hashes": {
+      "log/area-h/t-61.md": "8bedc8c6e2bfc31d06b205523bcc15de77ed7497af97e66b8dc971ae914c105c"
+    }
+  },
+  "log/AREA-I/README.md": {
+    "size": 1035,
+    "mtime_ns": 1790001669767995750,
+    "indexed_at_ns": 1790002737296454719,
+    "word_count": 167,
+    "hashes": {
+      "log/area-i/readme.md": "083fab67a8fa56005d124e4a5c07573436a4b77f5240347d9d51588060680de8"
+    }
+  },
+  "log/AREA-I/T-62.md": {
+    "size": 12953,
+    "mtime_ns": 1790001669768119163,
+    "indexed_at_ns": 1790002737296761590,
+    "word_count": 1722,
+    "hashes": {
+      "log/area-i/t-62.md": "52d900d60de0da5f8bc7bc139fd5b04e62e6bff150c3272aeb91b1a7466d278c"
+    }
+  },
+  "log/AREA-I/T-63.md": {
+    "size": 5122,
+    "mtime_ns": 1790001669768180365,
+    "indexed_at_ns": 1790002737297239950,
+    "word_count": 817,
+    "hashes": {
+      "log/area-i/t-63.md": "b155b73c52d691d1d546351b9353f8c73875b65368a2676e99564f01dcf01a92"
+    }
+  },
+  "log/AREA-I/T-64.md": {
+    "size": 16110,
+    "mtime_ns": 1790001669768275843,
+    "indexed_at_ns": 1790002737297624262,
+    "word_count": 2222,
+    "hashes": {
+      "log/area-i/t-64.md": "2f202c2b3ea3f6d88ff093e26f471ab15859b1fba987abb6103a799e78d09832"
+    }
+  },
+  "log/AREA-I/T-65.md": {
+    "size": 4159,
+    "mtime_ns": 1790001669768325886,
+    "indexed_at_ns": 1790002737298020661,
+    "word_count": 656,
+    "hashes": {
+      "log/area-i/t-65.md": "65a6207cc10e96a66134fa18c559843338030783923fcc14a15ab5ef9f20a04f"
+    }
+  },
+  "log/AREA-J/README.md": {
+    "size": 701,
+    "mtime_ns": 1789913565746529448,
+    "indexed_at_ns": 1790002737298390549,
+    "word_count": 110,
+    "hashes": {
+      "log/area-j/readme.md": "fe9022002f626d24513325db79da38e9a5e8ac9d1eaa53c326370a62a745a4fc"
+    }
+  },
+  "log/AREA-J/T-66.md": {
+    "size": 22406,
+    "mtime_ns": 1790001669768466005,
+    "indexed_at_ns": 1790002737298761729,
+    "word_count": 3045,
+    "hashes": {
+      "log/area-j/t-66.md": "4b92083330b692254dd8a421e34f1ae612ed92492e20fcf4fd954718362a0897"
+    }
+  },
+  "log/AREA-J/T-67.md": {
+    "size": 4124,
+    "mtime_ns": 1790001669768514445,
+    "indexed_at_ns": 1790002737299166484,
+    "word_count": 624,
+    "hashes": {
+      "log/area-j/t-67.md": "24c8ffd19a5368a60e6b75e13c7ba5b1c7f8d4cec3b69507f2b37c659de54ee5"
+    }
+  },
+  "log/AREA-J/T-68.md": {
+    "size": 5761,
+    "mtime_ns": 1790001669768569525,
+    "indexed_at_ns": 1790002737299542895,
+    "word_count": 962,
+    "hashes": {
+      "log/area-j/t-68.md": "a446f54bc9a3bd8b909bae564dde86f3fc4b731333a68a6398e4313eda999107"
+    }
+  },
+  "log/AREA-J/T-69.md": {
+    "size": 4493,
+    "mtime_ns": 1790001669768618409,
+    "indexed_at_ns": 1790002737299976041,
+    "word_count": 733,
+    "hashes": {
+      "log/area-j/t-69.md": "a5bf6e3a15383b295cc5aacc7114d4aad67d999b6a136b047412fea966cf311f"
+    }
+  },
+  "log/AREA-J/T-77.md": {
+    "size": 6293,
+    "mtime_ns": 1790001669768672928,
+    "indexed_at_ns": 1790002737300366630,
+    "word_count": 826,
+    "hashes": {
+      "log/area-j/t-77.md": "337d8cbb768643413453c52d2d8315511df0adf20d3222f6e2a1efcdb6ffa8e4"
+    }
+  },
+  "log/AREA-J/T-80.md": {
+    "size": 8373,
+    "mtime_ns": 1790002191550816867,
+    "indexed_at_ns": 1790002737300784461,
+    "word_count": 1162,
+    "hashes": {
+      "log/area-j/t-80.md": "e6c1d01a4f3242096c670b5ce86a4affce69cf1d8aa96a2ab8a1bf826e641dc6"
+    }
+  },
+  "log/HANDOFF-ARCHIVE.md": {
+    "size": 34054,
+    "mtime_ns": 1790002274599941561,
+    "indexed_at_ns": 1790002737301185664,
+    "word_count": 4784,
+    "hashes": {
+      "log/handoff-archive.md": "1a86565b269665924521f4e32b957c7c73395276c41914c5c4de65178287eafe"
+    }
+  },
+  "log/contracts/00-core.md": {
+    "size": 13660,
+    "mtime_ns": 1790001669768900064,
+    "indexed_at_ns": 1790002737301604395,
+    "word_count": 1781,
+    "hashes": {
+      "log/contracts/00-core.md": "870c32d6487b05f0bddc2e4191f38da70452bfbbf48180a743e3447afcc207b1"
+    }
+  },
+  "log/contracts/architecture.md": {
+    "size": 7973,
+    "mtime_ns": 1789913512336366325,
+    "indexed_at_ns": 1790002737302030494,
+    "word_count": 522,
+    "hashes": {
+      "log/contracts/architecture.md": "90bfdbcbfd43a9dbcf462506b4a7cb0d28b65e8e486a17cfaabb0740ef53d9b9"
+    }
+  },
+  "log/contracts/data-layer.md": {
+    "size": 11662,
+    "mtime_ns": 1790001669768979355,
+    "indexed_at_ns": 1790002737302416285,
+    "word_count": 1609,
+    "hashes": {
+      "log/contracts/data-layer.md": "e63fef79283df766da429a237bea7a486985f8eeca08a8384470bfe566a863db"
+    }
+  },
+  "log/contracts/deviations.md": {
+    "size": 11684,
+    "mtime_ns": 1790001669769058227,
+    "indexed_at_ns": 1790002737302858739,
+    "word_count": 1509,
+    "hashes": {
+      "log/contracts/deviations.md": "ab568a8814f5c4bba5a07d015c18879e3c4f4cbef28114225f1640537e51e603"
+    }
+  },
+  "log/contracts/engine-physics.md": {
+    "size": 11844,
+    "mtime_ns": 1790001669769143016,
+    "indexed_at_ns": 1790002737303108388,
+    "word_count": 1780,
+    "hashes": {
+      "log/contracts/engine-physics.md": "79f4ca9f51781cef2fc2c68d4532b6b0b0970f2fb3c8b9959de13eb5cf8950cb"
+    }
+  },
+  "log/contracts/io-contracts.md": {
+    "size": 11375,
+    "mtime_ns": 1790001669769219579,
+    "indexed_at_ns": 1790002737303294525,
+    "word_count": 1530,
+    "hashes": {
+      "log/contracts/io-contracts.md": "dfe5a03350e606eb71a84f16ba8bc065cc06e0b92845f932f2a0057386ba2fe5"
+    }
+  },
+  "log/contracts/worker-sweep.md": {
+    "size": 3362,
+    "mtime_ns": 1790001669769219579,
+    "indexed_at_ns": 1790002737303467658,
+    "word_count": 494,
+    "hashes": {
+      "log/contracts/worker-sweep.md": "b169a20a9994feeb55314804b4bc5252dceee7236d2b9e7ce6cc5dc0c5d80199"
+    }
+  },
+  "package.json": {
+    "size": 814,
+    "mtime_ns": 1789560363872617216,
+    "indexed_at_ns": 1790002726226504580,
+    "word_count": 74,
+    "hashes": { "package.json": "8b30a75d23f8e1e6750e46182ee17b884de08519783b6c0a7e4c9036ab6f2a7f" }
+  },
+  "packages/data/package.json": {
+    "size": 351,
+    "mtime_ns": 1790001669769219579,
+    "indexed_at_ns": 1790002726226801126,
+    "word_count": 35,
+    "hashes": {
+      "packages/data/package.json": "c641354950c0f01d89475d3e0b51577dedb185bc223ccb5c996e8f8f0bf1b92c"
+    }
+  },
+  "packages/data/src/constructions.ts": {
+    "size": 6947,
+    "mtime_ns": 1790001669769368162,
+    "indexed_at_ns": 1790002700762985503,
+    "word_count": 952
+  },
+  "packages/data/src/errors.ts": {
+    "size": 1075,
+    "mtime_ns": 1789483861126204721,
+    "indexed_at_ns": 1790002700763288088,
+    "word_count": 146
+  },
+  "packages/data/src/glazing.ts": {
+    "size": 4634,
+    "mtime_ns": 1790001669769538987,
+    "indexed_at_ns": 1790002700763555048,
+    "word_count": 641
+  },
+  "packages/data/src/index.ts": {
+    "size": 1938,
+    "mtime_ns": 1790001669769538987,
+    "indexed_at_ns": 1790002700763832706,
+    "word_count": 242
+  },
+  "packages/data/src/materials.ts": {
+    "size": 17360,
+    "mtime_ns": 1790001669769665128,
+    "indexed_at_ns": 1790002700764093270,
+    "word_count": 2165
+  },
+  "packages/data/src/presets.ts": {
+    "size": 31406,
+    "mtime_ns": 1790001669769826594,
+    "indexed_at_ns": 1790002700764464281,
+    "word_count": 3710
+  },
+  "packages/data/src/scenarios.ts": {
+    "size": 19369,
+    "mtime_ns": 1790001669769923750,
+    "indexed_at_ns": 1790002700764851887,
+    "word_count": 2574
+  },
+  "packages/data/src/tmy.ts": {
+    "size": 4158,
+    "mtime_ns": 1790001669769987392,
+    "indexed_at_ns": 1790002700765182061,
+    "word_count": 530
+  },
+  "packages/data/src/weather/csv.ts": {
+    "size": 5606,
+    "mtime_ns": 1790001669770047553,
+    "indexed_at_ns": 1790002700765487874,
+    "word_count": 753
+  },
+  "packages/data/src/weather/pipeline.ts": {
+    "size": 19009,
+    "mtime_ns": 1790001669770141150,
+    "indexed_at_ns": 1790002700765803978,
+    "word_count": 2508
+  },
+  "packages/data/src/weather/sources.ts": {
+    "size": 9313,
+    "mtime_ns": 1790001669770218695,
+    "indexed_at_ns": 1790002700766177415,
+    "word_count": 1063
+  },
+  "packages/data/test/catalog.test.ts": {
+    "size": 8224,
+    "mtime_ns": 1790001669770283261,
+    "indexed_at_ns": 1790002700766498157,
+    "word_count": 866
+  },
+  "packages/data/test/fixtures/nasa-power-leh-clean.json": {
+    "size": 12556,
+    "mtime_ns": 1790001669770346837,
+    "indexed_at_ns": 1790002726227126220,
+    "word_count": 944,
+    "hashes": {
+      "packages/data/test/fixtures/nasa-power-leh-clean.json": "66c1fe2857c44ffe277a7c3c645cc86fd4692c106bb5e2d0f6d401bb7dd3d55e"
+    }
+  },
+  "packages/data/test/fixtures/nasa-power-leh-gaps.json": {
+    "size": 18410,
+    "mtime_ns": 1790001669770416567,
+    "indexed_at_ns": 1790002726227445788,
+    "word_count": 1328,
+    "hashes": {
+      "packages/data/test/fixtures/nasa-power-leh-gaps.json": "ecf292b6894928b42cc23cba8c10941b8b8e163e164fdb60d7e2248624943b3d"
+    }
+  },
+  "packages/data/test/fixtures/open-meteo-leh.json": {
+    "size": 3980,
+    "mtime_ns": 1790001669770416567,
+    "indexed_at_ns": 1790002726227772251,
+    "word_count": 446,
+    "hashes": {
+      "packages/data/test/fixtures/open-meteo-leh.json": "9904fd0ebf24206516f9c5fd0355d8d4a5746d0768cfa6efb0d71d3cc1d01537"
+    }
+  },
+  "packages/data/test/presets.test.ts": {
+    "size": 8975,
+    "mtime_ns": 1790001669770416567,
+    "indexed_at_ns": 1790002700767741446,
+    "word_count": 878
+  },
+  "packages/data/test/scenarios.test.ts": {
+    "size": 12153,
+    "mtime_ns": 1790001669770583834,
+    "indexed_at_ns": 1790002700768029410,
+    "word_count": 1315
+  },
+  "packages/data/test/sources.test.ts": {
+    "size": 15663,
+    "mtime_ns": 1790001669770676891,
+    "indexed_at_ns": 1790002700768325159,
+    "word_count": 1565
+  },
+  "packages/data/test/tmy.test.ts": {
+    "size": 11886,
+    "mtime_ns": 1790001669770753315,
+    "indexed_at_ns": 1790002700768636153,
+    "word_count": 1363
+  },
+  "packages/data/test/weather.test.ts": {
+    "size": 19467,
+    "mtime_ns": 1790001669771048057,
+    "indexed_at_ns": 1790002700768937374,
+    "word_count": 2126
+  },
+  "packages/data/tmy/README.md": {
+    "size": 9966,
+    "mtime_ns": 1790001669771164267,
+    "indexed_at_ns": 1790002737303650660,
+    "word_count": 1121,
+    "hashes": {
+      "packages/data/tmy/readme.md": "bb62a5a51c5828c7b272b9cb5e62ae6e5de8c2f8fe18d3e059143ea804dfda03"
+    }
+  },
+  "packages/data/tmy/drass.json": {
+    "size": 496902,
+    "mtime_ns": 1790001669772914759,
+    "indexed_at_ns": 1790002726228081078,
+    "word_count": 70171,
+    "hashes": {
+      "packages/data/tmy/drass.json": "cbd1844f2097c591f95bcf601c53dc45b56f89c14394a7c7ce9d4b10221f5c80"
+    }
+  },
+  "packages/data/tmy/jaisalmer.json": {
+    "size": 497171,
+    "mtime_ns": 1790001669774563095,
+    "indexed_at_ns": 1790002726228744530,
+    "word_count": 70171,
+    "hashes": {
+      "packages/data/tmy/jaisalmer.json": "1ef95f433c04be1cc864a60e4563442ba193ac28b82531dd9243aef243a8482a"
+    }
+  },
+  "packages/data/tmy/kargil.json": {
+    "size": 498491,
+    "mtime_ns": 1790001669776191454,
+    "indexed_at_ns": 1790002726229489874,
+    "word_count": 70171,
+    "hashes": {
+      "packages/data/tmy/kargil.json": "2ad93c11e422e10b9d041630aec59abe429af9beecbe07aa2bca7702d3b0cd81"
+    }
+  },
+  "packages/data/tmy/leh.json": {
+    "size": 496546,
+    "mtime_ns": 1790001669777819069,
+    "indexed_at_ns": 1790002726230257807,
+    "word_count": 70171,
+    "hashes": {
+      "packages/data/tmy/leh.json": "439a36739c51bd9891e440611939c8a596e714dbc62380d4d24b54033a9416ee"
+    }
+  },
+  "packages/data/tmy/nubra.json": {
+    "size": 509227,
+    "mtime_ns": 1790001669779459715,
+    "indexed_at_ns": 1790002726231040900,
+    "word_count": 70173,
+    "hashes": {
+      "packages/data/tmy/nubra.json": "0f9d318311a143948c3f1f9d193b2c03e54b1a121ff960e15568ad77e2c6f5cc"
+    }
+  },
+  "packages/data/tsconfig.json": {
+    "size": 132,
+    "mtime_ns": 1789484126086679552,
+    "indexed_at_ns": 1790002726231817968,
+    "word_count": 13,
+    "hashes": {
+      "packages/data/tsconfig.json": "7ab78e0f5bf4dd0888a8f15317a9082ef115173f2d7764621be48c03ba978eef"
+    }
+  },
+  "packages/engine/package.json": {
+    "size": 291,
+    "mtime_ns": 1788916667895803778,
+    "indexed_at_ns": 1790002726232169375,
+    "word_count": 30,
+    "hashes": {
+      "packages/engine/package.json": "e56622f8badb0885f584a52082664e23c2a66aa24b5b156a5e33f43876e037ad"
+    }
+  },
+  "packages/engine/src/air.ts": {
+    "size": 1738,
+    "mtime_ns": 1788916775636026781,
+    "indexed_at_ns": 1790002700781964885,
+    "word_count": 255
+  },
+  "packages/engine/src/constants.ts": {
+    "size": 2643,
+    "mtime_ns": 1789370166815492990,
+    "indexed_at_ns": 1790002700782232838,
+    "word_count": 397
+  },
+  "packages/engine/src/envelope/mesh.ts": {
+    "size": 6903,
+    "mtime_ns": 1788917503674389108,
+    "indexed_at_ns": 1790002700782528339,
+    "word_count": 1091
+  },
+  "packages/engine/src/envelope/response.ts": {
+    "size": 5127,
+    "mtime_ns": 1788917439094705420,
+    "indexed_at_ns": 1790002700782838490,
+    "word_count": 876
+  },
+  "packages/engine/src/index.ts": {
+    "size": 12508,
+    "mtime_ns": 1789953438714588660,
+    "indexed_at_ns": 1790002700783107355,
+    "word_count": 1566
+  },
+  "packages/engine/src/loads/ground.ts": {
+    "size": 1558,
+    "mtime_ns": 1788917177154185148,
+    "indexed_at_ns": 1790002700783451164,
+    "word_count": 245
+  },
+  "packages/engine/src/loads/infiltration.ts": {
+    "size": 6248,
+    "mtime_ns": 1789484836945731064,
+    "indexed_at_ns": 1790002700783748208,
+    "word_count": 936
+  },
+  "packages/engine/src/loads/internal.ts": {
+    "size": 958,
+    "mtime_ns": 1788917177156185216,
+    "indexed_at_ns": 1790002700784053671,
+    "word_count": 138
+  },
+  "packages/engine/src/loads/windows.ts": {
+    "size": 1814,
+    "mtime_ns": 1788917177149184978,
+    "indexed_at_ns": 1790002700784329779,
+    "word_count": 290
+  },
+  "packages/engine/src/post/conversions.ts": {
+    "size": 1112,
+    "mtime_ns": 1788917559717829764,
+    "indexed_at_ns": 1790002700784609832,
+    "word_count": 165
+  },
+  "packages/engine/src/post/energyBalance.ts": {
+    "size": 3421,
+    "mtime_ns": 1789533885932131268,
+    "indexed_at_ns": 1790002700784884828,
+    "word_count": 493
+  },
+  "packages/engine/src/post/heatFlows.ts": {
+    "size": 3192,
+    "mtime_ns": 1789520091816189142,
+    "indexed_at_ns": 1790002700785175126,
+    "word_count": 356
+  },
+  "packages/engine/src/post/kpis.ts": {
+    "size": 4060,
+    "mtime_ns": 1789520040155818627,
+    "indexed_at_ns": 1790002700785451734,
+    "word_count": 572
+  },
+  "packages/engine/src/serialise.ts": {
+    "size": 13933,
+    "mtime_ns": 1789953438714588660,
+    "indexed_at_ns": 1790002700785730679,
+    "word_count": 1707
+  },
+  "packages/engine/src/solar/decomposition.ts": {
+    "size": 2545,
+    "mtime_ns": 1788916984892258077,
+    "indexed_at_ns": 1790002700786045722,
+    "word_count": 418
+  },
+  "packages/engine/src/solar/geometry.ts": {
+    "size": 5663,
+    "mtime_ns": 1788916853691150354,
+    "indexed_at_ns": 1790002700786326466,
+    "word_count": 823
+  },
+  "packages/engine/src/solar/shading.ts": {
+    "size": 5510,
+    "mtime_ns": 1789389063071635778,
+    "indexed_at_ns": 1790002700786623810,
+    "word_count": 820
+  },
+  "packages/engine/src/solar/transposition.ts": {
+    "size": 3438,
+    "mtime_ns": 1788916984893264466,
+    "indexed_at_ns": 1790002700786936447,
+    "word_count": 521
+  },
+  "packages/engine/src/solve/assemble.ts": {
+    "size": 6131,
+    "mtime_ns": 1789533885932297554,
+    "indexed_at_ns": 1790002700787226073,
+    "word_count": 799
+  },
+  "packages/engine/src/solve/integrator.ts": {
+    "size": 30366,
+    "mtime_ns": 1789819720558436870,
+    "indexed_at_ns": 1790002700787519731,
+    "word_count": 4114
+  },
+  "packages/engine/src/solve/linalg.ts": {
+    "size": 3890,
+    "mtime_ns": 1788916800074045989,
+    "indexed_at_ns": 1790002700787932336,
+    "word_count": 749
+  },
+  "packages/engine/src/solve/schur.ts": {
+    "size": 7259,
+    "mtime_ns": 1788918709663278336,
+    "indexed_at_ns": 1790002700788231338,
+    "word_count": 1161
+  },
+  "packages/engine/src/storage/pcm.ts": {
+    "size": 4136,
+    "mtime_ns": 1789383675644010360,
+    "indexed_at_ns": 1790002700788541702,
+    "word_count": 645
+  },
+  "packages/engine/src/storage/waterMass.ts": {
+    "size": 2879,
+    "mtime_ns": 1789533885932772427,
+    "indexed_at_ns": 1790002700788860290,
+    "word_count": 396
+  },
+  "packages/engine/src/surfaces/exterior.ts": {
+    "size": 2985,
+    "mtime_ns": 1788917141961953152,
+    "indexed_at_ns": 1790002700789157496,
+    "word_count": 485
+  },
+  "packages/engine/src/surfaces/interior.ts": {
+    "size": 2716,
+    "mtime_ns": 1788917141963953225,
+    "indexed_at_ns": 1790002700789450689,
+    "word_count": 425
+  },
+  "packages/engine/src/types.ts": {
+    "size": 19448,
+    "mtime_ns": 1789953438715035865,
+    "indexed_at_ns": 1790002700789734352,
+    "word_count": 2600
+  },
+  "packages/engine/src/units.ts": {
+    "size": 1161,
+    "mtime_ns": 1788916683749204125,
+    "indexed_at_ns": 1790002700790063812,
+    "word_count": 218
+  },
+  "packages/engine/src/validate.ts": {
+    "size": 4266,
+    "mtime_ns": 1788917633203004855,
+    "indexed_at_ns": 1790002700790343194,
+    "word_count": 534
+  },
+  "packages/engine/test/box.ts": {
+    "size": 3544,
+    "mtime_ns": 1788919000066633359,
+    "indexed_at_ns": 1790002700790648407,
+    "word_count": 410
+  },
+  "packages/engine/test/fixtures.ts": {
+    "size": 14415,
+    "mtime_ns": 1789388881288490974,
+    "indexed_at_ns": 1790002700790940239,
+    "word_count": 1878
+  },
+  "packages/engine/test/gate.test.ts": {
+    "size": 8134,
+    "mtime_ns": 1789485176542718904,
+    "indexed_at_ns": 1790002700791257673,
+    "word_count": 1011
+  },
+  "packages/engine/test/heatFlows.test.ts": {
+    "size": 11638,
+    "mtime_ns": 1789520624252677122,
+    "indexed_at_ns": 1790002700791558987,
+    "word_count": 1548
+  },
+  "packages/engine/test/helpers.ts": {
+    "size": 2744,
+    "mtime_ns": 1789388881293712741,
+    "indexed_at_ns": 1790002700791876450,
+    "word_count": 395
+  },
+  "packages/engine/test/infiltration.test.ts": {
+    "size": 12981,
+    "mtime_ns": 1789520146582709908,
+    "indexed_at_ns": 1790002700792149977,
+    "word_count": 1602
+  },
+  "packages/engine/test/integrator.test.ts": {
+    "size": 20189,
+    "mtime_ns": 1789485181469648595,
+    "indexed_at_ns": 1790002700792454368,
+    "word_count": 2584
+  },
+  "packages/engine/test/mesh.test.ts": {
+    "size": 7795,
+    "mtime_ns": 1789485185358372778,
+    "indexed_at_ns": 1790002700792811065,
+    "word_count": 956
+  },
+  "packages/engine/test/multiday.test.ts": {
+    "size": 11907,
+    "mtime_ns": 1789575890474826926,
+    "indexed_at_ns": 1790002700793094834,
+    "word_count": 1473
+  },
+  "packages/engine/test/pcm.test.ts": {
+    "size": 6743,
+    "mtime_ns": 1789383729686622887,
+    "indexed_at_ns": 1790002700793881133,
+    "word_count": 887
+  },
+  "packages/engine/test/perf.test.ts": {
+    "size": 2283,
+    "mtime_ns": 1788919094818677088,
+    "indexed_at_ns": 1790002700794182436,
+    "word_count": 335
+  },
+  "packages/engine/test/serialise.test.ts": {
+    "size": 4793,
+    "mtime_ns": 1789370166815665561,
+    "indexed_at_ns": 1790002700794454055,
+    "word_count": 472
+  },
+  "packages/engine/test/shading.test.ts": {
+    "size": 7690,
+    "mtime_ns": 1789383882529359552,
+    "indexed_at_ns": 1790002700794734131,
+    "word_count": 991
+  },
+  "packages/engine/test/solar.test.ts": {
+    "size": 6088,
+    "mtime_ns": 1788916941999947854,
+    "indexed_at_ns": 1790002700795009101,
+    "word_count": 776
+  },
+  "packages/engine/test/storage.test.ts": {
+    "size": 11351,
+    "mtime_ns": 1789533885932956903,
+    "indexed_at_ns": 1790002700795290064,
+    "word_count": 1371
+  },
+  "packages/engine/test/validation-noaa.test.ts": {
+    "size": 8482,
+    "mtime_ns": 1789496274307069618,
+    "indexed_at_ns": 1790002700795602358,
+    "word_count": 1182
+  },
+  "packages/engine/test/warmstart.test.ts": {
+    "size": 12126,
+    "mtime_ns": 1789953438715251121,
+    "indexed_at_ns": 1790002700795913297,
+    "word_count": 1229
+  },
+  "packages/engine/tsconfig.json": {
+    "size": 132,
+    "mtime_ns": 1788916667897803784,
+    "indexed_at_ns": 1790002726232607472,
+    "word_count": 13,
+    "hashes": {
+      "packages/engine/tsconfig.json": "a0e086c681a96fa117656a596f81ca10f00992d3e10b9bbd93e7e82f45f7436d"
+    }
+  },
+  "packages/optimise/package.json": {
+    "size": 355,
+    "mtime_ns": 1790001669779514676,
+    "indexed_at_ns": 1790002726232941228,
+    "word_count": 35,
+    "hashes": {
+      "packages/optimise/package.json": "52232f7acae02ee7ffd4bf3f706f1db62e7f90f6d2cf49b3c5afd4cb5988a84f"
+    }
+  },
+  "packages/optimise/src/index.ts": {
+    "size": 114,
+    "mtime_ns": 1789572337498037375,
+    "indexed_at_ns": 1790002700796699737,
+    "word_count": 14
+  },
+  "packages/optimise/src/sweep.ts": {
+    "size": 24410,
+    "mtime_ns": 1790001669779657540,
+    "indexed_at_ns": 1790002700797261344,
+    "word_count": 2986
+  },
+  "packages/optimise/test/fixtures.ts": {
+    "size": 7287,
+    "mtime_ns": 1790001669779727192,
+    "indexed_at_ns": 1790002700797687925,
+    "word_count": 844
+  },
+  "packages/optimise/test/sweep.test.ts": {
+    "size": 11668,
+    "mtime_ns": 1790001669779801246,
+    "indexed_at_ns": 1790002700798007104,
+    "word_count": 1254
+  },
+  "packages/optimise/tsconfig.json": {
+    "size": 175,
+    "mtime_ns": 1789572337498567707,
+    "indexed_at_ns": 1790002726233276920,
+    "word_count": 18,
+    "hashes": {
+      "packages/optimise/tsconfig.json": "a62f712b6bda782e78d25dff32bb3fba2a38639e89d512454750155ec76683a5"
+    }
+  },
+  "plan.md": {
+    "size": 33120,
+    "mtime_ns": 1788919757232366443,
+    "indexed_at_ns": 1790002737303853424,
+    "word_count": 5427,
+    "hashes": { "plan.md": "bab552bfad9d42d81ade201f26632ed196f0d3f6eb9df494024beee89b9b01ab" }
+  },
+  "scripts/ci-energy-balance.mjs": {
+    "size": 21422,
+    "mtime_ns": 1790001669779923957,
+    "indexed_at_ns": 1790002700799445221,
+    "word_count": 2552
+  },
+  "tsconfig.base.json": {
+    "size": 440,
+    "mtime_ns": 1788916657205766849,
+    "indexed_at_ns": 1790002726233580067,
+    "word_count": 33,
+    "hashes": {
+      "tsconfig.base.json": "949f46bc008d8bc0125115e337f4b0e9dcfd4d281df2b0218389a8beafc27cdd"
+    }
+  },
+  "vitest.config.ts": {
+    "size": 1334,
+    "mtime_ns": 1789593263981421624,
+    "indexed_at_ns": 1790002700799920318,
+    "word_count": 190
+  }
+}

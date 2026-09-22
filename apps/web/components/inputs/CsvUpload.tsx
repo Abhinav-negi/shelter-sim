@@ -54,10 +54,14 @@ export function CsvUpload({ startDayOfYear, site, onWeatherParsed }: CsvUploadPr
         }}
       />
       {fileName && rowErrors.length === 0 && (
-        <p style={{ fontSize: 12, color: '#166534' }}>Loaded {fileName}.</p>
+        <p style={{ fontSize: 12, color: 'var(--color-positive)' }}>Loaded {fileName}.</p>
       )}
       {rowErrors.length > 0 && (
-        <div role="alert" data-testid="csv-errors" style={{ fontSize: 12, color: '#991b1b' }}>
+        <div
+          role="alert"
+          data-testid="csv-errors"
+          style={{ fontSize: 12, color: 'var(--color-negative)' }}
+        >
           <p>
             {fileName} could not be used ({rowErrors.length} problem
             {rowErrors.length === 1 ? '' : 's'}). The weather already loaded is unchanged.

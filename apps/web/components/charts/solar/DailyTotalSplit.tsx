@@ -33,7 +33,7 @@ export function DailyTotalSplit({ solar }: { solar: SimulationResult['solar'] })
           height: '1.5rem',
           borderRadius: '4px',
           overflow: 'hidden',
-          border: '1px solid #ccc',
+          border: '1px solid var(--color-border)',
         }}
         role="img"
         aria-label={`Useful ${formatEnergy(useful)}, rejected ${formatEnergy(rejected)}`}

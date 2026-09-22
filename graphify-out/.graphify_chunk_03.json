@@ -1,0 +1,2537 @@
+{
+  "nodes": [
+    {
+      "id": "log_area_d_t_32_task",
+      "label": "T-32: Design snapshots and share links",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_d_t_33_task",
+      "label": "T-33: The simulation-run cache",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_d_t_34_task",
+      "label": "T-34: The material repository and the seed script",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_d_t_35_task",
+      "label": "T-35: The DB-off integration proof",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_e_readme",
+      "label": "AREA-E README (Server tier)",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_e_t_36_task",
+      "label": "T-36: Next.js scaffold, the store, the unit boundary, layout slots",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_e_t_37_task",
+      "label": "T-37: /api/weather — the CORS proxy, cached",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_e_t_38_task",
+      "label": "T-38: /api/simulate — one run, cached",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_e_t_39_task",
+      "label": "T-39: /api/optimise and /api/scenarios, with streaming progress",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-39.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_e_t_40_task",
+      "label": "T-40: The worker-thread pool, one per core",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_e_t_41_task",
+      "label": "T-41: /api/designs and /api/materials",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_e_t_42_task",
+      "label": "T-42: Request validation, the error taxonomy, and rate limiting",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-42.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_readme",
+      "label": "AREA-F README (Frontend)",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_43_task",
+      "label": "T-43: The browser Web Worker and the offline fallback path",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-43.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_44_task",
+      "label": "T-44: The five-control simple form",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_45_task",
+      "label": "T-45: The Advanced panel",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-45.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_46_task",
+      "label": "T-46: The isometric house: click a wall, scrub the day",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-46.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_47_task",
+      "label": "T-47: The temperature view (PS Deliverable 1)",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_48_task",
+      "label": "T-48: The solar capture view (PS Deliverable 2)",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-48.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_49_task",
+      "label": "T-49: The heat-flow view and the Sankey (PS Deliverable 3)",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_50_task",
+      "label": "T-50: The survival grid",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_51_task",
+      "label": "T-51: KPI cards, the integrity badge and the safety warning",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-51.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_d_t_30_task",
+      "label": "T-30 (Area D, inferred): the db.ts client wrapper task",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_d_t_31_task",
+      "label": "T-31 (Area D, inferred): the weather-cache repository task",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_lib_repo_designs_savedesign",
+      "label": "saveDesign()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_repo_designs_loaddesign",
+      "label": "loadDesign()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_repo_designs_purgeexpireddesigns",
+      "label": "purgeExpiredDesigns()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_lib_repo_runs_readrun",
+      "label": "readRun()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_repo_runs_readfullrun",
+      "label": "readFullRun()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_repo_runs_writerun",
+      "label": "writeRun()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_repo_runs_purgerunsforotherversions",
+      "label": "purgeRunsForOtherVersions()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_lib_repo_materials_listmaterials",
+      "label": "listMaterials()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_repo_materials_getmaterial",
+      "label": "getMaterial()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_prisma_seed_seedmaterials",
+      "label": "seedMaterials()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_prisma_seed_validatesources",
+      "label": "validateSources()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_lib_repo_weather_readweathercache",
+      "label": "readWeatherCache() (T-31)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_repo_weather_writeweathercache",
+      "label": "writeWeatherCache() (T-31)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_test_db_off_integration_test",
+      "label": "db-off.integration.test.ts (six-exercise matrix)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_scripts_check_db_off_mjs",
+      "label": "scripts/check-db-off.mjs",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_app_page_tsx",
+      "label": "app/page.tsx (three-column layout)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_store_ts",
+      "label": "lib/store.ts (global app state)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_units_ts",
+      "label": "lib/units.ts (Kelvin/Celsius unit boundary)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_units_formattempc",
+      "label": "formatTempC()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_i18n_ts",
+      "label": "lib/i18n.ts (t() registry)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_app_api_weather_route",
+      "label": "app/api/weather/route.ts",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_app_api_simulate_route",
+      "label": "app/api/simulate/route.ts",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_app_api_optimise_route",
+      "label": "app/api/optimise/route.ts (planned, not started)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-39.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_app_api_scenarios_route",
+      "label": "app/api/scenarios/route.ts (planned, not started)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-39.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_lib_pool_ts",
+      "label": "lib/pool.ts (worker-thread pool)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_workers_sim_node_worker_mjs",
+      "label": "workers/sim.node.worker.mjs",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_app_api_designs_route",
+      "label": "app/api/designs/route.ts (POST)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_app_api_designs_shareid_route",
+      "label": "app/api/designs/[shareId]/route.ts (GET)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_app_api_materials_route",
+      "label": "app/api/materials/route.ts (GET)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_lib_api_ts",
+      "label": "lib/api.ts (apiError/apiOk/withApi, planned)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-42.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_ratelimit_ts",
+      "label": "lib/ratelimit.ts (fixed-window limiter, planned)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-42.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_workers_sim_worker_ts",
+      "label": "workers/sim.worker.ts (browser Web Worker)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-43.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_lib_workerclient_ts",
+      "label": "lib/workerClient.ts (runSimulation/runScenarios/isServerReachable)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-43.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_components_inputs_simpleform",
+      "label": "components/inputs/SimpleForm.tsx",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_components_advanced_advancedpanel",
+      "label": "components/advanced/AdvancedPanel.tsx",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-45.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_components_house_houseview",
+      "label": "components/house/HouseView.tsx (isometric SVG house)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-46.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_components_charts_temp_tempchart",
+      "label": "components/charts/temp/TempChart.tsx (PS Deliverable 1)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_components_charts_solar_solarpanel",
+      "label": "components/charts/solar/SolarPanel.tsx (PS Deliverable 2)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-48.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_components_charts_heatflow_heatflowpanel",
+      "label": "components/charts/heatflow/HeatFlowPanel.tsx (PS Deliverable 3)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_components_charts_heatflow_sankeydiagram",
+      "label": "components/charts/heatflow/SankeyDiagram.tsx",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_components_grid_survivalgrid",
+      "label": "components/grid/SurvivalGrid.tsx",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_components_kpis_kpicolumn",
+      "label": "components/kpis/KpiColumn.tsx",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-51.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "apps_web_lib_db_ts",
+      "label": "lib/db.ts (withDb/dbHealthy)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_vitest_config_ts",
+      "label": "apps/web vitest.config.ts (fileParallelism/singleFork fix)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apps_web_next_config_mjs",
+      "label": "apps/web next.config.mjs (webpack externals/extensionAlias)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "packages_engine_src_index",
+      "label": "packages/engine/src/index.ts (public barrel)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_data_src_index",
+      "label": "packages/data/src/index.ts (public barrel)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_engine_src_serialise_requestfromjson",
+      "label": "requestFromJson()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_engine_src_serialise_requesttojson",
+      "label": "requestToJson()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_engine_src_serialise_canonicalrequesthash",
+      "label": "canonicalRequestHash()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_engine_src_serialise_resulttojson",
+      "label": "resultToJson()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_engine_src_serialise_resultfromjson",
+      "label": "resultFromJson()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_engine_src_index_simulate",
+      "label": "simulate()",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_engine_src_units_toc",
+      "label": "toC() (canonical Kelvin→Celsius)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_engine_src_units_tok",
+      "label": "toK() (canonical Celsius→Kelvin)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-45.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_data_src_tmy",
+      "label": "packages/data/src/tmy.ts (tmyById, TMY_LOCATIONS)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "packages_data_src_scenarios",
+      "label": "packages/data/src/scenarios.ts (buildScenarios, scenarioWeather)",
+      "file_type": "code",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "concept_db_off_degradation",
+      "label": "DB-off / DB-unreachable graceful degradation pattern",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_barrel_export_gap",
+      "label": "Package barrel-export omission (recurring toolchain gap)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_worker_protocol_7_14",
+      "label": "§7.14 WorkerRequest/WorkerResponse protocol",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_c13_unaided_user_test",
+      "label": "CHALLENGE.md C-13: unaided non-expert usability test",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_survival_grid_banding",
+      "label": "Survival grid green/amber/red thresholds (BLUEPRINT.md Appendix C)",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "plan_md",
+      "label": "plan.md",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "tech_md",
+      "label": "TECH.md",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "contracts_md",
+      "label": "CONTRACTS.md",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "challenge_md",
+      "label": "CHALLENGE.md",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "audit_md",
+      "label": "AUDIT.md",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-51.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "blueprint_md",
+      "label": "BLUEPRINT.md",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "log_area_d_t_32_task",
+      "target": "log_area_d_t_30_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_33_task",
+      "target": "log_area_d_t_30_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_34_task",
+      "target": "log_area_d_t_30_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_35_task",
+      "target": "log_area_d_t_31_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_35_task",
+      "target": "log_area_d_t_32_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_35_task",
+      "target": "log_area_d_t_33_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_35_task",
+      "target": "log_area_d_t_34_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_37_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_38_task",
+      "target": "log_area_d_t_33_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_38_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_39_task",
+      "target": "log_area_e_t_40_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-39.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_40_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_40_task",
+      "target": "log_area_f_t_43_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_41_task",
+      "target": "log_area_d_t_32_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_41_task",
+      "target": "log_area_d_t_34_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_41_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_42_task",
+      "target": "log_area_e_t_37_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-42.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_42_task",
+      "target": "log_area_e_t_38_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-42.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_42_task",
+      "target": "log_area_e_t_39_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-42.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_42_task",
+      "target": "log_area_e_t_41_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-42.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_43_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-43.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_44_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_44_task",
+      "target": "log_area_e_t_41_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_44_task",
+      "target": "log_area_f_t_46_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_45_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-45.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_46_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-46.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_47_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_47_task",
+      "target": "log_area_f_t_43_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_48_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-48.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_48_task",
+      "target": "log_area_f_t_43_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-48.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_49_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_49_task",
+      "target": "log_area_f_t_43_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_50_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_50_task",
+      "target": "log_area_f_t_47_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_51_task",
+      "target": "log_area_e_t_36_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-51.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_51_task",
+      "target": "log_area_f_t_43_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-51.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_51_task",
+      "target": "log_area_f_t_47_task",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-51.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "apps_web_lib_repo_designs_savedesign",
+      "target": "packages_engine_src_serialise_requestfromjson",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_designs_savedesign",
+      "target": "packages_engine_src_serialise_requesttojson",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_designs_loaddesign",
+      "target": "packages_engine_src_serialise_requestfromjson",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_runs_readrun",
+      "target": "packages_engine_src_serialise_canonicalrequesthash",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_runs_writerun",
+      "target": "packages_engine_src_serialise_canonicalrequesthash",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_runs_readfullrun",
+      "target": "packages_engine_src_serialise_resultfromjson",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_runs_writerun",
+      "target": "packages_engine_src_serialise_resulttojson",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "packages_engine_src_index",
+      "target": "packages_engine_src_serialise_requestfromjson",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "packages_engine_src_index",
+      "target": "packages_engine_src_serialise_requesttojson",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "packages_engine_src_index",
+      "target": "packages_engine_src_serialise_canonicalrequesthash",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_simulate_route",
+      "target": "packages_engine_src_serialise_requestfromjson",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_simulate_route",
+      "target": "apps_web_lib_repo_runs_readrun",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_simulate_route",
+      "target": "packages_engine_src_index_simulate",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_simulate_route",
+      "target": "apps_web_lib_repo_runs_writerun",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_designs_route",
+      "target": "apps_web_lib_repo_designs_savedesign",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_designs_shareid_route",
+      "target": "apps_web_lib_repo_designs_loaddesign",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_materials_route",
+      "target": "apps_web_lib_repo_materials_listmaterials",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_prisma_seed_seedmaterials",
+      "target": "apps_web_prisma_seed_validatesources",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_materials_listmaterials",
+      "target": "packages_data_src_index",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "packages_data_src_index",
+      "target": "packages_data_src_tmy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "packages_data_src_index",
+      "target": "packages_data_src_scenarios",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_test_db_off_integration_test",
+      "target": "apps_web_lib_repo_materials_listmaterials",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_test_db_off_integration_test",
+      "target": "apps_web_lib_repo_designs_savedesign",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_test_db_off_integration_test",
+      "target": "apps_web_lib_repo_runs_readrun",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_test_db_off_integration_test",
+      "target": "packages_data_src_scenarios",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_scripts_check_db_off_mjs",
+      "target": "apps_web_test_db_off_integration_test",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_weather_route",
+      "target": "apps_web_lib_repo_weather_readweathercache",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_weather_route",
+      "target": "apps_web_lib_repo_weather_writeweathercache",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_weather_route",
+      "target": "packages_data_src_index",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_31_task",
+      "target": "apps_web_lib_repo_weather_readweathercache",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page_tsx",
+      "target": "packages_data_src_tmy",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page_tsx",
+      "target": "apps_web_lib_store_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page_tsx",
+      "target": "apps_web_lib_units_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_page_tsx",
+      "target": "apps_web_lib_i18n_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_pool_ts",
+      "target": "packages_engine_src_serialise_requesttojson",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_pool_ts",
+      "target": "packages_engine_src_serialise_resultfromjson",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_pool_ts",
+      "target": "apps_web_workers_sim_node_worker_mjs",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_workers_sim_worker_ts",
+      "target": "apps_web_lib_workerclient_ts",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-43.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_workerclient_ts",
+      "target": "apps_web_app_api_simulate_route",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-43.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_workerclient_ts",
+      "target": "apps_web_workers_sim_worker_ts",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-43.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_house_houseview",
+      "target": "apps_web_lib_units_formattempc",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-46.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_charts_temp_tempchart",
+      "target": "apps_web_lib_units_formattempc",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_charts_temp_tempchart",
+      "target": "packages_engine_src_units_toc",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_advanced_advancedpanel",
+      "target": "packages_engine_src_units_toc",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-45.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_advanced_advancedpanel",
+      "target": "packages_engine_src_units_tok",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-45.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_charts_temp_tempchart",
+      "target": "apps_web_components_house_houseview",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_kpis_kpicolumn",
+      "target": "apps_web_lib_units_formattempc",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-51.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_grid_survivalgrid",
+      "target": "apps_web_lib_store_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_grid_survivalgrid",
+      "target": "packages_data_src_scenarios",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_charts_heatflow_heatflowpanel",
+      "target": "apps_web_components_charts_heatflow_sankeydiagram",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_charts_solar_solarpanel",
+      "target": "packages_engine_src_index_simulate",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-48.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_inputs_simpleform",
+      "target": "apps_web_app_api_materials_route",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "apps_web_lib_repo_designs_savedesign",
+      "target": "apps_web_lib_db_ts",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_runs_readrun",
+      "target": "apps_web_lib_db_ts",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_materials_listmaterials",
+      "target": "apps_web_lib_db_ts",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_vitest_config_ts",
+      "target": "apps_web_lib_db_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_next_config_mjs",
+      "target": "packages_data_src_index",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_next_config_mjs",
+      "target": "packages_engine_src_index",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_weather_route",
+      "target": "apps_web_next_config_mjs",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_designs_route",
+      "target": "apps_web_next_config_mjs",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_d_t_32_task",
+      "target": "concept_db_off_degradation",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_33_task",
+      "target": "concept_db_off_degradation",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_34_task",
+      "target": "concept_db_off_degradation",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-34.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_35_task",
+      "target": "concept_db_off_degradation",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_37_task",
+      "target": "concept_db_off_degradation",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_38_task",
+      "target": "concept_db_off_degradation",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_41_task",
+      "target": "concept_db_off_degradation",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-41.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_d_t_32_task",
+      "target": "concept_barrel_export_gap",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_33_task",
+      "target": "concept_barrel_export_gap",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-33.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_d_t_35_task",
+      "target": "concept_barrel_export_gap",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_37_task",
+      "target": "concept_barrel_export_gap",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-37.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_44_task",
+      "target": "concept_barrel_export_gap",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_e_t_40_task",
+      "target": "concept_worker_protocol_7_14",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_43_task",
+      "target": "concept_worker_protocol_7_14",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-43.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_39_task",
+      "target": "concept_worker_protocol_7_14",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-39.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_f_t_44_task",
+      "target": "concept_c13_unaided_user_test",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_50_task",
+      "target": "concept_c13_unaided_user_test",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_f_t_50_task",
+      "target": "concept_survival_grid_banding",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_d_t_32_task",
+      "target": "plan_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-32.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_36_task",
+      "target": "tech_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_36_task",
+      "target": "challenge_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-36.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_38_task",
+      "target": "challenge_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-38.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_39_task",
+      "target": "plan_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-39.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_40_task",
+      "target": "plan_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_e_t_40_task",
+      "target": "challenge_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_44_task",
+      "target": "plan_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_44_task",
+      "target": "challenge_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_45_task",
+      "target": "audit_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-45.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_46_task",
+      "target": "plan_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-46.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_47_task",
+      "target": "challenge_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_48_task",
+      "target": "plan_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-48.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_48_task",
+      "target": "challenge_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-48.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_49_task",
+      "target": "plan_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_49_task",
+      "target": "audit_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_50_task",
+      "target": "plan_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_50_task",
+      "target": "blueprint_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_51_task",
+      "target": "audit_md",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-51.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_f_t_44_task",
+      "target": "apps_web_lib_units_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-44.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_45_task",
+      "target": "apps_web_lib_units_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-45.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_46_task",
+      "target": "apps_web_lib_units_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-46.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_47_task",
+      "target": "apps_web_lib_units_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-47.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_48_task",
+      "target": "apps_web_lib_units_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-48.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_49_task",
+      "target": "apps_web_lib_units_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_50_task",
+      "target": "apps_web_lib_units_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-50.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_51_task",
+      "target": "apps_web_lib_units_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-51.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "apps_web_lib_pool_ts",
+      "target": "apps_web_vitest_config_ts",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_repo_runs_readrun",
+      "target": "apps_web_components_charts_heatflow_heatflowpanel",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-49.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "packages_engine_src_index",
+      "target": "packages_data_src_index",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "db_off_degradation_pattern",
+      "label": "Database-off/unreachable graceful-degradation pattern across Area D repos and Area E routes",
+      "nodes": [
+        "log_area_d_t_32_task",
+        "log_area_d_t_33_task",
+        "log_area_d_t_34_task",
+        "log_area_d_t_35_task",
+        "apps_web_lib_db_ts"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md"
+    },
+    {
+      "id": "barrel_export_toolchain_gap",
+      "label": "Recurring package-barrel/module-resolution toolchain gap discovered mid-task, fixed outside task allow-lists",
+      "nodes": ["packages_engine_src_index", "packages_data_src_index", "apps_web_next_config_mjs"],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-D/T-35.md"
+    },
+    {
+      "id": "worker_protocol_implementation",
+      "label": "Shared §7.14 worker request/response protocol implemented by server pool and browser worker",
+      "nodes": [
+        "apps_web_lib_pool_ts",
+        "apps_web_workers_sim_node_worker_mjs",
+        "apps_web_workers_sim_worker_ts",
+        "apps_web_lib_workerclient_ts"
+      ],
+      "relation": "implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-E/T-40.md"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

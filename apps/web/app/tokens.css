@@ -1,0 +1,69 @@
+/* apps/web/app/tokens.css
+ *
+ * Design tokens for the dark theme already in use across the app. Values
+ * here are the SAME colors that were previously scattered as repeated hex
+ * literals across globals.css, the CSS Modules files, and ~14 inline
+ * `style={{}}` components -- this file doesn't repaint anything, it just
+ * gives the existing palette one source of truth. Status colors
+ * (ok/warn/danger) are the pastel chip colors `KpiColumn`/`SurvivalGrid`
+ * already used for their badges/bands; kept as light chips on purpose (a
+ * colored status pill reads fine on a dark page) but their SURROUNDING text
+ * ended up using near-invisible light-theme greys (`#555`/`#666`/`#ccc`)
+ * against the `#0f1115` page background -- this migration fixes that
+ * contrast bug by giving those spots proper dark-theme tokens instead.
+ */
+
+:root {
+  /* Surface */
+  --color-bg: #0f1115;
+  --color-surface: #171a21;
+  --color-border: #2a2d36;
+  --color-border-subtle: #3a3e4a;
+
+  /* Text */
+  --color-text: #e8e8ec;
+  --color-text-muted: #a9adba;
+  --color-text-faint: #7d8190;
+
+  /* Accent */
+  --color-accent: #4f8cff;
+
+  /* Status chips -- pastel backgrounds with dark text, legible regardless of
+   * page theme (KpiColumn's badge/warnings, SurvivalGrid's row bands). */
+  --color-ok-bg: #d6f5d6;
+  --color-ok-text: #14532d;
+  --color-warn-bg: #fff3cd;
+  --color-warn-text: #7c2d12;
+  --color-warn-border: #b45309;
+  --color-danger-bg: #f8d7da;
+  --color-danger-text: #7f1d1d;
+
+  /* Light popovers (chart tooltips) -- deliberately light-on-dark-page, same
+   * reasoning as the status chips above. Text color is set explicitly
+   * because these sit next to text that inherits the page's light-on-dark
+   * body color, which is illegible on a light popup if left unset. */
+  --color-popover-bg: #ffffff;
+  --color-popover-text: #1a1a1a;
+  --color-popover-border: #ccc;
+
+  /* Status text rendered directly on the dark page (not inside a pastel
+   * chip) -- e.g. a form's inline error/success line. Lighter than the chip
+   * pair above so it stays readable against --color-bg. */
+  --color-positive: #4ade80;
+  --color-negative: #f87171;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+
+  /* Type scale */
+  --font-size-sm: 0.85rem;
+  --font-size-base: 0.95rem;
+  --font-size-lg: 1.1rem;
+
+  --radius: 8px;
+  --radius-sm: 4px;
+}

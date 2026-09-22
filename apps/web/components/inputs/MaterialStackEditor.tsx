@@ -43,7 +43,12 @@ export function MaterialStackEditor({
     <section
       data-testid="stack-editor"
       aria-label={`Material stack for ${surface!.id}`}
-      style={{ border: '1px solid #cbd5e1', borderRadius: 8, padding: 12, marginTop: 8 }}
+      style={{
+        border: '1px solid var(--color-border)',
+        borderRadius: 8,
+        padding: 12,
+        marginTop: 8,
+      }}
     >
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <strong>
@@ -54,7 +59,7 @@ export function MaterialStackEditor({
           Close
         </button>
       </header>
-      <p style={{ fontSize: 12, color: '#475569' }}>
+      <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
         Layers ordered outside (top) to inside (bottom). Drag a slider to change how thick a layer
         is.
       </p>
@@ -68,11 +73,11 @@ export function MaterialStackEditor({
           return (
             <li
               key={`${layer.materialId}-${i}`}
-              style={{ border: '1px solid #e2e8f0', borderRadius: 6, padding: 8 }}
+              style={{ border: '1px solid var(--color-border-subtle)', borderRadius: 6, padding: 8 }}
             >
               <div style={{ fontWeight: 600 }}>{material?.name ?? layer.materialId}</div>
               {material?.blurb && (
-                <div style={{ fontSize: 12, color: '#475569' }}>{material.blurb}</div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{material.blurb}</div>
               )}
               <label htmlFor={inputId} style={{ display: 'block', marginTop: 4 }}>
                 Thickness: {thicknessMm} mm
@@ -94,7 +99,7 @@ export function MaterialStackEditor({
                   <summary style={{ cursor: 'pointer', fontSize: 12 }}>
                     Where this number comes from
                   </summary>
-                  <p style={{ fontSize: 12, color: '#475569' }}>{material.source}</p>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{material.source}</p>
                 </details>
               )}
             </li>

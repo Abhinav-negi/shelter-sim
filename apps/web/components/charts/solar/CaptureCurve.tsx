@@ -78,16 +78,23 @@ export function CaptureCurve({
           stroke="#94a3b8"
           strokeWidth={1}
         />
-        <text x={4} y={PAD_TOP + 4} fontSize="9" fill="#475569">
+        <text x={4} y={PAD_TOP + 4} fontSize="9" fill="var(--color-text-muted)">
           {maxW.toFixed(0)} W
         </text>
-        <text x={4} y={HEIGHT - PAD_BOTTOM} fontSize="9" fill="#475569">
+        <text x={4} y={HEIGHT - PAD_BOTTOM} fontSize="9" fill="var(--color-text-muted)">
           0 W
         </text>
         {hourTicks.map((h) => {
           const x = PAD_LEFT + ((h * 3600) / maxT) * (WIDTH - PAD_LEFT - PAD_RIGHT);
           return (
-            <text key={h} x={x} y={HEIGHT - 4} fontSize="9" fill="#475569" textAnchor="middle">
+            <text
+              key={h}
+              x={x}
+              y={HEIGHT - 4}
+              fontSize="9"
+              fill="var(--color-text-muted)"
+              textAnchor="middle"
+            >
               {h}h
             </text>
           );

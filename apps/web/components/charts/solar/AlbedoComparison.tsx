@@ -95,7 +95,7 @@ export function AlbedoComparison({ request }: { request: SimulationRequest }) {
               style={{
                 flex: '1 1 auto',
                 minWidth: 0,
-                background: '#f1f5f9',
+                background: 'var(--color-border-subtle)',
                 borderRadius: '3px',
                 overflow: 'hidden',
               }}
@@ -118,7 +118,7 @@ export function AlbedoComparison({ request }: { request: SimulationRequest }) {
           </div>
         ))}
       </div>
-      <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: '0.4rem' }}>
+      <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.4rem' }}>
         South wall total, same building and day, only ground albedo changed.
       </p>
       <p

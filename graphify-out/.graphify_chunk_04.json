@@ -1,0 +1,1534 @@
+{
+  "nodes": [
+    {
+      "id": "log_area_f_t_52",
+      "label": "T-52: Assumptions Panel, Exports, Offline Banner, i18n",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_53",
+      "label": "T-53: Day/Night Animation Driven by Real Solar-Position Code",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-53.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_71",
+      "label": "T-71: Wire Area F Components into app-shell.tsx Placeholders",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_73",
+      "label": "T-73: Wire T-52 Meta Components into slot-assumptions",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-73.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_74",
+      "label": "T-74: Wire i18n into SimpleForm.tsx and KpiColumn.tsx",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-74.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_75",
+      "label": "T-75: Stack DayNightAnimation Behind HouseView in slot-house",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-75.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_readme",
+      "label": "Area G README — Decision Support",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_54",
+      "label": "T-54: The Sweep Engine — Expand, Dispatch, Collect",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-54.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_55",
+      "label": "T-55: Browser Worker Pool and Shared Spin-Up Cache",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-55.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_56",
+      "label": "T-56: Ranking, Pareto Front, Perturbation-Stability Check",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-56.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_57",
+      "label": "T-57: The Buildable Recommendation and Non-AI Template Fallback",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-57.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_58",
+      "label": "T-58: The AI Write-Up, Two-Stage Separation, Number Verifier",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-58.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_h_readme",
+      "label": "Area H README — Scenarios",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_h_t_59",
+      "label": "T-59: The Eighteen-Scenario Matrix Built from Real Recorded History",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-59.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_h_t_60",
+      "label": "T-60: Run the Matrix and Shape the Survival-Grid Contract",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_h_t_61",
+      "label": "T-61: Multi-Day Runs and the Sunless-Streak Path",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-61.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_i_readme",
+      "label": "Area I README — Validation & Credibility",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_i_t_62",
+      "label": "T-62: Continuous Energy-Balance Audit in CI",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-62.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_i_t_63",
+      "label": "T-63: VALIDATION.md",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-63.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_i_t_64",
+      "label": "T-64: EQUATIONS.md and the Limitations List",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-64.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_i_t_65",
+      "label": "T-65: One EnergyPlus Reference Case",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-65.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_j_readme",
+      "label": "Area J README — Delivery",
+      "file_type": "document",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-J/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_f_t_52_assumptions_panel",
+      "label": "Assumptions Panel (every constant/correlation with value, unit, source)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_52_limitations_list",
+      "label": "Explicit Limitations List (deliberate choices, not apologies)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_52_exports",
+      "label": "CSV/JSON/PDF Exports (print-stylesheet PDF, no PDF library)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_52_offline_banner",
+      "label": "Offline Banner (honest, never silently pretending full function)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_52_locale_aggregator",
+      "label": "i18n Locale Aggregator Pattern (own only the aggregator)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_f_t_53_daynight_animation",
+      "label": "Day/Night Animation (real sunPosition, not a screensaver)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-53.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_53_progress_ring",
+      "label": "Progress Ring (real done/total, never a fabricated percentage)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-53.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_53_scrubber_mode",
+      "label": "Scrubber Mode (sun follows store.scrubberHour)",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-53.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_f_t_71_appshell_wiring",
+      "label": "App-Shell Slot Wiring (pure integration, no new physics)",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_f_t_75_stacking",
+      "label": "DayNightAnimation-behind-HouseView Stacking (position:relative wrapper)",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-75.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_g_t_54_spinup_sharing",
+      "label": "Spin-Up Sharing / Warm-State Cache Across Sweep Variants",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-54.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_54_expandvariants",
+      "label": "expandVariants Cartesian Expansion over VariableSpec[]",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-54.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_g_t_55_runner_factory",
+      "label": "pool.ts Transport-Agnostic Runner Factory",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-55.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_g_t_56_rank",
+      "label": "rank() — Primary/Secondary Metric with Tie Policy",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-56.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_56_perturbation_stability",
+      "label": "perturbationStability — C-14 ±20% Robustness Check",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-56.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_56_enforceconstraints",
+      "label": "enforceConstraints — Defence-in-Depth ACH Floor Enforcement",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-56.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_g_t_57_recommendation",
+      "label": "Recommendation Structure (spec + performance + economics + tie notice)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-57.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_57_template_prose",
+      "label": "renderTemplateProse — Non-AI Fallback (never dead panel)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-57.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_g_t_58_two_stage_separation",
+      "label": "Two-Stage Separation: Physics Decides, AI Writes Prose",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-58.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_g_t_58_verifynumbers",
+      "label": "verifyNumbers — Reject Hallucinated Numbers, Retry Once, Fallback",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-58.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_h_t_59_scenario_selection",
+      "label": "18-Scenario Selection Rules (provenance-based, never guessed)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-59.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_h_t_59_clear_cold_night",
+      "label": "Clear Cold Night Scenario (worse than coldest night overall)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-59.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_h_t_59_sunless_streak",
+      "label": "Sunless-Streak Scenario (real test of thermal storage)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-59.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_h_t_60_banding",
+      "label": "Green/Amber/Red Survival-Grid Banding Thresholds",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_h_t_60_annualtotals",
+      "label": "annualTotals — Honest Annualisation (12 Monthly Days Weighted)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_h_t_61_spinup_convergence",
+      "label": "Multi-Day Spin-Up (converges on first day only, then real march)",
+      "file_type": "concept",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-61.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_h_t_61_perf_ceiling",
+      "label": "Multi-Day Wall-Clock Ceiling ((k+9)/(k+1), 8x-10x unreachable)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-61.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_i_t_62_energybalance_script",
+      "label": "ci-energy-balance.mjs — 29-Case Residual Audit",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-62.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_i_t_62_negative_controls",
+      "label": "Negative Controls (Q5 included, Q4 dropped, Q9 sign flipped)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-62.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_i_t_63_validation_doc",
+      "label": "VALIDATION.md — Ten-Test Validation Report Replacing the ANSYS Claim",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-63.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_i_t_64_equations_doc",
+      "label": "EQUATIONS.md — Governing Equations with Citations and Simplification Ceilings",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-64.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "log_area_i_t_64_well_mixed_correction",
+      "label": "Well-Mixed vs Well-Stratified Correction",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-64.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+
+    {
+      "id": "log_area_i_t_65_energyplus_comparison",
+      "label": "Single-Zone EnergyPlus Comparison (RMSE, % heating energy diff)",
+      "file_type": "rationale",
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-65.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_36",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_43",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_51",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_73",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_74",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_52_assumptions_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_52_limitations_list",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_52_exports",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_52_offline_banner",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_52",
+      "target": "log_area_f_t_52_locale_aggregator",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-52.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_f_t_53",
+      "target": "log_area_f_t_46",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-53.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_53",
+      "target": "log_area_f_t_53_daynight_animation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-53.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_53",
+      "target": "log_area_f_t_53_progress_ring",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-53.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_53",
+      "target": "log_area_f_t_53_scrubber_mode",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-53.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_53_daynight_animation",
+      "target": "log_area_f_t_46",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-53.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_f_t_71",
+      "target": "log_area_f_t_43",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_71",
+      "target": "log_area_f_t_45",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_71",
+      "target": "log_area_f_t_46",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_71",
+      "target": "log_area_f_t_47",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_71",
+      "target": "log_area_f_t_48",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_71",
+      "target": "log_area_f_t_49",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_71",
+      "target": "log_area_f_t_51",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_71",
+      "target": "log_area_f_t_44",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_71",
+      "target": "log_area_f_t_71_appshell_wiring",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-71.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_f_t_73",
+      "target": "log_area_f_t_52",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-73.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_73",
+      "target": "log_area_f_t_71",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-73.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_f_t_74",
+      "target": "log_area_f_t_47",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-74.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_74",
+      "target": "log_area_f_t_51",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-74.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_74",
+      "target": "log_area_f_t_52",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-74.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_74",
+      "target": "log_area_f_t_44",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-74.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_74",
+      "target": "log_area_f_t_52_locale_aggregator",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-74.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_f_t_75",
+      "target": "log_area_f_t_53",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-75.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_75",
+      "target": "log_area_f_t_71",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-75.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_75",
+      "target": "log_area_f_t_75_stacking",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-75.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_f_t_75_stacking",
+      "target": "log_area_f_t_53_daynight_animation",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-75.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_g_t_54",
+      "target": "log_area_g_t_54_spinup_sharing",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-54.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_54",
+      "target": "log_area_g_t_54_expandvariants",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-54.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_54",
+      "target": "log_area_b_t_76",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-54.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_54",
+      "target": "log_area_g_t_55",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-54.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_54_spinup_sharing",
+      "target": "log_area_b_t_76",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-54.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_54",
+      "target": "log_area_b_engine",
+      "relation": "references",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.2,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-54.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_g_t_55",
+      "target": "log_area_f_t_43",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-55.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_55",
+      "target": "log_area_g_t_54",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-55.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_55",
+      "target": "log_area_g_t_55_runner_factory",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-55.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_g_t_56",
+      "target": "log_area_g_t_54",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-56.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_56",
+      "target": "log_area_g_t_56_rank",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-56.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_56",
+      "target": "log_area_g_t_56_perturbation_stability",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-56.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_56",
+      "target": "log_area_g_t_56_enforceconstraints",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-56.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_56_enforceconstraints",
+      "target": "log_area_g_t_54",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-56.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_g_t_57",
+      "target": "log_area_g_t_56",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-57.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_57",
+      "target": "log_area_g_t_57_recommendation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-57.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_57",
+      "target": "log_area_g_t_57_template_prose",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-57.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_g_t_58",
+      "target": "log_area_g_t_57",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-58.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_58",
+      "target": "log_area_g_t_58_two_stage_separation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-58.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_58",
+      "target": "log_area_g_t_58_verifynumbers",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-58.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_g_t_58_verifynumbers",
+      "target": "log_area_g_t_57_template_prose",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-G/T-58.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_h_t_59",
+      "target": "log_area_h_t_59_scenario_selection",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-59.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_59",
+      "target": "log_area_h_t_59_clear_cold_night",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-59.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_59",
+      "target": "log_area_h_t_59_sunless_streak",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-59.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_h_t_60",
+      "target": "log_area_h_t_59",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_60",
+      "target": "log_area_g_t_54",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_60",
+      "target": "log_area_h_t_59_sunless_streak",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_60",
+      "target": "log_area_h_t_59_clear_cold_night",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_60",
+      "target": "log_area_h_t_60_banding",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_60",
+      "target": "log_area_h_t_60_annualtotals",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_h_t_61",
+      "target": "log_area_h_t_59",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-61.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_61",
+      "target": "log_area_h_t_59_sunless_streak",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-61.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_61",
+      "target": "log_area_h_t_61_spinup_convergence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-61.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_61",
+      "target": "log_area_h_t_61_perf_ceiling",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-61.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_h_t_61_spinup_convergence",
+      "target": "log_area_g_t_54_spinup_sharing",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-61.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_i_t_62",
+      "target": "log_area_h_t_59",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-62.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_62",
+      "target": "log_area_i_t_62_energybalance_script",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-62.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_62",
+      "target": "log_area_i_t_62_negative_controls",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-62.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_62_energybalance_script",
+      "target": "log_area_h_t_59_scenario_selection",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-62.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_i_t_63",
+      "target": "log_area_i_t_62",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-63.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_63",
+      "target": "log_area_h_t_61",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-63.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_63",
+      "target": "log_area_f_t_52_limitations_list",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-63.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_63",
+      "target": "log_area_i_t_65",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-63.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_63",
+      "target": "log_area_i_t_63_validation_doc",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-63.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_i_t_64",
+      "target": "log_area_i_t_64_equations_doc",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-64.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_64",
+      "target": "log_area_i_t_64_well_mixed_correction",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-64.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_64_equations_doc",
+      "target": "log_area_f_t_52_limitations_list",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-64.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_64_well_mixed_correction",
+      "target": "log_area_f_t_52_limitations_list",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-64.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+
+    {
+      "source": "log_area_i_t_65",
+      "target": "log_area_i_t_62",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-65.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_65",
+      "target": "log_area_i_t_63",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-65.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "log_area_i_t_65",
+      "target": "log_area_i_t_65_energyplus_comparison",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-I/T-65.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "assumptions_panel_i18n_completion",
+      "label": "Assumptions Panel Built, Wired and i18n-Closed (T-52 -> T-73 -> T-74)",
+      "nodes": ["log_area_f_t_52", "log_area_f_t_73", "log_area_f_t_74"],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-74.md"
+    },
+    {
+      "id": "daynight_animation_integration",
+      "label": "Day/Night Animation Built, Shell-Wired and Stacked (T-53 -> T-71 -> T-75)",
+      "nodes": ["log_area_f_t_53", "log_area_f_t_71", "log_area_f_t_75"],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-F/T-75.md"
+    },
+    {
+      "id": "scenario_matrix_pipeline",
+      "label": "Scenario Matrix Pipeline: Build -> Run -> Multi-Day Path (T-59 -> T-60 -> T-61)",
+      "nodes": ["log_area_h_t_59", "log_area_h_t_60", "log_area_h_t_61"],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/abhinav/Downloads/SIH/shelter-sim/log/AREA-H/T-60.md"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

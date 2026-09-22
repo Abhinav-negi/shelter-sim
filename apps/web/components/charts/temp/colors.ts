@@ -3,9 +3,14 @@
 // T-47. Categorical colours for up to 4 overlaid variants' indoor-temperature
 // lines -- the dataviz skill's validated default categorical palette, fixed
 // hue order, never cycled or reassigned by rank (skill: color-formula.md).
-// This app has no dark-mode theming anywhere yet (no `prefers-color-scheme`/
-// `data-theme` in the codebase), so light-mode hex only; add a dark set if
-// the app grows one (LOG.md rule 13 -- ceiling noted, not hidden).
+// These stay literal hex (not CSS custom properties) because they're
+// referenced from TS logic, not just rendered -- they're validated
+// contrast-safe saturated hues, legible on both the app's dark page and a
+// light print/export background. The chart's CHROME (axis labels,
+// gridlines, crosshair, in TempChart.tsx) previously assumed a light plot
+// background too -- that part now uses `var(--color-text-muted)` /
+// `var(--color-border-subtle)` from app/tokens.css to match the app's
+// actual dark theme.
 
 /** Slots 1-4 of the reference categorical palette: blue, orange, aqua,
  * yellow. Worst adjacent CVD Delta E 9.1, worst adjacent normal-vision Delta

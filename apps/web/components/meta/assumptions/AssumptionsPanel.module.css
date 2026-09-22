@@ -20,7 +20,7 @@
 
 .subtitle {
   font-size: 0.8rem;
-  color: #a9adba;
+  color: var(--color-text-muted);
   margin: 0 0 0.5rem 0;
 }
 
@@ -34,7 +34,7 @@
 .table td {
   text-align: left;
   padding: 0.35rem 0.5rem;
-  border-bottom: 1px solid #2a2d36;
+  border-bottom: 1px solid var(--color-border);
   vertical-align: top;
   word-break: break-word;
 }
@@ -48,10 +48,10 @@
 .editRow input {
   width: 100%;
   max-width: 8rem;
-  background: #1a1c22;
-  color: #e8e8ec;
-  border: 1px solid #3a3e4a;
-  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
   padding: 0.2rem 0.35rem;
 }
 
@@ -62,14 +62,14 @@
 }
 
 .fuelCard {
-  border: 1px solid #2a2d36;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   padding: 0.6rem;
 }
 
 .fuelCardLabel {
   font-size: 0.7rem;
-  color: #a9adba;
+  color: var(--color-text-muted);
 }
 
 .fuelCardValue {
@@ -93,7 +93,7 @@
   .table td::before {
     content: attr(data-label);
     font-weight: 600;
-    color: #a9adba;
+    color: var(--color-text-muted);
     flex: 0 0 auto;
   }
 }

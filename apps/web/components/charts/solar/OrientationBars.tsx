@@ -104,7 +104,7 @@ export function OrientationBars({
                 style={{
                   flex: '1 1 auto',
                   minWidth: 0,
-                  background: '#f1f5f9',
+                  background: 'var(--color-border-subtle)',
                   borderRadius: '3px',
                   overflow: 'hidden',
                 }}
@@ -131,7 +131,7 @@ export function OrientationBars({
                   flexShrink: 0,
                   fontSize: '0.7rem',
                   textAlign: 'right',
-                  color: '#64748b',
+                  color: 'var(--color-text-muted)',
                 }}
                 title="Solar intensity, independent of this surface's real area"
               >

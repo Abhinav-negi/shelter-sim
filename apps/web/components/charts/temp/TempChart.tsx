@@ -210,7 +210,7 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
                   x2={PLOT_WIDTH}
                   y1={yScale(t)}
                   y2={yScale(t)}
-                  stroke="#e5e5e0"
+                  stroke="var(--color-border-subtle)"
                   strokeWidth={1}
                 />
                 <text
@@ -219,7 +219,7 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
                   textAnchor="end"
                   dominantBaseline="middle"
                   fontSize={8}
-                  fill="#52514e"
+                  fill="var(--color-text-muted)"
                 >
                   {Math.round(t)}
                 </text>
@@ -229,7 +229,7 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
               transform={`translate(${-MARGIN.left + 8},${PLOT_HEIGHT / 2}) rotate(-90)`}
               textAnchor="middle"
               fontSize={8}
-              fill="#52514e"
+              fill="var(--color-text-muted)"
             >
               °C
             </text>
@@ -242,7 +242,7 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
                 y={PLOT_HEIGHT + 14}
                 textAnchor="middle"
                 fontSize={8}
-                fill="#52514e"
+                fill="var(--color-text-muted)"
               >
                 {formatHourLabel(h)}
               </text>
@@ -341,7 +341,7 @@ export function TempChart({ variants, comfortBand }: TempChartProps) {
                 x2={xScale(tooltip.hour)}
                 y1={0}
                 y2={PLOT_HEIGHT}
-                stroke="#0b0b0b"
+                stroke="var(--color-text)"
                 strokeWidth={1}
                 strokeDasharray="1,2"
                 data-testid="temp-crosshair"
