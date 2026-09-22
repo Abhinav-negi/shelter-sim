@@ -241,20 +241,12 @@ export function canonicalRequestHash(r: SimulationRequest): string {
 
 // ============================== SHA-256 ==============================
 //
-// node:crypto when available (real Node, the only place this actually runs
-// today); otherwise the small pure-JS implementation below, so a future browser
-// bundle (T-40/T-43) that cannot resolve node:crypto still works.
-
-let nodeSha256: ((input: string) => string) | undefined;
-try {
-  const nodeCrypto = await import('node:crypto');
-  nodeSha256 = (input: string) => nodeCrypto.createHash('sha256').update(input, 'utf8').digest('hex');
-} catch {
-  nodeSha256 = undefined;
-}
+// Pure-JS FIPS 180-4 — identical digests to node:crypto, sync module load so
+// the browser webpack bundle (and Client Components that import the engine)
+// stay free of top-level await.
 
 function sha256Hex(input: string): string {
-  return nodeSha256 ? nodeSha256(input) : pureSha256Hex(input);
+  return pureSha256Hex(input);
 }
 
 const SHA256_K = new Uint32Array([

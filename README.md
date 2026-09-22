@@ -7,6 +7,102 @@ See `LOG.md` for the build ledger index — task status, dependencies and the ex
 `log/AREA-<letter>/T-<NN>.md` file that holds each task's full entry (shared contracts are split
 by topic under `log/contracts/`). Start there.
 
+## Setup
+
+### Prerequisites
+
+- **Node.js ≥ 20** (`node -v`)
+- npm (comes with Node)
+- Git
+
+No Postgres is required for local use. The database is a cache/share layer only — the app runs fully in **DB-off** mode with no `.env`.
+
+### 1. Install dependencies
+
+```bash
+cd shelter-sim
+npm install
+```
+
+### 2. Build workspace packages
+
+The web app imports compiled output from `@shelter/engine` and `@shelter/data`. Build them before starting the UI:
+
+```bash
+npm run build --workspace @shelter/engine
+npm run build --workspace @shelter/data
+```
+
+Rebuild these again whenever you change code under `packages/engine` or `packages/data`.
+
+### 3. Start the app (DB-off — recommended default)
+
+```bash
+npm run dev --workspace @shelter/web
+```
+
+Open **http://localhost:3000** (redirects to `/results`).
+
+| Route | Purpose |
+|---|---|
+| `/results` | Temperature, solar, heat-flow charts and house view |
+| `/setup` | Edit geometry, materials, glazing, weather, options |
+| `/compare` | Eighteen-scenario survival / comparison grid |
+
+Changes on Setup re-run the thermal model (debounced) and update Results.
+
+### 4. Optional — SQLite for cache & share links
+
+Only needed if you want persisted weather/run caches or share URLs. From `apps/web`:
+
+```bash
+cd apps/web
+cp .env.example .env
+```
+
+Uncomment in `.env`:
+
+```bash
+DATABASE_URL="file:./dev.db"
+DATABASE_PROVIDER="sqlite"
+```
+
+Then migrate and seed:
+
+```bash
+npm run db:migrate
+npm run db:seed
+cd ../..
+npm run dev --workspace @shelter/web
+```
+
+For production Postgres, set `DATABASE_URL` to a `postgresql://…` URL and `DATABASE_PROVIDER="postgresql"` (see `apps/web/.env.example`).
+
+### Useful commands
+
+```bash
+# Unit / integration tests
+npm test --workspace @shelter/engine
+npm test --workspace @shelter/data
+npm test --workspace @shelter/web
+
+# Confirm the demo path works with no database
+node apps/web/scripts/check-db-off.mjs
+
+# Production-style Next build (after engine + data are built)
+npm run build --workspace @shelter/web
+npm run start --workspace @shelter/web
+```
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Module / import errors from `@shelter/engine` or `@shelter/data` | Run the package builds in step 2 |
+| Stale UI or odd webpack warnings after a package change | `rm -rf apps/web/.next` then restart `dev` |
+| Port 3000 already in use | Stop the other process, or `npx next dev --webpack -p 3001` from `apps/web` |
+| Node version errors | Upgrade to Node 20+ |
+
 ## Branch protocol
 
 - **one branch per task**, named for the task id in lower case: `t-18-shading`.
