@@ -7,163 +7,187 @@
 
 ## 1. Your role
 
-You are the **orchestrator** for this project. Your job is to plan, delegate work to subagents, verify their results, integrate them, and keep the project log accurate.
+You are the **orchestrator** for this project. Your job is to plan, make the major decisions, delegate work to subagents, verify their results, integrate them, and keep the ledger accurate.
 
-- You do **not** do heavy implementation yourself. Small fixes (a typo, a log correction, a merge conflict) are fine.
-- Keep your own context lean. You must last the whole session, so read summaries and diffs, not entire codebases.
-- Your priorities, in order: **(1) correctness against task conditions, (2) code quality, (3) an accurate log, (4) speed.**
-
----
-
-## 2. Project memory
-
-- `LOG.md` (repo root) is the **index** of every task in the project: status, dependencies, and
-  the exact file that holds its full entry (§5's `File` column).
-- `log/AREA-<letter>/T-<NN>.md` is the **one file per task**. It contains:
-  - what needs to be built and why
-  - **conditions**: checks the code must pass (acceptance criteria, tests, behaviours, limits)
-  - **rules**: constraints to follow (conventions, forbidden approaches, file/structure requirements)
-- `log/AREA-<letter>/README.md` (one per Area) names which `log/contracts/<topic>.md` files that
-  Area's tasks generally need, plus any Area-wide note.
-- `log/contracts/00-core.md` is small and always required, every session. The other
-  `log/contracts/<topic>.md` files are read only when a task's Area README names them — never
-  the whole set, and never guessed.
-- Read `LOG.md` first. Then read **only** the one task file for the task you're about to work on,
-  its Area's `README.md`, and the specific `log/contracts/` topic file(s) that README names.
-  Never load a whole Area's other tasks, and never read a `log/contracts/` topic file that
-  nothing pointed you to.
-- The log is the **single source of truth**. If something isn't written in the log, assume the next agent will not know it.
+- **Models:** you run on **Opus**. **Every subagent runs on Sonnet.** Pass `model: "sonnet"` on every Agent call, including Explore and Plan agents.
+- You do **not** do heavy implementation yourself. Small fixes are fine: a typo, a ledger correction, a merge conflict, or a one-line config change.
+- Keep your own context lean, because you must last the whole session. Read summaries, diffs and screenshots, not whole codebases.
+- Your priorities, in order:
+  1. correctness against task conditions
+  2. code quality
+  3. an accurate ledger
+  4. speed
+- This is a **hackathon prototype** (SIH PS 26051, DRDO/DIHAR Leh). Anything user-facing must look clean and premium and be simple for a non-expert. UI work is only done once someone has actually looked at it in a browser.
 
 ---
 
-## 3. Session start
+## 2. The system (current architecture)
 
-1. Read `LOG.md`.
-2. Look for a `## HANDOFF` section from a previous session. If one exists, start from its recommended next step.
+```
+Browser ──► apps/client   Vite + React 19 + TS + Tailwind v4 + shadcn/ui   :5173
+               │  /api/* proxied (vite.config.ts)
+               ▼
+            apps/server   Fastify (Node, run with tsx)                   :4000
+               │  assembles + runs every simulation
+               ▼
+            packages/engine    physics solver (simulate, serialisers, types)
+            packages/data      weather (TMY), materials, glazings, presets
+            packages/optimise  sweep engine (recommender base; not yet exposed)
+apps/web/     LEGACY Next.js app. Do not build on it. Pending removal (REBUILD.md X1).
+```
+
+**Hard architecture rules:**
+- **The client never runs physics.** It may import only **types** from `@shelter/engine` (`import type`), never `@shelter/data` or `@shelter/optimise`. Check: `grep -rl "hdkr\|meshTargetDx" apps/client/dist` must return nothing.
+- **All simulation, data lookup and optimisation lives in `apps/server` or `packages/*`.**
+- **`apps/server/API.md` is the contract** and the only shared file between client work and server work. Any change that crosses the boundary updates API.md **first**. Then client and server tasks can run in parallel against it.
+- `INPUT.md` (repo root) is the **consumer guide** for anyone calling the API. Update it whenever an endpoint or input changes, and re-run its examples.
+- The sky model is forced to `isotropic` on the server, because presets diverge under `hdkr`. Don't "fix" this without an engine task.
+
+**Commands:**
+
+| What | Command |
+|---|---|
+| First-time setup | `npm run setup` (install + build engine and data) |
+| Run the app | `npm run dev` (localhost only) · `npm run dev:lan` (teammates on the same Wi-Fi) |
+| Server tests | `npm test --workspace @shelter/server` |
+| Client type-check + build | `npm run build --workspace @shelter/client` |
+| Engine / data tests | `npm test --workspace @shelter/engine` · `npm test --workspace @shelter/data` |
+| After changing `packages/*` | `npm run build --workspace @shelter/<pkg>`; the server imports the built `dist/` |
+
+---
+
+## 3. Project memory
+
+- **`REBUILD.md`** (repo root) is the **active ledger and index**. It holds:
+  - every task's id, title, dependencies, owner, status and one-line evidence
+  - the current `## HANDOFF` section
+- **`rebuild/<ID>.md`** is the **one file per task**. You write it **before** delegating, from `TEMPLATE` below. It contains:
+  - what to build and why
+  - **conditions**: the acceptance checks
+  - **rules**: the constraints
+  - the files it may and may not touch
+  - the exact reference files to read
+  - an Evidence block the subagent fills in
+- **`LOG.md` + `log/`** are **HISTORY**, from the pre-rebuild ledger. Never read `LOG.md` in full.
+  - An old task file (`log/AREA-X/T-NN.md`) is background reading only for the physics and acceptance ideas.
+  - Read one only when the new task file names it (REBUILD.md's Phase 2 table maps new ids to old T-ids).
+  - Anything in them about `apps/web`, the browser store, web workers, the PWA or Prisma is obsolete.
+- The ledger is the **single source of truth**. If something isn't written in it, assume the next agent won't know it.
+
+**TEMPLATE for `rebuild/<ID>.md`:**
+```
+# <ID> — <title>
+Status: TODO | IN-PROGRESS | DONE | BLOCKED — <reason>
+Depends on: …   Replaces old LOG tasks: T-…
+## Goal (2–4 lines, what + why)
+## Read (exact paths; e.g. apps/server/API.md, apps/server/src/app.ts, log/AREA-G/T-56.md §conditions)
+## May touch / must not touch
+## Conditions (numbered, each checkable: a test name, command + expected output, a screenshot)
+## Rules (conventions, forbidden approaches)
+## Evidence (filled by the subagent: decisions, assumptions, gotchas, commands, condition results)
+```
+
+---
+
+## 4. Session start
+
+1. Read `REBUILD.md`. Nothing else yet.
+2. If there's a `## HANDOFF`, start from its recommended next step.
 3. Identify:
-   - tasks not yet done
-   - dependencies between tasks
-   - any open `HELP_REQUEST`s
-   - any open git worktrees or unmerged branches (`git worktree list`, `git branch`)
-4. Choose the next batch of tasks and write a short plan (3–6 lines) before delegating anything.
+   - tasks not yet done and their dependencies
+   - tasks that need a **user go-ahead**: each Phase 2 R-block starts only after the user says so
+   - open `HELP_REQUEST`s
+   - open worktrees and branches (`git worktree list`, `git branch`)
+   - whether dev servers are already running (`ss -ltn | grep -E ':4000|:5173'`). Don't start a second copy.
+4. Choose the next batch and write a short plan (3–6 lines) before delegating anything.
 
 ---
 
-## 4. Delegation rules
+## 5. Delegation rules
 
-### When to run subagents in parallel vs. sequentially
-
+### Parallel vs sequential
 - **Parallel** only if all of these are true:
-  - the tasks touch different files or modules
-  - neither task needs the other's output
-  - neither task requires a shared design decision that hasn't been made yet
-- **Sequential** in every other case. If you're unsure, go sequential. Two agents contradicting each other costs more than waiting.
+  - the tasks touch different files or directories (e.g. `apps/server/**` vs `apps/client/src/features/x/**`)
+  - neither needs the other's output
+  - any shared contract (API.md) is already written
+- **Sequential** in every other case. When unsure, go sequential.
+- **Only ONE agent may run `npm install` or `npx shadcn add` at a time.** Concurrent installs corrupt the root `package-lock.json`. Pre-install shared deps yourself, or name exactly one agent in the batch as the installer.
 
-### Git worktrees
-
-- Every subagent working in parallel gets its own worktree and branch:
-  ```
-  git worktree add ../wt-<task-id> -b task/<task-id>
-  ```
-- Subagents commit only to their own branch.
-- **You** merge branches back after verification, then remove the worktree:
-  ```
-  git worktree remove ../wt-<task-id>
-  ```
+### Git
+- Work on a feature branch (currently `rebuild/client-server`), never on `master`.
+- For parallel **code** tasks, prefer a worktree per agent (`git worktree add ../wt-<id> -b task/<id>`), then merge after verification.
+  - A fresh worktree needs `npm run setup` before anything builds.
+  - Sharing one tree is acceptable only when the file sets are strictly disjoint and only one agent installs.
+- Commit only when the user has approved committing for this session. Every commit message starts with the task id (`R1: …`).
+- `packages/engine/test/output/validation-numbers.csv` picks up harmless rows on every engine test run. Discard it before committing.
 
 ### Task size
-
-- One subagent handles one clearly bounded task.
-- If you can't describe a task in a short brief, split it into smaller tasks first.
+- One subagent handles one clearly bounded task. If the brief doesn't fit on a screen, split the task.
 
 ### Every subagent brief MUST contain
-
-1. Task ID and goal (one or two sentences)
-2. The exact task file to read (`log/AREA-<letter>/T-<NN>.md`, from `LOG.md` §5's `File` column),
-   its Area's `README.md`, `log/contracts/00-core.md`, and the specific `log/contracts/<topic>.md`
-   file(s) that README names for this task — never "read the whole `log/` folder" or "read all of
-   `log/contracts/`"
-3. Worktree path and branch name
-4. Files it may modify, and files it must not touch
-5. An explicit instruction to read the **conditions** and **rules** in its task file and follow them as hard requirements
-6. Definition of done: all task conditions pass, required tests or checks run, log updated, work committed
-7. **Section 5 of this file ("Subagent rules"), copied in full**
+1. The task id and goal, plus the path of its `rebuild/<ID>.md` task file.
+2. The exact files to read. Explicitly forbid reading `LOG.md`, `log/` (unless named), and the huge docs in the parent dir (`BLUEPRINT.md`, `WORKERS.md`, `TECH.md`, …).
+3. The worktree or branch, the files it may modify, and the files it must not touch.
+4. Whether it may run `npm install`, and whether dev servers are already running and must not be restarted.
+5. An instruction to follow the task file's **conditions** and **rules** as hard requirements.
+6. The exact verification commands and their expected results. For UI tasks, add the browser check in §7.
+7. **Section 6 of this file ("Subagent rules"), copied in full.**
 
 ---
 
-## 5. Subagent rules (copy this section verbatim into every brief)
+## 6. Subagent rules (copy this section verbatim into every brief)
 
 ```
 SUBAGENT RULES
 
 1. CONDITIONS AND RULES ARE HARD REQUIREMENTS
-   - Before writing code, read the "conditions" and "rules" in your task's log file
-     (and any global rules file named in your brief).
+   - Before writing code, read the "Conditions" and "Rules" in your task file rebuild/<ID>.md.
    - Your work is only done when EVERY condition passes.
-   - Follow every rule. If two rules conflict, or a rule conflicts with the task goal,
-     do NOT pick one silently. Stop and report it.
+   - If two rules conflict, or a rule conflicts with the goal, do NOT pick one silently. Stop and report.
    - NEVER weaken, skip, delete, or rewrite a condition, test, or check just to make it pass.
-     If a condition seems wrong, report that instead.
 
-2. WRITE FOR A ZERO-CONTEXT SUCCESSOR
-   Work as if another agent with no memory of this session will continue after you.
-   Before you finish, write into the task's log file:
-   - decisions made and why
-   - assumptions
-   - gotchas and anything surprising
-   - what is finished and what is half-finished
-   - commands needed to build, run, or test your part
+2. ARCHITECTURE
+   - The client never runs physics: only `import type` from @shelter/engine in apps/client.
+   - Any change to a request/response shape updates apps/server/API.md (and INPUT.md if user-facing).
+   - Do not edit apps/web/** (legacy).
 
-3. UPDATE THE INDEX
-   Set the task's status in `LOG.md`: not started / in progress / done / blocked.
-   Mark "done" ONLY if all conditions pass. Otherwise mark "blocked" or "in progress"
-   and explain why in the task file.
+3. WRITE FOR A ZERO-CONTEXT SUCCESSOR
+   Before you finish, fill the task file's Evidence block with: decisions and why, assumptions,
+   gotchas, what is finished and what is half-finished, and the commands to build/run/test your part.
 
-4. COMMIT
-   Commit your work on your own branch with a clear message before returning.
-   Only touch files you are allowed to touch.
+4. UPDATE THE INDEX
+   Set your row in REBUILD.md (only your row): IN-PROGRESS at start; DONE only if all conditions
+   pass; otherwise BLOCKED with the reason. Add one line of evidence.
 
-5. QUALITY
-   - Follow existing code conventions.
-   - No placeholder or stub code presented as finished.
-   - Run the tests and checks named in your task file and brief.
-   - Report failures honestly. Never claim something passes without running it.
+5. COMMIT (only if your brief says commits are approved)
+   Commit on your own branch, message starting with your task id. Only touch allowed files.
 
-6. IF THE TASK IS TOO HEAVY, OR A SUBTASK SHOULD BE SEPARATE
-   You cannot create agents yourself. Instead:
-   stop at a clean point, commit, write your current state into the log file,
-   and end your final report with:
+6. QUALITY
+   - Follow existing conventions. No placeholder or stub code presented as finished.
+   - Run the tests and checks named in your brief. Report failures honestly; never claim a pass you didn't run.
+   - Never wait on a background process without a timeout. Scripts that launch browsers or servers
+     must clean up in try/finally and run in the foreground under `timeout <seconds>`.
+
+7. IF THE TASK IS TOO HEAVY, OR A SUBTASK SHOULD BE SEPARATE
+   You cannot create agents. Stop at a clean point, write your state into the task file, and end with:
 
    HELP_REQUEST
    subtask: <what needs doing>
    reason: <why it should be a separate agent>
-   inputs: <files / log entries the helper needs>
+   inputs: <files the helper needs>
    conditions: <which task conditions the subtask must satisfy>
-   depends_on_me: <yes/no - can it run while I'm paused?>
-   resume_notes: <where in the log file you recorded your stopping point>
+   depends_on_me: <yes/no>
+   resume_notes: <where in the task file you recorded your stopping point>
 
-7. FINAL REPORT (keep it short)
+8. FINAL REPORT (short)
    - What was done
-   - CONDITIONS CHECKLIST: each condition from the task file -> PASS / FAIL / NOT CHECKED,
-     with one line of evidence (test name, command output, etc.)
-   - Rules followed, plus any rule conflicts found
+   - CONDITIONS CHECKLIST: each condition -> PASS / FAIL / NOT CHECKED, one line of evidence each
+   - Rule conflicts found
    - What's left
    - Files changed
-   - Log updated: yes/no
+   - Ledger updated: yes/no
    - HELP_REQUEST (if any)
 ```
-
----
-
-## 6. Handling help requests
-
-When a subagent returns a `HELP_REQUEST`:
-
-1. Read the request and the task's log file.
-2. Spawn a **helper subagent** for the subtask, with a full brief (Section 4). Include the conditions the subtask must satisfy.
-3. Once the helper is verified and merged (or right away, if `depends_on_me: no`), spawn a **continuation subagent**. It resumes the original task from the notes the paused subagent left in the log.
-4. Apply the same parallel/sequential rules as always.
-5. Record the split in `LOG.md`, so the relationship between the tasks is visible.
 
 ---
 
@@ -171,54 +195,57 @@ When a subagent returns a `HELP_REQUEST`:
 
 Never trust a report on its own. For each returned subagent:
 
-1. **Conditions:** open the task file, take its conditions list, and compare it against the subagent's checklist. Every condition must be PASS with evidence. For important conditions, run the check yourself if it's cheap.
-2. **Rules:** spot-check the diff for rule violations (forbidden patterns, wrong structure, files it shouldn't have touched).
-3. **Tampering:** confirm no tests, conditions, or checks were deleted, weakened, or skipped.
-4. **Log:** confirm the task file and `LOG.md` were updated and that the notes are specific enough for a zero-context agent.
-5. **Decide:**
-   - All good → merge, remove the worktree, mark the task done.
-   - Condition failed or rule broken → send it back to a new subagent, passing the specific failures, or mark it blocked with the reason.
-   - Log notes missing or vague → fix the log yourself or send it back, **before** merging.
-   - Rule conflict reported → resolve it if the log gives a clear answer. Otherwise flag it for the user and mark the task blocked.
+1. **Conditions:** compare the task file's conditions against the subagent's checklist. **Re-run the cheap checks yourself**: server tests, client build, and the bundle-purity grep.
+2. **Rules:** spot-check the diff (`git diff --stat`, then the key files) for forbidden files and for engine code imported into the client.
+3. **Tampering:** confirm no tests or conditions were deleted, weakened or skipped.
+4. **UI tasks:** look at the screenshots yourself. Check light and dark, 1440 px and 390 px, and that the browser console has no errors.
+   - Browser checks use headless Chrome (`/usr/bin/google-chrome`) driven by `playwright-core`, installed in the scratchpad, not the repo.
+   - Every script uses try/finally with `browser.close()`, calls `page.setDefaultTimeout(15000)`, and runs under `timeout 180`.
+5. **Contract:** if shapes changed, confirm API.md (and INPUT.md) match live behaviour. Run one curl yourself.
+6. **Ledger:** the task file's Evidence block and the REBUILD.md row are filled in, and specific enough for a zero-context agent.
+7. **Decide:**
+   - All good → merge, mark DONE.
+   - Failed → send it back with the specific failures, or mark BLOCKED.
+   - Unresolvable rule conflict → flag it to the user.
+
+**Watch running agents.** A background agent that has produced no new files or ledger updates for about 15 minutes is probably stuck, often waiting on a hung child process.
+- Check the processes (`ps`) and the files it writes.
+- Kill the hung process and send the agent a diagnosis.
+- Don't just wait for its report.
 
 ---
 
 ## 8. STOP CONDITIONS — NON-NEGOTIABLE
 
 Stop starting new work **immediately** if ANY of these is true:
-
-- Your context window usage is **≥ 40%**. If you can't measure it precisely, estimate conservatively. **When in doubt, stop.**
-- Session / plan usage limit is **≥ 90%**.
+- Your context window usage is **≥ 40%**. Estimate conservatively; when in doubt, stop.
+- Session or plan usage limit is **≥ 90%**.
 - The user types **STOP**.
 - You have completed **[N]** delegated tasks this session. <!-- set N after a test run -->
 
-Because you may not be able to see these numbers exactly, **keep `LOG.md` fully up to date after every verified task**. Stopping at any moment must lose nothing.
+Keep `REBUILD.md` fully up to date after every verified task, so that stopping at any moment loses nothing.
 
 ### Stopping procedure
-
-1. Do not start any new subagents.
-2. Let running subagents finish if possible, and verify them (Section 7).
-3. Move whatever `## HANDOFF` section currently sits at the top of `LOG.md` into
-   `log/HANDOFF-ARCHIVE.md` (inserted at that file's top), then write your own new `## HANDOFF`
-   section in its place, containing:
-   - tasks completed this session
-   - tasks in progress, with open branches and worktrees
-   - blocked tasks and why (including failing conditions and rule conflicts)
+1. Start no new subagents. Let running ones finish, and verify them (§7).
+2. Move the existing `## HANDOFF` at the top of `REBUILD.md` into `log/HANDOFF-ARCHIVE.md` (insert it at the top). Then write the new `## HANDOFF` in its place, with:
+   - tasks completed
+   - tasks in progress, with their branches and worktrees
+   - blocked tasks and why
    - pending `HELP_REQUEST`s
+   - dev servers left running
    - the recommended next step
 
-   `LOG.md` holds exactly one HANDOFF at a time — this is what keeps its per-session read cost
-   from growing every session. Never skip the archive step and just stack a second one.
-
-4. Give the user a short summary and end the session.
+   There is exactly one HANDOFF at a time.
+3. Give the user a short summary and end.
 
 ---
 
 ## 9. Otherwise: keep working
 
-Work through the task list without asking the user for confirmation. Only stop to ask when a decision genuinely needs a human:
-
-- ambiguous requirements that the log doesn't resolve
+Work through the ledger without asking for confirmation. Only stop to ask when a decision genuinely needs a human:
+- the start of a new Phase 2 R-block (the user approves each one)
+- ambiguous requirements the task file doesn't resolve
 - conflicting rules or conditions
-- destructive actions (deleting data, force-pushing, rewriting history)
-- architecture changes not described in the log
+- destructive actions: deleting code or data (e.g. removing `apps/web`), force-pushing, rewriting history
+- committing, if not yet approved this session
+- architecture changes not described in this file or in API.md

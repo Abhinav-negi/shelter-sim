@@ -1,5 +1,8 @@
 # LOG.md — The ShelterSim Build Ledger
 
+> **2026-09-24: this file is now HISTORY.** The app was rebuilt as `apps/server` (Fastify) + `apps/client` (Vite).
+> The active ledger is `REBUILD.md` — its "Phase 2" table triages every task still open here.
+
 ## HANDOFF (2026-09-21, end of session — eleventh session)
 
 **Completed this session: ledger moved 58 / 79 → 61 / 80 (one task landed for real; two
@@ -398,7 +401,7 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
 | [x] | T-43 | The browser Web Worker and the offline fallback path | T-36 | `log/AREA-F/T-43.md` |
-| [!] | T-44 | The five-control simple form | T-28, T-36, T-41 | `log/AREA-F/T-44.md` |
+| [S] | T-44 | SUPERSEDED (see REBUILD.md) — The five-control simple form | T-28, T-36, T-41 | `log/AREA-F/T-44.md` |
 | [x] | T-45 | The Advanced panel | T-36 | `log/AREA-F/T-45.md` |
 | [x] | T-46 | The isometric house: click a wall, scrub the day | T-36 | `log/AREA-F/T-46.md` |
 | [x] | T-47 | The temperature view (PS Deliverable 1) and the 6 AM label | T-36, T-43 | `log/AREA-F/T-47.md` |
@@ -417,8 +420,8 @@ Area file's checkboxes are truth and this table is fixed to match them.)*
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
-| [!] | T-54 | The sweep engine: expand, dispatch, collect | T-06, T-24, T-28 | `log/AREA-G/T-54.md` |
-| [ ] | T-55 | The browser worker pool and the shared spin-up cache | T-43, T-54 | `log/AREA-G/T-55.md` |
+| [x] | T-54 | The sweep engine: expand, dispatch, collect (2x-speed gate WAIVED by user 2026-09-24, see REBUILD.md) | T-06, T-24, T-28 | `log/AREA-G/T-54.md` |
+| [S] | T-55 | SUPERSEDED (see REBUILD.md) — The browser worker pool and the shared spin-up cache | T-43, T-54 | `log/AREA-G/T-55.md` |
 | [ ] | T-56 | Ranking, the Pareto front, and the perturbation-stability check | T-54 | `log/AREA-G/T-56.md` |
 | [ ] | T-57 | The buildable recommendation, and the non-AI template fallback | T-24, T-56 | `log/AREA-G/T-57.md` |
 | [ ] | T-58 | The AI write-up, its two-stage separation, and the number verifier | T-42, T-57 | `log/AREA-G/T-58.md` |
@@ -446,12 +449,12 @@ moving the denominator to 6)
 
 | | ID | Title | Depends on | File |
 |---|---|---|---|---|
-| [!] | T-66 | Offline: the PWA and a network-free static build | T-27, T-36, T-43 | `log/AREA-J/T-66.md` |
+| [S] | T-66 | SUPERSEDED (see REBUILD.md) — Offline: the PWA and a network-free static build | T-27, T-36, T-43 | `log/AREA-J/T-66.md` |
 | [ ] | T-67 | Deployment | T-29, T-42, T-66 | `log/AREA-J/T-67.md` |
 | [ ] | T-68 | The demo script and hostile-question preparation | T-63, T-66 | `log/AREA-J/T-68.md` |
 | [ ] | T-69 | The PPT | T-46, T-47, T-63, T-68 | `log/AREA-J/T-69.md` |
 | [x] | T-77 | Wire PWA registration into `app/layout.tsx` | T-66 | `log/AREA-J/T-77.md` |
-| [ ] | T-80 | Wire real connectivity detection into `dispatchSimulation()` | T-66 | `log/AREA-J/T-80.md` |
+| [S] | T-80 | SUPERSEDED (see REBUILD.md) — Wire real connectivity detection into `dispatchSimulation()` | T-66 | `log/AREA-J/T-80.md` |
 
 
 ---
