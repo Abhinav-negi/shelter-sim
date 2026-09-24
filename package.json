@@ -10,6 +10,9 @@
     "node": ">=20"
   },
   "scripts": {
+    "setup": "npm install && npm run build --workspace @shelter/engine --workspace @shelter/data",
+    "dev": "concurrently -n server,client -c blue,magenta --kill-others-on-fail \"npm run dev --workspace @shelter/server\" \"npm run dev --workspace @shelter/client\"",
+    "dev:lan": "concurrently -n server,client -c blue,magenta --kill-others-on-fail \"HOST=0.0.0.0 npm run dev --workspace @shelter/server\" \"npm run dev --workspace @shelter/client -- --host\"",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "tsc -b packages/engine",
@@ -21,6 +24,7 @@
     "@types/node": "^22.9.0",
     "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.70.0",
+    "concurrently": "^9.1.0",
     "eslint": "^10.10.0",
     "prettier": "^3.9.6",
     "typescript": "^5.6.3",

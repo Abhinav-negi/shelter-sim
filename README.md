@@ -1,107 +1,70 @@
 # ShelterSim
 
-Software thermal model for area-specific passive shelter design.
-DRDO / DIHAR Leh · SIH Problem Statement 26051.
+Predicts how warm a passive-solar shelter stays through a Ladakh winter night, so a design can
+be checked in seconds instead of built and found wrong. DRDO / DIHAR Leh · SIH Problem Statement
+26051.
 
-See `LOG.md` for the build ledger index — task status, dependencies and the exact
-`log/AREA-<letter>/T-<NN>.md` file that holds each task's full entry (shared contracts are split
-by topic under `log/contracts/`). Start there.
+## Architecture
 
-## Setup
+```
+apps/client  (Vite + React + Tailwind v4 + shadcn/ui, :5173)
+     │  fetch /api/*  — proxied by Vite in dev
+     ▼
+apps/server  (Fastify, :4000)  ── contract: apps/server/API.md
+     │  imports
+     ▼
+packages/engine, packages/data   (thermal model, material & location catalogue)
+```
+
+`apps/server` is the only thing that touches `@shelter/engine`/`@shelter/data` at runtime;
+`apps/client` only knows the JSON shapes in `apps/server/API.md` — that file is the sole contract
+between the two apps. `apps/web` (the earlier Next.js build, with the engine running in-browser)
+is legacy, kept only until it's removed — see `REBUILD.md` for the rebuild ledger and status of
+that removal.
+
+## Quick start
 
 ### Prerequisites
 
 - **Node.js ≥ 20** (`node -v`)
 - npm (comes with Node)
-- Git
 
-No Postgres is required for local use. The database is a cache/share layer only — the app runs fully in **DB-off** mode with no `.env`.
-
-### 1. Install dependencies
+### Run it
 
 ```bash
-cd shelter-sim
-npm install
+npm run setup   # npm install, then build packages/engine and packages/data
+npm run dev     # runs apps/server (:4000) and apps/client (:5173) together
 ```
 
-### 2. Build workspace packages
+Open **http://localhost:5173**.
 
-The web app imports compiled output from `@shelter/engine` and `@shelter/data`. Build them before starting the UI:
+## API
+
+`apps/server` exposes `GET /api/health`, `GET /api/options`, `POST /api/simulate`. Full request/
+response shapes, error codes and the `DesignInput` contract live in `apps/server/API.md` — that
+is the only file shared between client and server, and the one to update first if either side's
+data shape needs to change.
+
+Calling the API from outside this repo (curl/Python/JS, both the simple `DesignInput` form and
+the full engine `SimulationRequest`)? See [`INPUT.md`](INPUT.md) — every example there is verified.
+
+## Tests
 
 ```bash
-npm run build --workspace @shelter/engine
-npm run build --workspace @shelter/data
+npm test --workspace @shelter/server        # Fastify route tests
+npm test --workspace @shelter/engine        # thermal model
+npm test --workspace @shelter/data          # material / location catalogue
+npm run build --workspace @shelter/client   # type-check + production build
 ```
 
-Rebuild these again whenever you change code under `packages/engine` or `packages/data`.
+## Troubleshooting
 
-### 3. Start the app (DB-off — recommended default)
-
-```bash
-npm run dev --workspace @shelter/web
-```
-
-Open **http://localhost:3000** (redirects to `/results`).
-
-| Route      | Purpose                                             |
-| ---------- | --------------------------------------------------- |
-| `/results` | Temperature, solar, heat-flow charts and house view |
-| `/setup`   | Edit geometry, materials, glazing, weather, options |
-| `/compare` | Eighteen-scenario survival / comparison grid        |
-
-Changes on Setup re-run the thermal model (debounced) and update Results.
-
-### 4. Optional — SQLite for cache & share links
-
-Only needed if you want persisted weather/run caches or share URLs. From `apps/web`:
-
-```bash
-cd apps/web
-cp .env.example .env
-```
-
-Uncomment in `.env`:
-
-```bash
-DATABASE_URL="file:./dev.db"
-DATABASE_PROVIDER="sqlite"
-```
-
-Then migrate and seed:
-
-```bash
-npm run db:migrate
-npm run db:seed
-cd ../..
-npm run dev --workspace @shelter/web
-```
-
-For production Postgres, set `DATABASE_URL` to a `postgresql://…` URL and `DATABASE_PROVIDER="postgresql"` (see `apps/web/.env.example`).
-
-### Useful commands
-
-```bash
-# Unit / integration tests
-npm test --workspace @shelter/engine
-npm test --workspace @shelter/data
-npm test --workspace @shelter/web
-
-# Confirm the demo path works with no database
-node apps/web/scripts/check-db-off.mjs
-
-# Production-style Next build (after engine + data are built)
-npm run build --workspace @shelter/web
-npm run start --workspace @shelter/web
-```
-
-### Troubleshooting
-
-| Symptom                                                          | Fix                                                                         |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Module / import errors from `@shelter/engine` or `@shelter/data` | Run the package builds in step 2                                            |
-| Stale UI or odd webpack warnings after a package change          | `rm -rf apps/web/.next` then restart `dev`                                  |
-| Port 3000 already in use                                         | Stop the other process, or `npx next dev --webpack -p 3001` from `apps/web` |
-| Node version errors                                              | Upgrade to Node 20+                                                         |
+| Symptom                                                              | Fix                                                                                         |
+| ---------------------------------------------------------------------| -------------------------------------------------------------------------------------------- |
+| Client shows the "Server offline" banner                             | Start the server — `npm run dev --workspace @shelter/server`, or `npm run dev` from the repo root for both apps |
+| Module/import errors from `@shelter/engine` or `@shelter/data`       | Rebuild them: `npm run build --workspace @shelter/engine --workspace @shelter/data`         |
+| Port 4000 or 5173 already in use                                     | Stop the other process, or change the port in `apps/server/src/index.ts` / `apps/client/vite.config.ts` |
+| Node version errors                                                  | Upgrade to Node 20+                                                                          |
 
 ## Branch protocol
 
@@ -109,76 +72,3 @@ npm run start --workspace @shelter/web
 - **Every commit message begins with the task id**: `T-18: ...`, so
   `git log --grep='^T-18'` shows exactly what a task touched.
 - A task is not `[x]` in `LOG.md` until both the ledger and the branch are updated.
-
-## Before the demo
-
-The database is a cache and a share layer, never a dependency (`LOG.md` global rule 18) — every
-feature on the demo path must work with it stopped or absent. Run this before walking into a room
-with no network and no Postgres:
-
-```bash
-node apps/web/scripts/check-db-off.mjs
-```
-
-It unsets `DATABASE_URL` and runs the DB-off half of `apps/web/test/db-off.integration.test.ts`
-(T-35) — the material catalogue, a full Leh simulation, the weather/design/run caches and the
-eighteen-scenario matrix, all with a 5-second-per-call ceiling and zero tolerated exceptions —
-then prints one `PASS`/`FAIL` line and exits `0`/`1` accordingly. There is no page to boot yet
-(Area F is not built); once one exists this script should be extended to also start the server
-and hit it over HTTP.
-
-### Zero network (T-66)
-
-`AUDIT.md`'s subtlety: a PWA needs one prior online visit to install its service worker, so it
-cannot survive "cold start, no network, unfamiliar machine, ten minutes before presenting." Two
-independent mechanisms cover the two real scenarios:
-
-**(a) Field deployment — the PWA.** `apps/web/public/manifest.webmanifest` and
-`apps/web/public/sw.js` precache the app shell and all five of T-27's bundled TMY files
-(`apps/web/public/tmy/*.json`). Once the app has been opened online once, it keeps working with
-the network off. `sw.js` is network-first for the HTML document (so a redeploy is never served
-stale while a server is reachable) and cache-first for content-hashed `/_next/static/...` assets
-(safe forever, since the hash changes the moment the content does) — the cache-busting mechanism
-for acceptance test 12. **Known gap, reported rather than routed around:** nothing in this app
-currently calls `navigator.serviceWorker.register()` or links `<link rel="manifest">` into
-`<head>` — the only place that could live is `apps/web/app/layout.tsx`, which is outside this
-task's allow-list (`apps/web/public/**`, `next.config.*`, `scripts/build-static.mjs`). Likewise,
-`store.online` never flips to `false` in the live app today: `lib/store.ts`'s `dispatchSimulation()`
-calls `simulate()` synchronously in-process and never calls `lib/workerClient.ts`'s
-`isServerReachable()`/`runSimulation()` (T-43's own offline-detection logic exists and is tested,
-but nothing wires it into the store's real dispatch path), and `lib/store.ts` is off this task's
-allow-list too. Both `sw.js` and the connectivity semantics are built and self-tested in isolation;
-wiring them into the live render tree needs a few lines in one of those two files. See
-`log/AREA-J/T-66.md`'s Evidence block for the full reasoning.
-
-**(b) Demo day — the static export.** No prior visit, no install, no server, ever — the mechanism
-that survives an unfamiliar machine and bad venue Wi-Fi:
-
-```bash
-npm run build --workspace @shelter/engine
-npm run build --workspace @shelter/data
-node apps/web/scripts/build-static.mjs
-npx serve apps/web/static-export        # or any other local static file server
-```
-
-The script computes the default (Leh) preset's result directly in Node — the same
-`resolvePreset()`/`simulate()` `apps/web/app/page.tsx` runs, just outside Next's build sandbox —
-then assembles a throwaway copy of the app (production source only: no `app/api/`, no
-`app/page.tsx`, no test files) with a replacement client-only entry point
-(`next/dynamic(..., { ssr: false })`, needed because statically prerendering `<AppShell>` hangs
-Next's static-generation sandbox on `@shelter/engine`'s top-level await — see the script's header
-comment for the exact reasoning and the two independent hangs reproduced while building this),
-and runs Next's own `output: 'export'` against that copy. Nothing under `app/`, `lib/store.ts`,
-`components/**` or `app/api/**` is ever edited in place. The result: a self-contained
-`apps/web/static-export/` directory (44 files, ~4.0 MB, all five TMY files included, zero
-`localhost`/`127.0.0.1` references) that shows the Leh result immediately, offline, on a fresh
-machine, with the offline banner correctly reading _"Offline — showing 1 scenario, AI advice
-unavailable."_ from the first client-side effect.
-
-**Known ledger defect, unrelated to either mechanism above:** deleting `apps/web/app/api/`
-entirely and running the ordinary `npm run build --workspace apps/web` currently fails —
-`apps/web/components/inputs/inputs.test.ts` does `await import('../../app/api/materials/route')`,
-which Next's build-time TypeScript pass cannot resolve once that directory is gone. That file is
-outside this task's allow-list (`components/**`); `apps/web/scripts/build-static.mjs` sidesteps it
-by never copying test files into its own throwaway build, but the _ordinary_ build is still
-affected. See `log/AREA-J/T-66.md` acceptance test 5.

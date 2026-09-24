@@ -1,0 +1,38 @@
+# REBUILD.md — client/server rebuild ledger
+
+Plan: split `apps/web` (Next.js, engine bundled in browser) into `apps/server` (Fastify, owns all
+simulation + data) and `apps/client` (Vite + React + Tailwind + shadcn/ui, guided wizard).
+Contract: `apps/server/API.md` — the ONLY shared file between client and server.
+Branch: `rebuild/client-server`. Do not edit `apps/web/` or `packages/*`.
+
+Protocol: update ONLY your own row. TODO → IN-PROGRESS → DONE (or BLOCKED + reason).
+Evidence = commands you ran and their result, one line.
+
+| ID | Task | Depends | Owner | Status | Evidence |
+|---|---|---|---|---|---|
+| S1 | DesignInput + `apps/server/API.md` | — | sonnet-S1 | DONE | `wc -l apps/server/API.md` = 219; interfaces cross-checked against packages/engine/src/types.ts + serialise.ts + packages/data/src/*.ts |
+| S2 | `apps/server` Fastify: /health /options /simulate + test | S1 | sonnet-S2 | DONE | `npm test --workspace @shelter/server` = 7/7 passed; smoke: health/options/simulate all 200 on port 4000, simulate ~65ms wall-clock |
+| C1 | `apps/client` scaffold, header, How-to-use sheet, api.ts, proxy | S1 | sonnet-C1 | DONE | `npm run build --workspace @shelter/client` passes (313KB JS, 70KB CSS); `grep -rl "shelter/engine\|hdkr\|DEFAULT_SIM_OPTIONS" apps/client/dist` = no hits (types-only import erased); `npx vite` served 200 on :5173, stopped clean |
+| C2 | Wizard steps 1–4 | C1 | sonnet-C2 | DONE | `npm run build --workspace @shelter/client` passes (401KB JS, 73KB CSS); server (tsx) + `npx vite --port 5173` from apps/client: `curl -s localhost:5173/api/health`→`{"ok":true}`, `curl -s localhost:5173/api/options` proxied full JSON; both stopped clean |
+| C3 | Results page: KPIs, 3 chart tabs, "What this means" | C1 | sonnet-C3 | DONE | `npm run build --workspace @shelter/client` passes (789KB JS, 75KB CSS); `grep -rl "shelter/engine" apps/client/dist` = no hits; `explain()` on leh-default.json fixture gives 3 insights (dawn 0.2°C warn, 0.25h below freezing warn, decrement factor 0.30 good) |
+| I1 | Root dev script, e2e run, error/offline states, README | S2 C2 C3 | sonnet-I1 | DONE | root `dev`/`setup` scripts added (concurrently); review fixes: options-aware Results labels (humanizeId removed), --gain/--loss chart tokens (light+dark), Results lazy-loaded (main 409KB + Results 382KB chunks, both <500KB, was 789KB single chunk); e2e-found fixes: NaN:00 tooltip (labelFormatter used wrong arg), -0.0°C negative-zero KPI, orphaned "Aux heat" KPI card (grid→flex-wrap, no orphan at 1440px or 390px), clipped Freezing/°C labels (insideTopRight + margin), heat-flow chart empty on fullPage capture (disabled Bar `isAnimationActive`, a real resize-race bug not just a screenshot artifact) + added kWh value labels, "Modify design" now reopens wizard on Review step (was resetting to step 1, causing the original e2e hang) via `Wizard.initialStep`; e2e in real Chrome (playwright-core, headless, /usr/bin/google-chrome): `timeout 180 node run.mjs` — 7/7 assertions PASS, 0 console errors, 0 page errors, script exits cleanly (try/finally + setDefaultTimeout(15000)); offline banner verified separately after `kill` on port 4000 — shown correctly; final checks: `npm test --workspace @shelter/server` 7/7, `npm run build --workspace @shelter/client` clean, `npm test --workspace @shelter/engine` 160 passed/10 skipped, `npm test --workspace @shelter/data` 86 passed; dev/e2e processes killed, ports 4000/5173 confirmed free |
+| X1 | Remove `apps/web` (user confirms first) | I1 | | TODO | |
+
+## Phase 2 — open work carried over from LOG.md (this is now the active ledger)
+
+`LOG.md` is history. Old task files under `log/` stay valid as *background reading* for the physics
+and acceptance ideas, but anything touching `apps/web`, the browser store, or web workers is obsolete.
+Each R-block needs the user's go-ahead before it starts.
+
+| ID | Task | From LOG | Depends | Owner | Status | Evidence |
+|---|---|---|---|---|---|---|
+| A1 | Server: `/api/simulate/raw`, `/api/assemble`, LAN (`dev:lan`) + CORS, tests | — | — | sonnet-A1 | DONE | `npm test --workspace @shelter/server` 12/12 passed; `npx tsc -p apps/server/tsconfig.json --noEmit` clean; live: `curl -X POST localhost:4000/api/simulate/raw --data @examples/leh-request.json` → 200 with kpis (109754-byte example, tsx-watch hot-reloaded, no restart) |
+| A2 | `INPUT.md`: API guide + full engine `SimulationRequest` format + examples | — | A1 | sonnet-A2 | DONE | `wc -l INPUT.md` = 487; 15 live checks against localhost:4000 all matched the doc verbatim (health, options, simulate via curl/Python-requests/JS-fetch, assemble, simulate/raw with both assembled.json and examples/leh-request.json, night-min Python snippet, 4 error cases — bad locationId/lengthM/missing weather.GHI/missing operation, OPTIONS preflight, and the §6 customise workflow: lowering rammedEarth k 1.0→0.3 raised minIndoorTemp −0.05°C→2.63°C); README.md 2-line pointer added near API section |
+| R1 | Recommender: ranking/Pareto + buildable recommendation in `packages/optimise`, `POST /api/recommend`, "Suggest a better design" card | T-54 (waived ✔), T-56, T-57, T-39 (optimise half) | A1 | | TODO | |
+| R2 | Scenario survival grid: `POST /api/scenarios`, Compare tab | T-60, T-50, T-39 (scenarios half) | R1 | | TODO | |
+| R3 | Multi-day runs + sunless streak, `days` in DesignInput | T-61 | — | | TODO | |
+| D1 | Docs for new architecture: VALIDATION.md, demo script, PPT update | T-63, T-68, T-69 | R1 R2 | | TODO | |
+| R4 | Hardening + deploy (rate limit only if public) | T-42, T-67 | R1 | | TODO | |
+| R5 | AI write-up of recommendation (needs API key) — optional | T-58 | R1 | | TODO | |
+| H1 | Needs a named human owner: NOAA validation, EnergyPlus reference case | T-23, T-65 | — | human | BLOCKED | unchanged |
+| — | SUPERSEDED: simple form, browser worker pool, PWA/static export, connectivity wiring | T-44, T-55, T-66, T-80 | — | — | SUPERSEDED | replaced by wizard, server, `/api/health` polling |

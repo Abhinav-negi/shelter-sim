@@ -14,8 +14,8 @@ import type { ReactNode } from 'react';
 
 export const dynamic = 'force-dynamic';
 
-export default function WorkspaceLayout({ children }: { children: ReactNode }) {
-  const { request, result, presetId } = resolveInitialState();
+export default async function WorkspaceLayout({ children }: { children: ReactNode }) {
+  const { request, result, presetId } = await resolveInitialState();
   return (
     <WorkspaceShell initialRequest={request} initialResult={result} initialPresetId={presetId}>
       {children}
