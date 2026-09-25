@@ -129,8 +129,17 @@ describe('apps/studio-server', () => {
     expect(body.field).toBe('glazingId');
   });
 
-  it('custom location with no weatherFor wired up -> 422 CUSTOM_LOCATION_UNAVAILABLE', async () => {
-    const app = buildApp();
+  // P3 wires a real weatherFor into this route (design/assemble.ts's seam is
+  // filled in, see src/weather/resolve.ts); this used to assert the P1
+  // placeholder 422 for ANY custom location. The meaningful thing left to
+  // test at this layer (no live network allowed, condition 5) is the "both
+  // upstream sources unreachable" failure path -- see test/weather.test.ts
+  // for the happy-path custom-location preview against recorded fixtures.
+  it('custom location, both weather sources unreachable -> 502 UPSTREAM_UNAVAILABLE', async () => {
+    const failingFetch: typeof fetch = async () => {
+      throw new Error('simulated network failure');
+    };
+    const app = buildApp({ fetchImpl: failingFetch });
     const { defaults } = buildOptions();
     const res = await app.inject({
       method: 'POST',
@@ -140,8 +149,8 @@ describe('apps/studio-server', () => {
         location: { kind: 'custom', name: 'Test spot', lat: 34.1, lon: 77.6, elevation: 3500 },
       },
     });
-    expect(res.statusCode).toBe(422);
-    expect(res.json().code).toBe('CUSTOM_LOCATION_UNAVAILABLE');
+    expect(res.statusCode).toBe(502);
+    expect(res.json().code).toBe('UPSTREAM_UNAVAILABLE');
   });
 
   it('GET /api/health has CORS header', async () => {
