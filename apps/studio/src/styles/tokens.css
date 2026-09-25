@@ -1,0 +1,89 @@
+/* Design tokens — ShelterSim Studio.
+   Precise, calm, scientific: warm paper / near-black ink, one cold instrument-blue
+   accent, a thermal scale reserved for temperature data. Light is the default;
+   dark applies via `prefers-color-scheme` and is overridable with `data-theme`
+   on <html> (see src/lib/theme.ts). PLAN.md §Design system is the source of truth. */
+
+:root {
+  /* Neutrals (light) */
+  --paper: #f6f5f2;
+  --surface: #efeeea;
+  --ink: #16171a;
+  --ink-muted: #63676c;
+  --hairline: #dcdad3;
+
+  /* Accent: cold instrument blue */
+  --accent: #26597e;
+  --accent-hover: #1e4a69;
+  --accent-fg: #f6f5f2;
+
+  /* Thermal scale (cold -> neutral -> warm), temperature data only */
+  --thermal-coldest: #2e6fa6;
+  --thermal-cold: #6c9ac0;
+  --thermal-neutral: #b6b2a6;
+  --thermal-warm: #c98a4b;
+  --thermal-hottest: #b4472a;
+
+  /* Type scale */
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --text-xs: 0.6875rem; /* 11px */
+  --text-sm: 0.8125rem; /* 13px */
+  --text-base: 0.9375rem; /* 15px */
+  --text-md: 1.0625rem; /* 17px */
+  --text-lg: 1.25rem; /* 20px */
+  --text-xl: 1.625rem; /* 26px */
+  --text-2xl: 2.125rem; /* 34px */
+
+  /* Spacing (4/8 grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Radii — hairline instrument, never pill */
+  --radius-sm: 3px;
+  --radius: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #16181b;
+    --surface: #1c1f23;
+    --ink: #edece7;
+    --ink-muted: #9a9d9f;
+    --hairline: #33363a;
+
+    --accent: #6f9dc4;
+    --accent-hover: #8bb1d3;
+    --accent-fg: #0e1113;
+
+    --thermal-coldest: #4c85b8;
+    --thermal-cold: #7fa9c9;
+    --thermal-neutral: #8f8b7f;
+    --thermal-warm: #d59a5e;
+    --thermal-hottest: #c85a3a;
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #16181b;
+  --surface: #1c1f23;
+  --ink: #edece7;
+  --ink-muted: #9a9d9f;
+  --hairline: #33363a;
+
+  --accent: #6f9dc4;
+  --accent-hover: #8bb1d3;
+  --accent-fg: #0e1113;
+
+  --thermal-coldest: #4c85b8;
+  --thermal-cold: #7fa9c9;
+  --thermal-neutral: #8f8b7f;
+  --thermal-warm: #d59a5e;
+  --thermal-hottest: #c85a3a;
+}
