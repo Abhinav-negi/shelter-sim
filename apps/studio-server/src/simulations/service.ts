@@ -37,7 +37,7 @@ export interface SimulationSummary {
   kpis: SimulationKpis;
   /** Custom locations only: weather source + assumptions this run used. */
   weatherProvenance?: WeatherProvenanceSummary;
-  createdAt: Date;
+  createdAt: string; // ISO
 }
 export interface SimulationFull extends SimulationSummary {
   result: unknown;
@@ -53,7 +53,7 @@ function toSummary(doc: SimulationDoc): SimulationSummary {
     inputSnapshot: doc.inputSnapshot,
     kpis: doc.kpis,
     ...(doc.weatherProvenance ? { weatherProvenance: doc.weatherProvenance } : {}),
-    createdAt: doc.createdAt as unknown as Date,
+    createdAt: (doc.createdAt as unknown as Date).toISOString(),
   };
 }
 
