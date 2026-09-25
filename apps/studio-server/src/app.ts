@@ -9,9 +9,13 @@ import { GLAZING, MATERIALS, PRESETS, TMY_LOCATIONS } from '@shelter/data';
 import { EngineError, resultToJson } from '@shelter/engine';
 import type { EngineErrorCode } from '@shelter/engine';
 import { assemble, CustomLocationUnavailableError, OCCUPANCY_PRESETS } from './design/assemble.js';
+import type { WeatherFor } from './design/assemble.js';
 import type { ShelterDesign } from './design/types.js';
+import { locationsRoutes } from './locations/routes.js';
 import { buildOptions } from './options.js';
 import { fastPhysics } from './providers/index.js';
+import { UpstreamUnavailableError } from './weather/errors.js';
+import { resolveCustomWeather } from './weather/resolve.js';
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024; // 5 MB, API.md §5
 
@@ -129,8 +133,15 @@ function fieldFromValidationError(first: {
   return typeof missing === 'string' ? missing : undefined;
 }
 
-export function buildApp(): FastifyInstance {
+export interface BuildAppOptions {
+  /** Injected for tests (recorded fixtures, no live network); defaults to
+   * global `fetch` (Node 24) for the real weather/geocoding calls. */
+  fetchImpl?: typeof fetch;
+}
+
+export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
   const app = Fastify({ bodyLimit: MAX_BODY_BYTES, logger: false });
+  const { fetchImpl } = opts;
 
   app.setErrorHandler((err: FastifyError, _req, reply) => {
     const validation = (err as { validation?: unknown[] }).validation;
@@ -145,6 +156,10 @@ export function buildApp(): FastifyInstance {
     }
     if (err instanceof CustomLocationUnavailableError) {
       reply.code(422).send({ code: err.code, message: err.message });
+      return;
+    }
+    if (err instanceof UpstreamUnavailableError) {
+      reply.code(502).send({ code: err.code, message: err.message });
       return;
     }
     if (err instanceof EngineError) {
@@ -172,20 +187,36 @@ export function buildApp(): FastifyInstance {
     reply.code(204).send();
   });
 
+  app.register(locationsRoutes, fetchImpl ? { fetchImpl } : {});
+
   app.get('/api/health', async () => ({ ok: true }));
 
   app.get('/api/options', async () => buildOptions());
 
-  // No weatherFor is wired up yet (P3), so a custom-location design 422s
-  // with CUSTOM_LOCATION_UNAVAILABLE -- see design/assemble.ts.
+  // location.kind==='custom': resolve weather ASYNCHRONOUSLY first (fetch/
+  // cache -> normalise -> Site), then pass a SYNCHRONOUS closure as
+  // `weatherFor` -- assemble()'s seam is sync (design/assemble.ts), the
+  // fetch behind it is not. `location.kind==='preset'` skips this entirely,
+  // same as before P3 (weatherFor stays undefined).
   app.post(
     '/api/simulate/preview',
     { schema: { body: shelterDesignSchema() } },
     async (req) => {
       const design = req.body as ShelterDesign;
-      const request = assemble(design);
+      let weatherFor: WeatherFor | undefined;
+      let weatherProvenance: { source: string; year: number; notes: string[] } | undefined;
+      if (design.location.kind === 'custom') {
+        const resolved = await resolveCustomWeather(design.location, fetchImpl);
+        weatherFor = () => ({ weather: resolved.weather, site: resolved.site });
+        weatherProvenance = resolved.provenance;
+      }
+      const request = assemble(design, weatherFor);
       const { kpis, result } = await fastPhysics.run(request);
-      return { kpis, result: resultToJson(result) };
+      return {
+        kpis,
+        result: resultToJson(result),
+        ...(weatherProvenance ? { weatherProvenance } : {}),
+      };
     },
   );
 
