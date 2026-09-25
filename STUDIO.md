@@ -9,7 +9,7 @@ Planning done and approved. S0 done: pending rebuild edits committed (`0700e7a`)
 `studio/main` created, old orchestrator archived to `log/ORCHESTRATOR-REBUILD.md`, ledger written.
 **Waiting on the user for** `MONGODB_URI` + `JWT_SECRET` (needed only for running the app; tests use
 mongodb-memory-server). Old app dev servers are running on :4000/:5173; leave them alone.
-**Next step:** delegate P1 (alone, it defines the contract), then P2 ∥ P3 ∥ F1.
+P1 merged (`f394300`). **Next step:** P2 ∥ P3 ∥ F1 in worktrees (F1 is the only installer; P2/P3 use `npm ci`).
 
 ## Decisions (approved by user unless marked "orchestrator")
 1. New apps `apps/studio` + `apps/studio-server` (orchestrator: naming). Old apps and `packages/*` frozen.
@@ -27,7 +27,7 @@ mongodb-memory-server). Old app dev servers are running on :4000/:5173; leave th
 | ID | Task | Depends | Owner | Status | Evidence |
 |---|---|---|---|---|---|
 | S0 | Branch, commits, ORCHESTRATOR.md, ledger | – | orchestrator | DONE | `git log --oneline -1 rebuild/client-server` = 0700e7a; ledger files present |
-| P1 | Server foundation: scaffold, ShelterDesign, assemble copy+ext, provider, preview, API.md, parity test | S0 | | DONE | `apps/studio-server` created; `npm test -w @shelter/studio-server` 13/13 pass incl. parity; `tsc -p apps/studio-server --noEmit` clean; `npm test -w @shelter/server` still 12/12; frozen-app diff empty. See `ledger/tasks/P1.md` Evidence. |
+| P1 | Server foundation: scaffold, ShelterDesign, assemble copy+ext, provider, preview, API.md, parity test | S0 | | DONE | `apps/studio-server` created; `npm test -w @shelter/studio-server` 13/13 pass incl. parity; `tsc -p apps/studio-server --noEmit` clean; `npm test -w @shelter/server` still 12/12; frozen-app diff empty. See `ledger/tasks/P1.md` Evidence. Orchestrator review fix: `/api/options` now has `materials[].defaultThicknessM` + `presets[].thicknessM{wall,roof,floor}`. Note: `weatherFor` seam is **sync**; P3 pre-fetches async in the route. |
 | P2 | Auth + designs + simulations (Mongo) | P1 | | TODO | |
 | P3 | Weather + location search + custom-location assembly | P1 | | TODO | |
 | F1 | Client scaffold: design system, shell, routing, store, api client | P1 | | TODO | |
