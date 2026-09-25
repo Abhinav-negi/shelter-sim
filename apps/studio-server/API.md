@@ -191,6 +191,10 @@ interface ApiError {
 | `SINGULAR_MATRIX`              | 500  | engine                                                                  |
 | `PAYLOAD_TOO_LARGE`            | 413  | body over 5 MB                                                         |
 | `INTERNAL_ERROR`               | 500  | anything unexpected                                                    |
+| `UNAUTHENTICATED`              | 401  | (P2) missing/invalid/expired auth cookie on a protected route          |
+| `EMAIL_TAKEN`                  | 409  | (P2) `POST /api/auth/register` with an email already in use            |
+| `INVALID_CREDENTIALS`          | 401  | (P2) `POST /api/auth/login` with a wrong password OR an unknown email — same message either way |
+| `NOT_FOUND`                    | 404  | (P2) a design/simulation id that doesn't exist, or belongs to another user (ownership misses are 404, never 403) |
 
 `STATUS_BY_CODE` for the engine codes is reused verbatim from `apps/server/src/app.ts`.
 
@@ -202,18 +206,90 @@ interface ApiError {
    hand-copied table as `apps/server/src/assemble.ts` (ids `familyLivestock`, `barrackPersonnel`,
    `smallHousehold`, `heatedOffice`).
 
-## 7. Planned routes (P2, P3 — not implemented in P1)
+## 7. Auth (P2)
 
-| Route                                                              | Auth    | Task |
-| -------------------------------------------------------------------- | ------- | ---- |
-| `GET /api/locations/search?q=` (Open-Meteo geocoding)                | –       | P3   |
-| `POST /api/auth/register` · `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` | –/✓ | P2 |
-| `GET /api/designs` · `POST /api/designs`                             | ✓ owner | P2   |
-| `GET /api/designs/:id` · `PUT /api/designs/:id` · `DELETE /api/designs/:id` | ✓ owner | P2 |
-| `POST /api/designs/:id/simulations` (run + persist frozen snapshot)  | ✓ owner | P2   |
-| `GET /api/designs/:id/simulations` · `GET /api/simulations/:id`      | ✓ owner | P2   |
+Email+password. Passwords are hashed with `crypto.scrypt` and a random per-user salt
+(`src/auth/password.ts`; stored as `"<saltHex>:<hashHex>"`, never returned). `@fastify/jwt` +
+`@fastify/cookie` issue a 7-day JWT in a cookie named `token` — httpOnly, `SameSite=Lax`, `Secure`
+only when `NODE_ENV=production`. Every route below reuses this same cookie via
+`request.jwtVerify()` (`src/auth/authenticate.ts`); a missing/invalid cookie is `UNAUTHENTICATED`
+(§6).
 
-Auth: email+password, `crypto.scrypt` + per-user salt, `@fastify/jwt` + `@fastify/cookie` issue a
-7-day JWT in an httpOnly, SameSite=Lax cookie (Secure in production). Ownership misses return 404,
-not 403. `env.ts`'s `MONGODB_URI`/`JWT_SECRET` are optional in P1 and become required at startup
-once P2 lands.
+```ts
+interface PublicUser {
+  id: string;
+  email: string;
+  name: string;
+} // never passwordHash
+```
+
+| Route | Auth | Body | 200/201 |
+|---|---|---|---|
+| `POST /api/auth/register` | – | `{email, password (min 8 chars), name}` | 201 `{user: PublicUser}`, sets the cookie. Duplicate email → 409 `EMAIL_TAKEN`. |
+| `POST /api/auth/login` | – | `{email, password}` | 200 `{user: PublicUser}`, sets the cookie. Wrong password or unknown email → 401 `INVALID_CREDENTIALS` (identical message either way). |
+| `POST /api/auth/logout` | – | – | 200 `{ok: true}`, clears the cookie. |
+| `GET /api/auth/me` | ✓ | – | 200 `{user: PublicUser}`. No/invalid cookie → 401 `UNAUTHENTICATED`. |
+
+## 8. Designs (P2)
+
+`design` is a whole `ShelterDesign` (§3), validated with the **same** ajv schema as
+`POST /api/simulate/preview` (`shelterDesignSchema()`, exported from `src/app.ts` for this reuse).
+All routes require auth; a design id that doesn't exist or belongs to another user is 404
+`NOT_FOUND` (never 403), for every route below.
+
+```ts
+interface DesignSummary {
+  id: string;
+  name: string;
+  design: ShelterDesign;
+  createdAt: string; // ISO
+  updatedAt: string; // ISO
+}
+```
+
+| Route | Body | 200/201 |
+|---|---|---|
+| `POST /api/designs` | `{name, design}` | 201 `DesignSummary` |
+| `GET /api/designs` | – | 200 `DesignSummary[]`, newest (`updatedAt`) first |
+| `GET /api/designs/:id` | – | 200 `DesignSummary` |
+| `PUT /api/designs/:id` | `{name, design}` (whole replacement, same schema as POST) | 200 `DesignSummary` |
+| `DELETE /api/designs/:id` | – | 204, empty body |
+
+## 9. Simulations (P2)
+
+`POST .../simulations` runs the design's **current** state through `fastPhysics`
+(§5) and freezes it: `inputSnapshot` is a deep copy (`structuredClone`) of the design at that
+moment, so editing the design afterward never changes a past simulation's stored snapshot,
+`kpis`, or `result`.
+
+```ts
+interface SimulationSummary {
+  id: string;
+  designId: string;
+  provider: string; // 'fast-physics'
+  engineVersion: string; // packages/engine/package.json's version at run time
+  requestHash: string; // canonicalRequestHash(assembled request)
+  inputSnapshot: ShelterDesign; // frozen deep copy
+  kpis: SimulationKpis;
+  createdAt: string; // ISO
+}
+interface SimulationFull extends SimulationSummary {
+  result: unknown; // resultToJson(SimulationResult), same shape as §4's PreviewResponse.result
+}
+```
+
+| Route | Auth | 200/201 |
+|---|---|---|
+| `POST /api/designs/:id/simulations` | ✓ owner | 201 `SimulationFull`. Design not owned → 404 `NOT_FOUND`; engine/validation failures reuse §6's codes. |
+| `GET /api/designs/:id/simulations` | ✓ owner | 200 `SimulationSummary[]` (no `result`), newest first. |
+| `GET /api/simulations/:id` | ✓ owner | 200 `SimulationFull` (with `result`). Not owned → 404 `NOT_FOUND`. |
+
+## 10. Planned routes (P3 — not implemented yet)
+
+| Route | Auth | Task |
+|---|---|---|
+| `GET /api/locations/search?q=` (Open-Meteo geocoding) | – | P3 |
+
+`env.ts`'s `MONGODB_URI`/`JWT_SECRET` were optional in P1; `src/index.ts` now requires both and
+exits with a clear message if either is missing (§ condition 5, `db.ts` owns the mongoose
+connect/disconnect lifecycle; P3's `weatherCache` collection uses the same default connection).

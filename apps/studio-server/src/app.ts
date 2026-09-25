@@ -1,10 +1,16 @@
 // apps/studio-server/src/app.ts — Fastify instance. P1 routes: GET
-// /api/health, GET /api/options, POST /api/simulate/preview. Contract:
-// apps/studio-server/API.md. Validation/error conventions ported from
-// apps/server/src/app.ts (ajv schema -> VALIDATION_ERROR, engine
+// /api/health, GET /api/options, POST /api/simulate/preview. P2 adds auth
+// (@fastify/jwt + @fastify/cookie) and the designs/simulations route
+// plugins (auth/routes.ts, designs/routes.ts, simulations/routes.ts) --
+// this file only registers them and wires the cookie/jwt plugins; the
+// route logic itself lives in those plugins' own service.ts files.
+// Contract: apps/studio-server/API.md. Validation/error conventions ported
+// from apps/server/src/app.ts (ajv schema -> VALIDATION_ERROR, engine
 // STATUS_BY_CODE, 5 MB body limit, no stack traces).
 
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
+import fastifyCookie from '@fastify/cookie';
+import fastifyJwt from '@fastify/jwt';
 import { GLAZING, MATERIALS, PRESETS, TMY_LOCATIONS } from '@shelter/data';
 import { EngineError, resultToJson } from '@shelter/engine';
 import type { EngineErrorCode } from '@shelter/engine';
@@ -12,6 +18,11 @@ import { assemble, CustomLocationUnavailableError, OCCUPANCY_PRESETS } from './d
 import type { ShelterDesign } from './design/types.js';
 import { buildOptions } from './options.js';
 import { fastPhysics } from './providers/index.js';
+import authRoutes from './auth/routes.js';
+import { EmailTakenError, InvalidCredentialsError } from './auth/service.js';
+import designsRoutes from './designs/routes.js';
+import { NotFoundError } from './designs/service.js';
+import simulationsRoutes from './simulations/routes.js';
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024; // 5 MB, API.md §5
 
@@ -43,7 +54,10 @@ function surfaceConstructionSchema(materialIds: string[]) {
   };
 }
 
-function shelterDesignSchema() {
+// Exported so designs/routes.ts can validate a design body with the exact
+// same ShelterDesign schema as /api/simulate/preview (condition 2), instead
+// of a second, drifting copy.
+export function shelterDesignSchema() {
   const locationIds = TMY_LOCATIONS.map((l) => l.id);
   const presetIds = PRESETS.map((p) => p.id);
   const materialIds = MATERIALS.map((m) => m.id);
@@ -129,8 +143,21 @@ function fieldFromValidationError(first: {
   return typeof missing === 'string' ? missing : undefined;
 }
 
-export function buildApp(): FastifyInstance {
+export interface BuildAppOptions {
+  /** Signs/verifies the auth cookie's JWT. Defaults to an insecure dev
+   * value -- fine for tests (buildApp() has no DB either), never used by
+   * index.ts, which requires a real JWT_SECRET before calling buildApp(). */
+  jwtSecret?: string;
+  /** Only 'production' makes the auth cookie Secure (condition 1). Defaults
+   * to process.env.NODE_ENV, same as env.ts. */
+  nodeEnv?: string;
+}
+
+export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
   const app = Fastify({ bodyLimit: MAX_BODY_BYTES, logger: false });
+  const jwtSecret = opts.jwtSecret ?? 'dev-insecure-secret-do-not-use-in-production';
+  const nodeEnv = opts.nodeEnv ?? process.env['NODE_ENV'] ?? 'development';
+  const secureCookies = nodeEnv === 'production';
 
   app.setErrorHandler((err: FastifyError, _req, reply) => {
     const validation = (err as { validation?: unknown[] }).validation;
@@ -151,6 +178,18 @@ export function buildApp(): FastifyInstance {
       reply.code(STATUS_BY_CODE[err.code] ?? 500).send({ code: err.code, message: err.message });
       return;
     }
+    if (err instanceof EmailTakenError) {
+      reply.code(409).send({ code: err.code, message: err.message });
+      return;
+    }
+    if (err instanceof InvalidCredentialsError) {
+      reply.code(401).send({ code: err.code, message: err.message });
+      return;
+    }
+    if (err instanceof NotFoundError) {
+      reply.code(404).send({ code: err.code, message: err.message });
+      return;
+    }
     if ((err as { statusCode?: number }).statusCode === 413) {
       reply.code(413).send({ code: 'PAYLOAD_TOO_LARGE', message: err.message });
       return;
@@ -160,6 +199,16 @@ export function buildApp(): FastifyInstance {
       .code(500)
       .send({ code: 'INTERNAL_ERROR', message: 'An unexpected server error occurred.' });
   });
+
+  // Auth: @fastify/jwt reads the JWT straight out of the httpOnly `token`
+  // cookie (its own `cookie` option, backed by @fastify/cookie) -- routes
+  // call request.jwtVerify() (auth/authenticate.ts) instead of parsing
+  // headers by hand.
+  app.register(fastifyCookie);
+  app.register(fastifyJwt, { secret: jwtSecret, cookie: { cookieName: 'token', signed: false } });
+  app.register(authRoutes, { secureCookies });
+  app.register(designsRoutes);
+  app.register(simulationsRoutes);
 
   // CORS, ported from apps/server/src/app.ts (LAN dev client).
   app.addHook('onSend', async (_req, reply, payload) => {

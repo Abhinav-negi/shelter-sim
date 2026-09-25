@@ -28,7 +28,7 @@ P1 merged (`f394300`). **Next step:** P2 ∥ P3 ∥ F1 in worktrees (F1 is the o
 |---|---|---|---|---|---|
 | S0 | Branch, commits, ORCHESTRATOR.md, ledger | – | orchestrator | DONE | `git log --oneline -1 rebuild/client-server` = 0700e7a; ledger files present |
 | P1 | Server foundation: scaffold, ShelterDesign, assemble copy+ext, provider, preview, API.md, parity test | S0 | | DONE | `apps/studio-server` created; `npm test -w @shelter/studio-server` 13/13 pass incl. parity; `tsc -p apps/studio-server --noEmit` clean; `npm test -w @shelter/server` still 12/12; frozen-app diff empty. See `ledger/tasks/P1.md` Evidence. Orchestrator review fix: `/api/options` now has `materials[].defaultThicknessM` + `presets[].thicknessM{wall,roof,floor}`. Note: `weatherFor` seam is **sync**; P3 pre-fetches async in the route. |
-| P2 | Auth + designs + simulations (Mongo) | P1 | | TODO | |
+| P2 | Auth + designs + simulations (Mongo) | P1 | | DONE | `apps/studio-server/src/{db.ts,auth/**,designs/**,simulations/**}` added; `app.ts` registers `@fastify/cookie`+`@fastify/jwt` and the three route plugins (minimal diff, routes only); `index.ts` fails fast if `MONGODB_URI`/`JWT_SECRET` missing. `npm test -w @shelter/studio-server` 34/34 pass (13 P1 + 21 P2, incl. `mongodb-memory-server`); `tsc -p apps/studio-server --noEmit` clean; frozen-app diff empty; scratch run on :4102 against a real Mongo confirmed register/me over real HTTP+cookies. See `ledger/tasks/P2.md` Evidence. |
 | P3 | Weather + location search + custom-location assembly | P1 | | TODO | |
 | F1 | Client scaffold: design system, shell, routing, store, api client | P1 | | TODO | |
 | F2 | 3D ShelterViewer | F1 | | TODO | |
