@@ -1,26 +1,22 @@
-// Auth routes are P2's to implement (API.md §7 "planned routes"); shapes below
-// follow PLAN.md's "email+password, JWT in an httpOnly cookie" description.
-// Update alongside API.md if P2 lands a different shape.
+// Auth routes, API.md §7. Every route wraps its user in `{user}`; logout
+// returns `{ok: true}`. Shapes are typed from @shelter/studio-server
+// (PublicUser), never hand-copied (condition 2).
+import type { PublicUser } from '@shelter/studio-server';
 import { get, post } from './client';
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-}
-
 export const login = (email: string, password: string) =>
-  post<AuthUser>('/auth/login', { email, password });
+  post<{ user: PublicUser }>('/auth/login', { email, password }).then((r) => r.user);
 
 export const register = (email: string, password: string, name: string) =>
-  post<AuthUser>('/auth/register', { email, password, name });
+  post<{ user: PublicUser }>('/auth/register', { email, password, name }).then((r) => r.user);
 
 export const logout = () => post<{ ok: true }>('/auth/logout');
 
 /** Never throws: no session (401) or an unreachable server both resolve to `null`. */
-export async function getMe(): Promise<AuthUser | null> {
+export async function getMe(): Promise<PublicUser | null> {
   try {
-    return await get<AuthUser>('/auth/me');
+    const { user } = await get<{ user: PublicUser }>('/auth/me');
+    return user;
   } catch {
     return null;
   }
