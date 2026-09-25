@@ -216,7 +216,13 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
   // call request.jwtVerify() (auth/authenticate.ts) instead of parsing
   // headers by hand.
   app.register(fastifyCookie);
-  app.register(fastifyJwt, { secret: jwtSecret, cookie: { cookieName: 'token', signed: false } });
+  // sign.expiresIn: the token itself expires with the cookie (7 d), so a
+  // copied token can't outlive the session.
+  app.register(fastifyJwt, {
+    secret: jwtSecret,
+    cookie: { cookieName: 'token', signed: false },
+    sign: { expiresIn: '7d' },
+  });
   app.register(authRoutes, { secureCookies });
   app.register(designsRoutes);
   app.register(simulationsRoutes, fetchImpl ? { fetchImpl } : {});

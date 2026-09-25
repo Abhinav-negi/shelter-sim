@@ -44,13 +44,16 @@ export async function registerUser(
   return toPublicUser(user);
 }
 
+// Verified against when the email is unknown, so an unknown email costs the
+// same scrypt work as a wrong password (no account enumeration by timing).
+const DUMMY_HASH = hashPassword('not-a-real-password');
+
 export async function authenticateUser(email: string, password: string): Promise<PublicUser> {
   const user = await User.findOne({ email: email.toLowerCase() });
   // Same INVALID_CREDENTIALS message/status for an unknown email as for a
   // wrong password (condition 1) -- don't leak which one it was.
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
-    throw new InvalidCredentialsError();
-  }
+  const ok = await verifyPassword(password, user?.passwordHash ?? (await DUMMY_HASH));
+  if (!user || !ok) throw new InvalidCredentialsError();
   return toPublicUser(user);
 }
 
