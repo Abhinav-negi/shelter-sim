@@ -1,12 +1,12 @@
-import type { ComponentType } from 'react'
-import { Check, ClipboardCheck, Home, Layers, MapPin } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import type { ComponentType } from 'react';
+import { Check, ClipboardCheck, Home, Layers, MapPin } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface StepMeta {
-  label: string
-  title: string
-  hint: string
-  icon: ComponentType<{ className?: string }>
+  label: string;
+  title: string;
+  hint: string;
+  icon: ComponentType<{ className?: string }>;
 }
 
 export const STEPS: StepMeta[] = [
@@ -34,22 +34,22 @@ export const STEPS: StepMeta[] = [
     hint: 'Check the design, then simulate a cold winter night in under a second.',
     icon: ClipboardCheck,
   },
-]
+];
 
 interface StepperProps {
-  step: number
-  maxReached: number
-  onJump: (index: number) => void
+  step: number;
+  maxReached: number;
+  onJump: (index: number) => void;
 }
 
 export function Stepper({ step, maxReached, onJump }: StepperProps) {
   return (
     <ol className="flex items-start" aria-label="Wizard progress">
       {STEPS.map((s, i) => {
-        const complete = i < step
-        const current = i === step
-        const reachable = i <= maxReached
-        const Icon = s.icon
+        const complete = i < step;
+        const current = i === step;
+        const reachable = i <= maxReached;
+        const Icon = s.icon;
         return (
           <li key={s.label} className="flex flex-1 items-center last:flex-none">
             <div className="flex flex-col items-center gap-1.5">
@@ -82,12 +82,15 @@ export function Stepper({ step, maxReached, onJump }: StepperProps) {
             {i < STEPS.length - 1 && (
               <div
                 aria-hidden
-                className={cn('mx-1.5 mb-4 h-0.5 flex-1 rounded-full sm:mx-2', i < step ? 'bg-primary' : 'bg-border')}
+                className={cn(
+                  'mx-1.5 mb-4 h-0.5 flex-1 rounded-full sm:mx-2',
+                  i < step ? 'bg-primary' : 'bg-border',
+                )}
               />
             )}
           </li>
-        )
+        );
       })}
     </ol>
-  )
+  );
 }

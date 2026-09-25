@@ -1,5 +1,5 @@
-import { MapPin, Home, Layers, Play, Lightbulb } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { MapPin, Home, Layers, Play, Lightbulb } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
@@ -7,7 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet'
+} from '@/components/ui/sheet';
 
 const steps = [
   {
@@ -30,7 +30,7 @@ const steps = [
     title: '4. Run & read results',
     body: 'The server predicts a full day indoors — temperature, sunlight captured and heat flow.',
   },
-]
+];
 
 export function HowToUseSheet() {
   return (
@@ -66,8 +66,8 @@ export function HowToUseSheet() {
                 stays inside over the day, next to the outdoor temperature.
               </li>
               <li>
-                <span className="text-foreground">Solar energy captured</span> — sunlight
-                entering through windows and warming the walls.
+                <span className="text-foreground">Solar energy captured</span> — sunlight entering
+                through windows and warming the walls.
               </li>
               <li>
                 <span className="text-foreground">Heat flow</span> — where warmth is gained and
@@ -80,12 +80,12 @@ export function HowToUseSheet() {
             <Lightbulb className="text-accent-foreground size-4 shrink-0" />
             <p className="text-sm">
               <span className="font-medium">Tip: </span>
-              The night-time minimum at 06:00 is the number that matters most in Ladakh — that's
-              the coldest moment a shelter has to survive.
+              The night-time minimum at 06:00 is the number that matters most in Ladakh — that's the
+              coldest moment a shelter has to survive.
             </p>
           </div>
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

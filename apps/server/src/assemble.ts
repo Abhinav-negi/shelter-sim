@@ -292,7 +292,11 @@ function currentWwr(building: Building, orientation: Orientation): number {
   return area / wall.area;
 }
 
-function setWwr(request: SimulationRequest, orientation: Orientation, wwr: number): SimulationRequest {
+function setWwr(
+  request: SimulationRequest,
+  orientation: Orientation,
+  wwr: number,
+): SimulationRequest {
   const clamped = Math.min(0.9, Math.max(0, wwr));
   const wall = wallForOrientation(request.building, orientation);
   if (!wall) return request;
@@ -442,10 +446,12 @@ function siteForLocation(locationId: string): Site {
 function resolvePreset(preset: Preset): SimulationRequest {
   const materials: Record<string, Material> = {};
   for (const surface of preset.request.building.surfaces) {
-    for (const layer of surface.construction) materials[layer.materialId] = materialById(layer.materialId);
+    for (const layer of surface.construction)
+      materials[layer.materialId] = materialById(layer.materialId);
   }
   const glazings: Record<string, Glazing> = {};
-  for (const win of preset.request.building.windows) glazings[win.glazingId] = glazingById(win.glazingId);
+  for (const win of preset.request.building.windows)
+    glazings[win.glazingId] = glazingById(win.glazingId);
   return { ...preset.request, weather: tmyById(preset.locationId), materials, glazings };
 }
 

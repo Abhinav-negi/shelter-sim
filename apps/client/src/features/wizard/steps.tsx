@@ -1,10 +1,10 @@
-import { Loader2, Mountain, Pencil, Play } from 'lucide-react'
-import type { DesignInput, MaterialOption, Options } from '@/api'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Loader2, Mountain, Pencil, Play } from 'lucide-react';
+import type { DesignInput, MaterialOption, Options } from '@/api';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -14,36 +14,36 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
-import { Switch } from '@/components/ui/switch'
-import { cn } from '@/lib/utils'
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { cn } from '@/lib/utils';
 
-export const LENGTH_RANGE = { min: 2, max: 30, step: 0.5 }
-export const WIDTH_RANGE = { min: 2, max: 30, step: 0.5 }
-export const HEIGHT_RANGE = { min: 2, max: 6, step: 0.1 }
-export const WWR_RANGE = { min: 0, max: 0.9, step: 0.05 }
+export const LENGTH_RANGE = { min: 2, max: 30, step: 0.5 };
+export const WIDTH_RANGE = { min: 2, max: 30, step: 0.5 };
+export const HEIGHT_RANGE = { min: 2, max: 6, step: 0.1 };
+export const WWR_RANGE = { min: 0, max: 0.9, step: 0.05 };
 
 const MATERIAL_CATEGORIES: { id: MaterialOption['category']; label: string }[] = [
   { id: 'structural', label: 'Structural' },
   { id: 'insulation', label: 'Insulation' },
   { id: 'finish', label: 'Finish' },
   { id: 'storage', label: 'Storage' },
-]
+];
 
-const KEEP_PRESET = '__keep_preset__'
+const KEEP_PRESET = '__keep_preset__';
 
 const FACADES: { key: 'S' | 'E' | 'W' | 'N'; label: string }[] = [
   { key: 'S', label: 'South' },
   { key: 'E', label: 'East' },
   { key: 'W', label: 'West' },
   { key: 'N', label: 'North' },
-]
+];
 
 interface StepProps {
-  options: Options
-  value: DesignInput
-  onChange: (value: DesignInput) => void
+  options: Options;
+  value: DesignInput;
+  onChange: (value: DesignInput) => void;
 }
 
 // ---------- Step 1: Location ----------
@@ -55,7 +55,7 @@ export function Step1Location({ options, value, onChange }: StepProps) {
         <h3 className="mb-3 text-sm font-medium">Site</h3>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {options.locations.map((loc) => {
-            const selected = value.locationId === loc.id
+            const selected = value.locationId === loc.id;
             return (
               <button
                 key={loc.id}
@@ -64,18 +64,26 @@ export function Step1Location({ options, value, onChange }: StepProps) {
                 onClick={() => onChange({ ...value, locationId: loc.id })}
                 className={cn(
                   'flex flex-col gap-1 rounded-xl border p-3.5 text-left transition-colors',
-                  selected ? 'border-primary bg-accent ring-1 ring-primary' : 'border-border hover:bg-muted',
+                  selected
+                    ? 'border-primary bg-accent ring-1 ring-primary'
+                    : 'border-border hover:bg-muted',
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <Mountain className={cn('size-4 shrink-0', selected ? 'text-primary' : 'text-muted-foreground')} />
+                  <Mountain
+                    className={cn(
+                      'size-4 shrink-0',
+                      selected ? 'text-primary' : 'text-muted-foreground',
+                    )}
+                  />
                   <span className="font-medium">{loc.name}</span>
                 </div>
                 <div className="text-muted-foreground text-xs">
-                  {loc.elevation.toLocaleString()} m elevation · {loc.latitude.toFixed(2)}, {loc.longitude.toFixed(2)}
+                  {loc.elevation.toLocaleString()} m elevation · {loc.latitude.toFixed(2)},{' '}
+                  {loc.longitude.toFixed(2)}
                 </div>
               </button>
-            )
+            );
           })}
         </div>
       </div>
@@ -95,15 +103,15 @@ export function Step1Location({ options, value, onChange }: StepProps) {
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 // ---------- Step 2: Shelter ----------
 
 export function Step2Shelter({ options, value, onChange }: StepProps) {
-  const floorArea = value.lengthM * value.widthM
-  const volume = floorArea * value.heightM
-  const occupancy = options.occupancyPresets.find((o) => o.id === value.occupancyPresetId)
+  const floorArea = value.lengthM * value.widthM;
+  const volume = floorArea * value.heightM;
+  const occupancy = options.occupancyPresets.find((o) => o.id === value.occupancyPresetId);
 
   return (
     <div className="space-y-6">
@@ -111,7 +119,7 @@ export function Step2Shelter({ options, value, onChange }: StepProps) {
         <h3 className="mb-3 text-sm font-medium">Shelter type</h3>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {options.presets.map((preset) => {
-            const selected = value.presetId === preset.id
+            const selected = value.presetId === preset.id;
             return (
               <button
                 key={preset.id}
@@ -120,13 +128,17 @@ export function Step2Shelter({ options, value, onChange }: StepProps) {
                 onClick={() => onChange({ ...value, presetId: preset.id })}
                 className={cn(
                   'flex flex-col gap-1 rounded-xl border p-3.5 text-left transition-colors',
-                  selected ? 'border-primary bg-accent ring-1 ring-primary' : 'border-border hover:bg-muted',
+                  selected
+                    ? 'border-primary bg-accent ring-1 ring-primary'
+                    : 'border-border hover:bg-muted',
                 )}
               >
                 <span className="font-medium">{preset.name}</span>
-                <span className="text-muted-foreground line-clamp-3 text-xs">{preset.description}</span>
+                <span className="text-muted-foreground line-clamp-3 text-xs">
+                  {preset.description}
+                </span>
               </button>
-            )
+            );
           })}
         </div>
       </div>
@@ -171,7 +183,10 @@ export function Step2Shelter({ options, value, onChange }: StepProps) {
 
       <div className="max-w-sm space-y-1.5">
         <Label htmlFor="occupancy">Occupancy</Label>
-        <Select value={value.occupancyPresetId} onValueChange={(v) => onChange({ ...value, occupancyPresetId: v })}>
+        <Select
+          value={value.occupancyPresetId}
+          onValueChange={(v) => onChange({ ...value, occupancyPresetId: v })}
+        >
           <SelectTrigger id="occupancy" className="w-full">
             <SelectValue placeholder="Choose occupancy" />
           </SelectTrigger>
@@ -186,7 +201,7 @@ export function Step2Shelter({ options, value, onChange }: StepProps) {
         {occupancy && <p className="text-muted-foreground text-xs">{occupancy.blurb}</p>}
       </div>
     </div>
-  )
+  );
 }
 
 function DimensionField({
@@ -197,14 +212,14 @@ function DimensionField({
   value,
   onValueChange,
 }: {
-  id: string
-  label: string
-  unit: string
-  range: { min: number; max: number; step: number }
-  value: number
-  onValueChange: (n: number) => void
+  id: string;
+  label: string;
+  unit: string;
+  range: { min: number; max: number; step: number };
+  value: number;
+  onValueChange: (n: number) => void;
 }) {
-  const clamp = (n: number) => Math.min(range.max, Math.max(range.min, n))
+  const clamp = (n: number) => Math.min(range.max, Math.max(range.min, n));
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>
@@ -227,15 +242,15 @@ function DimensionField({
           step={range.step}
           value={value}
           onChange={(e) => {
-            const n = Number(e.target.value)
-            if (!Number.isNaN(n)) onValueChange(clamp(n))
+            const n = Number(e.target.value);
+            if (!Number.isNaN(n)) onValueChange(clamp(n));
           }}
           className="w-20"
           aria-label={`${label} value`}
         />
       </div>
     </div>
-  )
+  );
 }
 
 // ---------- Step 3: Envelope ----------
@@ -247,16 +262,19 @@ function MaterialSelect({
   value,
   onValueChange,
 }: {
-  id: string
-  label: string
-  materials: MaterialOption[]
-  value: string | null
-  onValueChange: (v: string | null) => void
+  id: string;
+  label: string;
+  materials: MaterialOption[];
+  value: string | null;
+  onValueChange: (v: string | null) => void;
 }) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Select value={value ?? KEEP_PRESET} onValueChange={(v) => onValueChange(v === KEEP_PRESET ? null : v)}>
+      <Select
+        value={value ?? KEEP_PRESET}
+        onValueChange={(v) => onValueChange(v === KEEP_PRESET ? null : v)}
+      >
         <SelectTrigger id={id} className="w-full">
           <SelectValue />
         </SelectTrigger>
@@ -264,8 +282,8 @@ function MaterialSelect({
           <SelectItem value={KEEP_PRESET}>Keep preset construction (recommended)</SelectItem>
           <SelectSeparator />
           {MATERIAL_CATEGORIES.map((cat) => {
-            const items = materials.filter((m) => m.category === cat.id)
-            if (items.length === 0) return null
+            const items = materials.filter((m) => m.category === cat.id);
+            if (items.length === 0) return null;
             return (
               <SelectGroup key={cat.id}>
                 <SelectLabel>{cat.label}</SelectLabel>
@@ -280,16 +298,16 @@ function MaterialSelect({
                   </SelectItem>
                 ))}
               </SelectGroup>
-            )
+            );
           })}
         </SelectContent>
       </Select>
     </div>
-  )
+  );
 }
 
 export function Step3Envelope({ options, value, onChange }: StepProps) {
-  const glazing = options.glazings.find((g) => g.id === value.glazingId)
+  const glazing = options.glazings.find((g) => g.id === value.glazingId);
 
   return (
     <div className="space-y-6">
@@ -341,7 +359,9 @@ export function Step3Envelope({ options, value, onChange }: StepProps) {
 
       <div>
         <h3 className="mb-1 text-sm font-medium">Window-to-wall ratio</h3>
-        <p className="text-muted-foreground mb-3 text-xs">South-facing glass captures winter sun in Ladakh.</p>
+        <p className="text-muted-foreground mb-3 text-xs">
+          South-facing glass captures winter sun in Ladakh.
+        </p>
         <div className="grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-4">
           {FACADES.map(({ key, label }) => (
             <div key={key} className="space-y-1.5">
@@ -377,28 +397,28 @@ export function Step3Envelope({ options, value, onChange }: StepProps) {
         </Label>
       </div>
     </div>
-  )
+  );
 }
 
 // ---------- Step 4: Review ----------
 
 function findName<T extends { id: string; name: string }>(list: T[], id: string | null): string {
-  if (!id) return 'Preset construction'
-  return list.find((x) => x.id === id)?.name ?? id
+  if (!id) return 'Preset construction';
+  return list.find((x) => x.id === id)?.name ?? id;
 }
 
 interface Step4Props extends StepProps {
-  onEdit: (step: number) => void
-  onRun: () => void
-  running: boolean
-  error: string | null
+  onEdit: (step: number) => void;
+  onRun: () => void;
+  running: boolean;
+  error: string | null;
 }
 
 export function Step4Review({ options, value, onEdit, onRun, running, error }: Step4Props) {
-  const location = options.locations.find((l) => l.id === value.locationId)
-  const preset = options.presets.find((p) => p.id === value.presetId)
-  const occupancy = options.occupancyPresets.find((o) => o.id === value.occupancyPresetId)
-  const glazing = options.glazings.find((g) => g.id === value.glazingId)
+  const location = options.locations.find((l) => l.id === value.locationId);
+  const preset = options.presets.find((p) => p.id === value.presetId);
+  const occupancy = options.occupancyPresets.find((o) => o.id === value.occupancyPresetId);
+  const glazing = options.glazings.find((g) => g.id === value.glazingId);
 
   const groups: { step: number; title: string; rows: [string, string][] }[] = [
     {
@@ -433,7 +453,7 @@ export function Step4Review({ options, value, onEdit, onRun, running, error }: S
         ['Night shutters', value.nightShutters ? 'Closed 20:00–06:00' : 'Off'],
       ],
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -474,5 +494,5 @@ export function Step4Review({ options, value, onEdit, onRun, running, error }: S
         <p className="text-muted-foreground text-xs">Runs on the server in under a second.</p>
       </div>
     </div>
-  )
+  );
 }

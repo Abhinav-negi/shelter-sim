@@ -79,7 +79,11 @@ describe('apps/server', () => {
   it('setting wallMaterialId changes the result vs null (preset construction)', async () => {
     const app = buildApp();
     const { defaults } = buildOptions();
-    const defaultRes = await app.inject({ method: 'POST', url: '/api/simulate', payload: defaults });
+    const defaultRes = await app.inject({
+      method: 'POST',
+      url: '/api/simulate',
+      payload: defaults,
+    });
     const rccRes = await app.inject({
       method: 'POST',
       url: '/api/simulate',
@@ -97,7 +101,11 @@ describe('apps/server', () => {
     const app = buildApp();
     const { defaults } = buildOptions();
 
-    const assembleRes = await app.inject({ method: 'POST', url: '/api/assemble', payload: defaults });
+    const assembleRes = await app.inject({
+      method: 'POST',
+      url: '/api/assemble',
+      payload: defaults,
+    });
     expect(assembleRes.statusCode).toBe(200);
     const assembledRequest = assembleRes.json();
 
@@ -137,11 +145,19 @@ describe('apps/server', () => {
   it('POST /api/simulate/raw with weather removed -> 400 INVALID_INPUT field weather', async () => {
     const app = buildApp();
     const { defaults } = buildOptions();
-    const assembleRes = await app.inject({ method: 'POST', url: '/api/assemble', payload: defaults });
+    const assembleRes = await app.inject({
+      method: 'POST',
+      url: '/api/assemble',
+      payload: defaults,
+    });
     const assembledRequest = assembleRes.json() as Record<string, unknown>;
     const { weather: _weather, ...withoutWeather } = assembledRequest;
 
-    const res = await app.inject({ method: 'POST', url: '/api/simulate/raw', payload: withoutWeather });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/simulate/raw',
+      payload: withoutWeather,
+    });
     expect(res.statusCode).toBe(400);
     const body = res.json();
     expect(body.code).toBe('INVALID_INPUT');

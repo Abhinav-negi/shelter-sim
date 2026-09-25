@@ -37,6 +37,7 @@ apps/web/     LEGACY Next.js app. Do not build on it. Pending removal (REBUILD.m
 ```
 
 **Hard architecture rules:**
+
 - **The client never runs physics.** It may import only **types** from `@shelter/engine` (`import type`), never `@shelter/data` or `@shelter/optimise`. Check: `grep -rl "hdkr\|meshTargetDx" apps/client/dist` must return nothing.
 - **All simulation, data lookup and optimisation lives in `apps/server` or `packages/*`.**
 - **`apps/server/API.md` is the contract** and the only shared file between client work and server work. Any change that crosses the boundary updates API.md **first**. Then client and server tasks can run in parallel against it.
@@ -45,13 +46,13 @@ apps/web/     LEGACY Next.js app. Do not build on it. Pending removal (REBUILD.m
 
 **Commands:**
 
-| What | Command |
-|---|---|
-| First-time setup | `npm run setup` (install + build engine and data) |
-| Run the app | `npm run dev` (localhost only) · `npm run dev:lan` (teammates on the same Wi-Fi) |
-| Server tests | `npm test --workspace @shelter/server` |
-| Client type-check + build | `npm run build --workspace @shelter/client` |
-| Engine / data tests | `npm test --workspace @shelter/engine` · `npm test --workspace @shelter/data` |
+| What                        | Command                                                                          |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| First-time setup            | `npm run setup` (install + build engine and data)                                |
+| Run the app                 | `npm run dev` (localhost only) · `npm run dev:lan` (teammates on the same Wi-Fi) |
+| Server tests                | `npm test --workspace @shelter/server`                                           |
+| Client type-check + build   | `npm run build --workspace @shelter/client`                                      |
+| Engine / data tests         | `npm test --workspace @shelter/engine` · `npm test --workspace @shelter/data`    |
 | After changing `packages/*` | `npm run build --workspace @shelter/<pkg>`; the server imports the built `dist/` |
 
 ---
@@ -75,6 +76,7 @@ apps/web/     LEGACY Next.js app. Do not build on it. Pending removal (REBUILD.m
 - The ledger is the **single source of truth**. If something isn't written in it, assume the next agent won't know it.
 
 **TEMPLATE for `rebuild/<ID>.md`:**
+
 ```
 # <ID> — <title>
 Status: TODO | IN-PROGRESS | DONE | BLOCKED — <reason>
@@ -106,6 +108,7 @@ Depends on: …   Replaces old LOG tasks: T-…
 ## 5. Delegation rules
 
 ### Parallel vs sequential
+
 - **Parallel** only if all of these are true:
   - the tasks touch different files or directories (e.g. `apps/server/**` vs `apps/client/src/features/x/**`)
   - neither needs the other's output
@@ -114,6 +117,7 @@ Depends on: …   Replaces old LOG tasks: T-…
 - **Only ONE agent may run `npm install` or `npx shadcn add` at a time.** Concurrent installs corrupt the root `package-lock.json`. Pre-install shared deps yourself, or name exactly one agent in the batch as the installer.
 
 ### Git
+
 - Work on a feature branch (currently `rebuild/client-server`), never on `master`.
 - For parallel **code** tasks, prefer a worktree per agent (`git worktree add ../wt-<id> -b task/<id>`), then merge after verification.
   - A fresh worktree needs `npm run setup` before anything builds.
@@ -122,9 +126,11 @@ Depends on: …   Replaces old LOG tasks: T-…
 - `packages/engine/test/output/validation-numbers.csv` picks up harmless rows on every engine test run. Discard it before committing.
 
 ### Task size
+
 - One subagent handles one clearly bounded task. If the brief doesn't fit on a screen, split the task.
 
 ### Every subagent brief MUST contain
+
 1. The task id and goal, plus the path of its `rebuild/<ID>.md` task file.
 2. The exact files to read. Explicitly forbid reading `LOG.md`, `log/` (unless named), and the huge docs in the parent dir (`BLUEPRINT.md`, `WORKERS.md`, `TECH.md`, …).
 3. The worktree or branch, the files it may modify, and the files it must not touch.
@@ -209,6 +215,7 @@ Never trust a report on its own. For each returned subagent:
    - Unresolvable rule conflict → flag it to the user.
 
 **Watch running agents.** A background agent that has produced no new files or ledger updates for about 15 minutes is probably stuck, often waiting on a hung child process.
+
 - Check the processes (`ps`) and the files it writes.
 - Kill the hung process and send the agent a diagnosis.
 - Don't just wait for its report.
@@ -218,6 +225,7 @@ Never trust a report on its own. For each returned subagent:
 ## 8. STOP CONDITIONS — NON-NEGOTIABLE
 
 Stop starting new work **immediately** if ANY of these is true:
+
 - Your context window usage is **≥ 40%**. Estimate conservatively; when in doubt, stop.
 - Session or plan usage limit is **≥ 90%**.
 - The user types **STOP**.
@@ -226,6 +234,7 @@ Stop starting new work **immediately** if ANY of these is true:
 Keep `REBUILD.md` fully up to date after every verified task, so that stopping at any moment loses nothing.
 
 ### Stopping procedure
+
 1. Start no new subagents. Let running ones finish, and verify them (§7).
 2. Move the existing `## HANDOFF` at the top of `REBUILD.md` into `log/HANDOFF-ARCHIVE.md` (insert it at the top). Then write the new `## HANDOFF` in its place, with:
    - tasks completed
@@ -236,6 +245,7 @@ Keep `REBUILD.md` fully up to date after every verified task, so that stopping a
    - the recommended next step
 
    There is exactly one HANDOFF at a time.
+
 3. Give the user a short summary and end.
 
 ---
@@ -243,6 +253,7 @@ Keep `REBUILD.md` fully up to date after every verified task, so that stopping a
 ## 9. Otherwise: keep working
 
 Work through the ledger without asking for confirmation. Only stop to ask when a decision genuinely needs a human:
+
 - the start of a new Phase 2 R-block (the user approves each one)
 - ambiguous requirements the task file doesn't resolve
 - conflicting rules or conditions

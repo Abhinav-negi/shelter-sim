@@ -10,3 +10,7 @@ plan.md
 # T-05 scope: .work/ templates have an exact hand-specified shape (LOG.md ties
 # claim.sh's sed substitutions to it); prettier reformatting is not this task's job.
 .work/
+
+# Generated JSON (real server output) -- regenerate, never hand-format.
+apps/server/test/fixtures/
+examples/

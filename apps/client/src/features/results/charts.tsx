@@ -9,18 +9,18 @@ import {
   ReferenceLine,
   XAxis,
   YAxis,
-} from 'recharts'
+} from 'recharts';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from '@/components/ui/chart'
-import type { ResultJson } from '@/api'
-import { HEAT_FLOW_KEYS, HEAT_FLOW_LABELS, surfaceLabel } from './labels'
+} from '@/components/ui/chart';
+import type { ResultJson } from '@/api';
+import { HEAT_FLOW_KEYS, HEAT_FLOW_LABELS, surfaceLabel } from './labels';
 
-const kToC = (k: number) => k - 273.15
-const fmtHour = (h: number) => `${String(Math.round(h)).padStart(2, '0')}:00`
+const kToC = (k: number) => k - 273.15;
+const fmtHour = (h: number) => `${String(Math.round(h)).padStart(2, '0')}:00`;
 
 // ---------- Temperature ----------
 
@@ -28,7 +28,7 @@ const tempConfig = {
   indoor: { label: 'Indoor air', color: 'var(--chart-1)' },
   ambient: { label: 'Outdoor ambient', color: 'var(--chart-3)' },
   sky: { label: 'Sky', color: 'var(--muted-foreground)' },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function TemperatureChart({ result }: { result: ResultJson }) {
   const data = result.time.map((t, i) => ({
@@ -36,7 +36,7 @@ export function TemperatureChart({ result }: { result: ResultJson }) {
     indoor: Number(kToC(result.temperatures.indoorAir[i]!).toFixed(2)),
     ambient: Number(kToC(result.temperatures.ambient[i]!).toFixed(2)),
     sky: Number(kToC(result.temperatures.sky[i]!).toFixed(2)),
-  }))
+  }));
 
   return (
     <ChartContainer config={tempConfig} className="aspect-auto h-72 w-full">
@@ -64,7 +64,12 @@ export function TemperatureChart({ result }: { result: ResultJson }) {
           y={0}
           stroke="var(--destructive)"
           strokeDasharray="4 4"
-          label={{ value: 'Freezing', position: 'insideTopRight', fill: 'var(--destructive)', fontSize: 11 }}
+          label={{
+            value: 'Freezing',
+            position: 'insideTopRight',
+            fill: 'var(--destructive)',
+            fontSize: 11,
+          }}
         />
         <ReferenceLine
           x={6}
@@ -82,27 +87,33 @@ export function TemperatureChart({ result }: { result: ResultJson }) {
             />
           }
         />
-        <Line dataKey="sky" stroke="var(--color-sky)" strokeDasharray="3 3" dot={false} strokeWidth={1.5} />
+        <Line
+          dataKey="sky"
+          stroke="var(--color-sky)"
+          strokeDasharray="3 3"
+          dot={false}
+          strokeWidth={1.5}
+        />
         <Line dataKey="ambient" stroke="var(--color-ambient)" dot={false} strokeWidth={2} />
         <Line dataKey="indoor" stroke="var(--color-indoor)" dot={false} strokeWidth={2.5} />
       </LineChart>
     </ChartContainer>
-  )
+  );
 }
 
 // ---------- Solar ----------
 
 const solarConfig = {
   kwh: { label: 'Captured', color: 'var(--chart-1)' },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function SolarChart({ result }: { result: ResultJson }) {
-  const { opaque, glazed, bySurface } = result.solar.dailyTotalKWh
+  const { opaque, glazed, bySurface } = result.solar.dailyTotalKWh;
   const data = Object.entries(bySurface)
     .map(([id, kwh]) => ({ id, label: surfaceLabel(id), kwh: Number(kwh.toFixed(2)) }))
-    .sort((a, b) => b.kwh - a.kwh)
-  const top = data[0]
-  const total = opaque + glazed
+    .sort((a, b) => b.kwh - a.kwh);
+  const top = data[0];
+  const total = opaque + glazed;
 
   return (
     <div className="space-y-4">
@@ -138,7 +149,7 @@ export function SolarChart({ result }: { result: ResultJson }) {
         </p>
       )}
     </div>
-  )
+  );
 }
 
 // ---------- Heat flow ----------
@@ -147,17 +158,17 @@ const heatFlowConfig = {
   value: { label: 'Daily total', color: 'var(--chart-1)' },
   gain: { label: 'Gain', color: 'var(--gain)' },
   loss: { label: 'Loss', color: 'var(--loss)' },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function HeatFlowChart({ result }: { result: ResultJson }) {
-  const totals = result.heatFlows.dailyTotalsKWh
+  const totals = result.heatFlows.dailyTotalsKWh;
   const data = HEAT_FLOW_KEYS.map((key) => ({
     key,
     label: HEAT_FLOW_LABELS[key],
     value: Number((totals[key] ?? 0).toFixed(2)),
   }))
     .filter((d) => d.value !== 0)
-    .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+    .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
 
   return (
     <div className="space-y-2">
@@ -173,9 +184,21 @@ export function HeatFlowChart({ result }: { result: ResultJson }) {
             tickLine={false}
             axisLine={false}
             fontSize={12}
-            label={{ value: 'kWh/day (+ gain, − loss)', position: 'insideBottom', offset: -4, fontSize: 11 }}
+            label={{
+              value: 'kWh/day (+ gain, − loss)',
+              position: 'insideBottom',
+              offset: -4,
+              fontSize: 11,
+            }}
           />
-          <YAxis type="category" dataKey="label" tickLine={false} axisLine={false} width={168} fontSize={12} />
+          <YAxis
+            type="category"
+            dataKey="label"
+            tickLine={false}
+            axisLine={false}
+            width={168}
+            fontSize={12}
+          />
           <ReferenceLine x={0} stroke="var(--border)" />
           <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
           <Bar dataKey="value" radius={4} isAnimationActive={false}>
@@ -203,5 +226,5 @@ export function HeatFlowChart({ result }: { result: ResultJson }) {
         </span>
       </div>
     </div>
-  )
+  );
 }

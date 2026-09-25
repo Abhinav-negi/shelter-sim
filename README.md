@@ -1,8 +1,7 @@
 # ShelterSim
 
 Predicts how warm a passive-solar shelter stays through a Ladakh winter night, so a design can
-be checked in seconds instead of built and found wrong. DRDO / DIHAR Leh · SIH Problem Statement
-26051.
+be checked in seconds instead of built and found wrong. DRDO / DIHAR Leh · SIH Problem Statement 26051.
 
 ## Architecture
 
@@ -59,12 +58,12 @@ npm run build --workspace @shelter/client   # type-check + production build
 
 ## Troubleshooting
 
-| Symptom                                                              | Fix                                                                                         |
-| ---------------------------------------------------------------------| -------------------------------------------------------------------------------------------- |
-| Client shows the "Server offline" banner                             | Start the server — `npm run dev --workspace @shelter/server`, or `npm run dev` from the repo root for both apps |
-| Module/import errors from `@shelter/engine` or `@shelter/data`       | Rebuild them: `npm run build --workspace @shelter/engine --workspace @shelter/data`         |
-| Port 4000 or 5173 already in use                                     | Stop the other process, or change the port in `apps/server/src/index.ts` / `apps/client/vite.config.ts` |
-| Node version errors                                                  | Upgrade to Node 20+                                                                          |
+| Symptom                                                        | Fix                                                                                                             |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Client shows the "Server offline" banner                       | Start the server — `npm run dev --workspace @shelter/server`, or `npm run dev` from the repo root for both apps |
+| Module/import errors from `@shelter/engine` or `@shelter/data` | Rebuild them: `npm run build --workspace @shelter/engine --workspace @shelter/data`                             |
+| Port 4000 or 5173 already in use                               | Stop the other process, or change the port in `apps/server/src/index.ts` / `apps/client/vite.config.ts`         |
+| Node version errors                                            | Upgrade to Node 20+                                                                                             |
 
 ## Branch protocol
 
