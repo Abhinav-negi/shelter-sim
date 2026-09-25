@@ -1,0 +1,24 @@
+{
+  "name": "@shelter/studio-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "types": "./src/design/types.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.0",
+    "@fastify/jwt": "^9.0.0",
+    "@shelter/data": "0.1.0",
+    "@shelter/engine": "0.1.0",
+    "fastify": "^5.0.0",
+    "mongoose": "^8.0.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.0.0",
+    "tsx": "^4.19.0"
+  }
+}

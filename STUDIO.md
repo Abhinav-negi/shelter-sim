@@ -27,7 +27,7 @@ mongodb-memory-server). Old app dev servers are running on :4000/:5173; leave th
 | ID | Task | Depends | Owner | Status | Evidence |
 |---|---|---|---|---|---|
 | S0 | Branch, commits, ORCHESTRATOR.md, ledger | – | orchestrator | DONE | `git log --oneline -1 rebuild/client-server` = 0700e7a; ledger files present |
-| P1 | Server foundation: scaffold, ShelterDesign, assemble copy+ext, provider, preview, API.md, parity test | S0 | | TODO | |
+| P1 | Server foundation: scaffold, ShelterDesign, assemble copy+ext, provider, preview, API.md, parity test | S0 | | DONE | `apps/studio-server` created; `npm test -w @shelter/studio-server` 13/13 pass incl. parity; `tsc -p apps/studio-server --noEmit` clean; `npm test -w @shelter/server` still 12/12; frozen-app diff empty. See `ledger/tasks/P1.md` Evidence. |
 | P2 | Auth + designs + simulations (Mongo) | P1 | | TODO | |
 | P3 | Weather + location search + custom-location assembly | P1 | | TODO | |
 | F1 | Client scaffold: design system, shell, routing, store, api client | P1 | | TODO | |

@@ -13,6 +13,7 @@
     "setup": "npm install && npm run build --workspace @shelter/engine --workspace @shelter/data",
     "dev": "concurrently -n server,client -c blue,magenta --kill-others-on-fail \"npm run dev --workspace @shelter/server\" \"npm run dev --workspace @shelter/client\"",
     "dev:lan": "concurrently -n server,client -c blue,magenta --kill-others-on-fail \"HOST=0.0.0.0 npm run dev --workspace @shelter/server\" \"npm run dev --workspace @shelter/client -- --host\"",
+    "dev:studio": "npm run dev --workspace @shelter/studio-server",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "tsc -b packages/engine",
