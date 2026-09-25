@@ -7,6 +7,9 @@ export interface SceneColors {
   inkMuted: string;
   hairline: string;
   accent: string;
+  /** The thermal scale's warm stop — used for the sun indicator (a data
+   *  value, not decoration), never for the building/UI. */
+  thermalWarm: string;
 }
 
 const CSS_VAR: Record<keyof SceneColors, string> = {
@@ -16,6 +19,7 @@ const CSS_VAR: Record<keyof SceneColors, string> = {
   inkMuted: '--ink-muted',
   hairline: '--hairline',
   accent: '--accent',
+  thermalWarm: '--thermal-warm',
 };
 
 const FALLBACK: SceneColors = {
@@ -25,6 +29,7 @@ const FALLBACK: SceneColors = {
   inkMuted: '#63676c',
   hairline: '#dcdad3',
   accent: '#26597e',
+  thermalWarm: '#c98a4b',
 };
 
 function readColors(): SceneColors {

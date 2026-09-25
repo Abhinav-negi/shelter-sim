@@ -10,11 +10,13 @@
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useMemo } from 'react';
+import { Color } from 'three';
 import type { Options, ShelterDesign } from '@shelter/studio-server';
 import { Building } from './Building';
 import { Compass } from './Compass';
 import { buildSceneGeometry } from './geometry';
 import { sunDirection } from './solar';
+import { Sun } from './Sun';
 import { useThemeColors } from './useThemeColors';
 
 export interface ShelterViewerProps {
@@ -47,6 +49,10 @@ function resolveLatLon(design: ShelterDesign, options: Options): { lat: number; 
 const SUN_COLOR = '#fff6e8';
 const SKY_COLOR = '#eef3f7';
 
+function mix(a: string, b: string, t: number): string {
+  return new Color(a).lerp(new Color(b), t).getStyle();
+}
+
 function Ground({ radius, color }: { radius: number; color: string }) {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
@@ -69,6 +75,15 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
   const groundRadius = footprint * 16;
   const fogNear = footprint * 4;
   const fogFar = footprint * 11;
+  // Lift the ground a step toward the (lighter) hairline token: on its own,
+  // dark-theme `surface` is dark enough that the shadow disappears into it
+  // (review: "the ground is pure black so the shadow disappears"). A small,
+  // theme-agnostic mix keeps light mode's ground essentially unchanged
+  // (hairline is close to surface there) while giving dark mode's ground
+  // enough headroom for the shadow to actually read against it.
+  const groundColor = useMemo(() => mix(colors.surface, colors.hairline, 0.4), [colors.surface, colors.hairline]);
+  const sunColor = colors.thermalWarm;
+  const buildingCenter: [number, number, number] = [0, geometry.heightM / 2, 0];
 
   return (
     <>
@@ -91,8 +106,9 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
         shadow-bias={-0.0015}
       />
 
-      <Ground radius={groundRadius} color={colors.surface} />
+      <Ground radius={groundRadius} color={groundColor} />
       <Compass geometry={geometry} colors={colors} />
+      {sunUp && <Sun direction={sunDir} radius={sunDistance} center={buildingCenter} color={sunColor} />}
 
       <group rotation={[0, geometry.rotationY, 0]}>
         <Building geometry={geometry} />
