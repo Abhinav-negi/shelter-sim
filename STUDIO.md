@@ -3,13 +3,15 @@
 Orchestrator protocol: `ORCHESTRATOR.md`. Architecture: `ledger/PLAN.md`. One file per task: `ledger/tasks/<ID>.md`.
 Integration branch: **`studio/main`**. Task branches: `task/<id>` in worktrees `../wt-<id>`.
 
-## HANDOFF (2026-09-25, session 1)
+## HANDOFF (2026-09-25, session 1 — in progress)
 
-Planning done and approved. S0 done: pending rebuild edits committed (`0700e7a`) on `rebuild/client-server`,
-`studio/main` created, old orchestrator archived to `log/ORCHESTRATOR-REBUILD.md`, ledger written.
-**Waiting on the user for** `MONGODB_URI` + `JWT_SECRET` (needed only for running the app; tests use
-mongodb-memory-server). Old app dev servers are running on :4000/:5173; leave them alone.
-P1 merged (`f394300`). **Next step:** P2 ∥ P3 ∥ F1 in worktrees (F1 is the only installer; P2/P3 use `npm ci`).
+Merged into `studio/main`: P1, P3, P2 (+ orchestrator integration fix: `design/prepare.ts` so saved runs of
+custom-location designs resolve weather), security fixes (JWT `expiresIn 7d`, dummy-hash login timing), F1.
+F1's agent hit the Sonnet session limit mid-rebase; orchestrator finished the rebase and verified it.
+Main tree `node_modules` must be refreshed with `npm install` (NOT `npm ci`: old app dev servers on :4000/:5173 run
+from it) after merges that change the lockfile.
+**Waiting on the user for** `MONGODB_URI` + `JWT_SECRET` (running the app only).
+**Next step:** F1b ∥ F2 in worktrees, then F3 → F4 → Q1.
 
 ## Decisions (approved by user unless marked "orchestrator")
 1. New apps `apps/studio` + `apps/studio-server` (orchestrator: naming). Old apps and `packages/*` frozen.
@@ -31,6 +33,7 @@ P1 merged (`f394300`). **Next step:** P2 ∥ P3 ∥ F1 in worktrees (F1 is the o
 | P2 | Auth + designs + simulations (Mongo) | P1 | | DONE | `apps/studio-server/src/{db.ts,auth/**,designs/**,simulations/**}` added; `app.ts` registers `@fastify/cookie`+`@fastify/jwt` and the three route plugins (minimal diff, routes only); `index.ts` fails fast if `MONGODB_URI`/`JWT_SECRET` missing. `npm test -w @shelter/studio-server` 34/34 pass (13 P1 + 21 P2, incl. `mongodb-memory-server`); `tsc -p apps/studio-server --noEmit` clean; frozen-app diff empty; scratch run on :4102 against a real Mongo confirmed register/me over real HTTP+cookies. See `ledger/tasks/P2.md` Evidence. |
 | P3 | Weather + location search + custom-location assembly | P1 | | DONE | `apps/studio-server/src/{weather/**,locations/**}` added; `GET /api/locations/search?q=` (Open-Meteo geocoding, 502 `UPSTREAM_UNAVAILABLE` upstream); custom-location preview resolves weather async (Open-Meteo archive, falling back to NASA POWER) → `normaliseWeather` → `weatherCache` Mongo model (`{source,lat(2dp),lon(2dp),year}` unique) → sync `weatherFor` closure into P1's seam, unchanged. `npm test -w @shelter/studio-server` 26/26 pass (2 live-only skipped) incl. parity; `tsc -p apps/studio-server --noEmit` clean; `npm test -w @shelter/server` still 12/12; frozen-app diff empty. Live smoke: Shimla (31.10442, 77.16662) preview → 200, `weatherProvenance:{source:'open-meteo',year:2023,notes:[...]}`. See `ledger/tasks/P3.md` Evidence. |
 | F1 | Client scaffold: design system, shell, routing, store, api client | P1 | | DONE | `apps/studio` (`@shelter/studio`, Vite :5273, proxy `/api`→:4100) created: tokens (light/dark + toggle), app shell (wordmark/nav/theme toggle), routes `/`, `/login`, `/register`, `/app`, `/app/design/:id`, `/app/compare` (`/app/*` guarded by `GET /api/auth/me`), zustand `ShelterDesign` store w/ per-group setters + `dirty` + selectors (`subscribeWithSelector`), typed `src/api/*` wrappers normalising errors to `{code,message,field?}`, 6 UI primitives (Button/Input/Slider/Select/Segmented/FieldRow). `npm run build -w @shelter/studio` clean; `npm test -w @shelter/studio` 9/9 pass; `grep -rl "hdkr\|meshTargetDx" apps/studio/dist` empty; 8 screenshots (light/dark × 1440/390 × `/`,`/login`) 0 console errors. See `ledger/tasks/F1.md` Evidence. |
+| F1b | Reconcile client api/ (auth, designs, simulations, locations) with real API.md | F1 P2 P3 | | TODO | |
 | F2 | 3D ShelterViewer | F1 | | TODO | |
 | F3 | Studio page: controls, live preview, results | F1 F2 | | TODO | |
 | F4 | Landing, auth pages, dashboard, compare | F3 P2 | | TODO | |
