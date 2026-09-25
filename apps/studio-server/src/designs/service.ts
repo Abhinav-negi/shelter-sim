@@ -17,8 +17,8 @@ export interface DesignSummary {
   id: string;
   name: string;
   design: ShelterDesign;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO
+  updatedAt: string; // ISO
 }
 
 function toSummary(doc: HydratedDocument<DesignDoc>): DesignSummary {
@@ -26,8 +26,8 @@ function toSummary(doc: HydratedDocument<DesignDoc>): DesignSummary {
     id: doc._id.toString(),
     name: doc.name,
     design: doc.design,
-    createdAt: doc.createdAt as unknown as Date,
-    updatedAt: doc.updatedAt as unknown as Date,
+    createdAt: (doc.createdAt as unknown as Date).toISOString(),
+    updatedAt: (doc.updatedAt as unknown as Date).toISOString(),
   };
 }
 

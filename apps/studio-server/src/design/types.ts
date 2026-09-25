@@ -15,6 +15,7 @@
 // from (STUDIO.md / ledger rules).
 
 import type { SimulationKpis } from '@shelter/engine';
+import type { WeatherProvenanceSummary } from '../weather/resolve.js';
 
 export type DesignLocation =
   | { kind: 'preset'; id: string }
@@ -117,4 +118,17 @@ export interface PreviewResponse {
   result: unknown; // ResultJson, i.e. resultToJson(SimulationResult) -- the
   // engine only types the pre-JSON SimulationResult (Float64Array fields);
   // the JSON shape is documented in API.md, same as apps/server/API.md §4.
+  /** Present iff location.kind === 'custom' (P3, API.md §4). */
+  weatherProvenance?: WeatherProvenanceSummary;
 }
+
+// ======================= re-exports for apps/studio (F1b) =======================
+// The client `import type`s these from here (package.json's "types" field),
+// never from the server modules directly -- keeps the client's only server
+// dependency this one file. No hand-copied shapes (condition 2).
+
+export type { PublicUser } from '../auth/service.js';
+export type { DesignSummary } from '../designs/service.js';
+export type { SimulationSummary, SimulationFull } from '../simulations/service.js';
+export type { WeatherProvenanceSummary } from '../weather/resolve.js';
+export type { LocationSearchResult } from '../weather/geocode.js';
