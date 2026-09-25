@@ -58,12 +58,16 @@ export interface PresetOption {
   name: string;
   description: string;
   locationId: string;
+  /** Total thickness (m) of the preset's own construction per surface type. */
+  thicknessM: { wall: number; roof: number; floor: number };
 }
 export interface MaterialOption {
   id: string;
   name: string;
   category: 'structural' | 'insulation' | 'finish' | 'storage';
   conductivity: number;
+  /** Starting thickness (m) when this material is picked for a surface. */
+  defaultThicknessM: number;
   blurb?: string;
 }
 export interface GlazingOption {

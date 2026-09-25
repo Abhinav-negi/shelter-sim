@@ -35,12 +35,14 @@ interface PresetOption {
   name: string;
   description: string;
   locationId: string;
+  thicknessM: { wall: number; roof: number; floor: number }; // m, total of the preset's own layer stack
 }
 interface MaterialOption {
   id: string;
   name: string;
   category: 'structural' | 'insulation' | 'finish' | 'storage';
   conductivity: number;
+  defaultThicknessM: number; // m, starting thickness when picked for a surface
   blurb?: string;
 } // conductivity W/(m*K)
 interface GlazingOption {

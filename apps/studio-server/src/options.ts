@@ -37,6 +37,55 @@ const DEFAULTS: ShelterDesign = {
   occupancyPresetId: 'familyLivestock',
 };
 
+// Starting thickness when a user picks a material for a surface. Reproduced
+// verbatim from apps/server/src/assemble.ts (THICKNESS_OVERRIDE_M /
+// DEFAULT_THICKNESS_BY_CATEGORY) -- the user can then change it.
+const THICKNESS_OVERRIDE_M: Record<string, number> = {
+  stoneMasonryGranite: 0.4,
+  rammedEarth: 0.4,
+  firedClayBrick: 0.23,
+  denseConcrete: 0.2,
+  rcc: 0.15,
+  aacBlock: 0.2,
+  timberPoplarWillow: 0.05,
+  compressedEarthBlock: 0.3,
+  mudPlaster: 0.08,
+  cementPlaster: 0.02,
+  eps: 0.1,
+  xps: 0.1,
+  puf: 0.05,
+  glassWool: 0.1,
+  rockWool: 0.1,
+  strawBale: 0.35,
+  sheepWool: 0.1,
+  steelCGI: 0.0006,
+  waterDrum: 0.2,
+  gravelSoilFill: 0.1,
+  pcmParaffinRT25: 0.03,
+};
+const DEFAULT_THICKNESS_BY_CATEGORY: Record<string, number> = {
+  structural: 0.3,
+  insulation: 0.1,
+  finish: 0.02,
+  storage: 0.2,
+};
+
+export function defaultThicknessM(materialId: string, category: string): number {
+  return THICKNESS_OVERRIDE_M[materialId] ?? DEFAULT_THICKNESS_BY_CATEGORY[category] ?? 0.2;
+}
+
+/** Total layer thickness per surface type of a preset's own construction, so
+ * the 3D viewer can draw a null (preset) construction at its real thickness. */
+function presetThicknessM(
+  surfaces: readonly { type: string; construction: readonly { thickness: number }[] }[],
+): { wall: number; roof: number; floor: number } {
+  const total = (type: string) => {
+    const s = surfaces.find((x) => x.type === type);
+    return s ? s.construction.reduce((sum, l) => sum + l.thickness, 0) : 0;
+  };
+  return { wall: total('wall'), roof: total('roof'), floor: total('floor') };
+}
+
 let cached: Options | undefined;
 
 export function buildOptions(): Options {
@@ -57,6 +106,7 @@ export function buildOptions(): Options {
         name: p.name,
         description: p.description,
         locationId: p.locationId,
+        thicknessM: presetThicknessM(p.request.building.surfaces),
       }),
     ),
     materials: MATERIALS.map(
@@ -65,6 +115,7 @@ export function buildOptions(): Options {
         name: m.name,
         category: m.category,
         conductivity: m.k,
+        defaultThicknessM: defaultThicknessM(m.id, m.category),
         ...(m.blurb !== undefined ? { blurb: m.blurb } : {}),
       }),
     ),
