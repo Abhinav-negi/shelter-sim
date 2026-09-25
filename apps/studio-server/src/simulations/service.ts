@@ -10,7 +10,8 @@ import { fileURLToPath } from 'node:url';
 import { Types } from 'mongoose';
 import { canonicalRequestHash, resultToJson } from '@shelter/engine';
 import type { SimulationKpis } from '@shelter/engine';
-import { assemble } from '../design/assemble.js';
+import { prepareRequest } from '../design/prepare.js';
+import type { WeatherProvenanceSummary } from '../weather/resolve.js';
 import type { ShelterDesign } from '../design/types.js';
 import { fastPhysics } from '../providers/index.js';
 import { getOwnedDesignDoc, NotFoundError } from '../designs/service.js';
@@ -34,6 +35,8 @@ export interface SimulationSummary {
   requestHash: string;
   inputSnapshot: ShelterDesign;
   kpis: SimulationKpis;
+  /** Custom locations only: weather source + assumptions this run used. */
+  weatherProvenance?: WeatherProvenanceSummary;
   createdAt: Date;
 }
 export interface SimulationFull extends SimulationSummary {
@@ -49,6 +52,7 @@ function toSummary(doc: SimulationDoc): SimulationSummary {
     requestHash: doc.requestHash,
     inputSnapshot: doc.inputSnapshot,
     kpis: doc.kpis,
+    ...(doc.weatherProvenance ? { weatherProvenance: doc.weatherProvenance } : {}),
     createdAt: doc.createdAt as unknown as Date,
   };
 }
@@ -60,10 +64,14 @@ function toFull(doc: SimulationDoc): SimulationFull {
 /** Runs the design's CURRENT state through the provider and freezes it.
  * `inputSnapshot` is a deep copy, so editing the design afterward leaves
  * this row untouched (condition 3). */
-export async function runSimulation(ownerId: string, designId: string): Promise<SimulationFull> {
+export async function runSimulation(
+  ownerId: string,
+  designId: string,
+  fetchImpl?: typeof fetch,
+): Promise<SimulationFull> {
   const designDoc = await getOwnedDesignDoc(ownerId, designId);
   const inputSnapshot: ShelterDesign = structuredClone(designDoc.design);
-  const request = assemble(inputSnapshot);
+  const { request, weatherProvenance } = await prepareRequest(inputSnapshot, fetchImpl);
   const { kpis, result } = await fastPhysics.run(request);
   const doc = await Simulation.create({
     ownerId: new Types.ObjectId(ownerId),
@@ -73,6 +81,7 @@ export async function runSimulation(ownerId: string, designId: string): Promise<
     requestHash: canonicalRequestHash(request),
     inputSnapshot,
     kpis,
+    ...(weatherProvenance ? { weatherProvenance } : {}),
     result: resultToJson(result),
   });
   return toFull(doc);

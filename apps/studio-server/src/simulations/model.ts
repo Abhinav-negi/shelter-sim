@@ -7,6 +7,7 @@
 import mongoose, { Schema, Types, type InferSchemaType, type Model } from 'mongoose';
 import type { SimulationKpis } from '@shelter/engine';
 import type { ShelterDesign } from '../design/types.js';
+import type { WeatherProvenanceSummary } from '../weather/resolve.js';
 
 const { model, models } = mongoose;
 
@@ -19,6 +20,7 @@ const simulationSchema = new Schema(
     requestHash: { type: String, required: true },
     inputSnapshot: { type: Schema.Types.Mixed, required: true },
     kpis: { type: Schema.Types.Mixed, required: true },
+    weatherProvenance: { type: Schema.Types.Mixed },
     result: { type: Schema.Types.Mixed, required: true },
   },
   { timestamps: { createdAt: true, updatedAt: false } },
@@ -27,8 +29,9 @@ simulationSchema.index({ designId: 1, createdAt: -1 });
 
 export type SimulationDoc = Omit<
   InferSchemaType<typeof simulationSchema>,
-  'inputSnapshot' | 'kpis' | 'result'
+  'inputSnapshot' | 'kpis' | 'result' | 'weatherProvenance'
 > & {
+  weatherProvenance?: WeatherProvenanceSummary;
   inputSnapshot: ShelterDesign;
   kpis: SimulationKpis;
   result: unknown;

@@ -16,13 +16,16 @@ import { EngineError, resultToJson } from '@shelter/engine';
 import type { EngineErrorCode } from '@shelter/engine';
 import { assemble, CustomLocationUnavailableError, OCCUPANCY_PRESETS } from './design/assemble.js';
 import type { ShelterDesign } from './design/types.js';
+import { locationsRoutes } from './locations/routes.js';
 import { buildOptions } from './options.js';
+import { prepareRequest } from './design/prepare.js';
 import { fastPhysics } from './providers/index.js';
 import authRoutes from './auth/routes.js';
 import { EmailTakenError, InvalidCredentialsError } from './auth/service.js';
 import designsRoutes from './designs/routes.js';
 import { NotFoundError } from './designs/service.js';
 import simulationsRoutes from './simulations/routes.js';
+import { UpstreamUnavailableError } from './weather/errors.js';
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024; // 5 MB, API.md §5
 
@@ -151,6 +154,9 @@ export interface BuildAppOptions {
   /** Only 'production' makes the auth cookie Secure (condition 1). Defaults
    * to process.env.NODE_ENV, same as env.ts. */
   nodeEnv?: string;
+  /** Injected for tests (recorded fixtures, no live network); defaults to
+   * global `fetch` (Node 24) for the real weather/geocoding calls. */
+  fetchImpl?: typeof fetch;
 }
 
 export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
@@ -158,6 +164,7 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
   const jwtSecret = opts.jwtSecret ?? 'dev-insecure-secret-do-not-use-in-production';
   const nodeEnv = opts.nodeEnv ?? process.env['NODE_ENV'] ?? 'development';
   const secureCookies = nodeEnv === 'production';
+  const { fetchImpl } = opts;
 
   app.setErrorHandler((err: FastifyError, _req, reply) => {
     const validation = (err as { validation?: unknown[] }).validation;
@@ -172,6 +179,10 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
     }
     if (err instanceof CustomLocationUnavailableError) {
       reply.code(422).send({ code: err.code, message: err.message });
+      return;
+    }
+    if (err instanceof UpstreamUnavailableError) {
+      reply.code(502).send({ code: err.code, message: err.message });
       return;
     }
     if (err instanceof EngineError) {
@@ -208,7 +219,7 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
   app.register(fastifyJwt, { secret: jwtSecret, cookie: { cookieName: 'token', signed: false } });
   app.register(authRoutes, { secureCookies });
   app.register(designsRoutes);
-  app.register(simulationsRoutes);
+  app.register(simulationsRoutes, fetchImpl ? { fetchImpl } : {});
 
   // CORS, ported from apps/server/src/app.ts (LAN dev client).
   app.addHook('onSend', async (_req, reply, payload) => {
@@ -221,20 +232,28 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
     reply.code(204).send();
   });
 
+  app.register(locationsRoutes, fetchImpl ? { fetchImpl } : {});
+
   app.get('/api/health', async () => ({ ok: true }));
 
   app.get('/api/options', async () => buildOptions());
 
-  // No weatherFor is wired up yet (P3), so a custom-location design 422s
-  // with CUSTOM_LOCATION_UNAVAILABLE -- see design/assemble.ts.
+  // Custom locations resolve weather asynchronously inside prepareRequest
+  // (design/prepare.ts), the same path persisted runs use.
   app.post(
     '/api/simulate/preview',
     { schema: { body: shelterDesignSchema() } },
     async (req) => {
-      const design = req.body as ShelterDesign;
-      const request = assemble(design);
+      const { request, weatherProvenance } = await prepareRequest(
+        req.body as ShelterDesign,
+        fetchImpl,
+      );
       const { kpis, result } = await fastPhysics.run(request);
-      return { kpis, result: resultToJson(result) };
+      return {
+        kpis,
+        result: resultToJson(result),
+        ...(weatherProvenance ? { weatherProvenance } : {}),
+      };
     },
   );
 

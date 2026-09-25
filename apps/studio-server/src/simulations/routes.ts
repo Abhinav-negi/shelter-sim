@@ -7,12 +7,15 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { authenticate, userId } from '../auth/authenticate.js';
 import { getSimulation, listSimulations, runSimulation } from './service.js';
 
-const simulationsRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
+const simulationsRoutes: FastifyPluginAsync<{ fetchImpl?: typeof fetch }> = async (
+  app: FastifyInstance,
+  opts,
+) => {
   app.addHook('preHandler', authenticate);
 
   app.post('/api/designs/:id/simulations', async (request, reply) => {
     const { id } = request.params as { id: string };
-    const created = await runSimulation(userId(request), id);
+    const created = await runSimulation(userId(request), id, opts.fetchImpl);
     reply.code(201);
     return created;
   });

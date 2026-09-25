@@ -127,9 +127,11 @@ Same nine steps as `apps/server/src/assemble.ts` (`apps/server/API.md` §4), wit
 
 1. Weather + site resolve from `design.location`, not a bare `locationId`. `location.kind==='preset'`
    uses the bundled TMY exactly as before. `location.kind==='custom'` calls an injected
-   `weatherFor(location)` hook (P3 implements the real one: Open-Meteo geocoding + a year of hourly
-   weather + `normaliseWeather` + Mongo cache); P1 has no real implementation and the route 422s
-   with `CUSTOM_LOCATION_UNAVAILABLE` (§6) when no `weatherFor` is wired up.
+   `weatherFor(location)` hook -- the preview route (`src/app.ts`) resolves it for real (Open-Meteo
+   archive falling back to NASA POWER, `normaliseWeather`, Mongo cache; §4's "Custom-location weather"
+   subsection) before calling `assemble()`, since the hook itself is synchronous but fetching is not. A
+   caller that invokes `assemble()` directly with no `weatherFor` still gets `CUSTOM_LOCATION_UNAVAILABLE`
+   (§6, 422) for a custom location -- that path is untouched, just no longer reachable through the route.
 2. `building.azimuth = design.azimuthDeg` (new step -- the engine applies the rotation itself,
    `packages/engine/src/solve/assemble.ts:121`; per-surface `azimuth` stays relative to south,
    unrotated).
@@ -145,12 +147,72 @@ Same nine steps as `apps/server/src/assemble.ts` (`apps/server/API.md` §4), wit
 interface PreviewResponse {
   kpis: SimulationKpis; // @shelter/engine
   result: ResultJson; // resultToJson(simulate(request)) -- see apps/server/API.md §4 for the full shape
+  weatherProvenance?: WeatherProvenanceSummary; // present iff location.kind === 'custom' (P3)
+}
+
+interface WeatherProvenanceSummary {
+  source: 'open-meteo' | 'nasa-power';
+  year: number; // reference year fetched, 2023 (matches `defaults.date`'s year)
+  notes: string[]; // disclosed assumptions: standardMeridian's derivation, groundAlbedo=0.2, plus
+  // normaliseWeather's own provenance.notes (gap-fills, derived DNI/DHI/LW_down, pressure) and, on a
+  // cache hit, a "served from weatherCache (no network call)" note
 }
 ```
 
 `ResultJson`'s shape (KPI keys, heat-flow pathway keys, units) is identical to `apps/server/API.md`
 §4's `ResultJson`/`SimulationKpis` tables -- not repeated here, that file is the source of truth for
 the engine-result wire shape shared by both servers.
+
+### Custom-location weather (P3, `src/weather/resolve.ts`)
+
+`location.kind==='custom'` is resolved BEFORE `assemble()` runs (the seam in `design/assemble.ts`,
+`WeatherFor`, is synchronous; fetching is not): the preview route calls `resolveCustomWeather(location)`
+first, then passes a plain sync closure over its result as `weatherFor`. Steps, for the fixed reference
+year **2023** (matches the bundled TMY / `defaults.date`):
+
+1. **Cache read** -- `weatherCache` Mongo model keyed by `{source, lat(2dp), lon(2dp), year}` (mongoose's
+   default connection; when nothing is connected, `mongoose.connection.readyState !== 1`, the cache is
+   skipped entirely and every call fetches fresh -- P2's DB-less tests and this route both keep working
+   with no Mongo running). A hit needs no network call at all.
+2. **Fetch** -- Open-Meteo archive (`@shelter/data`'s `openMeteoUrl`/`parseOpenMeteo`, frozen builders),
+   with `&timezone=auto` appended by this file (the frozen builder issues no `timezone` param, so the
+   response would otherwise be UTC with no offset to read -- `RawWeather.startHour` is documented as a
+   *local* clock hour, so this also fixes correctness, not just the offset). Falls back to NASA POWER
+   (`nasaPowerUrl`/`parseNasaPower`) on any Open-Meteo failure (network, non-2xx, parse, or
+   `normaliseWeather` validation). If both fail: throws, **no fallback to a preset site** (ledger rule --
+   weather values are never invented).
+3. **Normalise** -- `@shelter/data`'s `normaliseWeather` (gap-fill, Erbs DNI/DHI, Swinbank LW_down,
+   resample to 3600 s).
+4. **Site** -- `groundTempMeanAnnual` = the mean of the normalised year's `T_amb` (K); `standardMeridian`
+   = `utc_offset_seconds/3600*15` from Open-Meteo's response root (its own `timezone=auto` field), or, on
+   the NASA POWER fallback, the nearest 15° meridian to the longitude (NASA POWER's hourly endpoint
+   reports `time_standard: "LST"` -- Local Standard Time for that fixed-width zone, so its meridian is by
+   definition the nearest multiple of 15°); `groundAlbedo` = **0.2** (fixed assumption, disclosed in
+   `weatherProvenance.notes`, not measured).
+5. **Cache write** -- the normalised series + `standardMeridian` (upsert), so the second request for the
+   same rounded coordinate/year is a pure cache hit.
+
+`GET fetch` is global (Node 24), injected as `buildApp({ fetchImpl })` for tests -- no install.
+
+## 4b. `GET /api/locations/search?q=` (P3)
+
+Open-Meteo geocoding, no auth. `src/locations/routes.ts` (registered as a Fastify plugin) +
+`src/weather/geocode.ts`.
+
+```ts
+interface LocationSearchResult {
+  name: string;
+  country: string;
+  admin1?: string;
+  lat: number;
+  lon: number;
+  elevation: number; // m
+}
+```
+
+200 with `LocationSearchResult[]`, at most 8 (Open-Meteo's own `count` param). A blank/missing `q`
+returns `[]` with no upstream call. Upstream failure (network error or non-2xx) → 502
+`UPSTREAM_UNAVAILABLE`.
 
 ## 5. `src/providers/` — the simulation seam
 
@@ -180,7 +242,8 @@ interface ApiError {
 | Code                          | HTTP | Source                                                                 |
 | ------------------------------ | ---- | ----------------------------------------------------------------------- |
 | `VALIDATION_ERROR`             | 400  | `ShelterDesign` itself malformed (bad type, out-of-range, unknown id) — `field` names the offending dotted key, e.g. `"wallConstruction.thicknessM"` |
-| `CUSTOM_LOCATION_UNAVAILABLE`  | 422  | `location.kind==='custom'` and no `weatherFor` hook is wired up yet (P1; P3 closes this) |
+| `CUSTOM_LOCATION_UNAVAILABLE`  | 422  | `location.kind==='custom'` and no `weatherFor` hook is wired up (dead in practice since P3; kept for a caller that constructs `assemble()` directly with no `weatherFor`) |
+| `UPSTREAM_UNAVAILABLE`         | 502  | `GET /api/locations/search` or custom-location weather fetch: Open-Meteo (and, for weather, NASA POWER too) unreachable/non-2xx (P3) |
 | `INVALID_INPUT`                | 400  | engine: assembled `SimulationRequest` invalid                          |
 | `GEOMETRY_INCONSISTENT`        | 400  | engine                                                                  |
 | `WEATHER_INVALID`               | 422  | engine                                                                  |
@@ -270,6 +333,7 @@ interface SimulationSummary {
   engineVersion: string; // packages/engine/package.json's version at run time
   requestHash: string; // canonicalRequestHash(assembled request)
   inputSnapshot: ShelterDesign; // frozen deep copy
+  weatherProvenance?: { source: string; year: number; notes: string[] }; // custom locations only, same as preview
   kpis: SimulationKpis;
   createdAt: string; // ISO
 }
