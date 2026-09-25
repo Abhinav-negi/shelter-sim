@@ -6,9 +6,20 @@
 
 import { Edges } from '@react-three/drei';
 import { useMemo } from 'react';
-import { Color } from 'three';
 import type { Orientation, SceneGeometry, WallGeometry, WindowRect } from './geometry';
-import type { SceneColors } from './useThemeColors';
+
+// A fixed, theme-independent material palette — a real shelter's plaster and
+// timber don't change colour when someone toggles the app's UI theme. Only
+// the backdrop (background, ground, compass — ShelterViewer.tsx/Compass.tsx)
+// follows the design tokens so it harmonises with light/dark chrome; the
+// model itself always renders as this restrained, neutral daylight palette,
+// so it stays equally legible (and equally true to the physical design) in
+// either theme.
+const WALL_COLOR = '#d9d5c9';
+const ROOF_COLOR = '#a9a596';
+const FLOOR_COLOR = '#bdb8a9';
+const EDGE_COLOR = '#3a362c';
+const GLASS_COLOR = '#a9c3d6';
 
 interface Rect {
   uCenter: number;
@@ -52,17 +63,7 @@ const WALL_SIDE: Record<Orientation, { runAxis: 'x' | 'z'; sign: 1 | -1 }> = {
   W: { runAxis: 'z', sign: -1 },
 };
 
-function Wall({
-  geometry,
-  wall,
-  color,
-  edgeColor,
-}: {
-  geometry: SceneGeometry;
-  wall: WallGeometry;
-  color: string;
-  edgeColor: string;
-}) {
+function Wall({ geometry, wall }: { geometry: SceneGeometry; wall: WallGeometry }) {
   const { runAxis, sign } = WALL_SIDE[wall.orientation];
   const depthHalfExtent = runAxis === 'x' ? geometry.widthM / 2 : geometry.lengthM / 2;
   const outerFace = sign * depthHalfExtent;
@@ -85,8 +86,8 @@ function Wall({
         return (
           <mesh key={i} position={position} castShadow receiveShadow>
             <boxGeometry args={size} />
-            <meshStandardMaterial color={color} roughness={0.92} metalness={0} />
-            <Edges threshold={20} color={edgeColor} opacity={0.3} transparent linewidth={1} />
+            <meshStandardMaterial color={WALL_COLOR} roughness={0.92} metalness={0} />
+            <Edges threshold={20} color={EDGE_COLOR} opacity={0.35} transparent linewidth={1} />
           </mesh>
         );
       })}
@@ -106,7 +107,7 @@ function Wall({
             }
           />
           <meshPhysicalMaterial
-            color="#a9c3d6"
+            color={GLASS_COLOR}
             transparent
             opacity={0.35}
             roughness={0.05}
@@ -119,31 +120,17 @@ function Wall({
   );
 }
 
-function mix(a: string, b: string, t: number): string {
-  return new Color(a).lerp(new Color(b), t).getStyle();
-}
-
-export function Building({ geometry, colors }: { geometry: SceneGeometry; colors: SceneColors }) {
-  const wallColor = colors.surface;
-  const roofColor = useMemo(() => mix(colors.surface, colors.ink, 0.18), [colors.surface, colors.ink]);
-  const floorColor = useMemo(() => mix(colors.surface, colors.hairline, 0.5), [colors.surface, colors.hairline]);
-
+export function Building({ geometry }: { geometry: SceneGeometry }) {
   return (
     <group>
       {geometry.walls.map((wall) => (
-        <Wall
-          key={wall.orientation}
-          geometry={geometry}
-          wall={wall}
-          color={wallColor}
-          edgeColor={colors.ink}
-        />
+        <Wall key={wall.orientation} geometry={geometry} wall={wall} />
       ))}
 
       {/* Floor slab: top face at y=0, the walls' base. */}
       <mesh position={[0, -geometry.floorThicknessM / 2, 0]} receiveShadow>
         <boxGeometry args={[geometry.lengthM, geometry.floorThicknessM, geometry.widthM]} />
-        <meshStandardMaterial color={floorColor} roughness={0.95} />
+        <meshStandardMaterial color={FLOOR_COLOR} roughness={0.95} />
       </mesh>
 
       {/* Flat roof slab, flush with the wall footprint — no eaves, no roof type
@@ -155,8 +142,8 @@ export function Building({ geometry, colors }: { geometry: SceneGeometry; colors
         receiveShadow
       >
         <boxGeometry args={[geometry.lengthM, geometry.roofThicknessM, geometry.widthM]} />
-        <meshStandardMaterial color={roofColor} roughness={0.85} />
-        <Edges threshold={20} color={colors.ink} opacity={0.3} transparent linewidth={1} />
+        <meshStandardMaterial color={ROOF_COLOR} roughness={0.85} />
+        <Edges threshold={20} color={EDGE_COLOR} opacity={0.35} transparent linewidth={1} />
       </mesh>
     </group>
   );

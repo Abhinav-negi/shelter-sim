@@ -35,6 +35,18 @@ function resolveLatLon(design: ShelterDesign, options: Options): { lat: number; 
   return loc ? { lat: loc.latitude, lon: loc.longitude } : { lat: 34.1642, lon: 77.5771 };
 }
 
+// Fixed daylight colours for the sun/sky — deliberately NOT the paper/ink
+// design tokens. The tokens style the app chrome (background, ground,
+// materials) and correctly go near-black in dark mode; the *light sources*
+// model physical daylight, which doesn't get dark just because the UI theme
+// did. Conflating the two made the dark-theme render nearly black — the
+// "sun" was lighting the scene with near-black light. Only the backdrop
+// (background colour, ground, hairlines, wall/roof/floor materials) follows
+// the theme; illumination stays constant so the sun/hour controls (not the
+// theme toggle) are what changes how lit the scene looks.
+const SUN_COLOR = '#fff6e8';
+const SKY_COLOR = '#eef3f7';
+
 function Ground({ radius, color }: { radius: number; color: string }) {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
@@ -54,18 +66,20 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
   const sunDistance = footprint * 3;
   const sunUp = sunDir.y > 0.02; // sun above the horizon
   const shadowExtent = footprint * 1.2;
+  const groundRadius = footprint * 16;
+  const fogNear = footprint * 4;
+  const fogFar = footprint * 11;
 
   return (
     <>
       <color attach="background" args={[colors.paper]} />
-      <hemisphereLight
-        args={[colors.paper, colors.hairline, sunUp ? 0.55 : 0.3]}
-      />
-      <ambientLight intensity={sunUp ? 0.15 : 0.25} />
+      <fog attach="fog" args={[colors.paper, fogNear, fogFar]} />
+      <hemisphereLight args={[SKY_COLOR, colors.hairline, sunUp ? 0.65 : 0.35]} />
+      <ambientLight intensity={sunUp ? 0.2 : 0.3} />
       <directionalLight
         position={[sunDir.x * sunDistance, Math.max(sunDir.y, 0.05) * sunDistance, sunDir.z * sunDistance]}
-        intensity={sunUp ? 1.6 : 0.1}
-        color={colors.paper}
+        intensity={sunUp ? 1.9 : 0.15}
+        color={SUN_COLOR}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-shadowExtent}
@@ -77,11 +91,11 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
         shadow-bias={-0.0015}
       />
 
-      <Ground radius={footprint * 6} color={colors.surface} />
+      <Ground radius={groundRadius} color={colors.surface} />
       <Compass geometry={geometry} colors={colors} />
 
       <group rotation={[0, geometry.rotationY, 0]}>
-        <Building geometry={geometry} colors={colors} />
+        <Building geometry={geometry} />
       </group>
 
       <OrbitControls
@@ -102,14 +116,14 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
  *  preview route) decides where `design`/`options`/`hour` come from. */
 export function ShelterViewer({ design, options, hour }: ShelterViewerProps) {
   const footprint = Math.max(design.lengthM, design.widthM);
-  const camDist = footprint * 1.4;
+  const camDist = footprint * 2.1;
 
   return (
     <Canvas
       frameloop="demand"
-      shadows
+      shadows="percentage"
       dpr={[1, 2]}
-      camera={{ position: [camDist, camDist * 0.75, camDist * 1.15], fov: 32, near: 0.1, far: footprint * 40 }}
+      camera={{ position: [camDist, camDist * 0.62, camDist * 1.05], fov: 28, near: 0.1, far: footprint * 60 }}
     >
       <Scene design={design} options={options} hour={hour} />
     </Canvas>

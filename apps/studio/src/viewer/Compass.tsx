@@ -4,38 +4,65 @@
 // `geometry` only to place itself just outside the current footprint, never
 // to rotate itself. World frame: +Z = South, so north is -Z (see
 // geometry.ts's header for the full convention).
+//
+// The "N" is built from three thin boxes (a block glyph), not text — no
+// font/DOM dependency (drei's Text needs a network font fetch by default;
+// Html needs the DOM layer positioned just right) — wrapped in a drei
+// <Billboard> so it stays legible from any orbit angle.
 
-import { Html } from '@react-three/drei';
+import { Billboard } from '@react-three/drei';
+import { DoubleSide } from 'three';
 import type { SceneGeometry } from './geometry';
 import type { SceneColors } from './useThemeColors';
 
-export function Compass({ geometry, colors }: { geometry: SceneGeometry; colors: SceneColors }) {
-  const margin = 1.5;
-  const eastX = geometry.lengthM / 2 + margin;
+function NGlyph({ color }: { color: string }) {
+  const h = 0.5;
+  const w = 0.32;
+  const stroke = 0.07;
+  const diagLength = Math.hypot(w, h);
+  const diagAngle = Math.atan2(-h, w);
 
   return (
-    <group position={[eastX, 0.01, 0]}>
-      {/* Needle pointing to true north. */}
-      <mesh position={[0, 0, -0.5]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[0.03, 1]} />
-        <meshBasicMaterial color={colors.inkMuted} />
+    <group>
+      <mesh position={[-w / 2, 0, 0]}>
+        <boxGeometry args={[stroke, h, stroke]} />
+        <meshBasicMaterial color={color} />
       </mesh>
-      <mesh position={[0, 0, -1]} rotation={[-Math.PI / 2, 0, Math.PI]}>
-        <coneGeometry args={[0.09, 0.22, 3]} />
-        <meshBasicMaterial color={colors.ink} />
+      <mesh position={[w / 2, 0, 0]}>
+        <boxGeometry args={[stroke, h, stroke]} />
+        <meshBasicMaterial color={color} />
       </mesh>
-      <Html position={[0, 0, -1.35]} center transform={false} style={{ pointerEvents: 'none' }}>
-        <span
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 11,
-            letterSpacing: '0.08em',
-            color: colors.ink,
-          }}
-        >
-          N
-        </span>
-      </Html>
+      <mesh rotation={[0, 0, diagAngle]}>
+        <boxGeometry args={[diagLength, stroke, stroke]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+    </group>
+  );
+}
+
+export function Compass({ geometry, colors }: { geometry: SceneGeometry; colors: SceneColors }) {
+  const margin = 1.5;
+  const anchorX = geometry.lengthM / 2 + margin;
+  const needleLength = Math.max(1.2, Math.min(geometry.lengthM, geometry.widthM) * 0.35);
+
+  return (
+    <group position={[anchorX, 0.02, 0]}>
+      {/* A flat ring on the ground, and a needle pointing to true north (-Z). */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[needleLength * 0.96, needleLength, 48]} />
+        <meshBasicMaterial color={colors.inkMuted} transparent opacity={0.5} side={DoubleSide} />
+      </mesh>
+      <mesh position={[0, 0, -needleLength / 2]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.04, needleLength]} />
+        <meshBasicMaterial color={colors.accent} />
+      </mesh>
+      <mesh position={[0, 0, -needleLength]} rotation={[-Math.PI / 2, 0, Math.PI]}>
+        <coneGeometry args={[0.16, 0.4, 3]} />
+        <meshBasicMaterial color={colors.accent} />
+      </mesh>
+      <Billboard position={[0, 0.6, -needleLength]}>
+        <NGlyph color={colors.accent} />
+      </Billboard>
     </group>
   );
 }
