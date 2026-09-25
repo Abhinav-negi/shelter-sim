@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-thermal-coldest: var(--thermal-coldest);
+  --color-thermal-cold: var(--thermal-cold);
+  --color-thermal-neutral: var(--thermal-neutral);
+  --color-thermal-warm: var(--thermal-warm);
+  --color-thermal-hottest: var(--thermal-hottest);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--radius-sm);
+  --radius-DEFAULT: var(--radius);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  border-color: var(--hairline);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+/* Slider primitive — restyle the native range input to a hairline track + small thumb. */
+.shelter-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 1px;
+  background: var(--hairline);
+  border-radius: 0;
+}
+.shelter-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  margin-top: 0;
+}
+.shelter-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+.shelter-slider::-moz-range-track {
+  height: 1px;
+  background: var(--hairline);
+}
+.shelter-slider:disabled::-webkit-slider-thumb {
+  background: var(--ink-muted);
+}
