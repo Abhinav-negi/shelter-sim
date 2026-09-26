@@ -14,7 +14,8 @@ May: `apps/studio/src/viewer/**` (no `ShelterViewer` prop changes). Must not: an
 
 ## Conditions
 1. Studio page screenshots at 1440×900 and 390×844, light and dark: building, full compass (incl. "N") and sun line in
-   frame at load. Also /dev/viewer at 1280×800 looks unchanged from F2b.
+   frame at load. Also the Landing hero (`/`) at 1440 and 390: at 390 the building is currently cropped on both sides. /dev/viewer at
+   1280×800 looks unchanged from F2b.
 2. A pure, tested framing function (distance from footprint + aspect + fov).
 3. Build clean, tests pass, no new console warnings.
 
