@@ -28,6 +28,16 @@ function kpis(overrides: Partial<SimulationKpis>): SimulationKpis {
 }
 
 describe('buildKpiTable', () => {
+  it('never prints a negative zero (value or delta)', () => {
+    const rows = buildKpiTable([
+      { id: 'a', name: 'A', kpis: kpis({ minIndoorTemp: K(273.14) }) }, // -0.01 °C
+      { id: 'b', name: 'B', kpis: kpis({ minIndoorTemp: K(273.12) }) }, // delta -0.02
+    ]);
+    const min = rows.find((r) => r.label === 'Min indoor')!;
+    expect(min.cells[0]!.value).toBe('0.0');
+    expect(min.cells[1]!.delta).toBe('0.0');
+  });
+
   const baseline: CompareDesign = { id: 'a', name: 'Baseline', kpis: kpis({}) };
   const warmer: CompareDesign = {
     id: 'b',

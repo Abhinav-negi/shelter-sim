@@ -55,11 +55,18 @@ function rawValue(kpis: SimulationKpis, def: KpiDef): number {
   return def.kelvin ? kToC(v) : v;
 }
 
+/** Round first, then fold -0 to 0 (`-0 || 0` is 0), so a value that rounds to
+ *  zero never prints "-0.0" (same rule as results/format.ts's `fmtC`). */
+function fixed(n: number, decimals: number): number {
+  return Number(n.toFixed(decimals)) || 0;
+}
+
 /** Explicit "+"/"-" sign, never a bare positive number, so a delta always
  * reads as a delta and not an absolute value at a glance. */
 function fmtDelta(n: number, decimals: number): string {
-  const s = n.toFixed(decimals);
-  return n > 0 ? `+${s}` : s;
+  const r = fixed(n, decimals);
+  const s = r.toFixed(decimals);
+  return r > 0 ? `+${s}` : s;
 }
 
 /** designs[0] is the baseline every delta is computed against — never a
@@ -72,7 +79,7 @@ export function buildKpiTable(designs: CompareDesign[]): KpiTableRow[] {
       label: def.label,
       unit: def.unit,
       cells: values.map((v, i) => ({
-        value: v.toFixed(def.decimals),
+        value: fixed(v, def.decimals).toFixed(def.decimals),
         delta: i === 0 ? null : fmtDelta(v - baseline, def.decimals),
       })),
     };
