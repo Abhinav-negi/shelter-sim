@@ -1,5 +1,35 @@
 # HANDOFF archive (newest first)
 
+## HANDOFF (2026-09-26, end of session 3 — Studio v2 partly built)
+
+**Phase:** Studio v2 (plan `ledger/V2.md`, batches `ORCHESTRATOR.md` §10). The user asked to wrap up after batch 3.
+
+**Merged into `studio/main` this session (each verified per ORCHESTRATOR.md §7; see each task file's "Orchestrator
+review"):** G1 typed numeric entry (+ orchestrator fixes: arrows commit, round-before-clamp, float noise), G2 shape
+contract + server facets (box/cylinder/dome, 1–2 storeys single-zone), G3 shapes in viewer + Geometry controls
+(+ per-storey Height hint), G5 landing redesign (+ theme-restore bug fix). Suites on `studio/main`: studio-server
+69 (+2 skipped), studio 103. Frozen guard empty.
+
+**In progress — NOT merged:** **G4** select-to-edit, worktree `../wt-g4`, branch `task/g4` (tip `fe2c8f6`). Its agent
+hit the Sonnet rate limit mid-task. Tests 114/114 pass there, but **the build fails** (`ShelterViewer.tsx:132`, `size`
+used before declaration, from a half-done QA-hook edit). Branch predates G5 → rebase and hand-merge
+`ShelterViewer.tsx` (keep both `autoRotate` and `interactive` props). Full state + resume steps: `ledger/tasks/G4.md`
+§Evidence "State at cut-off".
+
+**Blocked:** nothing. **Servers:** none started by the orchestrator are running; :4100/:5273 are the user's own.
+
+**Session 4 (in progress):** G4 rebased + build fixed by the orchestrator; verification agent launched. **User: last task of
+the day — finish G4, start nothing new, then wrap up.**
+
+**Recommended next step:** (1) re-brief a Sonnet agent on G4 in `../wt-g4` per its task file's resume note, verify,
+merge; (2) Q2 (E2E + visual QA) — include the G5 follow-up (at 1440 the landing headline runs across the building;
+offset the model right); (3) D1 architecture map (orchestrator + Explore agent).
+
+**Known follow-ups (carried):** Dashboard/Compare N+1 `GET .../simulations`; duplicated KPI labels
+(`routes/compare/kpiTable.ts` vs `results/Kpis.tsx`); sun line leaves the frame; engine tests rewrite
+`packages/engine/test/output/validation-numbers.csv` (`git checkout` it before the frozen guard). Two-storey slab
+constants (0.15 m, 8 W/m²K) are documented assumptions (API.md §3c).
+
 ## HANDOFF (2026-09-26, end of session 2)
 
 **All tasks DONE and merged into `studio/main`** (each verified by the orchestrator per ORCHESTRATOR.md §7: tests,
