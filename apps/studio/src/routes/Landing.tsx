@@ -105,9 +105,16 @@ export function Landing() {
 
   return (
     <>
-      <section className="relative h-[64vh] min-h-[420px] w-full overflow-hidden border-b border-hairline bg-surface">
-        <div className="absolute inset-0">{options ? <HeroViewer options={options} /> : null}</div>
-        <div className="relative z-10 flex h-full flex-col justify-end px-4 pb-8 sm:px-6 sm:pb-12">
+      {/* Below `sm` (Q1F #1): the text panel used to overlay the hero at a
+       * height driven by wrapped copy, covering all but a sliver of the
+       * building at 390px. Stack instead — viewer gets its own box, panel
+       * sits below it in normal flow. At `sm`+ nothing changes: the panel's
+       * fixed max-width and shorter wrap leave the building visible under it. */}
+      <section className="relative w-full overflow-hidden border-b border-hairline bg-surface sm:h-[64vh] sm:min-h-[420px]">
+        <div className="h-[50vh] min-h-[320px] w-full sm:absolute sm:inset-0 sm:h-full sm:min-h-0">
+          {options ? <HeroViewer options={options} /> : null}
+        </div>
+        <div className="relative z-10 flex flex-col justify-end px-4 pt-6 pb-8 sm:absolute sm:inset-0 sm:h-full sm:px-6 sm:pt-0 sm:pb-12">
           <div className="max-w-xl border border-hairline bg-paper px-5 py-6 sm:px-7 sm:py-8">
             <p className="font-mono text-xs tracking-widest text-ink-muted uppercase">
               ShelterSim Studio
