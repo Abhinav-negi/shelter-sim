@@ -243,7 +243,7 @@ export function Compare() {
                     <h2 className="mb-3 text-xs font-medium uppercase tracking-wide text-ink-muted">
                       Key figures (Δ vs {readyDesigns[0]!.name})
                     </h2>
-                    <table className="w-full min-w-[420px] border-collapse text-sm">
+                    <table className="w-full border-collapse text-sm">
                       <thead>
                         <tr className="border-b border-hairline text-left">
                           <th className="py-2 pr-4 text-xs font-medium uppercase tracking-wide text-ink-muted">
