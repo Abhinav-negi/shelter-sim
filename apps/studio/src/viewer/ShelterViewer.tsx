@@ -9,13 +9,15 @@
 
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Color } from 'three';
 import type { Options, ShelterDesign } from '@shelter/studio-server';
+import { useSelection } from '../design/selection';
 import { Building } from './Building';
 import { Compass } from './Compass';
 import { CAMERA_FOV_DEG, cameraDistance } from './framing';
 import { buildSceneGeometry } from './geometry';
+import { PartPopover } from './PartPopover';
 import { sunDirection } from './solar';
 import { Sun } from './Sun';
 import { useThemeColors } from './useThemeColors';
@@ -32,6 +34,10 @@ export interface ShelterViewerProps {
    *  its *auto*-rotation needs a frame pumped every tick, which `RotatePump`
    *  below provides only while this prop is on. */
   autoRotate?: boolean;
+  /** G4: enables hover/click part selection + the PartPopover (condition 2:
+   *  "Viewer on Landing/Compare stays non-interactive"). Default off, so
+   *  every existing non-Studio caller is unaffected. */
+  interactive?: boolean;
 }
 
 /** Keeps `frameloop="demand"` rendering while `autoRotate` is on -- mounted
@@ -77,11 +83,32 @@ function Ground({ radius, color }: { radius: number; color: string }) {
   );
 }
 
-function Scene({ design, options, hour, autoRotate = false }: ShelterViewerProps) {
+function Scene({ design, options, hour, autoRotate = false, interactive = false }: ShelterViewerProps) {
   const colors = useThemeColors();
   const geometry = useMemo(() => buildSceneGeometry(design, options), [design, options]);
   const { lat, lon } = useMemo(() => resolveLatLon(design, options), [design, options]);
   const sunDir = useMemo(() => sunDirection(lat, lon, design.date, hour), [lat, lon, design.date, hour]);
+
+  // G4 (condition 2): cursor becomes a pointer while hovering a selectable
+  // part. Imperative DOM style, not a Canvas/R3F prop — no `invalidate()`
+  // needed, it doesn't touch the three.js scene.
+  const hoveredPart = useSelection((s) => (interactive ? s.hoveredPart : null));
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    gl.domElement.style.cursor = hoveredPart ? 'pointer' : 'auto';
+  }, [gl, hoveredPart]);
+
+  // G4 (condition 2): Esc clears the selection. Click-on-empty-space is
+  // handled by Canvas's `onPointerMissed` below (ShelterViewer itself).
+  const clearSelection = useSelection((s) => s.clearSelection);
+  useEffect(() => {
+    if (!interactive) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') clearSelection();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [interactive, clearSelection]);
 
   // G3: `buildingHeightM` is the real envelope height (dome=radius, 2
   // storeys=2h, condition 3 "fits the camera to the real bounding box") —
@@ -148,7 +175,8 @@ function Scene({ design, options, hour, autoRotate = false }: ShelterViewerProps
       {sunUp && <Sun direction={sunDir} radius={sunDistance} center={buildingCenter} color={sunColor} />}
 
       <group rotation={[0, geometry.rotationY, 0]}>
-        <Building geometry={geometry} />
+        <Building geometry={geometry} interactive={interactive} accent={colors.accent} />
+        {interactive && <PartPopover geometry={geometry} design={design} options={options} />}
       </group>
 
       <OrbitControls
@@ -169,11 +197,19 @@ function Scene({ design, options, hour, autoRotate = false }: ShelterViewerProps
 
 /** A view-only R3F scene of the current ShelterDesign. Pure props in, no
  *  store coupling — the caller (e.g. F3's Studio page, or the /dev/viewer
- *  preview route) decides where `design`/`options`/`hour` come from. */
-export function ShelterViewer({ design, options, hour, autoRotate = false }: ShelterViewerProps) {
+  *  preview route) decides where `design`/`options`/`hour` come from.
+  *  `autoRotate` (G5, landing hero) and `interactive` (G4, Studio selection)
+  *  are both optional and default off. */
+export function ShelterViewer({ design, options, hour, autoRotate = false, interactive = false }: ShelterViewerProps) {
+  const clearSelection = useSelection((s) => s.clearSelection);
   return (
-    <Canvas frameloop="demand" shadows="percentage" dpr={[1, 2]}>
-      <Scene design={design} options={options} hour={hour} autoRotate={autoRotate} />
+    <Canvas
+      frameloop="demand"
+      shadows="percentage"
+      dpr={[1, 2]}
+      {...(interactive ? { onPointerMissed: () => clearSelection() } : {})}
+    >
+      <Scene design={design} options={options} hour={hour} autoRotate={autoRotate} interactive={interactive} />
     </Canvas>
   );
 }
