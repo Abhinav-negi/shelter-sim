@@ -4,7 +4,7 @@ export type Theme = 'system' | 'light' | 'dark';
 
 const STORAGE_KEY = 'shelter-theme';
 
-function readStoredTheme(): Theme {
+export function readStoredTheme(): Theme {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
