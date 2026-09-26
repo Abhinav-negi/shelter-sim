@@ -18,8 +18,11 @@ session died: check each worktree's `git log studio/main..` and task-file Eviden
 (ORCHESTRATOR.md §7). Merging a task branch conflicts on its STUDIO.md row (expected): keep studio/main's side,
 replace only that row.
 
-**Recommended next step:** verify + merge G4 and G5 (merge one, then rebase-merge the other, resolving
-`ShelterViewer.tsx` by hand), then Q2 (E2E + visual QA), then D1 (architecture map).
+**User instruction (session 3):** wrap up after batch 3 — verify + merge G4 and G5, start NOTHING new this session.
+
+**Recommended next step (next session):** if G4/G5 are not yet merged, verify + merge them first (merge one, then the
+other, resolving `ShelterViewer.tsx` by hand — both add one optional prop). Then Q2 (E2E + visual QA), then D1
+(architecture map), per ORCHESTRATOR.md §10.
 
 ## Decisions (approved by user unless marked "orchestrator")
 1. New apps `apps/studio` + `apps/studio-server` (orchestrator: naming). Old apps and `packages/*` frozen.
