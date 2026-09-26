@@ -4,6 +4,8 @@ export { FieldRow } from './FieldRow';
 export type { FieldRowProps } from './FieldRow';
 export { Input } from './Input';
 export type { InputProps } from './Input';
+export { NumberInput } from './NumberInput';
+export type { NumberInputProps } from './NumberInput';
 export { Segmented } from './Segmented';
 export type { SegmentedProps } from './Segmented';
 export { Select } from './Select';
