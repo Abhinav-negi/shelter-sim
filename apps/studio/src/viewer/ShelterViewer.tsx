@@ -8,7 +8,7 @@
 // (F2.md condition 4).
 
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { Color } from 'three';
 import type { Options, ShelterDesign } from '@shelter/studio-server';
@@ -25,6 +25,20 @@ export interface ShelterViewerProps {
   options: Options;
   /** Local clock hour (0-24) for the sun-direction calculation. */
   hour: number;
+  /** G5 (landing hero): slow, continuous orbit. Default false — every other
+   *  caller (Studio, DevViewer) is unaffected. `frameloop="demand"` only
+   *  renders when something invalidates the frame; drei's OrbitControls
+   *  handles that for pointer-driven orbiting on its own 'change' event, but
+   *  its *auto*-rotation needs a frame pumped every tick, which `RotatePump`
+   *  below provides only while this prop is on. */
+  autoRotate?: boolean;
+}
+
+/** Keeps `frameloop="demand"` rendering while `autoRotate` is on -- mounted
+ *  only in that case, so it changes nothing when the prop is off/absent. */
+function RotatePump() {
+  useFrame(({ invalidate }) => invalidate());
+  return null;
 }
 
 function resolveLatLon(design: ShelterDesign, options: Options): { lat: number; lon: number } {
@@ -63,7 +77,7 @@ function Ground({ radius, color }: { radius: number; color: string }) {
   );
 }
 
-function Scene({ design, options, hour }: ShelterViewerProps) {
+function Scene({ design, options, hour, autoRotate = false }: ShelterViewerProps) {
   const colors = useThemeColors();
   const geometry = useMemo(() => buildSceneGeometry(design, options), [design, options]);
   const { lat, lon } = useMemo(() => resolveLatLon(design, options), [design, options]);
@@ -145,7 +159,10 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
         minPolarAngle={0.15}
         maxPolarAngle={Math.PI / 2 - 0.02}
         enableDamping={false}
+        autoRotate={autoRotate}
+        autoRotateSpeed={0.4}
       />
+      {autoRotate && <RotatePump />}
     </>
   );
 }
@@ -153,10 +170,10 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
 /** A view-only R3F scene of the current ShelterDesign. Pure props in, no
  *  store coupling — the caller (e.g. F3's Studio page, or the /dev/viewer
  *  preview route) decides where `design`/`options`/`hour` come from. */
-export function ShelterViewer({ design, options, hour }: ShelterViewerProps) {
+export function ShelterViewer({ design, options, hour, autoRotate = false }: ShelterViewerProps) {
   return (
     <Canvas frameloop="demand" shadows="percentage" dpr={[1, 2]}>
-      <Scene design={design} options={options} hour={hour} />
+      <Scene design={design} options={options} hour={hour} autoRotate={autoRotate} />
     </Canvas>
   );
 }
