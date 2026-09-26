@@ -3,6 +3,7 @@
 // spirit as viewer/useThemeColors.ts's own native-API approach.
 
 import { useEffect, useRef, useState, type RefObject } from 'react';
+import { readStoredTheme } from '../../lib/theme';
 
 /** Tracks `prefers-reduced-motion`, live (a user can flip it while the tab is
  *  open). Every G5 motion — hero auto-rotate, the dawn->dusk sun sweep, the
@@ -95,11 +96,14 @@ export function useAnimatedHour(active: boolean, from: number, to: number, cycle
 export function useForceDarkTokens(ref: RefObject<HTMLElement | null>): void {
   useEffect(() => {
     const root = document.documentElement;
-    const previous = root.getAttribute('data-theme');
     const apply = () => root.setAttribute('data-theme', 'dark');
+    // Restore the user's SAVED preference, not a mount-time snapshot: the theme
+    // toggle sits in the header, visible alongside the hero, so a snapshot would
+    // silently undo a choice made while the hero is in view (orchestrator fix).
     const restore = () => {
-      if (previous === null) root.removeAttribute('data-theme');
-      else root.setAttribute('data-theme', previous);
+      const theme = readStoredTheme();
+      if (theme === 'system') root.removeAttribute('data-theme');
+      else root.setAttribute('data-theme', theme);
     };
 
     apply(); // assume visible at mount — the hero is the top of the page
