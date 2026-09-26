@@ -7,13 +7,14 @@
 // its own 'change' event, so no manual `invalidate()` calls are needed here
 // (F2.md condition 4).
 
-import { OrbitControls } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { Canvas, useThree } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { Color } from 'three';
 import type { Options, ShelterDesign } from '@shelter/studio-server';
 import { Building } from './Building';
 import { Compass } from './Compass';
+import { CAMERA_FOV_DEG, cameraDistance } from './framing';
 import { buildSceneGeometry } from './geometry';
 import { sunDirection } from './solar';
 import { Sun } from './Sun';
@@ -75,6 +76,17 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
   const groundRadius = footprint * 16;
   const fogNear = footprint * 4;
   const fogFar = footprint * 11;
+
+  // Camera framing (F2c): reacts to the *canvas's own* aspect (its size in
+  // CSS px, not the window's — the Studio page's centre pane is near-square
+  // even at a wide viewport), not just the building's footprint — see
+  // framing.ts's header for why. `cameraFootprint` intentionally excludes
+  // height (matches F2/F2b's original `Math.max(design.lengthM, design.widthM)`
+  // — a tall+thin design shouldn't zoom the camera out further than before).
+  const size = useThree((s) => s.size);
+  const aspect = size.width / size.height;
+  const cameraFootprint = Math.max(geometry.lengthM, geometry.widthM);
+  const camDist = cameraDistance(cameraFootprint, aspect);
   // Lift the ground a step toward the (lighter) hairline token: on its own,
   // dark-theme `surface` is dark enough that the shadow disappears into it
   // (review: "the ground is pure black so the shadow disappears"). A small,
@@ -87,6 +99,13 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
 
   return (
     <>
+      <PerspectiveCamera
+        makeDefault
+        position={[camDist, camDist * 0.62, camDist * 1.05]}
+        fov={CAMERA_FOV_DEG}
+        near={0.1}
+        far={cameraFootprint * 60}
+      />
       <color attach="background" args={[colors.paper]} />
       <fog attach="fog" args={[colors.paper, fogNear, fogFar]} />
       <hemisphereLight args={[SKY_COLOR, colors.hairline, sunUp ? 0.65 : 0.35]} />
@@ -131,16 +150,8 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
  *  store coupling — the caller (e.g. F3's Studio page, or the /dev/viewer
  *  preview route) decides where `design`/`options`/`hour` come from. */
 export function ShelterViewer({ design, options, hour }: ShelterViewerProps) {
-  const footprint = Math.max(design.lengthM, design.widthM);
-  const camDist = footprint * 2.1;
-
   return (
-    <Canvas
-      frameloop="demand"
-      shadows="percentage"
-      dpr={[1, 2]}
-      camera={{ position: [camDist, camDist * 0.62, camDist * 1.05], fov: 28, near: 0.1, far: footprint * 60 }}
-    >
+    <Canvas frameloop="demand" shadows="percentage" dpr={[1, 2]}>
       <Scene design={design} options={options} hour={hour} />
     </Canvas>
   );
