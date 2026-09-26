@@ -5,6 +5,10 @@
    on <html> (see src/lib/theme.ts). PLAN.md §Design system is the source of truth. */
 
 :root {
+  /* Q1F #2: tells native controls (checkboxes, date input, selects) to use
+     the browser's dark UA palette instead of always defaulting to light. */
+  color-scheme: light;
+
   /* Neutrals (light) */
   --paper: #f6f5f2;
   --surface: #efeeea;
@@ -52,6 +56,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
+    color-scheme: dark;
+
     --paper: #16181b;
     --surface: #1c1f23;
     --ink: #edece7;
@@ -71,6 +77,8 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
+
   --paper: #16181b;
   --surface: #1c1f23;
   --ink: #edece7;

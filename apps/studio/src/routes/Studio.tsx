@@ -146,7 +146,37 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
   }
 
   if (loading || !design) {
-    return <p className="px-6 py-8 text-sm text-ink-muted">Loading design…</p>;
+    // Q1F #3: keep the page frame (header row + three-pane layout) so the
+    // fetch doesn't read as a near-blank/broken page; only the pane bodies
+    // swap for calm placeholders. Real stage text, matching the Suspense
+    // fallbacks already used below ("Loading viewer…"/"Loading results…") —
+    // no fake progress bar.
+    return (
+      <div className="flex h-[calc(100dvh-56px)] flex-col overflow-hidden">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-4 py-2.5 sm:px-6">
+          <span className="min-w-0 basis-full text-sm font-medium text-ink-muted sm:basis-auto sm:flex-1">
+            Loading design…
+          </span>
+          <Button variant="secondary" disabled>
+            Save design
+          </Button>
+          <Button variant="primary" disabled>
+            Save run
+          </Button>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+          <div className="flex h-[45vh] shrink-0 items-center justify-center text-sm text-ink-muted lg:order-2 lg:h-auto lg:min-h-0 lg:flex-1">
+            Loading viewer…
+          </div>
+          <aside className="shrink-0 border-hairline px-4 py-6 text-xs text-ink-muted lg:order-1 lg:w-85 lg:overflow-y-auto lg:border-r">
+            Loading controls…
+          </aside>
+          <aside className="shrink-0 border-hairline px-4 py-6 text-xs text-ink-muted lg:order-3 lg:w-95 lg:overflow-y-auto lg:border-l">
+            Loading results…
+          </aside>
+        </div>
+      </div>
+    );
   }
   if (loadError) {
     return (
