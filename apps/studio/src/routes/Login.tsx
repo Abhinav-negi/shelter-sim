@@ -4,11 +4,16 @@ import { login } from '../api/auth';
 import { ApiError } from '../api/client';
 import { Button, FieldRow, Input } from '../components/ui';
 
+interface FieldError {
+  field?: string | undefined;
+  message: string;
+}
+
 export function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FieldError | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent) {
@@ -19,7 +24,11 @@ export function Login() {
       await login(email, password);
       navigate('/app');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Something went wrong. Try again.');
+      setError(
+        err instanceof ApiError
+          ? { field: err.field, message: err.message }
+          : { message: 'Something went wrong. Try again.' },
+      );
     } finally {
       setLoading(false);
     }
@@ -31,7 +40,7 @@ export function Login() {
       <p className="mt-1 text-sm text-ink-muted">Continue to your shelters.</p>
 
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5" noValidate>
-        <FieldRow label="Email" htmlFor="email">
+        <FieldRow label="Email" htmlFor="email" error={error?.field === 'email' ? error.message : undefined}>
           <Input
             id="email"
             type="email"
@@ -41,7 +50,11 @@ export function Login() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </FieldRow>
-        <FieldRow label="Password" htmlFor="password" error={error ?? undefined}>
+        <FieldRow
+          label="Password"
+          htmlFor="password"
+          error={error?.field === 'password' ? error.message : undefined}
+        >
           <Input
             id="password"
             type="password"
@@ -51,6 +64,7 @@ export function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </FieldRow>
+        {error && !error.field ? <p className="text-xs text-thermal-hottest">{error.message}</p> : null}
         <Button type="submit" disabled={loading}>
           {loading ? 'Logging in…' : 'Log in'}
         </Button>
