@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Lightbulb } from 'lucide-react'
-import type { DesignInput, Options } from '@/api'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { STEPS, Stepper } from './Stepper'
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight, Lightbulb } from 'lucide-react';
+import type { DesignInput, Options } from '@/api';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { STEPS, Stepper } from './Stepper';
 import {
   HEIGHT_RANGE,
   LENGTH_RANGE,
@@ -14,7 +14,7 @@ import {
   Step4Review,
   WIDTH_RANGE,
   WWR_RANGE,
-} from './steps'
+} from './steps';
 
 /**
  * PROP CONTRACT — do not change without updating App.tsx's usage.
@@ -22,20 +22,20 @@ import {
  * App.tsx owns the state and persists it to localStorage. `onRun` fires simulate().
  */
 export interface WizardProps {
-  options: Options
-  value: DesignInput
-  onChange: (value: DesignInput) => void
-  onRun: () => void
-  running: boolean
-  error: string | null
+  options: Options;
+  value: DesignInput;
+  onChange: (value: DesignInput) => void;
+  onRun: () => void;
+  running: boolean;
+  error: string | null;
   /** Step to open on mount (0-indexed into STEPS). Defaults to 0 (Location); App.tsx passes
    *  the Review step (3) when re-entering the wizard via "Modify design" so the previously
    *  reviewed design and its Edit links are immediately usable, not buried three Next clicks away. */
-  initialStep?: number
+  initialStep?: number;
 }
 
 function inRange(n: number, range: { min: number; max: number }) {
-  return n >= range.min && n <= range.max
+  return n >= range.min && n <= range.max;
 }
 
 function isStep1Valid(value: DesignInput, options: Options) {
@@ -43,7 +43,7 @@ function isStep1Valid(value: DesignInput, options: Options) {
     options.locations.some((l) => l.id === value.locationId) &&
     /^2023-\d{2}-\d{2}$/.test(value.date) &&
     !Number.isNaN(new Date(value.date).getTime())
-  )
+  );
 }
 
 function isStep2Valid(value: DesignInput, options: Options) {
@@ -53,42 +53,51 @@ function isStep2Valid(value: DesignInput, options: Options) {
     inRange(value.widthM, WIDTH_RANGE) &&
     inRange(value.heightM, HEIGHT_RANGE) &&
     options.occupancyPresets.some((o) => o.id === value.occupancyPresetId)
-  )
+  );
 }
 
 function isStep3Valid(value: DesignInput, options: Options) {
-  const materialOk = (id: string | null) => id === null || options.materials.some((m) => m.id === id)
+  const materialOk = (id: string | null) =>
+    id === null || options.materials.some((m) => m.id === id);
   return (
     options.glazings.some((g) => g.id === value.glazingId) &&
     materialOk(value.wallMaterialId) &&
     materialOk(value.roofMaterialId) &&
     materialOk(value.floorMaterialId) &&
     (['S', 'E', 'W', 'N'] as const).every((k) => inRange(value.windowWwr[k], WWR_RANGE))
-  )
+  );
 }
 
 function isStepValid(step: number, value: DesignInput, options: Options) {
-  if (step === 0) return isStep1Valid(value, options)
-  if (step === 1) return isStep2Valid(value, options)
-  if (step === 2) return isStep3Valid(value, options)
-  return true
+  if (step === 0) return isStep1Valid(value, options);
+  if (step === 1) return isStep2Valid(value, options);
+  if (step === 2) return isStep3Valid(value, options);
+  return true;
 }
 
-export function Wizard({ options, value, onChange, onRun, running, error, initialStep = 0 }: WizardProps) {
-  const [step, setStep] = useState(initialStep)
-  const [maxReached, setMaxReached] = useState(initialStep)
+export function Wizard({
+  options,
+  value,
+  onChange,
+  onRun,
+  running,
+  error,
+  initialStep = 0,
+}: WizardProps) {
+  const [step, setStep] = useState(initialStep);
+  const [maxReached, setMaxReached] = useState(initialStep);
 
-  const meta = STEPS[step]
-  const valid = isStepValid(step, value, options)
+  const meta = STEPS[step];
+  const valid = isStepValid(step, value, options);
 
-  const goTo = (i: number) => setStep(i)
+  const goTo = (i: number) => setStep(i);
   const next = () => {
-    if (!valid || step >= STEPS.length - 1) return
-    const nextStep = step + 1
-    setStep(nextStep)
-    setMaxReached((m) => Math.max(m, nextStep))
-  }
-  const back = () => setStep((s) => Math.max(0, s - 1))
+    if (!valid || step >= STEPS.length - 1) return;
+    const nextStep = step + 1;
+    setStep(nextStep);
+    setMaxReached((m) => Math.max(m, nextStep));
+  };
+  const back = () => setStep((s) => Math.max(0, s - 1));
 
   return (
     <Card>
@@ -136,5 +145,5 @@ export function Wizard({ options, value, onChange, onRun, running, error, initia
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

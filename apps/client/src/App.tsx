@@ -1,15 +1,15 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { AlertTriangle, RotateCw } from 'lucide-react'
-import { getOptions, simulate, type DesignInput, type Options, type SimulateResponse } from '@/api'
-import { Header } from '@/components/Header'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Wizard } from '@/features/wizard/Wizard'
-import { STEPS } from '@/features/wizard/Stepper'
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { AlertTriangle, RotateCw } from 'lucide-react';
+import { getOptions, simulate, type DesignInput, type Options, type SimulateResponse } from '@/api';
+import { Header } from '@/components/Header';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Wizard } from '@/features/wizard/Wizard';
+import { STEPS } from '@/features/wizard/Stepper';
 
 // Lazy-loaded: Results pulls in recharts, which is the bulk of the JS bundle. Splitting it
 // out means the wizard-only path (most visits before the first "Run") never downloads it.
-const Results = lazy(() => import('@/features/results/Results'))
+const Results = lazy(() => import('@/features/results/Results'));
 
 function ResultsSkeleton() {
   return (
@@ -22,74 +22,74 @@ function ResultsSkeleton() {
       </div>
       <Skeleton className="h-80 w-full" />
     </div>
-  )
+  );
 }
 
-const DESIGN_STORAGE_KEY = 'sheltersim.design'
+const DESIGN_STORAGE_KEY = 'sheltersim.design';
 
 function loadStoredDesign(): DesignInput | null {
   try {
-    const raw = localStorage.getItem(DESIGN_STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as DesignInput) : null
+    const raw = localStorage.getItem(DESIGN_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as DesignInput) : null;
   } catch {
-    return null
+    return null;
   }
 }
 
 function storeDesign(design: DesignInput) {
   try {
-    localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(design))
+    localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(design));
   } catch {
     // storage unavailable — design just won't survive a reload
   }
 }
 
-type View = 'wizard' | 'results'
+type View = 'wizard' | 'results';
 
 export default function App() {
-  const [options, setOptions] = useState<Options | null>(null)
-  const [optionsError, setOptionsError] = useState(false)
-  const [design, setDesign] = useState<DesignInput | null>(null)
-  const [view, setView] = useState<View>('wizard')
-  const [result, setResult] = useState<SimulateResponse | null>(null)
-  const [running, setRunning] = useState(false)
-  const [runError, setRunError] = useState<string | null>(null)
+  const [options, setOptions] = useState<Options | null>(null);
+  const [optionsError, setOptionsError] = useState(false);
+  const [design, setDesign] = useState<DesignInput | null>(null);
+  const [view, setView] = useState<View>('wizard');
+  const [result, setResult] = useState<SimulateResponse | null>(null);
+  const [running, setRunning] = useState(false);
+  const [runError, setRunError] = useState<string | null>(null);
   // Which wizard step to open on: 0 (Location) on first run, Review after "Modify design" so
   // the just-reviewed design and its Edit links are right there instead of three Next clicks away.
-  const [wizardStep, setWizardStep] = useState(0)
+  const [wizardStep, setWizardStep] = useState(0);
 
   const loadOptions = () => {
-    setOptionsError(false)
-    setOptions(null)
+    setOptionsError(false);
+    setOptions(null);
     getOptions()
       .then((opts) => {
-        setOptions(opts)
-        setDesign((current) => current ?? loadStoredDesign() ?? opts.defaults)
+        setOptions(opts);
+        setDesign((current) => current ?? loadStoredDesign() ?? opts.defaults);
       })
-      .catch(() => setOptionsError(true))
-  }
+      .catch(() => setOptionsError(true));
+  };
 
-  useEffect(loadOptions, [])
+  useEffect(loadOptions, []);
 
   const handleChange = (next: DesignInput) => {
-    setDesign(next)
-    storeDesign(next)
-  }
+    setDesign(next);
+    storeDesign(next);
+  };
 
   const handleRun = () => {
-    if (!design) return
-    setRunning(true)
-    setRunError(null)
+    if (!design) return;
+    setRunning(true);
+    setRunError(null);
     simulate(design)
       .then((res) => {
-        setResult(res)
-        setView('results')
+        setResult(res);
+        setView('results');
       })
       .catch((err: unknown) => {
-        setRunError(err instanceof Error ? err.message : 'Simulation failed.')
+        setRunError(err instanceof Error ? err.message : 'Simulation failed.');
       })
-      .finally(() => setRunning(false))
-  }
+      .finally(() => setRunning(false));
+  };
 
   return (
     <div className="bg-background text-foreground min-h-svh">
@@ -103,8 +103,8 @@ export default function App() {
               <AlertDescription className="space-y-3">
                 <p>
                   ShelterSim couldn't reach the server. Start it with{' '}
-                  <code className="bg-muted rounded px-1 py-0.5">npm run dev</code> from the
-                  repo root, then retry.
+                  <code className="bg-muted rounded px-1 py-0.5">npm run dev</code> from the repo
+                  root, then retry.
                 </p>
                 <button
                   onClick={loadOptions}
@@ -147,8 +147,8 @@ export default function App() {
                     data={result}
                     options={options}
                     onModify={() => {
-                      setWizardStep(STEPS.length - 1)
-                      setView('wizard')
+                      setWizardStep(STEPS.length - 1);
+                      setView('wizard');
                     }}
                   />
                 </Suspense>
@@ -158,5 +158,5 @@ export default function App() {
         )}
       </main>
     </div>
-  )
+  );
 }

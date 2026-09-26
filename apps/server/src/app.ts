@@ -4,7 +4,13 @@
 
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import { GLAZING, MATERIALS, PRESETS, TMY_LOCATIONS } from '@shelter/data';
-import { EngineError, requestFromJson, requestToJson, resultToJson, simulate } from '@shelter/engine';
+import {
+  EngineError,
+  requestFromJson,
+  requestToJson,
+  resultToJson,
+  simulate,
+} from '@shelter/engine';
 import type { EngineErrorCode, SimulationRequest } from '@shelter/engine';
 import { assemble, OCCUPANCY_PRESETS, type DesignInput } from './assemble.js';
 import { buildOptions } from './options.js';
@@ -107,7 +113,9 @@ export function buildApp(): FastifyInstance {
       return;
     }
     console.error('[server] unexpected error:', err);
-    reply.code(500).send({ code: 'INTERNAL_ERROR', message: 'An unexpected server error occurred.' });
+    reply
+      .code(500)
+      .send({ code: 'INTERNAL_ERROR', message: 'An unexpected server error occurred.' });
   });
 
   // CORS: LAN browser callers (dev:lan client on another host on the network
@@ -127,27 +135,19 @@ export function buildApp(): FastifyInstance {
 
   app.get('/api/options', async () => buildOptions());
 
-  app.post(
-    '/api/simulate',
-    { schema: { body: designInputSchema() } },
-    async (req) => {
-      const input = req.body as DesignInput;
-      const request = assemble(input);
-      const result = simulate(request);
-      return { input, kpis: result.kpis, result: resultToJson(result) };
-    },
-  );
+  app.post('/api/simulate', { schema: { body: designInputSchema() } }, async (req) => {
+    const input = req.body as DesignInput;
+    const request = assemble(input);
+    const result = simulate(request);
+    return { input, kpis: result.kpis, result: resultToJson(result) };
+  });
 
   // POST /api/assemble -- DesignInput in, the exact SimulationRequest /api/simulate
   // would run, in wire JSON, out. Same body validation as /api/simulate (API.md).
-  app.post(
-    '/api/assemble',
-    { schema: { body: designInputSchema() } },
-    async (req) => {
-      const input = req.body as DesignInput;
-      return requestToJson(assemble(input));
-    },
-  );
+  app.post('/api/assemble', { schema: { body: designInputSchema() } }, async (req) => {
+    const input = req.body as DesignInput;
+    return requestToJson(assemble(input));
+  });
 
   // POST /api/simulate/raw -- a full engine SimulationRequest in wire JSON
   // (requestToJson's own output shape) in, {kpis, result} out. Malformed body

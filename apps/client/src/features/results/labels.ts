@@ -24,9 +24,9 @@ export const HEAT_FLOW_KEYS = [
   'Q10_ground',
   'Q4_skyRadiation',
   'storageRate',
-] as const
+] as const;
 
-export type HeatFlowKey = (typeof HEAT_FLOW_KEYS)[number]
+export type HeatFlowKey = (typeof HEAT_FLOW_KEYS)[number];
 
 export const HEAT_FLOW_LABELS: Record<HeatFlowKey, string> = {
   Q1_solarOpaque: 'Sun on walls & roof',
@@ -39,7 +39,7 @@ export const HEAT_FLOW_LABELS: Record<HeatFlowKey, string> = {
   Q10_ground: 'Conducted to/from ground',
   Q4_skyRadiation: 'Radiated to night sky',
   storageRate: 'Stored in / released from walls',
-}
+};
 
 export const SURFACE_LABELS: Record<string, string> = {
   wallSouth: 'South wall',
@@ -48,8 +48,8 @@ export const SURFACE_LABELS: Record<string, string> = {
   wallNorth: 'North wall',
   roof: 'Roof',
   floor: 'Floor',
-}
+};
 
 export function surfaceLabel(id: string): string {
-  return SURFACE_LABELS[id] ?? id
+  return SURFACE_LABELS[id] ?? id;
 }

@@ -9,8 +9,11 @@ only thing shared between the two teams; keep both sides honest against it.
 ## 1. `GET /api/health`
 
 ```ts
-interface HealthResponse { ok: true }
+interface HealthResponse {
+  ok: true;
+}
 ```
+
 200, always. No auth, no body required.
 
 ## 2. `GET /api/options`
@@ -20,19 +23,46 @@ Returns every catalogue the wizard needs to render cards, plus the default desig
 `wallConstructions`/`roofConstructions` split.
 
 ```ts
-interface LocationOption { id: string; name: string; latitude: number; longitude: number; elevation: number } // m
-interface PresetOption { id: string; name: string; description: string; locationId: string }
-interface MaterialOption { id: string; name: string; category: 'structural'|'insulation'|'finish'|'storage'; conductivity: number; blurb?: string } // conductivity W/(m*K), for a UI badge
-interface GlazingOption { id: string; name: string; U: number; SHGC: number; blurb?: string } // U: W/(m^2*K)
-interface OccupancyPresetOption { id: string; name: string; blurb: string }
+interface LocationOption {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  elevation: number;
+} // m
+interface PresetOption {
+  id: string;
+  name: string;
+  description: string;
+  locationId: string;
+}
+interface MaterialOption {
+  id: string;
+  name: string;
+  category: 'structural' | 'insulation' | 'finish' | 'storage';
+  conductivity: number;
+  blurb?: string;
+} // conductivity W/(m*K), for a UI badge
+interface GlazingOption {
+  id: string;
+  name: string;
+  U: number;
+  SHGC: number;
+  blurb?: string;
+} // U: W/(m^2*K)
+interface OccupancyPresetOption {
+  id: string;
+  name: string;
+  blurb: string;
+}
 
 interface Options {
-  locations: LocationOption[];       // @shelter/data TMY_LOCATIONS
-  presets: PresetOption[];           // @shelter/data PRESETS (id/name/description/locationId)
-  materials: MaterialOption[];       // @shelter/data MATERIALS — used for wallMaterialId, roofMaterialId, floorMaterialId
-  glazings: GlazingOption[];         // @shelter/data GLAZING
+  locations: LocationOption[]; // @shelter/data TMY_LOCATIONS
+  presets: PresetOption[]; // @shelter/data PRESETS (id/name/description/locationId)
+  materials: MaterialOption[]; // @shelter/data MATERIALS — used for wallMaterialId, roofMaterialId, floorMaterialId
+  glazings: GlazingOption[]; // @shelter/data GLAZING
   occupancyPresets: OccupancyPresetOption[]; // NOT in @shelter/data — see §5 note 3
-  defaults: DesignInput;             // the traditionalLadakhiByre (Leh) preset, expressed as DesignInput
+  defaults: DesignInput; // the traditionalLadakhiByre (Leh) preset, expressed as DesignInput
 }
 ```
 
@@ -43,19 +73,19 @@ below is one `requestOps.ts` setter's input — nothing here has no home in that
 
 ```ts
 interface DesignInput {
-  locationId: string;        // TMY_LOCATIONS id: 'leh' | 'kargil' | 'drass' | 'nubra' | 'jaisalmer'
-  date: string;               // ISO 'YYYY-MM-DD', reference year 2023 (isoDateToDayOfYear)
-  presetId: string;           // shelter-type card id, e.g. 'traditionalLadakhiByre'
-  lengthM: number;            // 2–30, step 0.5 — S/N wall run
-  widthM: number;             // 2–30, step 0.5 — E/W wall run
-  heightM: number;            // 2–6, step 0.1
-  wallMaterialId: string | null;  // @shelter/data MATERIALS id → single layer; null = keep the preset's own (multi-layer) construction
-  roofMaterialId: string | null;  // same rule
+  locationId: string; // TMY_LOCATIONS id: 'leh' | 'kargil' | 'drass' | 'nubra' | 'jaisalmer'
+  date: string; // ISO 'YYYY-MM-DD', reference year 2023 (isoDateToDayOfYear)
+  presetId: string; // shelter-type card id, e.g. 'traditionalLadakhiByre'
+  lengthM: number; // 2–30, step 0.5 — S/N wall run
+  widthM: number; // 2–30, step 0.5 — E/W wall run
+  heightM: number; // 2–6, step 0.1
+  wallMaterialId: string | null; // @shelter/data MATERIALS id → single layer; null = keep the preset's own (multi-layer) construction
+  roofMaterialId: string | null; // same rule
   floorMaterialId: string | null; // same rule
   windowWwr: { S: number; E: number; W: number; N: number }; // 0–0.9, step 0.05 (window-to-wall-area ratio per orientation)
-  glazingId: string;          // @shelter/data GLAZING id
-  nightShutters: boolean;     // closed 20:00–06:00 when true, adds shutterResistance=0.4 m^2*K/W
-  occupancyPresetId: string;  // server-side table id — see §5 note 3
+  glazingId: string; // @shelter/data GLAZING id
+  nightShutters: boolean; // closed 20:00–06:00 when true, adds shutterResistance=0.4 m^2*K/W
+  occupancyPresetId: string; // server-side table id — see §5 note 3
 }
 ```
 
@@ -115,16 +145,28 @@ into a plain `number[]` (same field names, same nesting, same lengths, no unit c
 
 ```ts
 interface ResultJson {
-  meta: { nodeCount: number; timesteps: number; wallClockMs: number; spinUpDaysUsed: number;
-          energyBalanceResidual: number; annualisationMethod: string; warnings: string[] };
-  time: number[];                        // seconds from period start, one per timestep
+  meta: {
+    nodeCount: number;
+    timesteps: number;
+    wallClockMs: number;
+    spinUpDaysUsed: number;
+    energyBalanceResidual: number;
+    annualisationMethod: string;
+    warnings: string[];
+  };
+  time: number[]; // seconds from period start, one per timestep
   temperatures: {
-    indoorAir: number[]; ambient: number[]; sky: number[]; meanRadiant: number[]; ground: number[]; // Kelvin
+    indoorAir: number[];
+    ambient: number[];
+    sky: number[];
+    meanRadiant: number[];
+    ground: number[]; // Kelvin
     surfaces: Record<string, { exterior: number[]; interior: number[] }>; // Kelvin, keyed by Surface.id
   };
   solar: {
-    incidentBySurface: Record<string, number[]>;  // W/m^2, keyed by Surface.id
-    absorbedOpaque: number[]; transmittedGlazed: number[];               // W
+    incidentBySurface: Record<string, number[]>; // W/m^2, keyed by Surface.id
+    absorbedOpaque: number[];
+    transmittedGlazed: number[]; // W
     dailyTotalKWh: { opaque: number; glazed: number; bySurface: Record<string, number> };
   };
   heatFlows: HeatFlowsJson; // see table below — all W except deltaT (K) and dailyTotalsKWh (kWh)
@@ -139,40 +181,40 @@ Heat flows by pathway: `heatFlows.<key>`, all same length as `time`.
 **Heat-flow pathway keys** (`heatFlows`, all `number[]`, Watts, one value per timestep; sign:
 positive = heat entering the indoor air node):
 
-| Key | Meaning |
-|---|---|
-| `Q1_solarOpaque` | Solar absorbed on opaque exterior surfaces |
-| `Q2_solarGlazed` | Solar transmitted through glazing |
-| `Q3_extConvection` | Exterior surface ↔ outdoor air convection |
-| `Q4_skyRadiation` | Longwave, exterior surface ↔ sky (usually negative) |
-| `Q5_envelopeConduction` | Conduction through opaque envelope (internal) |
-| `Q6_intConvection` | Interior surface ↔ indoor air convection (internal) |
-| `Q7_interiorLongwave` | Longwave between interior surfaces (internal) |
-| `Q8_windowConduction` | Conduction through glazing |
-| `Q9_infiltration` | Infiltration / ventilation |
-| `Q10_ground` | Conduction to ground through floor |
-| `Q11_internalGains` | Internal gains (people, stove, livestock) |
-| `Qaux` | Auxiliary heating actually delivered |
-| `storageRate` | Rate of change of energy stored in the fabric |
-| `deltaT` | `indoorAir - ambient`, **Kelvin-degrees**, not Watts |
-| `dailyTotalsKWh` | `Record<pathwayName, number>` — period totals, **kWh**, feeds a Sankey |
+| Key                     | Meaning                                                                |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `Q1_solarOpaque`        | Solar absorbed on opaque exterior surfaces                             |
+| `Q2_solarGlazed`        | Solar transmitted through glazing                                      |
+| `Q3_extConvection`      | Exterior surface ↔ outdoor air convection                              |
+| `Q4_skyRadiation`       | Longwave, exterior surface ↔ sky (usually negative)                    |
+| `Q5_envelopeConduction` | Conduction through opaque envelope (internal)                          |
+| `Q6_intConvection`      | Interior surface ↔ indoor air convection (internal)                    |
+| `Q7_interiorLongwave`   | Longwave between interior surfaces (internal)                          |
+| `Q8_windowConduction`   | Conduction through glazing                                             |
+| `Q9_infiltration`       | Infiltration / ventilation                                             |
+| `Q10_ground`            | Conduction to ground through floor                                     |
+| `Q11_internalGains`     | Internal gains (people, stove, livestock)                              |
+| `Qaux`                  | Auxiliary heating actually delivered                                   |
+| `storageRate`           | Rate of change of energy stored in the fabric                          |
+| `deltaT`                | `indoorAir - ambient`, **Kelvin-degrees**, not Watts                   |
+| `dailyTotalsKWh`        | `Record<pathwayName, number>` — period totals, **kWh**, feeds a Sankey |
 
 **KPI keys** (`kpis: SimulationKpis`):
 
-| Key | Unit | Meaning |
-|---|---|---|
-| `minIndoorTemp` / `maxIndoorTemp` / `meanIndoorTemp` | K | over the reported period |
-| `tempAt0600` | K | pre-dawn minimum, final simulated day |
-| `tempAt0600PerDay` | K[] (optional) | one value per simulated day |
-| `hoursInComfort` / `hoursBelow5C` / `hoursBelowFreezing` | h | |
-| `peakToPeakSwing` | K | |
-| `decrementFactor` | ratio | indoor swing / outdoor swing, lower is better |
-| `timeLagHours` | h | outdoor peak → indoor peak |
-| `auxEnergyKWhPerDay` | kWh/day | |
-| `keroseneEquivalentLitresPerYear` | L/yr | |
-| `co2EquivalentKgPerYear` | kg/yr | |
-| `costPerYearINR` | INR/yr | |
-| `condensationRiskHours` | h \| null | `null` when the weather series has no RH |
+| Key                                                      | Unit           | Meaning                                       |
+| -------------------------------------------------------- | -------------- | --------------------------------------------- |
+| `minIndoorTemp` / `maxIndoorTemp` / `meanIndoorTemp`     | K              | over the reported period                      |
+| `tempAt0600`                                             | K              | pre-dawn minimum, final simulated day         |
+| `tempAt0600PerDay`                                       | K[] (optional) | one value per simulated day                   |
+| `hoursInComfort` / `hoursBelow5C` / `hoursBelowFreezing` | h              |                                               |
+| `peakToPeakSwing`                                        | K              |                                               |
+| `decrementFactor`                                        | ratio          | indoor swing / outdoor swing, lower is better |
+| `timeLagHours`                                           | h              | outdoor peak → indoor peak                    |
+| `auxEnergyKWhPerDay`                                     | kWh/day        |                                               |
+| `keroseneEquivalentLitresPerYear`                        | L/yr           |                                               |
+| `co2EquivalentKgPerYear`                                 | kg/yr          |                                               |
+| `costPerYearINR`                                         | INR/yr         |                                               |
+| `condensationRiskHours`                                  | h \| null      | `null` when the weather series has no RH      |
 
 Temperatures throughout `result` are **Kelvin** (subtract 273.15 for °C); `DesignInput` itself
 carries no temperature fields, so the client never converts.
@@ -207,22 +249,26 @@ other devices on the LAN — plain `npm run dev` stays bound to `127.0.0.1`.
 Every response, success or failure, is JSON. Failures are always:
 
 ```ts
-interface ApiError { code: string; message: string; field?: string } // field only on VALIDATION_ERROR
+interface ApiError {
+  code: string;
+  message: string;
+  field?: string;
+} // field only on VALIDATION_ERROR
 ```
 
-| Code | HTTP | Source |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | `DesignInput` itself is malformed (bad type, out-of-range, unknown id) — `field` names the offending key, e.g. `"lengthM"` |
-| `INVALID_INPUT` | 400 | engine: assembled `SimulationRequest` invalid |
-| `GEOMETRY_INCONSISTENT` | 400 | engine |
-| `WEATHER_INVALID` | 422 | engine |
-| `UNKNOWN_MATERIAL` | 422 | engine |
-| `UNKNOWN_GLAZING` | 422 | engine |
-| `DATA_SCHEMA_MISMATCH` | 422 | engine |
-| `SOLVER_DIVERGED` | 500 | engine |
-| `SINGULAR_MATRIX` | 500 | engine |
-| `PAYLOAD_TOO_LARGE` | 413 | body over 5 MB |
-| `INTERNAL_ERROR` | 500 | anything unexpected |
+| Code                    | HTTP | Source                                                                                                                     |
+| ----------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------- |
+| `VALIDATION_ERROR`      | 400  | `DesignInput` itself is malformed (bad type, out-of-range, unknown id) — `field` names the offending key, e.g. `"lengthM"` |
+| `INVALID_INPUT`         | 400  | engine: assembled `SimulationRequest` invalid                                                                              |
+| `GEOMETRY_INCONSISTENT` | 400  | engine                                                                                                                     |
+| `WEATHER_INVALID`       | 422  | engine                                                                                                                     |
+| `UNKNOWN_MATERIAL`      | 422  | engine                                                                                                                     |
+| `UNKNOWN_GLAZING`       | 422  | engine                                                                                                                     |
+| `DATA_SCHEMA_MISMATCH`  | 422  | engine                                                                                                                     |
+| `SOLVER_DIVERGED`       | 500  | engine                                                                                                                     |
+| `SINGULAR_MATRIX`       | 500  | engine                                                                                                                     |
+| `PAYLOAD_TOO_LARGE`     | 413  | body over 5 MB                                                                                                             |
+| `INTERNAL_ERROR`        | 500  | anything unexpected                                                                                                        |
 
 (`STATUS_BY_CODE` for the engine codes is reused verbatim from
 `apps/web/app/api/simulate/route.ts`; `VALIDATION_ERROR` is new, for `DesignInput`-shape
@@ -234,7 +280,7 @@ onward use their own code from the table above, no `field`.)
 1. Every field in `DesignInput` maps to one existing `requestOps.ts` function; nothing here
    requires new physics.
 2. `@shelter/data`'s `CONSTRUCTIONS` (multi-layer named wall/roof/floor assemblies) has **no**
-   `requestOps` setter — `SimpleForm.tsx`'s wall/roof/floor dropdowns bind the *same* flat
+   `requestOps` setter — `SimpleForm.tsx`'s wall/roof/floor dropdowns bind the _same_ flat
    `materials` array to all three selects and always write a single-layer construction
    (`setWallMaterial`/`setRoofMaterial`/`setFloorMaterial`). `Options.materials` mirrors that:
    one list, no wall/roof/floor split, because the data has none either.

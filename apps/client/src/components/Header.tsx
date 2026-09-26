@@ -1,27 +1,31 @@
-import { MountainSnow, Moon, Sun } from 'lucide-react'
-import { HowToUseSheet } from '@/components/HowToUseSheet'
-import { Button } from '@/components/ui/button'
-import { useServerStatus } from '@/hooks/useServerStatus'
-import { useTheme } from '@/hooks/useTheme'
-import { cn } from '@/lib/utils'
+import { MountainSnow, Moon, Sun } from 'lucide-react';
+import { HowToUseSheet } from '@/components/HowToUseSheet';
+import { Button } from '@/components/ui/button';
+import { useServerStatus } from '@/hooks/useServerStatus';
+import { useTheme } from '@/hooks/useTheme';
+import { cn } from '@/lib/utils';
 
 function ServerStatusDot() {
-  const status = useServerStatus()
+  const status = useServerStatus();
   const label =
-    status === 'online' ? 'Server online' : status === 'offline' ? 'Server offline' : 'Checking…'
+    status === 'online' ? 'Server online' : status === 'offline' ? 'Server offline' : 'Checking…';
   const dot =
-    status === 'online' ? 'bg-emerald-500' : status === 'offline' ? 'bg-red-500' : 'bg-muted-foreground'
+    status === 'online'
+      ? 'bg-emerald-500'
+      : status === 'offline'
+        ? 'bg-red-500'
+        : 'bg-muted-foreground';
 
   return (
     <div className="text-muted-foreground hidden items-center gap-1.5 text-sm sm:flex">
       <span className={cn('size-2 rounded-full', dot)} aria-hidden />
       {label}
     </div>
-  )
+  );
 }
 
 export function Header() {
-  const { theme, toggle } = useTheme()
+  const { theme, toggle } = useTheme();
 
   return (
     <header className="bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
@@ -52,5 +56,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from 'react';
 import {
   ArrowLeft,
   Flame,
@@ -7,15 +7,15 @@ import {
   Sun,
   ThermometerSnowflake,
   ThermometerSun,
-} from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import type { Options, SimulateResponse } from '@/api'
-import { explain, type Severity } from './explain'
-import { HeatFlowChart, SolarChart, TemperatureChart } from './charts'
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { Options, SimulateResponse } from '@/api';
+import { explain, type Severity } from './explain';
+import { HeatFlowChart, SolarChart, TemperatureChart } from './charts';
 
 /**
  * PROP CONTRACT — do not change without updating App.tsx's usage.
@@ -25,22 +25,22 @@ import { HeatFlowChart, SolarChart, TemperatureChart } from './charts'
  * (location/preset) to human-readable names.
  */
 export interface ResultsProps {
-  data: SimulateResponse
-  options: Options
-  onModify: () => void
+  data: SimulateResponse;
+  options: Options;
+  onModify: () => void;
 }
 
-const kelvinToC = (k: number) => k - 273.15
+const kelvinToC = (k: number) => k - 273.15;
 const fmt1 = (k: number) => {
-  const c = kelvinToC(k)
-  return (Math.abs(c) < 0.05 ? 0 : c).toFixed(1)
-}
+  const c = kelvinToC(k);
+  return (Math.abs(c) < 0.05 ? 0 : c).toFixed(1);
+};
 
 const severityClasses: Record<Severity, string> = {
   good: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
   warn: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
   danger: 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300',
-}
+};
 
 function KpiCard({
   icon,
@@ -50,12 +50,12 @@ function KpiCard({
   tooltip,
   hero,
 }: {
-  icon: ReactNode
-  label: string
-  value: string
-  unit: string
-  tooltip: string
-  hero?: boolean
+  icon: ReactNode;
+  label: string;
+  value: string;
+  unit: string;
+  tooltip: string;
+  hero?: boolean;
 }) {
   return (
     <Tooltip>
@@ -66,7 +66,13 @@ function KpiCard({
               {icon}
               <span className="text-xs">{label}</span>
             </div>
-            <p className={hero ? 'mt-1 text-4xl font-semibold tracking-tight' : 'mt-1 text-2xl font-semibold tracking-tight'}>
+            <p
+              className={
+                hero
+                  ? 'mt-1 text-4xl font-semibold tracking-tight'
+                  : 'mt-1 text-2xl font-semibold tracking-tight'
+              }
+            >
               {value}
               <span className="ml-1 text-base font-normal text-muted-foreground">{unit}</span>
             </p>
@@ -75,15 +81,16 @@ function KpiCard({
       </TooltipTrigger>
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>
-  )
+  );
 }
 
 export function Results({ data, options, onModify }: ResultsProps) {
-  const { kpis, input, result } = data
-  const insights = explain(kpis)
-  const solarTotal = result.solar.dailyTotalKWh.opaque + result.solar.dailyTotalKWh.glazed
-  const locationName = options.locations.find((l) => l.id === input.locationId)?.name ?? input.locationId
-  const presetName = options.presets.find((p) => p.id === input.presetId)?.name ?? input.presetId
+  const { kpis, input, result } = data;
+  const insights = explain(kpis);
+  const solarTotal = result.solar.dailyTotalKWh.opaque + result.solar.dailyTotalKWh.glazed;
+  const locationName =
+    options.locations.find((l) => l.id === input.locationId)?.name ?? input.locationId;
+  const presetName = options.presets.find((p) => p.id === input.presetId)?.name ?? input.presetId;
 
   return (
     <div className="space-y-6">
@@ -206,9 +213,9 @@ export function Results({ data, options, onModify }: ResultsProps) {
         </Badge>
       </p>
     </div>
-  )
+  );
 }
 
 // Default export exists solely so App.tsx can React.lazy()-load this module (code-splitting
 // the charting bundle); the named export above remains the one to import for typing.
-export default Results
+export default Results;
