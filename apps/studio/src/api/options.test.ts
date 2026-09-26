@@ -20,7 +20,6 @@ describe('options wrapper', () => {
     const result = await getOptions();
     expect(fetch).toHaveBeenCalledWith('/api/options', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
     });
     expect(result).toEqual(options);
   });

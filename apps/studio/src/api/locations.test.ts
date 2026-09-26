@@ -20,7 +20,6 @@ describe('locations wrapper', () => {
     const result = await searchLocations('Leh, IN');
     expect(fetch).toHaveBeenCalledWith('/api/locations/search?q=Leh%2C%20IN', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
     });
     expect(result).toEqual(results);
   });

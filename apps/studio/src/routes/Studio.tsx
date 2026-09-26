@@ -172,12 +172,12 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center gap-4 border-b border-hairline px-4 py-2.5 sm:px-6">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-4 py-2.5 sm:px-6">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           aria-label="Design name"
-          className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none focus-visible:underline"
+          className="min-w-0 basis-full bg-transparent text-sm font-medium text-ink outline-none focus-visible:underline sm:basis-auto sm:flex-1"
         />
         <span className="shrink-0 text-xs text-ink-muted">{saveStateLabel}</span>
         <Button variant="secondary" onClick={() => handleSaveDesign().catch(() => {})} disabled={saveState === 'saving'}>

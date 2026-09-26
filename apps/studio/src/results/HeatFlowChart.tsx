@@ -8,6 +8,31 @@ import { Bar, BarChart, Cell, LabelList, ReferenceLine, ResponsiveContainer, XAx
 import { HEAT_FLOW_KEYS, HEAT_FLOW_LABELS } from './labels';
 import type { ResultJson } from './types';
 
+/** recharts' built-in `position="right"` anchors beyond the bar's tip in the
+ * VALUE's own direction -- for a negative bar that's further left (past the
+ * tip), which collided with the y-axis category label for a large-magnitude
+ * negative bar (F3.md condition 6 visual QA). An SVG rect's `x`/`width` are
+ * always non-negative, so `x + width` is always the bar's true screen-right
+ * edge (the tip for a positive bar, the zero line for a negative one) --
+ * anchoring there is deterministic and never overlaps the axis labels.
+ * `any`: recharts' content-prop typing is a large, awkward union (Label's
+ * Props vs LabelList's Props disagree on `viewBox`) -- this is the standard
+ * recharts custom-label escape hatch, not a real type hole (every field is
+ * coerced with Number() below before use). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ValueLabel(props: any) {
+  const x = Number(props.x ?? 0);
+  const y = Number(props.y ?? 0);
+  const width = Number(props.width ?? 0);
+  const height = Number(props.height ?? 0);
+  const v = Number(props.value);
+  return (
+    <text x={x + width + 6} y={y + height / 2} dy={4} fontSize={11} fill="var(--ink-muted)" textAnchor="start">
+      {`${v >= 0 ? '+' : ''}${v.toFixed(1)} kWh`}
+    </text>
+  );
+}
+
 export function HeatFlowChart({ result }: { result: ResultJson }) {
   const totals = result.heatFlows.dailyTotalsKWh;
   const data = HEAT_FLOW_KEYS.map((key) => ({
@@ -45,13 +70,7 @@ export function HeatFlowChart({ result }: { result: ResultJson }) {
           {data.map((d) => (
             <Cell key={d.key} fillOpacity={d.value >= 0 ? 1 : 0.55} />
           ))}
-          <LabelList
-            dataKey="value"
-            position="right"
-            fontSize={11}
-            fill="var(--ink-muted)"
-            formatter={(v?: unknown) => `${Number(v) >= 0 ? '+' : ''}${Number(v).toFixed(1)} kWh`}
-          />
+          <LabelList dataKey="value" content={ValueLabel} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>

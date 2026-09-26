@@ -19,7 +19,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     res = await fetch(`/api${path}`, {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
+      // Only set a JSON content-type when there's actually a body -- Fastify's
+      // default JSON body parser rejects a body-less POST (e.g. runSimulation,
+      // API.md §9: no request body) that still claims application/json
+      // (FST_ERR_CTP_EMPTY_JSON_BODY -> 500 INTERNAL_ERROR).
+      ...(init?.body !== undefined ? { headers: { 'Content-Type': 'application/json' } } : {}),
       ...init,
     });
   } catch {

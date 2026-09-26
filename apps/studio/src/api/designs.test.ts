@@ -51,7 +51,6 @@ describe('designs wrappers', () => {
     const result = await listDesigns();
     expect(fetch).toHaveBeenCalledWith('/api/designs', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
     });
     expect(result).toEqual([summary]);
   });
@@ -72,7 +71,6 @@ describe('designs wrappers', () => {
     await getDesign('d1');
     expect(fetch).toHaveBeenCalledWith('/api/designs/d1', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
     });
   });
 
@@ -92,7 +90,6 @@ describe('designs wrappers', () => {
     await deleteDesign('d1');
     expect(fetch).toHaveBeenCalledWith('/api/designs/d1', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
       method: 'DELETE',
     });
   });
@@ -103,7 +100,6 @@ describe('designs wrappers', () => {
     const result = await runSimulation('d1');
     expect(fetch).toHaveBeenCalledWith('/api/designs/d1/simulations', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
       method: 'POST',
     });
     expect(result).toEqual(full);
@@ -114,7 +110,6 @@ describe('designs wrappers', () => {
     await listSimulations('d1');
     expect(fetch).toHaveBeenCalledWith('/api/designs/d1/simulations', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
     });
   });
 
@@ -123,7 +118,6 @@ describe('designs wrappers', () => {
     await getSimulation('s1');
     expect(fetch).toHaveBeenCalledWith('/api/simulations/s1', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
     });
   });
 });
