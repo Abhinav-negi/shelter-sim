@@ -22,8 +22,10 @@ function clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v));
 }
 
+/** Snap to the step grid, then drop float noise (0.1 steps otherwise yield
+ *  2.3000000000000003 into the store). */
 function roundToStep(v: number, step: number): number {
-  return step > 0 ? Math.round(v / step) * step : v;
+  return step > 0 ? Number((Math.round(v / step) * step).toPrecision(12)) : v;
 }
 
 function format(v: number, decimals: number): string {
@@ -64,13 +66,23 @@ export function NumberInput({
       setDraft(format(value, decimals));
       return;
     }
-    const next = roundToStep(clamp(parsed, min, max), step);
+    apply(parsed);
+  }
+
+  // Round before clamping so a snapped value can never land outside [min,max].
+  function apply(raw: number) {
+    const next = clamp(roundToStep(raw, step), min, max);
     setDraft(format(next, decimals));
     if (next !== value) onChange(next);
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      // Arrows commit immediately (slider + model follow each press) instead of
+      // the native step, which would only change the uncommitted draft.
+      e.preventDefault();
+      apply(value + (e.key === 'ArrowUp' ? step : -step));
+    } else if (e.key === 'Enter') {
       e.preventDefault();
       commit();
     } else if (e.key === 'Escape') {

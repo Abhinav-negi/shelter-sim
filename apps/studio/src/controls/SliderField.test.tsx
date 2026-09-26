@@ -83,4 +83,44 @@ describe('SliderField', () => {
     expect(input.value).toBe('35');
     expect(slider.value).toBe('35');
   });
+
+  it('ArrowUp/ArrowDown commit one step immediately, clamped', () => {
+    render(<Harness />);
+    const input = screen.getByRole('spinbutton', { name: 'South window' }) as HTMLInputElement;
+    const slider = screen.getByRole('slider', { name: 'South window' }) as HTMLInputElement;
+
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
+    expect(slider.value).toBe('25');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input.value).toBe('15');
+    expect(slider.value).toBe('15');
+  });
+
+  it('fractional steps commit clean numbers (no float noise)', () => {
+    const seen: number[] = [];
+    function Metres() {
+      const [value, setValue] = useState(2.2);
+      return (
+        <SliderField
+          label="Height"
+          value={value}
+          onChange={(v) => {
+            seen.push(v);
+            setValue(v);
+          }}
+          min={2}
+          max={4}
+          step={0.1}
+          unit="m"
+        />
+      );
+    }
+    render(<Metres />);
+    const input = screen.getByRole('spinbutton', { name: 'Height' }) as HTMLInputElement;
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
+    fireEvent.change(input, { target: { value: '3.14' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(seen).toEqual([2.3, 3.1]);
+  });
 });
