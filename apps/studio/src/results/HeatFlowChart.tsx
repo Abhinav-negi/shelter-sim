@@ -4,34 +4,27 @@
 // system), and this chart is energy, not temperature, so a second diverging
 // pair would break that rule. One hue (accent), direct value labels, no
 // legend needed (dataviz skill: position already encodes the two states).
-import { Bar, BarChart, Cell, LabelList, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+//
+// Plain flexbox rows, not recharts: a first version used recharts'
+// `BarChart`/`LabelList` with the category label on the left (its Y axis)
+// and the kWh value floated next to the bar's own tip. Both label-placement
+// strategies tried there (recharts' built-in `position="right"`, then a
+// custom renderer anchored at the bar rect's screen-right edge) still left
+// the category text and the value text competing for the same horizontal
+// space at narrow widths — overlapping for a long category name or a large
+// negative value, and the longest value ("+225.5 kWh") clipping against the
+// container's right edge at 390 px (F3.md condition 6 visual QA, orchestrator
+// review of F3 e9e0211). Root cause: cramming category label + bar + value
+// into one 32 px-tall row leaves no width that's *guaranteed* free for the
+// value text regardless of the category name's length or the bar's sign.
+// Fixing that structurally (not just re-tuning offsets) means the value
+// never shares a line with the category label at all: each row is now two
+// lines -- the category label alone on its own full-width line, then the
+// bar and its value below it, the value in its own fixed-width column
+// (`w-24`, comfortably fits the longest string) that the bar's track never
+// reaches into. No SVG label-collision math left to get wrong.
 import { HEAT_FLOW_KEYS, HEAT_FLOW_LABELS } from './labels';
 import type { ResultJson } from './types';
-
-/** recharts' built-in `position="right"` anchors beyond the bar's tip in the
- * VALUE's own direction -- for a negative bar that's further left (past the
- * tip), which collided with the y-axis category label for a large-magnitude
- * negative bar (F3.md condition 6 visual QA). An SVG rect's `x`/`width` are
- * always non-negative, so `x + width` is always the bar's true screen-right
- * edge (the tip for a positive bar, the zero line for a negative one) --
- * anchoring there is deterministic and never overlaps the axis labels.
- * `any`: recharts' content-prop typing is a large, awkward union (Label's
- * Props vs LabelList's Props disagree on `viewBox`) -- this is the standard
- * recharts custom-label escape hatch, not a real type hole (every field is
- * coerced with Number() below before use). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ValueLabel(props: any) {
-  const x = Number(props.x ?? 0);
-  const y = Number(props.y ?? 0);
-  const width = Number(props.width ?? 0);
-  const height = Number(props.height ?? 0);
-  const v = Number(props.value);
-  return (
-    <text x={x + width + 6} y={y + height / 2} dy={4} fontSize={11} fill="var(--ink-muted)" textAnchor="start">
-      {`${v >= 0 ? '+' : ''}${v.toFixed(1)} kWh`}
-    </text>
-  );
-}
 
 export function HeatFlowChart({ result }: { result: ResultJson }) {
   const totals = result.heatFlows.dailyTotalsKWh;
@@ -47,32 +40,43 @@ export function HeatFlowChart({ result }: { result: ResultJson }) {
     return <p className="text-xs text-ink-muted">No heat-flow data in this preview.</p>;
   }
 
+  // A shared scale across all rows (domain always includes 0, like the old
+  // chart's implicit zero reference) so bar lengths are comparable row to
+  // row, same as a real bar chart's shared axis would give.
+  const values = data.map((d) => d.value);
+  const domainMin = Math.min(0, ...values);
+  const domainMax = Math.max(0, ...values);
+  const span = domainMax - domainMin || 1;
+  const zeroPct = ((0 - domainMin) / span) * 100;
+
   return (
-    <ResponsiveContainer width="100%" height={Math.max(200, data.length * 32)}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 56, top: 4, bottom: 4 }}>
-        <XAxis
-          type="number"
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: 'var(--ink-muted)', fontSize: 11 }}
-          tickFormatter={(v: number) => `${v}`}
-        />
-        <YAxis
-          type="category"
-          dataKey="label"
-          tickLine={false}
-          axisLine={false}
-          width={164}
-          tick={{ fill: 'var(--ink-muted)', fontSize: 11 }}
-        />
-        <ReferenceLine x={0} stroke="var(--hairline)" />
-        <Bar dataKey="value" fill="var(--accent)" isAnimationActive={false}>
-          {data.map((d) => (
-            <Cell key={d.key} fillOpacity={d.value >= 0 ? 1 : 0.55} />
-          ))}
-          <LabelList dataKey="value" content={ValueLabel} />
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="flex flex-col gap-3">
+      {data.map((d) => {
+        const valuePct = ((d.value - domainMin) / span) * 100;
+        const barLeft = Math.min(zeroPct, valuePct);
+        const barWidth = Math.max(Math.abs(valuePct - zeroPct), 0.5);
+        return (
+          <div key={d.key} className="flex flex-col gap-1">
+            <span className="text-xs text-ink-muted">{d.label}</span>
+            <div className="flex items-center gap-2">
+              <div className="relative h-2 flex-1">
+                <div
+                  aria-hidden
+                  className="absolute inset-y-0 w-px bg-hairline"
+                  style={{ left: `${zeroPct}%` }}
+                />
+                <div
+                  className="absolute inset-y-0 rounded-[1px] bg-accent"
+                  style={{ left: `${barLeft}%`, width: `${barWidth}%`, opacity: d.value >= 0 ? 1 : 0.55 }}
+                />
+              </div>
+              <span className="w-24 shrink-0 text-right font-mono text-xs text-ink-muted">
+                {`${d.value >= 0 ? '+' : ''}${d.value.toFixed(1)} kWh`}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }

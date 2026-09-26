@@ -171,7 +171,18 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
   const saveStateLabel = saveState === 'saving' ? 'Saving…' : hasUnsavedChanges ? 'Unsaved changes' : 'Saved';
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    // Fixed to (viewport - AppShell's header, measured ~54px, rounded up for
+    // safety) instead of the natural `flex-1` this used to be: AppShell's own
+    // wrapper is only `min-h-screen` (a minimum, not a cap), so an unbounded
+    // Studio subtree could grow taller than the viewport and the *document*
+    // would scroll instead of this page's own panes -- which is exactly what
+    // broke the 3D viewer's framing (orchestrator review, F3 e9e0211): a
+    // viewer pane inside an unbounded column takes on the height of its
+    // tallest sibling (the controls column), so the fixed-FOV camera ends up
+    // looking through a very tall, narrow frustum and only the roof reads.
+    // Capping the page's own height here, `overflow-hidden`, makes every
+    // descendant's `flex-1`/`min-h-0` actually mean something.
+    <div className="flex h-[calc(100dvh-56px)] flex-col overflow-hidden">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-4 py-2.5 sm:px-6">
         <input
           value={name}
@@ -197,20 +208,26 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
         <p className="border-b border-hairline px-4 py-1.5 text-xs text-ink-muted sm:px-6">Run saved.</p>
       ) : null}
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <aside className="overflow-y-auto border-hairline py-2 lg:w-85 lg:shrink-0 lg:border-r">
-          <ControlsPanel options={options} weatherProvenance={preview.data?.weatherProvenance} />
-        </aside>
-
-        <div className="flex min-h-90 flex-1 flex-col">
-          <div className="relative flex-1">
+      {/* Mobile (<lg): one scrolling column, viewer first ("designing a
+       * shelter, not filling a form" -- PLAN.md) at a fixed 45vh so its
+       * aspect ratio stays sane regardless of how tall controls/results are,
+       * then controls, then results, all in natural document-style flow
+       * (`overflow-y-auto` on this row itself, since the page above is now
+       * height-capped). Desktop (lg+): three independent-scroll panes side
+       * by side (`lg:overflow-hidden` here, each pane scrolls its own
+       * content) in the original Controls|Viewer|Results visual order via
+       * `lg:order-*` -- DOM order stays Viewer-first for mobile, only the
+       * visual position moves at the breakpoint. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+        <div className="flex h-[45vh] shrink-0 flex-col lg:order-2 lg:h-auto lg:min-h-0 lg:flex-1">
+          <div className="relative min-h-0 flex-1">
             <Suspense
               fallback={<div className="flex h-full items-center justify-center text-sm text-ink-muted">Loading viewer…</div>}
             >
               <ShelterViewer design={design} options={options} hour={hour} />
             </Suspense>
           </div>
-          <div className="flex items-center gap-3 border-t border-hairline px-4 py-2.5">
+          <div className="flex shrink-0 items-center gap-3 border-t border-hairline px-4 py-2.5">
             <span className="shrink-0 text-xs text-ink-muted">Time of day</span>
             <input
               type="range"
@@ -227,7 +244,11 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
           </div>
         </div>
 
-        <aside className="overflow-y-auto border-hairline lg:w-95 lg:shrink-0 lg:border-l">
+        <aside className="shrink-0 border-hairline py-2 lg:order-1 lg:w-85 lg:overflow-y-auto lg:border-r">
+          <ControlsPanel options={options} weatherProvenance={preview.data?.weatherProvenance} />
+        </aside>
+
+        <aside className="shrink-0 border-hairline lg:order-3 lg:w-95 lg:overflow-y-auto lg:border-l">
           <Suspense fallback={<div className="px-4 py-6 text-xs text-ink-muted">Loading results…</div>}>
             <ResultsPanel status={preview.status} data={preview.data} error={preview.error} onRetry={preview.retry} />
           </Suspense>
