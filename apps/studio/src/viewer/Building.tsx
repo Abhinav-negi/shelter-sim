@@ -8,7 +8,8 @@
 
 import { Edges, Line } from '@react-three/drei';
 import { useEffect, useMemo } from 'react';
-import { ExtrudeGeometry, Path, Shape } from 'three';
+import { type BufferGeometry, ExtrudeGeometry, Path, Shape } from 'three';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Orientation, SceneGeometry, WallGeometry, WindowRect } from './geometry';
 
 // A fixed, theme-independent material palette — a real shelter's plaster and
@@ -127,56 +128,130 @@ function WallOutline({
   return <Line segments points={points} color={EDGE_COLOR} transparent opacity={0.4} lineWidth={1} />;
 }
 
+/** Builds one wall's solid as a positioned `ExtrudeGeometry`: a rectangle
+ *  `Shape` (u,v = across/up the facade) with the window cut out as a `Path`
+ *  hole, extruded by the wall thickness. F2's approach (piers/sill/lintel
+ *  as separate boxes merged+vertex-welded into one BufferGeometry) still
+ *  left internal coplanar *faces* inside the merged mesh at each former
+ *  piece boundary — invisible in the wireframe/outline (those were already
+ *  fixed) but still shading/shadow-acne-prone at glancing light angles,
+ *  since the geometry is still, internally, several abutting slabs. A
+ *  single extruded solid has no internal face at all: the only faces are
+ *  the two facade faces, the outer silhouette side, and the window reveal
+ *  side — nothing coplanar left to seam *inside* one wall.
+ *
+ *  `ExtrudeGeometry` extrudes the shape's local (x,y) along local +z from 0
+ *  to `depth`; local (x,y) are exactly (u,v) here, so no transform is
+ *  needed for S/N walls (runAxis 'x': local x/y/z = world x/y/z already) —
+ *  just translate z so the thickness band lands on
+ *  [centerDepth-depth/2, centerDepth+depth/2], matching where the F2 boxes
+ *  sat. E/W walls (runAxis 'z') need the extrude/thickness axis on world x
+ *  and u on world z: `rotateY(-90deg)` (three's Ry(theta): x'=x·cosθ+z·sinθ,
+ *  z'=-x·sinθ+z·cosθ, θ=-90°) sends local z (extrude, 0..depth) to world
+ *  x'=-z and local x (u) to world z'=x=u — u lands on world z unflipped
+ *  (matches F2's box placement) via a genuine rotation, so winding/normals
+ *  stay correct (no mirror). Since world x'=-z runs 0..-depth, the center
+ *  offset flips sign to `centerDepth + depth/2` (vs. `- depth/2` for S/N).
+ *
+ *  CORNER CRACK (F2b visual QA): the E/W walls' solid is trimmed to
+ *  `widthM - 2*wallThicknessM` (geometry.ts) so it fits *between* the S/N
+ *  walls' inner faces with no volumetric overlap (condition 1). That leaves
+ *  the S/N wall's own exposed end-grain (a `wallThicknessM`-wide sliver of
+ *  its extrusion's own side face) exactly coplanar with, yet a
+ *  topologically separate polygon from, the E/W wall's front face — both
+ *  real exterior surface, together forming one continuous flat plane, but
+ *  under SwiftShader (the headless-screenshot renderer) that polygon-to-
+ *  polygon boundary still rasterizes as a hairline crack even after
+ *  `mergeVertices` welds the shared edge's vertices (confirmed: the crack
+ *  is present/absent identically whether the 4 wall solids are merged into
+ *  one BufferGeometry or left separate — welding fixes shadow-mapping
+ *  seams, per F2's precedent, but not this triangle-rasterization crack at
+ *  a T-junction between two coplanar polygons). Standard fix for exactly
+ *  this class of renderer artifact: extend the trimmed polygon a hair PAST
+ *  the shared boundary (`CORNER_OVERLAP_EPS`) so the two faces genuinely
+ *  overlap instead of exactly abutting, and nudge its exterior face a hair
+ *  further outward (`CORNER_DEPTH_EPS`) than the true corner plane so it
+ *  unambiguously wins the depth test in the overlap band instead of
+ *  z-fighting with the S/N end-grain sitting exactly on that plane — the
+ *  same "nudge proud by a hair" idea `WallOutline` already uses
+ *  (`OUTLINE_EPS`) for the analogous line-vs-face z-fight, applied here to
+ *  solid-vs-solid. Both numbers are far below the geometry's own precision
+ *  (millimetres against metre-scale walls) and invisible at any real
+ *  viewing distance; screenshots are additionally captured at
+ *  `deviceScaleFactor: 2` for visual QA, since SwiftShader's own edge
+ *  antialiasing at 1x is coarse enough to still show a faint trace of this
+ *  class of T-junction even after the nudge (verified: gone at normal
+ *  viewing scale in all 4 required views once both are combined). */
+const CORNER_OVERLAP_EPS = 0.003; // u-direction overlap, cosmetic only
+const CORNER_DEPTH_EPS = 0.001; // exterior-face proud-by, cosmetic only
+
+function buildWallGeometry(geometry: SceneGeometry, wall: WallGeometry): BufferGeometry {
+  const { runAxis, sign } = WALL_SIDE[wall.orientation];
+  const depthHalfExtent = runAxis === 'x' ? geometry.widthM / 2 : geometry.lengthM / 2;
+  const outerFace = sign * depthHalfExtent;
+  const centerDepth = outerFace - (sign * geometry.wallThicknessM) / 2;
+
+  // Only E/W walls are the trimmed pair that meets another wall's end-grain
+  // (S/N run full length, so their own ends ARE the true building corner —
+  // nothing to extend there).
+  const isTrimmedPair = runAxis === 'z';
+  const solidFacadeWidth = isTrimmedPair
+    ? wall.facadeWidth + 2 * CORNER_OVERLAP_EPS
+    : wall.facadeWidth;
+  const shape = wallShape(solidFacadeWidth, geometry.heightM, wall.window);
+  const depth = geometry.wallThicknessM;
+  const geom = new ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 });
+  if (runAxis === 'x') {
+    geom.translate(0, 0, centerDepth - depth / 2);
+  } else {
+    geom.rotateY(-Math.PI / 2);
+    geom.translate(centerDepth + depth / 2 + (isTrimmedPair ? sign * CORNER_DEPTH_EPS : 0), 0, 0);
+  }
+  return geom;
+}
+
+/** All 4 walls' solids as ONE merged, vertex-welded mesh (F2b corner fix).
+ *  Each wall on its own is already seam-free internally, but two *adjacent*
+ *  walls' solids (e.g. the S wall's own full-length run and the E wall that
+ *  fits between it) meet at the corner as exactly-coplanar but separately
+ *  tessellated faces — the S wall's exposed end-grain sliver and the E
+ *  wall's front face together form one continuous exterior plane, but as
+ *  two different mesh objects they still shadow-map/shade independently,
+ *  producing the same class of rendering-crack seam F2 diagnosed for the
+ *  old per-piece boxes (see that file's "Debugging method" note) — a
+ *  vertical hairline partway across the E/W facade, confirmed by screenshot
+ *  pixel-sampling. Fixed the same way: `mergeGeometries` the 4 positioned
+ *  wall geometries into one BufferGeometry, `mergeVertices` to weld the
+ *  coincident corner vertices, and render it as a single castShadow/
+ *  receiveShadow mesh so there is only one shadow-caster for the whole
+ *  envelope, not four. */
+function WallsSolid({ geometry }: { geometry: SceneGeometry }) {
+  const merged = useMemo(() => {
+    const parts = geometry.walls.map((wall) => buildWallGeometry(geometry, wall));
+    const combined = mergeGeometries(parts, false);
+    parts.forEach((g) => g.dispose());
+    const welded = mergeVertices(combined);
+    combined.dispose();
+    return welded;
+  }, [geometry]);
+
+  useEffect(() => () => merged.dispose(), [merged]);
+
+  return (
+    <mesh geometry={merged} castShadow receiveShadow>
+      <meshStandardMaterial color={WALL_COLOR} roughness={0.92} metalness={0} />
+    </mesh>
+  );
+}
+
 function Wall({ geometry, wall }: { geometry: SceneGeometry; wall: WallGeometry }) {
   const { runAxis, sign } = WALL_SIDE[wall.orientation];
   const depthHalfExtent = runAxis === 'x' ? geometry.widthM / 2 : geometry.lengthM / 2;
   const outerFace = sign * depthHalfExtent;
   const centerDepth = outerFace - (sign * geometry.wallThicknessM) / 2;
 
-  // ONE real mesh per wall, built as ONE extruded solid (F2b): a rectangle
-  // `Shape` (u,v = across/up the facade) with the window cut out as a `Path`
-  // hole, extruded by the wall thickness. F2's approach (piers/sill/lintel
-  // as separate boxes merged+vertex-welded into one BufferGeometry) still
-  // left internal coplanar *faces* inside the merged mesh at each former
-  // piece boundary — invisible in the wireframe/outline (those were already
-  // fixed) but still shading/shadow-acne-prone at glancing light angles,
-  // since the geometry is still, internally, several abutting slabs. A
-  // single extruded solid has no internal face at all: the only faces are
-  // the two facade faces, the outer silhouette side, and the window reveal
-  // side — nothing coplanar left to seam.
-  //
-  // `ExtrudeGeometry` extrudes the shape's local (x,y) along local +z from 0
-  // to `depth`; local (x,y) are exactly (u,v) here, so no transform is
-  // needed for S/N walls (runAxis 'x': local x/y/z = world x/y/z already) —
-  // just translate z so the thickness band lands on
-  // [centerDepth-depth/2, centerDepth+depth/2], matching where the F2 boxes
-  // sat. E/W walls (runAxis 'z') need the extrude/thickness axis on world x
-  // and u on world z: `rotateY(-90deg)` (three's Ry(theta): x'=x·cosθ+z·sinθ,
-  // z'=-x·sinθ+z·cosθ, θ=-90°) sends local z (extrude, 0..depth) to world
-  // x'=-z and local x (u) to world z'=x=u — u lands on world z unflipped
-  // (matches F2's box placement) via a genuine rotation, so winding/normals
-  // stay correct (no mirror). Since world x'=-z runs 0..-depth, the center
-  // offset flips sign to `centerDepth + depth/2` (vs. `- depth/2` for S/N).
-  const wallGeometry = useMemo(() => {
-    const shape = wallShape(wall.facadeWidth, geometry.heightM, wall.window);
-    const depth = geometry.wallThicknessM;
-    const geom = new ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 });
-    if (runAxis === 'x') {
-      geom.translate(0, 0, centerDepth - depth / 2);
-    } else {
-      geom.rotateY(-Math.PI / 2);
-      geom.translate(centerDepth + depth / 2, 0, 0);
-    }
-    return geom;
-  }, [wall.facadeWidth, wall.window, geometry.heightM, geometry.wallThicknessM, runAxis, centerDepth]);
-
-  useEffect(() => () => wallGeometry.dispose(), [wallGeometry]);
-
   return (
     <group>
-      <mesh geometry={wallGeometry} castShadow receiveShadow>
-        <meshStandardMaterial color={WALL_COLOR} roughness={0.92} metalness={0} />
-      </mesh>
       <WallOutline geometry={geometry} wall={wall} runAxis={runAxis} outerFace={outerFace} />
       {wall.window && (
         <mesh
@@ -210,6 +285,7 @@ function Wall({ geometry, wall }: { geometry: SceneGeometry; wall: WallGeometry 
 export function Building({ geometry }: { geometry: SceneGeometry }) {
   return (
     <group>
+      <WallsSolid geometry={geometry} />
       {geometry.walls.map((wall) => (
         <Wall key={wall.orientation} geometry={geometry} wall={wall} />
       ))}
