@@ -30,7 +30,9 @@ packages/engine, packages/data             MongoDB (users, designs, runs, weathe
 `ShelterDesign` (defined in `apps/studio-server/API.md`) is the single representation of a shelter. It drives the 3D
 model, the simulation, saved designs and comparisons. The client never runs physics: it only has `import type` from
 `@shelter/engine`. Saved runs keep a frozen input snapshot, so editing a design never changes past results. The
-build ledger is `STUDIO.md` (task table + handoff), with the architecture in `ledger/PLAN.md`.
+build ledger is `STUDIO.md` (task table + handoff), with the architecture in `ledger/PLAN.md`. The current phase,
+**Studio v2** (typed values, box/cylinder/dome and two-storey shelters, click-to-edit 3D model, new landing,
+architecture map), is planned in `ledger/V2.md`; `ORCHESTRATOR.md` is the entry point for resuming work.
 
 ### Classic
 

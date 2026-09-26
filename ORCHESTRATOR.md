@@ -1,7 +1,10 @@
 # ORCHESTRATOR — ShelterSim Studio
 
 > For the MAIN agent only. Subagents never read this file; everything they need goes in their brief.
-> New session? Read this file, then `STUDIO.md`. Nothing else until §4 tells you to.
+> New session? Read this file, then `STUDIO.md` (HANDOFF first), then `ledger/V2.md`. Nothing else until §4 tells you to.
+>
+> **Current phase: Studio v2** (approved 2026-09-26): typed numeric entry, shelter shapes (box/cylinder/dome, 1–2
+> storeys), select-to-edit in 3D, landing redesign, architecture map. Plan: `ledger/V2.md`. Batches and status: §10.
 
 ## 1. Role
 
@@ -33,6 +36,11 @@ apps/server :4000 · apps/client :5173 · apps/web (legacy) · packages/*
 - **`apps/studio-server/API.md` is the contract.** Any shape change updates it first.
 - **`ShelterDesign`** (defined in API.md) is the single representation of a shelter. It drives the 3D model, the
   simulation, saved designs and any future export.
+- **Shapes (v2) never touch the engine.** Non-box shapes and storeys are generated as facet surfaces in
+  `apps/studio-server/src/design/assemble.ts`; the box path must stay byte-identical (`test/parity.test.ts`). New
+  `ShelterDesign` fields are optional with defaults so old saved designs and frozen run snapshots stay valid.
+- **The client viewer mirrors the server's facets** (what you see is what is simulated). Selection state (v2) is
+  UI-only: never saved, never sent to the server, never triggers a preview.
 - Keep `skyModel: 'isotropic'` (presets diverge under `hdkr`).
 - Simulations store a frozen `inputSnapshot`. Editing a design never changes past runs.
 - No fake ANSYS. There is a `SimulationProvider` seam with one implementation, `fast-physics`.
@@ -52,6 +60,7 @@ apps/server :4000 · apps/client :5173 · apps/web (legacy) · packages/*
 
 - **`STUDIO.md`** is the index: `## HANDOFF`, decisions, and the task table (id, deps, owner, status, evidence).
 - **`ledger/PLAN.md`** holds the architecture: data model, API, UX, design system. It is the shared source of truth.
+- **`ledger/V2.md`** is the approved plan for the current phase (the user's request, their answers, every task).
 - **`ledger/tasks/<ID>.md`** is one short file per task (template below). Write or refresh it before delegating.
 - `LOG.md`, `log/`, `REBUILD.md` are HISTORY of the original app. Don't read them unless a task file names a section.
 - If it isn't in the ledger, the next session won't know it.
@@ -69,7 +78,8 @@ Status: TODO | IN-PROGRESS | DONE | BLOCKED — <reason>      Depends on: …
 
 ## 4. Session start
 
-1. Read `STUDIO.md`. Start from its HANDOFF's recommended next step.
+1. Read `STUDIO.md`. Start from its HANDOFF's recommended next step. For the current phase also read `ledger/V2.md`
+   and §10 below.
 2. Check: `git branch --show-current` (should be `studio/main`), `git worktree list`, `git status --short`.
 3. Check for running servers with `ss -ltn | grep -E ':4100|:5273'`. Don't start duplicates. `:4000/:5173` belong to
    the old app; leave them alone.
@@ -143,3 +153,27 @@ Stop starting new work if context is ≥ 40%, session usage is ≥ 90%, or the u
 2. Rewrite `## HANDOFF` in STUDIO.md: done, in progress (branches/worktrees), blocked, servers left running,
    recommended next step. There is exactly one HANDOFF at a time; prepend the old one to `ledger/HANDOFF-ARCHIVE.md`.
 3. Give the user a short summary.
+
+## 10. Current phase — Studio v2
+
+Plan: `ledger/V2.md`. Task files: `ledger/tasks/{G1,G2,G3,G4,G5,Q2,D1}.md`. Status: the STUDIO.md task table.
+
+| Batch | Tasks | Parallel? | Installer | Scratch ports |
+|---|---|---|---|---|
+| 1 | G1 (typed entry, client) ‖ G2 (shape contract + server facets) | yes, disjoint files | G2 only (should need none) | G1 :5274 · G2 :4101 |
+| 2 | G3 (shapes in viewer + Geometry controls) | – | none | :4102 / :5275 |
+| 3 | G4 (select-to-edit) ‖ G5 (landing) | yes; only overlap is G5's additive `autoRotate` prop on `ShelterViewer.tsx` — orchestrator resolves | none | G4 :4103/:5276 · G5 :4104/:5277 |
+| 4 | Q2 (E2E + visual QA) → fix tasks `Q2F` if findings | – | none (playwright-core in scratchpad) | :4109 / :5281 |
+| 5 | D1 (architecture map: Explore agent gathers facts, orchestrator writes + publishes the HTML page and `ARCHITECTURE-STUDIO.md`) | – | – | – |
+
+**Rules for this phase**
+- **Plan changes are written down before work continues.** If the user changes scope or a decision, update
+  `ledger/V2.md`, the affected `ledger/tasks/<ID>.md`, the STUDIO.md decisions/rows and the HANDOFF first, commit
+  the ledger, then delegate. A new session must be able to resume from this file alone.
+- Mark a task `IN-PROGRESS` in STUDIO.md (with worktree + branch in the Evidence cell) the moment its agent is
+  launched, so an interrupted session knows what was running.
+- User decisions for v2 (don't re-ask): shapes = box/cylinder/dome + 1–2 storeys as one zone, engine frozen;
+  3D editing = select → jump to control (both ways) + floating part panel, no drag handles; landing = bolder, same
+  identity, purposeful motion only with `prefers-reduced-motion` respected; architecture map = published HTML page
+  + `ARCHITECTURE-STUDIO.md`.
+

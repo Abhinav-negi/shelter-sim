@@ -1,37 +1,30 @@
 # STUDIO.md — ShelterSim Studio build ledger (index)
 
-Orchestrator protocol: `ORCHESTRATOR.md`. Architecture: `ledger/PLAN.md`. One file per task: `ledger/tasks/<ID>.md`.
+Orchestrator protocol: `ORCHESTRATOR.md`. Architecture: `ledger/PLAN.md`. Current phase plan (**Studio v2**):
+`ledger/V2.md`. One file per task: `ledger/tasks/<ID>.md`.
 Integration branch: **`studio/main`**. Task branches: `task/<id>` in worktrees `../wt-<id>`.
 
-## HANDOFF (2026-09-26, end of session 2)
+## HANDOFF (2026-09-26, session 3 — Studio v2 planned, not started)
 
-**All tasks DONE and merged into `studio/main`** (each verified by the orchestrator per ORCHESTRATOR.md §7: tests,
-build, frozen guard, screenshots read by eye): F2b (mitred extruded walls; round 1 rejected for visible corner seams),
-F3 (Studio page; round 1 rejected for roof-only viewer framing + heat-flow label overlap; also fixed a real Save-run
-500 in `api/client.ts`), F4 (landing, auth, dashboard, compare; orchestrator fixed a `-0.0` KPI formatting bug),
-F2c (aspect-aware camera framing), Q1 (committed E2E `apps/studio/e2e/flow.mjs`, 13/13; 3 findings), Q1F (those 3
-findings fixed). Suites at Q1: studio-server 49 (+2 skipped), studio 73, server 12, engine 160 (+10 skipped), data 86.
+**Phase:** Studio v2 approved by the user; full plan in `ledger/V2.md`, batches in `ORCHESTRATOR.md` §10, task files
+`ledger/tasks/{G1,G2,G3,G4,G5,Q2,D1}.md` written. v1 (S0…Q1F) is DONE and merged (see the archive for its handoff).
 
-**In progress:** nothing. No task worktrees or branches remain. No servers left running on studio/scratch ports.
+**In progress:** nothing yet. No task worktrees or branches. Servers on :4100/:5273 were already running at session
+start (the user's own `dev:studio`), not started by the orchestrator — leave them alone.
 
-**Run the E2E:** `timeout 180 env PLAYWRIGHT_CORE=<path to a playwright-core install> node apps/studio/e2e/flow.mjs`
-(playwright-core is deliberately not a repo dependency; `npm i playwright-core` into any scratch dir).
-
-**Known follow-ups (not bugs, not scheduled):** Dashboard/Compare do one `GET .../simulations` per design (N+1; a
-batch route would be an API.md change → ask the user); KPI labels are duplicated in `routes/compare/kpiTable.ts` and
-`results/Kpis.tsx` (export one `KPI_DEFS` next time results is touched); the sun line's far end leaves the frame at
-all aspects (accepted since F2); engine tests rewrite `packages/engine/test/output/validation-numbers.csv`, so
-`git checkout` it before the frozen guard.
-
-**Recommended next step:** ask the user what is next. The planned scope is complete. `apps/studio-server/.env` now
-exists, so `npm run dev:studio` (:4100/:5273) is the way to try the app for real. Old-app servers on :4000/:5173 are
-the user's; leave them alone.
+**Recommended next step:** start batch 1 — create worktrees `../wt-g1` (`task/g1`) and `../wt-g2` (`task/g2`) from
+`studio/main`, `npm run setup` in each, then launch G1 and G2 in parallel (Sonnet, background), marking both
+IN-PROGRESS here.
 
 ## Decisions (approved by user unless marked "orchestrator")
 1. New apps `apps/studio` + `apps/studio-server` (orchestrator: naming). Old apps and `packages/*` frozen.
 2. MongoDB + Mongoose. Tests use `mongodb-memory-server`.
 3. Locations: 5 bundled presets **plus** any lat/lon via Open-Meteo / NASA POWER (keyless), cached in Mongo.
-4. 3D: react-three-fiber + drei, flat roof only (it matches the engine), view-only (no direct editing).
+4. 3D: react-three-fiber + drei, flat roof. **v2 (user, 2026-09-26):** shapes box/cylinder/dome, 1–2 storeys simulated
+   as ONE zone (engine unchanged: shapes are generated facet surfaces in `design/assemble.ts`); select-to-edit (click a
+   part → matching control opens/highlights, and back), no drag gizmos. Was: view-only.
+9. v2 (user): every numeric control is also typeable. Landing: bolder, same identity; purposeful slow motion allowed
+   when `prefers-reduced-motion` is respected. Architecture map: published HTML page + `ARCHITECTURE-STUDIO.md`.
 5. Auth: email/password, scrypt, JWT in an httpOnly cookie (orchestrator: minor, per brief §7).
 6. The client imports `ShelterDesign` etc. **type-only** from `apps/studio-server/src/design/types.ts`, the single
    definition (orchestrator).
@@ -55,6 +48,13 @@ the user's; leave them alone.
 | F4 | Landing, auth pages, dashboard, compare | F3 P2 | | DONE | Rewrote `routes/{Landing,Dashboard,Compare}.tsx`, field-level-error'd `routes/{Login,Register}.tsx`, added `routes/compare/{OverlayChart.tsx,kpiTable.ts(+test)}`. Landing: lazy full-bleed `ShelterViewer` hero at dawn over a solid text panel, single-column numbered "how it works" list (not a feature grid), a real `POST /api/simulate/preview` chart under "Fast physics" (no auth needed, no fake data). Login/Register now map `ApiError.field` to the right `FieldRow` instead of always blaming password; field-less errors get a plain banner. Dashboard: hairline-divided list of `GET /api/designs` (name, resolved location, updated, dawn temp via one `GET .../simulations` per design — N+1, noted), empty state, inline (non-native) two-step delete confirm, log out. Compare: a 2–4 checkbox picker synced to `?ids=`, per-design latest-run fetch (also N+1), overlaid **indoor** curves (baseline in `--ink`, rest in thermal tokens), and a KPI delta table vs the first pick — no scores/rankings; designs without a run get a plain notice + a Studio link. Both `TemperatureChart` (Landing) and `OverlayChart` (Compare) are lazy so recharts stays out of the eager route chunk (bundle-size regression found + fixed during this task — eager chunk was 662 kB before, 303 kB after). `npm test -w @shelter/studio` 66/66; `npm run build -w @shelter/studio` clean; frozen-path diff and `dist` grep both empty. Live flow (register incl. a field error → dashboard empty → 2 designs + runs → dashboard grid → compare → delete w/ confirm → logout → login incl. wrong-password error → success) green against a scratch Mongo server + production build; 0 console errors besides the two Chrome-logged 400/401 network entries from the *deliberately* provoked auth errors the flow itself triggers, plus the pre-existing `THREE.Clock` warning. 24+ screenshots (1440/390 × light/dark × Landing/Login/Register/Dashboard-empty/Dashboard-filled/Compare, plus edge cases) all read by eye; found + fixed one real bug (Compare's KPI table had a `min-w-[420px]` clipping the right column at 390 px — removed, table now sizes to content). See `ledger/tasks/F4.md` Evidence. |
 | Q1 | E2E + visual QA pass, fixes routed back | all | | DONE | `apps/studio/e2e/{flow.mjs,scratch-server.mjs,preview.config.mjs,png.mjs}` (new): a playwright-core E2E script (register → new design → change width, viewer bbox grows (edge-detection, not flat-colour diff — see task Evidence) → preview → save → run saved → second design → compare shows both → logout → `/app` redirects to login), 0 unexpected console errors (allowlist: pre-existing `THREE.Clock` warning + the mechanical `/api/auth/me` 401 the logged-out redirect check itself provokes). `PLAYWRIGHT_CORE=<path> node apps/studio/e2e/flow.mjs` under `timeout 180`; starts its own scratch server (:4109) + `vite preview` (:5281), cleans up in `finally`. 13/13 checks pass, 3 runs, deterministic. Visual QA: 32 screenshots (every page × 1440/390 × light/dark + Studio loading/preview-error/Compare-no-run states), all read by eye — 3 findings (table in task Evidence): (1) major, F4, the already-known 390 px landing hero-covers-building; (2) minor, F4, dark-mode native checkboxes keep light UA styling (no `color-scheme` in tokens.css) on Compare; (3) minor, F3, Studio's "Loading design…" state is a bare text line with no header/skeleton. Preview-error and Compare-no-run states both confirmed **passing** (real message + Retry, no stack trace; plain notice, no broken chart). No banned-list violations found anywhere. Suites: studio-server 49/2 skipped, studio 73/73, server 12/12, engine 160/10 skipped, data 86/86, all green; build clean; frozen guard empty (a `packages/engine/test/output/validation-numbers.csv` test-run side-effect was reverted before every guard check). See `ledger/tasks/Q1.md` Evidence. |
 | Q1F | Fix Q1 findings: landing hero @390, dark color-scheme, Studio loading state | Q1 | | DONE | `Landing.tsx`: below `sm` the hero stacks (viewer own box, text panel in normal flow below it) instead of overlaying, so the building is visible above the panel at 390 px; `sm`+ (1440) unchanged (pixel-identical). `tokens.css`: `color-scheme: light`/`dark` added to the existing light/dark blocks (same `data-theme` selectors the toggle already drives) so native controls (checkboxes, date input) pick the matching UA palette. `Studio.tsx` (loading branch only): now renders the header row + three-pane frame with calm "Loading viewer…/controls…/results…" placeholders instead of bare "Loading design…" text. Before/after screenshots for all three, `flow.mjs` 13/13 PASS, `npm test -w @shelter/studio` 73/73, build clean, frozen guard empty. See `ledger/tasks/Q1F.md` Evidence. |
+| G1 | Typed numeric entry (all numeric controls + azimuth) | – | | TODO | |
+| G2 | Shape contract (box/cylinder/dome, storeys) + server facet surfaces | – | | TODO | |
+| G3 | Shapes in viewer + Geometry controls | G1 G2 | | TODO | |
+| G4 | Select-to-edit (3D part ↔ control highlight, part popover) | G3 | | TODO | |
+| G5 | Landing redesign (bolder, same identity) | G3 | | TODO | |
+| Q2 | E2E + visual QA for v2 | G4 G5 | | TODO | |
+| D1 | Studio architecture map (HTML page + ARCHITECTURE-STUDIO.md) | Q2 | orchestrator | TODO | |
 
 ## Required from user
 ```

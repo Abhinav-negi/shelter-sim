@@ -1,5 +1,29 @@
 # HANDOFF archive (newest first)
 
+## HANDOFF (2026-09-26, end of session 2)
+
+**All tasks DONE and merged into `studio/main`** (each verified by the orchestrator per ORCHESTRATOR.md §7: tests,
+build, frozen guard, screenshots read by eye): F2b (mitred extruded walls; round 1 rejected for visible corner seams),
+F3 (Studio page; round 1 rejected for roof-only viewer framing + heat-flow label overlap; also fixed a real Save-run
+500 in `api/client.ts`), F4 (landing, auth, dashboard, compare; orchestrator fixed a `-0.0` KPI formatting bug),
+F2c (aspect-aware camera framing), Q1 (committed E2E `apps/studio/e2e/flow.mjs`, 13/13; 3 findings), Q1F (those 3
+findings fixed). Suites at Q1: studio-server 49 (+2 skipped), studio 73, server 12, engine 160 (+10 skipped), data 86.
+
+**In progress:** nothing. No task worktrees or branches remain. No servers left running on studio/scratch ports.
+
+**Run the E2E:** `timeout 180 env PLAYWRIGHT_CORE=<path to a playwright-core install> node apps/studio/e2e/flow.mjs`
+(playwright-core is deliberately not a repo dependency; `npm i playwright-core` into any scratch dir).
+
+**Known follow-ups (not bugs, not scheduled):** Dashboard/Compare do one `GET .../simulations` per design (N+1; a
+batch route would be an API.md change → ask the user); KPI labels are duplicated in `routes/compare/kpiTable.ts` and
+`results/Kpis.tsx` (export one `KPI_DEFS` next time results is touched); the sun line's far end leaves the frame at
+all aspects (accepted since F2); engine tests rewrite `packages/engine/test/output/validation-numbers.csv`, so
+`git checkout` it before the frozen guard.
+
+**Recommended next step:** ask the user what is next. The planned scope is complete. `apps/studio-server/.env` now
+exists, so `npm run dev:studio` (:4100/:5273) is the way to try the app for real. Old-app servers on :4000/:5173 are
+the user's; leave them alone.
+
 ## HANDOFF (2026-09-26, end of session 1)
 
 **Merged into `studio/main` (verified by the orchestrator):** S0, P1, P2, P3, F1, F1b, F2, plus orchestrator fixes:
