@@ -31,7 +31,7 @@ function partLabel(part: PartId): string {
  *  `azimuthDirection`, just resolved to a single anchor point instead of a
  *  whole mesh. Mirrors, doesn't import, Building.tsx's internals (those are
  *  module-private) — this only needs a rough anchor, not exact geometry. */
-function anchorPosition(geometry: SceneGeometry, part: PartId): [number, number, number] {
+export function anchorPosition(geometry: SceneGeometry, part: PartId): [number, number, number] {
   if (part === 'roof') return [0, geometry.buildingHeightM + geometry.roofThicknessM, 0];
   if (part === 'floor') return [0, -geometry.floorThicknessM, 0];
 
