@@ -33,8 +33,49 @@ describe('ShelterDesign store', () => {
   it('loadDesign replaces the design and clears dirty', () => {
     useShelterDesign.getState().loadDesign(sample);
     const state = useShelterDesign.getState();
-    expect(state.design).toEqual(sample);
+    // sample has no shape/storeys (an old saved design) -- loadDesign
+    // normalises them to the documented defaults (box/1, API.md §3).
+    expect(state.design).toEqual({ ...sample, shape: 'box', storeys: 1 });
     expect(state.dirty).toBe(false);
+  });
+
+  it('loadDesign normalises a missing shape/storeys to box/1 (old saved design)', () => {
+    useShelterDesign.getState().loadDesign(sample);
+    expect(useShelterDesign.getState().design?.shape).toBe('box');
+    expect(useShelterDesign.getState().design?.storeys).toBe(1);
+  });
+
+  it('loadDesign leaves an explicit shape/storeys untouched', () => {
+    useShelterDesign.getState().loadDesign({ ...sample, shape: 'cylinder', storeys: 2 });
+    expect(useShelterDesign.getState().design?.shape).toBe('cylinder');
+    expect(useShelterDesign.getState().design?.storeys).toBe(2);
+  });
+
+  it('setShape changes only the shape', () => {
+    useShelterDesign.getState().loadDesign(sample);
+    useShelterDesign.getState().setShape('cylinder');
+    const { design, dirty } = useShelterDesign.getState();
+    expect(design?.shape).toBe('cylinder');
+    expect(design?.storeys).toBe(1);
+    expect(dirty).toBe(true);
+  });
+
+  it('setShape("dome") forces storeys back to 1', () => {
+    useShelterDesign.getState().loadDesign(sample);
+    useShelterDesign.getState().setStoreys(2);
+    expect(useShelterDesign.getState().design?.storeys).toBe(2);
+    useShelterDesign.getState().setShape('dome');
+    const { design } = useShelterDesign.getState();
+    expect(design?.shape).toBe('dome');
+    expect(design?.storeys).toBe(1);
+  });
+
+  it('setStoreys changes only the storeys', () => {
+    useShelterDesign.getState().loadDesign(sample);
+    useShelterDesign.getState().setStoreys(2);
+    const { design } = useShelterDesign.getState();
+    expect(design?.storeys).toBe(2);
+    expect(design?.shape).toBe('box');
   });
 
   it('setters are no-ops before a design is loaded', () => {

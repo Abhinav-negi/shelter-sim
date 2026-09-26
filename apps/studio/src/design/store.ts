@@ -3,7 +3,7 @@
 // api/ -> server. The viewer only *reads* the store."). Consumers should always
 // pass a selector, e.g. `useShelterDesign((s) => s.design?.lengthM)`, so a change
 // to one field doesn't rerender components that only care about another.
-import type { DesignLocation, ShelterDesign, SurfaceConstruction } from '@shelter/studio-server';
+import type { DesignLocation, ShelterDesign, Shape, Storeys, SurfaceConstruction } from '@shelter/studio-server';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 
@@ -25,6 +25,9 @@ export interface ShelterDesignState {
   setLengthM: (lengthM: number) => void;
   setWidthM: (widthM: number) => void;
   setHeightM: (heightM: number) => void;
+  /** Switching to 'dome' forces storeys to 1 (API.md §3: dome ⇒ storeys must be 1). */
+  setShape: (shape: Shape) => void;
+  setStoreys: (storeys: Storeys) => void;
 
   // Orientation
   setAzimuthDeg: (azimuthDeg: number) => void;
@@ -59,7 +62,11 @@ export const useShelterDesign = create<ShelterDesignState>()(
     design: null,
     dirty: false,
 
-    loadDesign: (design) => set({ design, dirty: false }),
+    // G3: an old saved design (or a frozen run's inputSnapshot) predates
+    // `shape`/`storeys` (both optional on the wire, API.md §3) — normalise
+    // them to the documented defaults here so every other setter/consumer
+    // can assume they're always present.
+    loadDesign: (design) => set({ design: { ...design, shape: design.shape ?? 'box', storeys: design.storeys ?? 1 }, dirty: false }),
     reset: (defaults) => set({ design: defaults, dirty: false }),
 
     setLocation: (location) => edit(set, () => ({ location })),
@@ -69,6 +76,8 @@ export const useShelterDesign = create<ShelterDesignState>()(
     setLengthM: (lengthM) => edit(set, () => ({ lengthM })),
     setWidthM: (widthM) => edit(set, () => ({ widthM })),
     setHeightM: (heightM) => edit(set, () => ({ heightM })),
+    setShape: (shape) => edit(set, () => (shape === 'dome' ? { shape, storeys: 1 } : { shape })),
+    setStoreys: (storeys) => edit(set, () => ({ storeys })),
 
     setAzimuthDeg: (azimuthDeg) => edit(set, () => ({ azimuthDeg })),
 

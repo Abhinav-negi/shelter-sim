@@ -69,7 +69,11 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
   const { lat, lon } = useMemo(() => resolveLatLon(design, options), [design, options]);
   const sunDir = useMemo(() => sunDirection(lat, lon, design.date, hour), [lat, lon, design.date, hour]);
 
-  const footprint = Math.max(geometry.lengthM, geometry.widthM, geometry.heightM * 2);
+  // G3: `buildingHeightM` is the real envelope height (dome=radius, 2
+  // storeys=2h, condition 3 "fits the camera to the real bounding box") —
+  // was `geometry.heightM*2` pre-G3, byte-identical here at storeys:1 (box
+  // and cylinder) since buildingHeightM===heightM then.
+  const footprint = Math.max(geometry.lengthM, geometry.widthM, geometry.buildingHeightM * 2);
   const sunDistance = footprint * 3;
   const sunUp = sunDir.y > 0.02; // sun above the horizon
   const shadowExtent = footprint * 1.2;
@@ -95,7 +99,7 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
   // enough headroom for the shadow to actually read against it.
   const groundColor = useMemo(() => mix(colors.surface, colors.hairline, 0.4), [colors.surface, colors.hairline]);
   const sunColor = colors.thermalWarm;
-  const buildingCenter: [number, number, number] = [0, geometry.heightM / 2, 0];
+  const buildingCenter: [number, number, number] = [0, geometry.buildingHeightM / 2, 0];
 
   return (
     <>
@@ -135,7 +139,7 @@ function Scene({ design, options, hour }: ShelterViewerProps) {
 
       <OrbitControls
         makeDefault
-        target={[0, geometry.heightM / 2, 0]}
+        target={[0, geometry.buildingHeightM / 2, 0]}
         minDistance={footprint * 0.6}
         maxDistance={footprint * 6}
         minPolarAngle={0.15}
