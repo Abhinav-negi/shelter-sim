@@ -7,7 +7,11 @@
 // S/N facades and runs along world X below); `widthM` is the E/W wall run
 // (N-S extent, sizes the E/W facades, runs along world Z). Wall/roof/floor
 // thickness is the construction's own `thicknessM`, or, when a construction
-// is null, the preset's total stack thickness for that surface.
+// is null, the preset's total stack thickness for that surface. Corner
+// joints (F2b): S/N walls run the full `lengthM`; E/W walls' `facadeWidth`
+// is shortened to `widthM - 2*wallThicknessM` so they fit flush between the
+// S/N walls' inner faces instead of both pairs running full-length and their
+// solids overlapping at each corner.
 //
 // World frame (see ShelterViewer.tsx): Y up, +X = East, +Z = South — chosen
 // to match the engine's own "azimuth measured from south, negative = East,
@@ -50,7 +54,12 @@ export interface WindowRect {
 
 export interface WallGeometry {
   orientation: Orientation;
-  /** m, this facade's width — lengthM for S/N, widthM for E/W. */
+  /** m, this facade's width — lengthM for S/N (the full footprint run); for
+   *  E/W, widthM minus twice the wall thickness, so the E/W walls fit
+   *  *between* the S/N walls' inner faces (S/N run the full length, E/W fit
+   *  between — F2b's corner-joint rule: flush at the corner, no overlap, no
+   *  gap) rather than both pairs running the full footprint and their solid
+   *  volumes overlapping in the corner cube. */
   facadeWidth: number;
   /** null when WWR is 0 or the facade is too small to fit a margined opening. */
   window: WindowRect | null;
@@ -100,11 +109,17 @@ export function buildSceneGeometry(design: ShelterDesign, options: Options): Sce
   const roofThicknessM = resolveThickness(design.roofConstruction, preset?.thicknessM.roof);
   const floorThicknessM = resolveThickness(design.floorConstruction, preset?.thicknessM.floor);
 
+  // S/N run the full lengthM footprint; E/W fit between their inner faces
+  // (see WallGeometry.facadeWidth doc). Floored at a hair above 0 so a
+  // pathological wallThicknessM >= widthM/2 degenerates to a sliver instead
+  // of a negative/zero-width shape crashing the extrude in Building.tsx.
+  const ewFacadeWidth = Math.max(1e-4, design.widthM - 2 * wallThicknessM);
+
   const facades: Array<{ orientation: Orientation; facadeWidth: number; wwr: number }> = [
     { orientation: 'S', facadeWidth: design.lengthM, wwr: design.windowWwr.S },
     { orientation: 'N', facadeWidth: design.lengthM, wwr: design.windowWwr.N },
-    { orientation: 'E', facadeWidth: design.widthM, wwr: design.windowWwr.E },
-    { orientation: 'W', facadeWidth: design.widthM, wwr: design.windowWwr.W },
+    { orientation: 'E', facadeWidth: ewFacadeWidth, wwr: design.windowWwr.E },
+    { orientation: 'W', facadeWidth: ewFacadeWidth, wwr: design.windowWwr.W },
   ];
 
   const walls: WallGeometry[] = facades.map((f) => ({

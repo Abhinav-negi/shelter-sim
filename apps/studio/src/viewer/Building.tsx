@@ -1,14 +1,14 @@
-// The building itself: walls (with real window openings, no CSG — each wall
-// is framed from up to four non-overlapping boxes: two piers, a sill band
-// and a lintel band, merged into one mesh — see the comment on `wallGeometry`
-// below — plus a separate glass pane, so there is nothing coplanar to
-// z-fight), a flat roof slab and a floor slab. Pure render component: all
-// the numbers come from `SceneGeometry` (geometry.ts).
+// The building itself: walls (each wall is ONE extruded solid — a rectangle
+// `THREE.Shape` with the window opening cut out as a `Path` hole, extruded
+// by the wall thickness — so there is no internal coplanar face anywhere
+// inside a wall to seam or shadow-acne; see the comment on `wallGeometry`
+// below — plus a separate glass pane sitting in the opening), a flat roof
+// slab and a floor slab. Pure render component: all the numbers come from
+// `SceneGeometry` (geometry.ts).
 
 import { Edges, Line } from '@react-three/drei';
 import { useEffect, useMemo } from 'react';
-import { BoxGeometry } from 'three';
-import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { ExtrudeGeometry, Path, Shape } from 'three';
 import type { Orientation, SceneGeometry, WallGeometry, WindowRect } from './geometry';
 
 // A fixed, theme-independent material palette — a real shelter's plaster and
@@ -24,37 +24,32 @@ const FLOOR_COLOR = '#bdb8a9';
 const EDGE_COLOR = '#3a362c';
 const GLASS_COLOR = '#a9c3d6';
 
-interface Rect {
-  uCenter: number;
-  uSize: number;
-  vCenter: number;
-  vSize: number;
-}
+/** The wall's outline as a `Shape` (u = across the facade, v = up the wall),
+ *  with the window opening (if any) cut out as a `Path` hole. `half` is
+ *  floored to a hair above 0 so a degenerate (near-zero) facadeWidth — see
+ *  geometry.ts's `ewFacadeWidth` floor — still produces valid, if sliver,
+ *  geometry instead of a zero-area shape. */
+function wallShape(facadeWidth: number, heightM: number, win: WindowRect | null): Shape {
+  const half = Math.max(1e-4, facadeWidth) / 2;
+  const shape = new Shape();
+  shape.moveTo(-half, 0);
+  shape.lineTo(half, 0);
+  shape.lineTo(half, heightM);
+  shape.lineTo(-half, heightM);
+  shape.closePath();
 
-/** The wall's opening broken into the solid boxes that frame it (or one box
- *  for a blank wall). u = across the facade, v = up the wall. */
-function frameRects(facadeWidth: number, heightM: number, win: WindowRect | null): Rect[] {
-  if (!win) {
-    return [{ uCenter: 0, uSize: facadeWidth, vCenter: heightM / 2, vSize: heightM }];
+  if (win) {
+    const halfWin = win.width / 2;
+    const top = win.sill + win.height;
+    const hole = new Path();
+    hole.moveTo(-halfWin, win.sill);
+    hole.lineTo(halfWin, win.sill);
+    hole.lineTo(halfWin, top);
+    hole.lineTo(-halfWin, top);
+    hole.closePath();
+    shape.holes.push(hole);
   }
-
-  const half = facadeWidth / 2;
-  const halfWin = win.width / 2;
-  const top = win.sill + win.height;
-  const pierWidth = half - halfWin;
-  const rects: Rect[] = [];
-
-  if (pierWidth > 1e-6) {
-    rects.push({ uCenter: -(half + halfWin) / 2, uSize: pierWidth, vCenter: heightM / 2, vSize: heightM });
-    rects.push({ uCenter: (half + halfWin) / 2, uSize: pierWidth, vCenter: heightM / 2, vSize: heightM });
-  }
-  if (win.sill > 1e-6) {
-    rects.push({ uCenter: 0, uSize: win.width, vCenter: win.sill / 2, vSize: win.sill });
-  }
-  if (heightM - top > 1e-6) {
-    rects.push({ uCenter: 0, uSize: win.width, vCenter: (top + heightM) / 2, vSize: heightM - top });
-  }
-  return rects;
+  return shape;
 }
 
 /** Which world axis a facade runs along, and which side of the footprint it
@@ -107,9 +102,19 @@ function WallOutline({
   runAxis: 'x' | 'z';
   outerFace: number;
 }) {
+  // The outline's own silhouette rectangle must span the BUILDING's true
+  // outer corner (geometry.lengthM / geometry.widthM), not wall.facadeWidth:
+  // for E/W walls, facadeWidth is trimmed short of that (F2b corner-joint
+  // fit, so the E/W *solid* stops at the S/N walls' inner faces) — but the
+  // S/N wall's own end continues past that point, same material, same
+  // exterior plane, all the way to the true corner. Drawing the outline at
+  // the trimmed facadeWidth would put a false construction line partway
+  // across an otherwise-continuous facade — exactly the seam defect F2b
+  // exists to remove, just self-inflicted by the outline this time.
+  const outlineWidth = runAxis === 'x' ? geometry.lengthM : geometry.widthM;
   const segments = useMemo(
-    () => outlineSegments(wall.facadeWidth, geometry.heightM, wall.window),
-    [wall.facadeWidth, geometry.heightM, wall.window],
+    () => outlineSegments(outlineWidth, geometry.heightM, wall.window),
+    [outlineWidth, geometry.heightM, wall.window],
   );
 
   const points = useMemo(() => {
@@ -128,44 +133,42 @@ function Wall({ geometry, wall }: { geometry: SceneGeometry; wall: WallGeometry 
   const outerFace = sign * depthHalfExtent;
   const centerDepth = outerFace - (sign * geometry.wallThicknessM) / 2;
 
-  const rects = useMemo(
-    () => frameRects(wall.facadeWidth, geometry.heightM, wall.window),
-    [wall.facadeWidth, geometry.heightM, wall.window],
-  );
-
-  // One real mesh per wall, not one per frame piece: piers/sill/lintel boxes
-  // are geometrically coplanar and share the same material, but as SEPARATE
-  // meshes each casts/receives shadows independently, and a shadow-map depth
-  // difference of a fraction of a texel right at their shared boundary shows
-  // up as a thin seam line — invisible-looking "identical material" doesn't
-  // stop that (review: "no shading step"). Merging into one BufferGeometry
-  // (three's own bundled BufferGeometryUtils, no new dependency) makes it a
-  // single shadow-caster with no internal boundary at all.
+  // ONE real mesh per wall, built as ONE extruded solid (F2b): a rectangle
+  // `Shape` (u,v = across/up the facade) with the window cut out as a `Path`
+  // hole, extruded by the wall thickness. F2's approach (piers/sill/lintel
+  // as separate boxes merged+vertex-welded into one BufferGeometry) still
+  // left internal coplanar *faces* inside the merged mesh at each former
+  // piece boundary — invisible in the wireframe/outline (those were already
+  // fixed) but still shading/shadow-acne-prone at glancing light angles,
+  // since the geometry is still, internally, several abutting slabs. A
+  // single extruded solid has no internal face at all: the only faces are
+  // the two facade faces, the outer silhouette side, and the window reveal
+  // side — nothing coplanar left to seam.
+  //
+  // `ExtrudeGeometry` extrudes the shape's local (x,y) along local +z from 0
+  // to `depth`; local (x,y) are exactly (u,v) here, so no transform is
+  // needed for S/N walls (runAxis 'x': local x/y/z = world x/y/z already) —
+  // just translate z so the thickness band lands on
+  // [centerDepth-depth/2, centerDepth+depth/2], matching where the F2 boxes
+  // sat. E/W walls (runAxis 'z') need the extrude/thickness axis on world x
+  // and u on world z: `rotateY(-90deg)` (three's Ry(theta): x'=x·cosθ+z·sinθ,
+  // z'=-x·sinθ+z·cosθ, θ=-90°) sends local z (extrude, 0..depth) to world
+  // x'=-z and local x (u) to world z'=x=u — u lands on world z unflipped
+  // (matches F2's box placement) via a genuine rotation, so winding/normals
+  // stay correct (no mirror). Since world x'=-z runs 0..-depth, the center
+  // offset flips sign to `centerDepth + depth/2` (vs. `- depth/2` for S/N).
   const wallGeometry = useMemo(() => {
-    const pieces = rects.map((r) => {
-      const size: [number, number, number] =
-        runAxis === 'x'
-          ? [r.uSize, r.vSize, geometry.wallThicknessM]
-          : [geometry.wallThicknessM, r.vSize, r.uSize];
-      const position: [number, number, number] =
-        runAxis === 'x' ? [r.uCenter, r.vCenter, centerDepth] : [centerDepth, r.vCenter, r.uCenter];
-      const box = new BoxGeometry(...size);
-      box.translate(...position);
-      return box;
-    });
-    const concatenated = mergeGeometries(pieces);
-    for (const piece of pieces) piece.dispose();
-    // mergeGeometries only concatenates attribute buffers — adjacent pieces'
-    // shared-boundary vertices are numerically equal but stay topologically
-    // separate, which some renderers (notably SwiftShader, the software
-    // WebGL used for headless screenshots) rasterize as a hairline crack
-    // right at that boundary — exactly the seam this was meant to fix.
-    // mergeVertices welds spatially-coincident vertices into one shared
-    // vertex, making it a genuinely continuous indexed mesh.
-    const merged = mergeVertices(concatenated, 1e-5);
-    concatenated.dispose();
-    return merged;
-  }, [rects, runAxis, centerDepth, geometry.wallThicknessM]);
+    const shape = wallShape(wall.facadeWidth, geometry.heightM, wall.window);
+    const depth = geometry.wallThicknessM;
+    const geom = new ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 });
+    if (runAxis === 'x') {
+      geom.translate(0, 0, centerDepth - depth / 2);
+    } else {
+      geom.rotateY(-Math.PI / 2);
+      geom.translate(centerDepth + depth / 2, 0, 0);
+    }
+    return geom;
+  }, [wall.facadeWidth, wall.window, geometry.heightM, geometry.wallThicknessM, runAxis, centerDepth]);
 
   useEffect(() => () => wallGeometry.dispose(), [wallGeometry]);
 
