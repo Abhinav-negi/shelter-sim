@@ -19,7 +19,6 @@ describe('health wrapper', () => {
     const result = await getHealth();
     expect(fetch).toHaveBeenCalledWith('/api/health', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
     });
     expect(result).toEqual({ ok: true });
   });

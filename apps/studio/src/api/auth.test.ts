@@ -45,7 +45,6 @@ describe('auth wrappers', () => {
     const result = await logout();
     expect(fetch).toHaveBeenCalledWith('/api/auth/logout', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
       method: 'POST',
     });
     expect(result).toEqual({ ok: true });
@@ -56,7 +55,6 @@ describe('auth wrappers', () => {
     const result = await getMe();
     expect(fetch).toHaveBeenCalledWith('/api/auth/me', {
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
     });
     expect(result).toEqual(user);
   });
