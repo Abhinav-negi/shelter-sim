@@ -123,6 +123,7 @@ function Scene({ design, options, hour, autoRotate = false, interactive = false 
   // inert for every real visitor: gated behind an explicit `?g4e2e=1` query
   // param nobody sets by accident, and only wired up when `interactive`.
   const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
   useEffect(() => {
     if (!interactive || typeof window === 'undefined') return;
     if (new URLSearchParams(window.location.search).get('g4e2e') !== '1') return;
@@ -163,7 +164,6 @@ function Scene({ design, options, hour, autoRotate = false, interactive = false 
   // framing.ts's header for why. `cameraFootprint` intentionally excludes
   // height (matches F2/F2b's original `Math.max(design.lengthM, design.widthM)`
   // — a tall+thin design shouldn't zoom the camera out further than before).
-  const size = useThree((s) => s.size);
   const aspect = size.width / size.height;
   const cameraFootprint = Math.max(geometry.lengthM, geometry.widthM);
   const camDist = cameraDistance(cameraFootprint, aspect);
