@@ -79,7 +79,16 @@ export function GeometrySection({ options }: { options: Options }) {
         <SliderField label="Width" value={widthM} onChange={setWidthM} min={widthR.min} max={widthR.max} step={widthR.step ?? 0.5} unit="m" />
       )}
       {!isDome && (
-        <SliderField label="Height" value={heightM} onChange={setHeightM} min={heightR.min} max={heightR.max} step={heightR.step ?? 0.1} unit="m" />
+        <SliderField
+          label="Height"
+          value={heightM}
+          onChange={setHeightM}
+          min={heightR.min}
+          max={heightR.max}
+          step={heightR.step ?? 0.1}
+          unit="m"
+          {...(storeys === 2 ? { hint: 'Per storey — the building is twice this tall.' } : {})}
+        />
       )}
     </Section>
   );
