@@ -35,6 +35,8 @@ const DEFAULTS: ShelterDesign = {
   glazingId: 'singleGlazing',
   nightShutters: false,
   occupancyPresetId: 'familyLivestock',
+  shape: 'box', // G2 condition 2: defaults spell out shape/storeys explicitly.
+  storeys: 1,
 };
 
 // Starting thickness when a user picks a material for a surface. Reproduced
