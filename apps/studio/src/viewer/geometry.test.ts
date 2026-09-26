@@ -64,6 +64,19 @@ describe('buildSceneGeometry', () => {
     expect(facadeWidth(wide, 'S')).toBe(facadeWidth(narrow, 'S'));
   });
 
+  it('corner joints are mitred: every wall reports its full outer (corner-to-corner) length, not a trimmed one', () => {
+    const g = buildSceneGeometry(makeDesign({ lengthM: 5, widthM: 6 }), options);
+    const facadeWidth = (o: 'E' | 'W' | 'S' | 'N') => g.walls.find((w) => w.orientation === o)!.facadeWidth;
+
+    // S/N run the lengthM span, E/W run the widthM span — none of them
+    // trimmed by wallThicknessM (the mitre taper that keeps interior
+    // corners from overlapping is applied in Building.tsx, not here).
+    expect(facadeWidth('S')).toBe(5);
+    expect(facadeWidth('N')).toBe(5);
+    expect(facadeWidth('E')).toBe(6);
+    expect(facadeWidth('W')).toBe(6);
+  });
+
   it('an explicit wallConstruction.thicknessM makes the walls thicker', () => {
     const thin = buildSceneGeometry(
       makeDesign({ wallConstruction: { materialId: 'm', thicknessM: 0.1 } }),

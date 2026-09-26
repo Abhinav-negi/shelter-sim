@@ -7,7 +7,17 @@
 // S/N facades and runs along world X below); `widthM` is the E/W wall run
 // (N-S extent, sizes the E/W facades, runs along world Z). Wall/roof/floor
 // thickness is the construction's own `thicknessM`, or, when a construction
-// is null, the preset's total stack thickness for that surface.
+// is null, the preset's total stack thickness for that surface. Corner
+// joints (F2b, mitred): every wall's `facadeWidth` is the full outer
+// (corner-to-corner) length — `lengthM` for S/N, `widthM` for E/W. Building.tsx
+// mitres each wall's thickness-direction ends at 45°, so the *exterior* face
+// reaches the true corner (matching its neighbour's exterior face exactly)
+// while the *interior* face is inset by `wallThicknessM` at each end — like a
+// picture-frame corner. That keeps each facade a single, continuous exterior
+// polygon corner-to-corner (no neighbour's end-grain exposed on it, and no
+// coplanar-but-separate-polygon seam), instead of an earlier butt-joint
+// scheme (one pair full length, the other trimmed to fit between) that left
+// a real rendering seam at the join even after vertex-welding.
 //
 // World frame (see ShelterViewer.tsx): Y up, +X = East, +Z = South — chosen
 // to match the engine's own "azimuth measured from south, negative = East,
@@ -50,7 +60,12 @@ export interface WindowRect {
 
 export interface WallGeometry {
   orientation: Orientation;
-  /** m, this facade's width — lengthM for S/N, widthM for E/W. */
+  /** m, this facade's full *outer* (corner-to-corner) width — `lengthM` for
+   *  S/N, `widthM` for E/W, the same convention for every orientation.
+   *  Building.tsx mitres each wall's thickness-direction ends so the
+   *  interior face is inset by `wallThicknessM` at each end while this
+   *  (exterior) length stays the true corner-to-corner run — see this
+   *  file's header for why (F2b corner-joint rule). */
   facadeWidth: number;
   /** null when WWR is 0 or the facade is too small to fit a margined opening. */
   window: WindowRect | null;
@@ -100,6 +115,9 @@ export function buildSceneGeometry(design: ShelterDesign, options: Options): Sce
   const roofThicknessM = resolveThickness(design.roofConstruction, preset?.thicknessM.roof);
   const floorThicknessM = resolveThickness(design.floorConstruction, preset?.thicknessM.floor);
 
+  // Every wall's facadeWidth is its full outer (corner-to-corner) run — see
+  // WallGeometry.facadeWidth doc; the mitre taper that keeps interior
+  // corners from overlapping is applied in Building.tsx, not here.
   const facades: Array<{ orientation: Orientation; facadeWidth: number; wwr: number }> = [
     { orientation: 'S', facadeWidth: design.lengthM, wwr: design.windowWwr.S },
     { orientation: 'N', facadeWidth: design.lengthM, wwr: design.windowWwr.N },
