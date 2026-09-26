@@ -1,6 +1,8 @@
 import { useId } from 'react';
 import type { Options } from '@shelter/studio-server';
 import { FieldRow, Segmented, Select } from '../components/ui';
+import { mapPartToField } from '../design/partMapping';
+import { useSelection } from '../design/selection';
 import { useShelterDesign } from '../design/store';
 import { Section } from './Section';
 import { SliderField } from './SliderField';
@@ -24,8 +26,13 @@ export function OpeningsSection({ options }: { options: Options }) {
   const wwrRange = options.ranges.windowWwr;
   const glazing = options.glazings.find((g) => g.id === glazingId);
 
+  // G4 (condition 3): opening a window part in the 3D viewer opens this
+  // section and highlights that orientation's slider.
+  const selectedPart = useSelection((s) => s.selectedPart);
+  const forceOpen = selectedPart !== null && mapPartToField(selectedPart).section === 'openings';
+
   return (
-    <Section title="Openings">
+    <Section title="Openings" open={forceOpen}>
       {FACADES.map(({ key, label }) => (
         <SliderField
           key={key}
@@ -38,6 +45,7 @@ export function OpeningsSection({ options }: { options: Options }) {
           unit="%"
           decimals={0}
           hint="Share of that wall's area that is glazed"
+          part={`window:${key}`}
         />
       ))}
       <FieldRow label="Glazing" htmlFor={glazingFieldId} {...(glazing?.blurb ? { hint: glazing.blurb } : {})}>

@@ -2,6 +2,7 @@
 // the panel is one of these (F3.md Rules: "Units are always shown in mono").
 import { useId } from 'react';
 import { FieldRow, NumberInput, Slider } from '../components/ui';
+import type { PartId } from '../design/selection';
 
 export interface SliderFieldProps {
   label: string;
@@ -14,6 +15,8 @@ export interface SliderFieldProps {
   decimals?: number;
   hint?: string;
   disabled?: boolean;
+  /** G4: the 3D part this slider edits (see FieldRow's `part` doc). */
+  part?: PartId;
 }
 
 export function SliderField({
@@ -27,10 +30,11 @@ export function SliderField({
   decimals = 1,
   hint,
   disabled,
+  part,
 }: SliderFieldProps) {
   const id = useId();
   return (
-    <FieldRow label={label} htmlFor={id} {...(hint !== undefined ? { hint } : {})}>
+    <FieldRow label={label} htmlFor={id} {...(hint !== undefined ? { hint } : {})} {...(part !== undefined ? { part } : {})}>
       <div className="flex items-center gap-3">
         <Slider
           id={id}

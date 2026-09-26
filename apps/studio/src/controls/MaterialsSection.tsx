@@ -1,6 +1,8 @@
 import { useId } from 'react';
 import type { MaterialOption, Options, SurfaceConstruction } from '@shelter/studio-server';
 import { FieldRow, Select } from '../components/ui';
+import { mapPartToField } from '../design/partMapping';
+import { useSelection } from '../design/selection';
 import { useShelterDesign } from '../design/store';
 import { Section } from './Section';
 import { SliderField } from './SliderField';
@@ -13,9 +15,20 @@ interface SurfaceFieldProps {
   materials: MaterialOption[];
   thicknessRange: { min: number; max: number; step?: number };
   onChange: (construction: SurfaceConstruction | null) => void;
+  /** G4: highlights this field when the matching 3D part is selected. Walls
+   *  has no single orientation-specific PartId (see FieldRow's `part` doc),
+   *  so it's passed as a plain override instead of a `part`. */
+  highlighted?: boolean;
 }
 
-function SurfaceMaterialField({ label, construction, materials, thicknessRange, onChange }: SurfaceFieldProps) {
+function SurfaceMaterialField({
+  label,
+  construction,
+  materials,
+  thicknessRange,
+  onChange,
+  highlighted,
+}: SurfaceFieldProps) {
   const fieldId = useId();
   const material = materials.find((m) => m.id === construction?.materialId);
 
@@ -33,7 +46,12 @@ function SurfaceMaterialField({ label, construction, materials, thicknessRange, 
 
   return (
     <div className="flex flex-col gap-3">
-      <FieldRow label={label} htmlFor={fieldId} {...(material?.blurb ? { hint: material.blurb } : {})}>
+      <FieldRow
+        label={label}
+        htmlFor={fieldId}
+        {...(highlighted !== undefined ? { highlighted } : {})}
+        {...(material?.blurb ? { hint: material.blurb } : {})}
+      >
         <Select
           id={fieldId}
           value={construction?.materialId ?? KEEP_PRESET}
@@ -68,14 +86,21 @@ export function MaterialsSection({ options }: { options: Options }) {
   const setRoofConstruction = useShelterDesign((s) => s.setRoofConstruction);
   const setFloorConstruction = useShelterDesign((s) => s.setFloorConstruction);
 
+  // G4 (condition 3): selecting a wall/roof/floor part in the 3D viewer
+  // opens this section and highlights the matching field.
+  const selectedPart = useSelection((s) => s.selectedPart);
+  const mapping = selectedPart !== null ? mapPartToField(selectedPart) : null;
+  const forceOpen = mapping?.section === 'materials';
+
   return (
-    <Section title="Materials">
+    <Section title="Materials" open={forceOpen}>
       <SurfaceMaterialField
         label="Walls"
         construction={wallConstruction}
         materials={options.materials}
         thicknessRange={options.ranges.thicknessM}
         onChange={setWallConstruction}
+        highlighted={mapping?.field === 'walls'}
       />
       <SurfaceMaterialField
         label="Roof"
@@ -83,6 +108,7 @@ export function MaterialsSection({ options }: { options: Options }) {
         materials={options.materials}
         thicknessRange={options.ranges.thicknessM}
         onChange={setRoofConstruction}
+        highlighted={mapping?.field === 'roof'}
       />
       <SurfaceMaterialField
         label="Floor"
@@ -90,6 +116,7 @@ export function MaterialsSection({ options }: { options: Options }) {
         materials={options.materials}
         thicknessRange={options.ranges.thicknessM}
         onChange={setFloorConstruction}
+        highlighted={mapping?.field === 'floor'}
       />
     </Section>
   );

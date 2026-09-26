@@ -254,7 +254,7 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
             <Suspense
               fallback={<div className="flex h-full items-center justify-center text-sm text-ink-muted">Loading viewer…</div>}
             >
-              <ShelterViewer design={design} options={options} hour={hour} />
+              <ShelterViewer design={design} options={options} hour={hour} interactive />
             </Suspense>
           </div>
           <div className="flex shrink-0 items-center gap-3 border-t border-hairline px-4 py-2.5">

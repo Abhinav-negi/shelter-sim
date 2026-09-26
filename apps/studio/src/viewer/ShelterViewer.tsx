@@ -9,13 +9,16 @@
 
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useMemo } from 'react';
-import { Color } from 'three';
+import { useEffect, useMemo } from 'react';
+import { Color, Vector3 } from 'three';
 import type { Options, ShelterDesign } from '@shelter/studio-server';
+import { useSelection } from '../design/selection';
+import type { PartId } from '../design/selection';
 import { Building } from './Building';
 import { Compass } from './Compass';
 import { CAMERA_FOV_DEG, cameraDistance } from './framing';
 import { buildSceneGeometry } from './geometry';
+import { anchorPosition, PartPopover } from './PartPopover';
 import { sunDirection } from './solar';
 import { Sun } from './Sun';
 import { useThemeColors } from './useThemeColors';
@@ -32,6 +35,10 @@ export interface ShelterViewerProps {
    *  its *auto*-rotation needs a frame pumped every tick, which `RotatePump`
    *  below provides only while this prop is on. */
   autoRotate?: boolean;
+  /** G4: enables hover/click part selection + the PartPopover (condition 2:
+   *  "Viewer on Landing/Compare stays non-interactive"). Default off, so
+   *  every existing non-Studio caller is unaffected. */
+  interactive?: boolean;
 }
 
 /** Keeps `frameloop="demand"` rendering while `autoRotate` is on -- mounted
@@ -77,11 +84,67 @@ function Ground({ radius, color }: { radius: number; color: string }) {
   );
 }
 
-function Scene({ design, options, hour, autoRotate = false }: ShelterViewerProps) {
+function Scene({ design, options, hour, autoRotate = false, interactive = false }: ShelterViewerProps) {
   const colors = useThemeColors();
   const geometry = useMemo(() => buildSceneGeometry(design, options), [design, options]);
   const { lat, lon } = useMemo(() => resolveLatLon(design, options), [design, options]);
   const sunDir = useMemo(() => sunDirection(lat, lon, design.date, hour), [lat, lon, design.date, hour]);
+
+  // G4 (condition 2): cursor becomes a pointer while hovering a selectable
+  // part. Imperative DOM style, not a Canvas/R3F prop — no `invalidate()`
+  // needed, it doesn't touch the three.js scene.
+  const hoveredPart = useSelection((s) => (interactive ? s.hoveredPart : null));
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    gl.domElement.style.cursor = hoveredPart ? 'pointer' : 'auto';
+  }, [gl, hoveredPart]);
+
+  // G4 (condition 2): Esc clears the selection. Click-on-empty-space is
+  // handled by Canvas's `onPointerMissed` below (ShelterViewer itself).
+  const clearSelection = useSelection((s) => s.clearSelection);
+  useEffect(() => {
+    if (!interactive) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') clearSelection();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [interactive, clearSelection]);
+
+  // G4.md condition 8's own test hook, explicitly allowed by the brief
+  // ("use a test hook guarded to dev/test only"). The E2E script still
+  // dispatches a REAL pointer click at these coordinates (so the click
+  // genuinely exercises the raycaster + each mesh's own onClick handler,
+  // `usePartInteraction.ts`) — this just answers "where on screen is
+  // `wall:S` right now", which is otherwise only knowable by replicating
+  // the camera/OrbitControls math outside the page. `__g4GetSelection` is a
+  // read-only peek at the store, for asserting the reverse direction
+  // (focusing a field -> hoveredPart changes) without a pixel-diff. Both are
+  // inert for every real visitor: gated behind an explicit `?g4e2e=1` query
+  // param nobody sets by accident, and only wired up when `interactive`.
+  const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
+  useEffect(() => {
+    if (!interactive || typeof window === 'undefined') return;
+    if (new URLSearchParams(window.location.search).get('g4e2e') !== '1') return;
+    const w = window as unknown as {
+      __g4PartScreenPosition?: (part: PartId) => { x: number; y: number };
+      __g4GetSelection?: () => { hoveredPart: PartId | null; selectedPart: PartId | null };
+    };
+    w.__g4PartScreenPosition = (part) => {
+      const [x, y, z] = anchorPosition(geometry, part);
+      const v = new Vector3(x, y, z).applyAxisAngle(new Vector3(0, 1, 0), geometry.rotationY).project(camera);
+      return { x: ((v.x + 1) / 2) * size.width, y: ((1 - v.y) / 2) * size.height };
+    };
+    w.__g4GetSelection = () => {
+      const s = useSelection.getState();
+      return { hoveredPart: s.hoveredPart, selectedPart: s.selectedPart };
+    };
+    return () => {
+      delete w.__g4PartScreenPosition;
+      delete w.__g4GetSelection;
+    };
+  }, [interactive, camera, geometry, size]);
 
   // G3: `buildingHeightM` is the real envelope height (dome=radius, 2
   // storeys=2h, condition 3 "fits the camera to the real bounding box") —
@@ -101,7 +164,6 @@ function Scene({ design, options, hour, autoRotate = false }: ShelterViewerProps
   // framing.ts's header for why. `cameraFootprint` intentionally excludes
   // height (matches F2/F2b's original `Math.max(design.lengthM, design.widthM)`
   // — a tall+thin design shouldn't zoom the camera out further than before).
-  const size = useThree((s) => s.size);
   const aspect = size.width / size.height;
   const cameraFootprint = Math.max(geometry.lengthM, geometry.widthM);
   const camDist = cameraDistance(cameraFootprint, aspect);
@@ -148,7 +210,8 @@ function Scene({ design, options, hour, autoRotate = false }: ShelterViewerProps
       {sunUp && <Sun direction={sunDir} radius={sunDistance} center={buildingCenter} color={sunColor} />}
 
       <group rotation={[0, geometry.rotationY, 0]}>
-        <Building geometry={geometry} />
+        <Building geometry={geometry} interactive={interactive} accent={colors.accent} />
+        {interactive && <PartPopover geometry={geometry} design={design} options={options} />}
       </group>
 
       <OrbitControls
@@ -169,11 +232,19 @@ function Scene({ design, options, hour, autoRotate = false }: ShelterViewerProps
 
 /** A view-only R3F scene of the current ShelterDesign. Pure props in, no
  *  store coupling — the caller (e.g. F3's Studio page, or the /dev/viewer
- *  preview route) decides where `design`/`options`/`hour` come from. */
-export function ShelterViewer({ design, options, hour, autoRotate = false }: ShelterViewerProps) {
+  *  preview route) decides where `design`/`options`/`hour` come from.
+  *  `autoRotate` (G5, landing hero) and `interactive` (G4, Studio selection)
+  *  are both optional and default off. */
+export function ShelterViewer({ design, options, hour, autoRotate = false, interactive = false }: ShelterViewerProps) {
+  const clearSelection = useSelection((s) => s.clearSelection);
   return (
-    <Canvas frameloop="demand" shadows="percentage" dpr={[1, 2]}>
-      <Scene design={design} options={options} hour={hour} autoRotate={autoRotate} />
+    <Canvas
+      frameloop="demand"
+      shadows="percentage"
+      dpr={[1, 2]}
+      {...(interactive ? { onPointerMissed: () => clearSelection() } : {})}
+    >
+      <Scene design={design} options={options} hour={hour} autoRotate={autoRotate} interactive={interactive} />
     </Canvas>
   );
 }
