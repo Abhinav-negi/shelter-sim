@@ -22,7 +22,8 @@ used before declaration, from a half-done QA-hook edit). Branch predates G5 → 
 
 **Blocked:** nothing. **Servers:** none started by the orchestrator are running; :4100/:5273 are the user's own.
 
-**Session 4 (in progress):** G4 rebased + build fixed by the orchestrator; verification agent launched.
+**Session 4 (in progress):** G4 rebased + build fixed by the orchestrator; verification agent launched. **User: last task of
+the day — finish G4, start nothing new, then wrap up.**
 
 **Recommended next step:** (1) re-brief a Sonnet agent on G4 in `../wt-g4` per its task file's resume note, verify,
 merge; (2) Q2 (E2E + visual QA) — include the G5 follow-up (at 1440 the landing headline runs across the building;
