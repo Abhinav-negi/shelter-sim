@@ -3,16 +3,26 @@
 Orchestrator protocol: `ORCHESTRATOR.md`. Architecture: `ledger/PLAN.md`. One file per task: `ledger/tasks/<ID>.md`.
 Integration branch: **`studio/main`**. Task branches: `task/<id>` in worktrees `../wt-<id>`.
 
-## HANDOFF (2026-09-25, session 1 — in progress)
+## HANDOFF (2026-09-26, end of session 1)
 
-Merged into `studio/main`: P1, P3, P2 (+ orchestrator integration fix: `design/prepare.ts` so saved runs of
-custom-location designs resolve weather), security fixes (JWT `expiresIn 7d`, dummy-hash login timing), F1.
-F1's agent hit the Sonnet session limit mid-rebase; orchestrator finished the rebase and verified it.
-Main tree `node_modules` must be refreshed with `npm install` (NOT `npm ci`: old app dev servers on :4000/:5173 run
-from it) after merges that change the lockfile.
-**Waiting on the user for** `MONGODB_URI` + `JWT_SECRET` (running the app only).
-F1b + F2 merged. **Next step:** F2b ∥ F3 in worktrees, then F4 → Q1.
+**Merged into `studio/main` (verified by the orchestrator):** S0, P1, P2, P3, F1, F1b, F2, plus orchestrator fixes:
+shared `design/prepare.ts` (saved runs of custom-location designs fetch weather too), JWT `expiresIn 7d`, dummy-hash
+login timing, ISO-string timestamps, `/api/options` default/preset thicknesses. Server 49 tests, client 38 tests green.
 
+**In progress — both agents were cut off by the Sonnet session limit; their work is committed as WIP, NOT merged:**
+- **F2b** — `../wt-f2b`, branch `task/f2b` (`51e5151`). Walls rebuilt as extruded shapes. Build + 38 tests green.
+  Left: the visual QA screenshots + pixel check (conditions 2), then Evidence. Scratch vite proxy change was reverted.
+- **F3** — `../wt-f3`, branch `task/f3` (`76665da`). `src/controls/**` (all 6 sections, location search, orientation
+  dial, debounced-request hook), `src/results/**` (explain port, °C formatting, temperature + heat-flow charts, KPIs),
+  `routes/Studio.tsx`. Build + 56 tests green. Left (the agent's last step was "wrap ResultsPanel usage in
+  Suspense"): finish Studio page wiring, the full flow check (register → new design → edit → preview → save → run →
+  reload) against the scratch Mongo server, screenshots, Evidence.
+
+**Recommended next step:** re-brief a fresh Sonnet agent for each IN the existing worktrees (`npm ci` is already done
+there), pointing at its task file's "Resume notes". Review both (§7), merge F2b first, then F3. Then F4 → Q1.
+No servers are left running on studio ports. Old app dev servers on :4000/:5173 are the user's; leave them.
+Main tree `node_modules`: after merging lockfile changes run `npm install` (NOT `npm ci`; the old app runs from it).
+**Waiting on the user for** `MONGODB_URI` + `JWT_SECRET` (only needed to run the app, not for tests).
 ## Decisions (approved by user unless marked "orchestrator")
 1. New apps `apps/studio` + `apps/studio-server` (orchestrator: naming). Old apps and `packages/*` frozen.
 2. MongoDB + Mongoose. Tests use `mongodb-memory-server`.
@@ -35,8 +45,8 @@ F1b + F2 merged. **Next step:** F2b ∥ F3 in worktrees, then F4 → Q1.
 | F1 | Client scaffold: design system, shell, routing, store, api client | P1 | | DONE | `apps/studio` (`@shelter/studio`, Vite :5273, proxy `/api`→:4100) created: tokens (light/dark + toggle), app shell (wordmark/nav/theme toggle), routes `/`, `/login`, `/register`, `/app`, `/app/design/:id`, `/app/compare` (`/app/*` guarded by `GET /api/auth/me`), zustand `ShelterDesign` store w/ per-group setters + `dirty` + selectors (`subscribeWithSelector`), typed `src/api/*` wrappers normalising errors to `{code,message,field?}`, 6 UI primitives (Button/Input/Slider/Select/Segmented/FieldRow). `npm run build -w @shelter/studio` clean; `npm test -w @shelter/studio` 9/9 pass; `grep -rl "hdkr\|meshTargetDx" apps/studio/dist` empty; 8 screenshots (light/dark × 1440/390 × `/`,`/login`) 0 console errors. See `ledger/tasks/F1.md` Evidence. |
 | F1b | Reconcile client api/ (auth, designs, simulations, locations) with real API.md | F1 P2 P3 | | DONE | `apps/studio/src/api/{auth,designs,locations,client}.ts` rewritten against `apps/studio-server/API.md`: auth wrappers unwrap `{user}` (register/login/me) and return `{ok:true}` (logout); designs wrappers use `DesignSummary`/`SimulationSummary`/`SimulationFull` (no `ownerId`), `updateDesign` is now a whole `{name,design}` PUT (was a partial patch), `deleteDesign` expects 204/no body; `locations.ts` now returns `{name,country,admin1?,lat,lon,elevation}` (was `{latitude,longitude,country?}`); `client.ts`'s `credentials` fixed `'include'`→`'same-origin'` (condition 4). Added `PublicUser`/`DesignSummary`/`SimulationSummary`/`SimulationFull`/`WeatherProvenanceSummary`/`LocationSearchResult` re-exports plus `PreviewResponse.weatherProvenance?` to `apps/studio-server/src/design/types.ts` (all `export type {...} from` — type-only, no runtime cycle despite `design/types.ts` ↔ `weather/resolve.ts` ↔ `designs·simulations/service.ts` mutual references). 6 new vitest files (one per wrapper module) mock `fetch` and assert method/URL/body/credentials. `npm run build -w @shelter/studio` clean; `npm test -w @shelter/studio` 28/28 pass; `npx tsc -p apps/studio-server --noEmit` clean; `npm test -w @shelter/studio-server` 49/49 pass (2 live-only skipped); frozen-path diff (`apps/server apps/client apps/web packages package-lock.json`) empty. `Login.tsx`/`Register.tsx`/`RequireAuth.tsx` needed no changes (they don't destructure the old flat shape). See `ledger/tasks/F1b.md` Evidence. |
 | F2 | 3D ShelterViewer | F1 | | DONE | `apps/studio/src/viewer/{geometry,solar,ShelterViewer,Building,Compass,useThemeColors,DevViewer}.{ts,tsx}` + `src/design/useOptions.ts` (new, cached `GET /api/options` hook) + one route in `App.tsx` (`/dev/viewer`, lazy-loaded). Pure `geometry.ts`: ShelterDesign→dimensions/thickness/window rects/azimuth rotation, documented world-frame + sign convention. `solar.ts`: independent declination/hour-angle sun-position function (client only imports *types* from `@shelter/engine`), checked against the engine's own documented Leh winter-solstice reference (32.4°). Walls built as non-overlapping frame boxes around each window opening (no CSG, no z-fighting); flat roof+floor slabs; world-space compass (Billboard + box-built "N" glyph, no font/DOM dependency); fog-faded ground disc; fixed daylight light colours decoupled from the paper/ink theme tokens (bug found + fixed: using the theme token as the light *color* made dark mode render almost black — see Building.tsx/ShelterViewer.tsx headers); `frameloop="demand"`, `OrbitControls` clamped polar angle. `npm run build -w @shelter/studio` clean (three code-split into its own `DevViewer-*.js` chunk, ~956 kB, out of the ~271 kB landing/login chunk); `npm test -w @shelter/studio` 38/38 pass (10 new: geometry.test.ts, solar.test.ts); frozen-path diff empty. Visual QA: 6 screenshots (default × light/dark, wide+thick, azimuth 90°, hour 8/16 sun-direction sanity check) against a scratch `buildApp()` + `vite preview` (production build — dev-mode StrictMode double-invoke triggers an unrelated-to-F2 R3F/React-19 console error that doesn't occur in production or affect shipped behaviour, see Evidence). 0 console errors/warnings except one unavoidable upstream `THREE.Clock` deprecation notice from `@react-three/fiber@9.8.1`'s own internals (pinned version, no install allowed). **Review round 2**: fixed construction-panel-seam artefact (frame pieces merged into one real mesh — `mergeGeometries`+`mergeVertices` from three's own bundled `BufferGeometryUtils` — plus a hand-authored silhouette+window-reveal-only outline replacing per-piece `<Edges>`); added a restrained sun indicator (`Sun.tsx`: disc + dashed line along `sunDirection`, thermal-warm token colour, hidden below horizon; `sunElevationDeg` already available to F3 via the pre-existing exported `sunAngle()`); lifted the dark-theme ground toward `hairline` so the shadow reads against it. Re-verified: build/38 tests/frozen-diff all still clean; re-screenshotted all 4 required views. See `ledger/tasks/F2.md` Evidence (round 2 section). |
-| F2b | Walls as single extruded solids (residual seams) | F2 | | TODO | |
-| F3 | Studio page: controls, live preview, results | F1 F2 | | TODO | |
+| F2b | Walls as single extruded solids (residual seams) | F2 | | IN-PROGRESS | WIP `task/f2b` 51e5151 in `../wt-f2b`; build + 38 tests green; visual QA left. See task file Resume notes. |
+| F3 | Studio page: controls, live preview, results | F1 F2 | | IN-PROGRESS | WIP `task/f3` 76665da in `../wt-f3`; build + 56 tests green; page wiring + flow/visual QA left. See task file Resume notes. |
 | F4 | Landing, auth pages, dashboard, compare | F3 P2 | | TODO | |
 | Q1 | E2E + visual QA pass, fixes routed back | all | | TODO | |
 

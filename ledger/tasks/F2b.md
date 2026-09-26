@@ -1,5 +1,5 @@
 # F2b — Walls as single extruded solids (remove residual seams)
-Status: TODO      Depends on: F2
+Status: IN-PROGRESS (WIP committed, agent hit session limit)      Depends on: F2
 
 ## Goal
 After F2's merge, faint dashed hairlines remain on facades where frame pieces meet (internal coplanar faces left
@@ -21,3 +21,10 @@ May: `apps/studio/src/viewer/**` except `ShelterViewer.tsx` props. Must not: any
 3. geometry tests still pass; build clean; no new console warnings.
 
 ## Evidence
+
+## Resume notes (orchestrator, 2026-09-26)
+WIP commit `51e5151` on `task/f2b` in `../wt-f2b`: `Building.tsx` + `geometry.ts` rebuilt with extruded wall shapes.
+`npm run build -w @shelter/studio` clean, `npm test -w @shelter/studio` 38/38. Not done: condition 2 (screenshots +
+pixel-sampling of former seam columns; the agent's last note said the corners looked clean and it was about to
+check wide+thick corners) and this Evidence block. The scratch `vite.config.ts` preview-proxy edit was reverted.
+Never commit it; use a CLI flag or env var for the scratch proxy instead.
