@@ -96,6 +96,7 @@ export function useAnimatedHour(active: boolean, from: number, to: number, cycle
 export function useForceDarkTokens(ref: RefObject<HTMLElement | null>): void {
   useEffect(() => {
     const root = document.documentElement;
+    let intersecting = true; // assume visible at mount — the hero is the top of the page
     const apply = () => root.setAttribute('data-theme', 'dark');
     // Restore the user's SAVED preference, not a mount-time snapshot: the theme
     // toggle sits in the header, visible alongside the hero, so a snapshot would
@@ -106,14 +107,33 @@ export function useForceDarkTokens(ref: RefObject<HTMLElement | null>): void {
       else root.setAttribute('data-theme', theme);
     };
 
-    apply(); // assume visible at mount — the hero is the top of the page
+    apply();
 
     const el = ref.current;
     if (!el) return restore;
-    const observer = new IntersectionObserver(([entry]) => (entry?.isIntersecting ? apply() : restore()));
+    const observer = new IntersectionObserver(([entry]) => {
+      intersecting = entry?.isIntersecting ?? false;
+      if (intersecting) apply();
+      else restore();
+    });
     observer.observe(el);
+
+    // Q2F: the header's theme toggle (useTheme, lib/theme.ts) sets this same
+    // `data-theme` attribute directly, independently of this hook, any time
+    // the user picks a theme -- including while still scrolled to the hero.
+    // That silently overwrote the forced 'dark' with the literal toggle
+    // choice (picking "Light" at the top of the page left the hero itself
+    // rendering in light tokens -- Q2.md's contrast finding traced back to
+    // this race, not just a colour/opacity choice). Re-assert 'dark' the
+    // instant something else changes the attribute while still in view.
+    const attrObserver = new MutationObserver(() => {
+      if (intersecting && root.getAttribute('data-theme') !== 'dark') apply();
+    });
+    attrObserver.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+
     return () => {
       observer.disconnect();
+      attrObserver.disconnect();
       restore();
     };
   }, [ref]);

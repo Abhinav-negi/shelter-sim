@@ -43,7 +43,14 @@ export function Hero({
       ref={heroRef}
       className="relative w-full overflow-hidden border-b border-hairline bg-paper text-ink sm:h-screen sm:min-h-[560px]"
     >
-      <div className="h-[58vh] min-h-[360px] w-full sm:absolute sm:inset-0 sm:h-full sm:min-h-0">
+      {/* Q2F: shifted right (visual-only CSS transform, not a resize -- the
+       *  canvas keeps its full-viewport size/aspect, so the camera framing in
+       *  ShelterViewer.tsx/framing.ts is untouched) so the building's
+       *  silhouette clears the text column at wide widths instead of sitting
+       *  directly behind the headline (Q2.md finding #1). Unchanged below
+       *  `sm` (no transform class there), matching Q1F #1's existing stacked
+       *  mobile layout. */}
+      <div className="h-[58vh] min-h-[360px] w-full sm:absolute sm:inset-0 sm:h-full sm:min-h-0 sm:translate-x-[22%]">
         <Viewer design={options.defaults} options={options} hour={hour} autoRotate={!reducedMotion} />
       </div>
 

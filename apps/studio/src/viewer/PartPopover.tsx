@@ -36,24 +36,39 @@ export function anchorPosition(geometry: SceneGeometry, part: PartId): [number, 
   if (part === 'floor') return [0, -geometry.floorThicknessM, 0];
 
   const orientation = orientationOf(part);
+  const isWindow = part.startsWith('window:');
   const midHeight = geometry.heightM / 2;
 
   if (geometry.shape === 'dome') {
     const facet = geometry.domeFacets.find((f) => f.kind === 'wall' && f.orientation === orientation);
     if (!facet) return [0, geometry.buildingHeightM / 2, 0];
+    let radius = (facet.radiusLow + facet.radiusHigh) / 2;
+    let height = (facet.heightLow + facet.heightHigh) / 2;
+    // Q2F: anchor a window popover at the window's own TOP edge (along the
+    // facet's slant) rather than the facet's middle, so the Html offset below
+    // (which pins the panel's bottom just above the anchor) clears the window
+    // instead of straddling it (Q2.md finding #2: the popover covered the
+    // part it edits).
+    if (isWindow && facet.window) {
+      const slantHeight = Math.hypot(facet.radiusHigh - facet.radiusLow, facet.heightHigh - facet.heightLow);
+      const topFrac = Math.min(1, (facet.window.sill + facet.window.height) / slantHeight);
+      height = facet.heightLow + topFrac * (facet.heightHigh - facet.heightLow);
+      radius = facet.radiusLow + topFrac * (facet.radiusHigh - facet.radiusLow);
+    }
     const dir = azimuthDirection(facet.azimuthDeg);
-    const radius = (facet.radiusLow + facet.radiusHigh) / 2;
-    const height = (facet.heightLow + facet.heightHigh) / 2;
     return [dir.x * radius, height, dir.z * radius];
   }
 
   const wall = geometry.walls.find((w) => w.orientation === orientation);
   if (!wall) return [0, midHeight, 0];
+  // Q2F: same window-top anchor as the dome branch above, for box/cylinder walls.
+  const windowTop = isWindow && wall.window ? wall.window.sill + wall.window.height : null;
+  const height = windowTop ?? midHeight;
 
   if (geometry.shape === 'cylinder') {
     const r = geometry.lengthM / 2;
     const dir = azimuthDirection(wall.azimuthDeg ?? 0);
-    return [dir.x * r, midHeight, dir.z * r];
+    return [dir.x * r, height, dir.z * r];
   }
 
   // box
@@ -61,7 +76,7 @@ export function anchorPosition(geometry: SceneGeometry, part: PartId): [number, 
   const sign = orientation === 'S' || orientation === 'E' ? 1 : -1;
   const depthHalfExtent = runAxis === 'x' ? geometry.widthM / 2 : geometry.lengthM / 2;
   const outerFace = sign * depthHalfExtent;
-  return runAxis === 'x' ? [0, midHeight, outerFace] : [outerFace, midHeight, 0];
+  return runAxis === 'x' ? [0, height, outerFace] : [outerFace, height, 0];
 }
 
 export function PartPopover({

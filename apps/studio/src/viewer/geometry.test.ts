@@ -236,5 +236,39 @@ describe('buildSceneGeometry', () => {
       const g = buildSceneGeometry(makeDesign({ shape: 'dome', lengthM: 10, heightM: 3 }), options);
       expect(g.buildingHeightM).toBe(5);
     });
+
+    it('Q2F: a 5m dome with South WWR 0.3 renders a non-null window on every south wall facet, margins scaled to the facet', () => {
+      // Regression for Q2.md's finding: a 5m dome's wall-band slant height
+      // (~0.85m) is shorter than the fixed 0.9m sill + 0.3m lintel margin, so
+      // windowRect used to clamp every dome facet's window to null regardless
+      // of WWR.
+      const design = makeDesign({ shape: 'dome', lengthM: 5, windowWwr: { S: 0.3, E: 0, W: 0, N: 0 } });
+      const g = buildSceneGeometry(design, options);
+      const halfAngle = (180 / DOME_SECTORS) * (Math.PI / 180);
+      const southWalls = g.domeFacets.filter((f) => f.kind === 'wall' && f.orientation === 'S');
+      // 3 south-facing sectors per wall band (azimuths -30, 0, 30 fall in
+      // orientationForAzimuth's S range) x 2 wall bands (0 and 1).
+      expect(southWalls.length).toBe(6);
+
+      for (const facet of southWalls) {
+        expect(facet.window).not.toBeNull();
+        const { width, height, sill } = facet.window!;
+        expect(width * height).toBeGreaterThan(0);
+
+        // Facet area: same flat-trapezoid formula the other dome tests above use.
+        const halfBottom = facet.radiusLow * Math.sin(halfAngle);
+        const halfTop = facet.radiusHigh * Math.sin(halfAngle);
+        const slantHeight = Math.hypot(facet.radiusHigh - facet.radiusLow, facet.heightHigh - facet.heightLow);
+        const facetArea = (halfBottom + halfTop) * slantHeight;
+        expect(width * height).toBeLessThanOrEqual(facetArea + 1e-9);
+
+        // Margins scale with the facet: the fixed 0.9m sill alone would meet
+        // or exceed this facet's own slant height (~0.85m/~0.97m), so a
+        // non-null window here is only possible because the sill shrank
+        // below both that fixed metre and the facet's own height.
+        expect(sill).toBeLessThan(0.9);
+        expect(sill).toBeLessThan(slantHeight);
+      }
+    });
   });
 });
