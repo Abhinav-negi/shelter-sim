@@ -30,7 +30,9 @@ export function Segmented<T extends string>({
           <label
             key={opt.value}
             className={cx(
-              'cursor-pointer rounded-[2px] px-3 py-1 text-xs font-medium transition-colors duration-100',
+              // `relative` keeps the sr-only radio inside this label; without it the
+              // radio positions against <body> and stretches the page (S1).
+              'relative cursor-pointer rounded-[2px] px-3 py-1 text-xs font-medium transition-colors duration-100',
               'has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent has-[:focus-visible]:outline-offset-2',
               checked ? 'bg-accent text-accent-fg' : 'text-ink-muted hover:text-ink',
               disabled && 'cursor-not-allowed opacity-40',

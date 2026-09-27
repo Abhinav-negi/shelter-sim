@@ -206,6 +206,11 @@ async function runFlow() {
     await page.waitForSelector('canvas', { timeout: 15000 });
     await page.waitForTimeout(500); // let the first demand-frameloop render settle
 
+    // S1: only the side panels scroll, never the page itself (Segmented's
+    // sr-only radios once escaped the panel and stretched <html>).
+    const pageScroll = await page.evaluate(() => [document.documentElement.scrollHeight, innerHeight]);
+    check(`Studio page itself does not scroll (${pageScroll[0]} <= ${pageScroll[1]})`, pageScroll[0] <= pageScroll[1] + 1);
+
     // 3. Change width -- the viewer bounding box grows. Length is pinned
     // large first: F2c's camera auto-frames to `max(lengthM, widthM)`, so if
     // Width were varied alone across that max it would also pull the camera
