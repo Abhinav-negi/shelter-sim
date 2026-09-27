@@ -3,7 +3,7 @@
 > For the MAIN agent only. Subagents never read this file; everything they need goes in their brief.
 > New session? Read this file, then `STUDIO.md` (HANDOFF first), then `ledger/V2.md`. Nothing else until §4 tells you to.
 >
-> **Current phase: Studio v2** (approved 2026-09-26): typed numeric entry, shelter shapes (box/cylinder/dome, 1–2
+> **Last phase: Studio v2 — COMPLETE (2026-09-27).** No new phase planned; ask the user. v2 was (approved 2026-09-26): typed numeric entry, shelter shapes (box/cylinder/dome, 1–2
 > storeys), select-to-edit in 3D, landing redesign, architecture map. Plan: `ledger/V2.md`. Batches and status: §10.
 
 ## 1. Role

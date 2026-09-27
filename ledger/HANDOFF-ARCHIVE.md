@@ -1,5 +1,29 @@
 # HANDOFF archive (newest first)
 
+## HANDOFF (2026-09-27, session 6 — Q2 merged, D1 published, Q2F running)
+
+**Phase:** Studio v2 (plan `ledger/V2.md`, batches `ORCHESTRATOR.md` §10).
+
+**Done this session:** **Q2** merged (`2e17ed2`): `apps/studio/e2e/flow.mjs` now covers typed entry, cylinder,
+2 storeys, 3D click → field highlight, save/reload persistence and old-shape designs (29/29, 3× green; orchestrator
+re-ran it). **D1** (REVIEW): `ARCHITECTURE-STUDIO.md` + page https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv
+(source `ledger/d1-architecture-page.html`); stale API.md §10 and env.ts comment fixed.
+
+**In progress:** **Q2F** (`ledger/tasks/Q2F.md`) — Sonnet agent in worktree `../wt-q2f`, branch `task/q2f`: dome
+windows never render in the viewer (`windowRect` fixed margins > dome band height), popover covers its part,
+landing hero overlap at 1440 + hero text contrast. If the session was cut off: check `git -C ../wt-q2f log`, the
+Q2F Evidence block, then verify per ORCHESTRATOR.md §7 or re-brief.
+
+**Recommended next step:** verify + merge Q2F (screenshots by eye: dome window, popover 1440/390, landing 1440
+light/dark), then re-check the D1 page for staleness (popover/landing wording only) and mark D1 DONE. That closes v2.
+
+**Known follow-ups (carried):** Dashboard/Compare N+1 `GET .../simulations`; duplicated KPI labels
+(`routes/compare/kpiTable.ts` vs `results/Kpis.tsx`); sun line leaves the frame; engine tests rewrite
+`packages/engine/test/output/validation-numbers.csv` (`git checkout` it before the frozen guard); two-storey slab
+constants (0.15 m, 8 W/m²K) are documented assumptions (API.md §3c); the `?g4e2e=1` test hook ships in production
+(inert without the param). playwright-core for E2E is staged per session in the scratchpad (`npm i playwright-core`
+in `<scratchpad>/pw`).
+
 ## HANDOFF (2026-09-26, end of session 4 — Studio v2 build tasks complete)
 
 **Phase:** Studio v2 (plan `ledger/V2.md`, batches `ORCHESTRATOR.md` §10). User ended the day after G4.

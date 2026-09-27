@@ -4,29 +4,27 @@ Orchestrator protocol: `ORCHESTRATOR.md`. Architecture: `ledger/PLAN.md`. Curren
 `ledger/V2.md`. One file per task: `ledger/tasks/<ID>.md`.
 Integration branch: **`studio/main`**. Task branches: `task/<id>` in worktrees `../wt-<id>`.
 
-## HANDOFF (2026-09-27, session 6 — Q2 merged, D1 published, Q2F running)
+## HANDOFF (2026-09-27, end of session 6 — Studio v2 COMPLETE)
 
-**Phase:** Studio v2 (plan `ledger/V2.md`, batches `ORCHESTRATOR.md` §10).
+**Phase:** Studio v2 is done. Every task in `ledger/V2.md` is merged into `studio/main`: G1–G5, Q2, Q2F, D1.
+No next phase is planned yet; ask the user what comes next (don't invent scope).
 
-**Done this session:** **Q2** merged (`2e17ed2`): `apps/studio/e2e/flow.mjs` now covers typed entry, cylinder,
-2 storeys, 3D click → field highlight, save/reload persistence and old-shape designs (29/29, 3× green; orchestrator
-re-ran it). **D1** (REVIEW): `ARCHITECTURE-STUDIO.md` + page https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv
-(source `ledger/d1-architecture-page.html`); stale API.md §10 and env.ts comment fixed.
+**This session:** **Q2** merged (flow.mjs covers the v2 flows, 29 checks, 3× green). **Q2F** merged after 2 review
+rounds: dome windows now render (margins scale with short dome facets, box/cylinder unchanged), the popover anchors
+above the window, the landing model is offset via camera `setViewOffset` (`frameShift` prop, ≥640px only), and the hero
+stays dark when the header toggle changes theme. **D1** done: `ARCHITECTURE-STUDIO.md` + page
+https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv (source `ledger/d1-architecture-page.html`; republish with `url`).
+Suites on `studio/main`: studio 122/122, studio-server 69 (+2 skipped), build clean, frozen guard empty.
 
-**In progress:** **Q2F** (`ledger/tasks/Q2F.md`) — Sonnet agent in worktree `../wt-q2f`, branch `task/q2f`: dome
-windows never render in the viewer (`windowRect` fixed margins > dome band height), popover covers its part,
-landing hero overlap at 1440 + hero text contrast. If the session was cut off: check `git -C ../wt-q2f log`, the
-Q2F Evidence block, then verify per ORCHESTRATOR.md §7 or re-brief.
+**In progress:** nothing. No task worktrees or branches remain; no orchestrator-started servers running.
 
-**Recommended next step:** verify + merge Q2F (screenshots by eye: dome window, popover 1440/390, landing 1440
-light/dark), then re-check the D1 page for staleness (popover/landing wording only) and mark D1 DONE. That closes v2.
-
-**Known follow-ups (carried):** Dashboard/Compare N+1 `GET .../simulations`; duplicated KPI labels
-(`routes/compare/kpiTable.ts` vs `results/Kpis.tsx`); sun line leaves the frame; engine tests rewrite
-`packages/engine/test/output/validation-numbers.csv` (`git checkout` it before the frozen guard); two-storey slab
-constants (0.15 m, 8 W/m²K) are documented assumptions (API.md §3c); the `?g4e2e=1` test hook ships in production
-(inert without the param). playwright-core for E2E is staged per session in the scratchpad (`npm i playwright-core`
-in `<scratchpad>/pw`).
+**Known follow-ups (candidates for the next phase):** the landing's animated sun disc can sit at or past the frame edge
+at some hours (and the sun line leaves the frame); Dashboard/Compare N+1 `GET .../simulations`; duplicated KPI labels
+(`routes/compare/kpiTable.ts` vs `results/Kpis.tsx`); `lib/theme.ts useTheme` could become hero-aware instead of the
+landing's MutationObserver re-asserting dark; two-storey slab constants (0.15 m, 8 W/m²K) are documented assumptions
+(API.md §3c); the `?g4e2e=1` test hook ships in production (inert without the param). Gotchas: engine tests rewrite
+`packages/engine/test/output/validation-numbers.csv` (`git checkout` it before the frozen guard); playwright-core for
+E2E is staged per session in the scratchpad (`npm i playwright-core` in `<scratchpad>/pw`).
 
 ## Decisions (approved by user unless marked "orchestrator")
 1. New apps `apps/studio` + `apps/studio-server` (orchestrator: naming). Old apps and `packages/*` frozen.
@@ -67,7 +65,7 @@ in `<scratchpad>/pw`).
 | G5 | Landing redesign (bolder, same identity) | G3 | sonnet agent | DONE | Cinematic hero (`routes/landing/Hero.tsx`) pinned to dark tokens regardless of theme via `useForceDarkTokens` — toggles the real `data-theme` attribute (not a scoped CSS override, which can't reach `useThemeColors`'s root-only `getComputedStyle` read) so the embedded `ShelterViewer` actually re-renders on transition; auto-rotates (`ShelterViewer.tsx`'s one additive `autoRotate` prop) while the sun sweeps dawn->dusk (`useAnimatedHour`, a 90s triangle wave) and a live indoor/outdoor strip samples the same shared preview at the animated hour (`sampleAtHour.ts`, interpolated). Shape strip (box/cylinder/dome, lazy-mounted via `useInView`), scroll-revealed stages (`.reveal` CSS + IntersectionObserver), the live chart now its own section, closing CTA. `prefers-reduced-motion` gated two ways (JS hook + CSS media query). 103/103 tests green (+4 new), build clean, frozen guard empty. Eager chunk 306.72kB->310.84kB (+4.1kB over this branch's own true baseline; brief's "~303kB" predates G2/G3's own increase to 306.72kB) — flagged for orchestrator judgement, not hidden. Screenshots 1440/390 x light/dark x {hero, full, scrolled-through} + 1 reduced-motion set, 0 console errors; Q1F #1 (390px building visibility) unregressed. Full writeup: `ledger/tasks/G5.md`. **Orchestrator review:** theme-restore bug fixed, bundle +4 kB accepted (stale 303 kB target), hero text/model overlap at 1440 logged for Q2; merged `--no-ff`. |
 | Q2 | E2E + visual QA for v2 | G4 G5 | sonnet agent | DONE | `flow.mjs` extended (session 6): fixed a pre-existing regression first (G1's typed `NumberInput` made `getByLabel('Length'/'Width')` ambiguous, same fix as G4's own script — `getByRole('slider', ...)`), then added typed-value/shape/storeys/3D-select/save-reload-persistence/old-shape-via-API steps per Q2.md condition 1. 29/29 checks, 3x deterministic, own ports (4109/5281) released every run. 28 screenshots (1440/390 × light/dark × box/cylinder/dome/2-storeys/selected-popover/typed-entry/landing) all read by eye, 0 console errors. Both carried G4/G5 polish notes reconfirmed (landing headline overlap @1440, popover-over-window @1440, worse @390) plus one new finding: dome shapes render no window pane in the 3D viewer below ~7.2m diameter regardless of WWR (`geometry.ts`'s `windowRect` sill+lintel clearance exceeds a small dome band's slant height) — display-only, the engine's own KPIs are correct; root cause confirmed via a throwaway diameter-12m repro. All 3 routed as `Q2F` in Q2.md's findings table. All suites green (studio-server 69+2skip, studio 118, server 12, engine 160+10skip, data 86), build clean, frozen guard empty. See `ledger/tasks/Q2.md` Evidence for full write-up. **Orchestrator review (session 6):** re-ran flow.mjs (29/29), diff limited to e2e + ledger, getByLabel→getByRole is a selector fix not a weakening, frozen guard empty; screenshots read — all 3 findings confirmed plus landing hero text contrast (→ Q2F). Merged `--no-ff`. |
 | Q2F | Fix Q2 findings: dome windows, popover placement, landing hero overlap + contrast | Q2 | sonnet agent | DONE | worktree `../wt-q2f`, branch `task/q2f` (session 6). Dome: `geometry.ts windowRect()` now takes an optional scaled-margins param, byte-identical for box/cylinder, dome facets scale sill/lintel to their own slant height instead of clamping to null; new unit test (5m dome, WWR 0.3, all south wall facets non-null). Popover: `anchorPosition()` anchors a window part at its own top edge, not the wall's mid-height; new `PartPopover.test.ts`. Landing: found the real root cause of the contrast finding was a race between `useForceDarkTokens` and the header's `useTheme` both writing `data-theme` independently — fixed with a `MutationObserver` re-assert in `hooks.ts`. Measured contrast post-fix ≈15:1 (ink) / 6.5:1 (ink-muted) against the now-reliably-dark background. **Round 1 orchestrator review** caught a regression in the headline/model-overlap fix (a CSS transform on the viewer div — hard seam + right-edge crop at 1440); reworked as a new `frameShift` prop on `ShelterViewer`/`Scene` (`viewer/ShelterViewer.tsx`) that shifts the *camera's rendered frame* via `camera.setViewOffset` + a zoom-out, not the DOM element (default false, byte-identical for Studio/DevViewer — confirmed via `flow.mjs`'s bbox/patch-diff numbers being pixel-identical before/after); gated to the `sm`+ breakpoint (`useMinWidth` hook) after an unconditional pass clipped the compass at 390px. Re-verified live at 1280/1440/1920 + 390, both themes: no seam, no crop, no overlap. `npm test -w @shelter/studio` 122/122 (118+4 new), build clean, `flow.mjs` 29/29, frozen guard empty. Full write-up + screenshots list in `ledger/tasks/Q2F.md` Evidence. **Orchestrator review (session 6):** 2 rounds (round 1 landing seam/crop sent back); all checks re-run, screenshots read; merged. |
-| D1 | Studio architecture map (HTML page + ARCHITECTURE-STUDIO.md) | Q2 | orchestrator | REVIEW | `ARCHITECTURE-STUDIO.md` + page https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv (source `ledger/d1-architecture-page.html`). Close after Q2 merges (re-check for staleness). See `ledger/tasks/D1.md`. |
+| D1 | Studio architecture map (HTML page + ARCHITECTURE-STUDIO.md) | Q2 | orchestrator | DONE | `ARCHITECTURE-STUDIO.md` + page https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv (source `ledger/d1-architecture-page.html`). Re-checked after Q2F: no stale claims. See `ledger/tasks/D1.md`. |
 
 ## Required from user
 ```
