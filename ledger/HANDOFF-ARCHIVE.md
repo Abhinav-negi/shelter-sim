@@ -1,5 +1,34 @@
 # HANDOFF archive (newest first)
 
+## HANDOFF (2026-09-26, end of session 4 — Studio v2 build tasks complete)
+
+**Phase:** Studio v2 (plan `ledger/V2.md`, batches `ORCHESTRATOR.md` §10). User ended the day after G4.
+
+**Merged into `studio/main` (each verified per ORCHESTRATOR.md §7; see each task file's "Orchestrator review"):**
+G1 typed numeric entry · G2 shape contract + server facets (box/cylinder/dome, 1–2 storeys single-zone) · G3 shapes in
+viewer + Geometry controls · G5 landing redesign · **G4 select-to-edit** (session 4: orchestrator rebased onto
+studio/main, resolved `ShelterViewer.tsx` keeping both `autoRotate` + `interactive`, fixed a build error; a fresh
+agent verified all 8 conditions live). Suites on `studio/main` (`ab7d70a`): studio 118/118, studio-server 69 (+2
+skipped), studio build clean, frozen guard empty.
+
+**In progress:** nothing. No task worktrees or branches remain. No orchestrator-started servers running
+(:4100/:5273 are the user's own `dev:studio`).
+
+**Recommended next step:** batch 4 — **Q2** (E2E + visual QA, `ledger/tasks/Q2.md`). Fold in the two polish
+follow-ups found in review: (a) landing at 1440 — headline runs across the building (offset the model right);
+(b) Studio at 1440 — the part popover partly covers the south window it edits (anchor beside/above the part).
+Route any findings as `Q2F`. Then batch 5 — **D1** architecture map (Explore agent for facts, orchestrator writes +
+publishes the HTML page and `ARCHITECTURE-STUDIO.md`).
+
+**Known follow-ups (carried):** Dashboard/Compare N+1 `GET .../simulations`; duplicated KPI labels
+(`routes/compare/kpiTable.ts` vs `results/Kpis.tsx`); sun line leaves the frame; engine tests rewrite
+`packages/engine/test/output/validation-numbers.csv` (`git checkout` it before the frozen guard); two-storey slab
+constants (0.15 m, 8 W/m²K) are documented assumptions (API.md §3c); the `?g4e2e=1` test hook ships in production but
+is inert without the query param (needed because the E2E runs against the production build).
+
+**Rate limits:** Sonnet agents hit the session limit twice (G2 first attempt, G4 first attempt). Brief agents to commit
+WIP at clean points; after a cut-off, commit what's in the worktree and record the state in the task file first.
+
 ## HANDOFF (2026-09-26, end of session 3 — Studio v2 partly built)
 
 **Phase:** Studio v2 (plan `ledger/V2.md`, batches `ORCHESTRATOR.md` §10). The user asked to wrap up after batch 3.
