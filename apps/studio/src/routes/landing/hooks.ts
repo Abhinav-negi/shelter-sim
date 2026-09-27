@@ -24,6 +24,29 @@ export function useReducedMotion(): boolean {
   return reduced;
 }
 
+/** Tracks whether the viewport is at least `minWidthPx` wide, live (updates
+ *  on resize/orientation change) — same plain `matchMedia` approach as
+ *  `useReducedMotion` above. Q2F: gates the hero's `ShelterViewer
+ *  frameShift` to the `sm`-and-up desktop layout only (the same breakpoint
+ *  `Hero.tsx`'s own `sm:` classes already switch the overlay layout at), so
+ *  the mobile stacked layout (Q1F #1) keeps its original, unshifted camera
+ *  framing — a fixed crop tuned for wide/landscape aspects clipped the
+ *  compass ring at 390px when it was applied unconditionally. */
+export function useMinWidth(minWidthPx: number): boolean {
+  const query = `(min-width: ${minWidthPx}px)`;
+  const [matches, setMatches] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, [query]);
+
+  return matches;
+}
+
 /** Whether `ref`'s element has any part in the viewport. Powers both the
  *  shape strip's lazy mount and the stages' scroll reveal. */
 export function useInView<T extends Element>(threshold = 0): [RefObject<T | null>, boolean] {

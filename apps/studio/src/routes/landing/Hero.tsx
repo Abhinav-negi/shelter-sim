@@ -13,11 +13,14 @@ import type { Options, PreviewResponse } from '@shelter/studio-server';
 import type { ComponentType } from 'react';
 import type { ResultJson } from '../../results/types';
 import type { ShelterViewerProps } from '../../viewer/ShelterViewer';
-import { useAnimatedHour, useForceDarkTokens, useReducedMotion } from './hooks';
+import { useAnimatedHour, useForceDarkTokens, useMinWidth, useReducedMotion } from './hooks';
 import { sampleAtHour } from './sampleAtHour';
 
 const DAWN_HOUR = 6;
 const DUSK_HOUR = 18;
+// Tailwind's default `sm` breakpoint — the same one every `sm:` class below
+// switches the mobile stacked layout to the desktop full-bleed overlay at.
+const SM_BREAKPOINT_PX = 640;
 
 const ctaClass =
   'inline-flex items-center justify-center rounded-sm bg-accent px-5 py-2.5 text-base font-medium text-accent-fg transition-colors hover:bg-accent-hover';
@@ -36,6 +39,12 @@ export function Hero({
   const heroRef = useRef<HTMLElement>(null);
   useForceDarkTokens(heroRef);
   const hour = useAnimatedHour(!reducedMotion, DAWN_HOUR, DUSK_HOUR);
+  // Q2F: only the `sm`+ desktop layout (full-bleed canvas behind the text)
+  // needs the model shifted out from under the text column; the mobile
+  // layout below `sm` already puts the viewer in its own box above the text
+  // in normal flow (Q1F #1), so it must keep its original, unshifted camera
+  // framing — see `useMinWidth`'s own doc comment for why.
+  const isDesktopHero = useMinWidth(SM_BREAKPOINT_PX);
   const sample = preview ? sampleAtHour(preview.result as ResultJson, hour) : null;
 
   return (
@@ -43,15 +52,23 @@ export function Hero({
       ref={heroRef}
       className="relative w-full overflow-hidden border-b border-hairline bg-paper text-ink sm:h-screen sm:min-h-[560px]"
     >
-      {/* Q2F: shifted right (visual-only CSS transform, not a resize -- the
-       *  canvas keeps its full-viewport size/aspect, so the camera framing in
-       *  ShelterViewer.tsx/framing.ts is untouched) so the building's
-       *  silhouette clears the text column at wide widths instead of sitting
-       *  directly behind the headline (Q2.md finding #1). Unchanged below
-       *  `sm` (no transform class there), matching Q1F #1's existing stacked
-       *  mobile layout. */}
-      <div className="h-[58vh] min-h-[360px] w-full sm:absolute sm:inset-0 sm:h-full sm:min-h-0 sm:translate-x-[22%]">
-        <Viewer design={options.defaults} options={options} hour={hour} autoRotate={!reducedMotion} />
+      <div className="h-[58vh] min-h-[360px] w-full sm:absolute sm:inset-0 sm:h-full sm:min-h-0">
+        {/* Q2F: `frameShift` shifts the camera's *rendered frame* (a
+         *  projection-matrix crop, ShelterViewer.tsx) rather than the DOM
+         *  element, so the canvas stays full-bleed (no CSS transform, no
+         *  seam/crop at the canvas edge) while the building/compass move
+         *  into the right ~60% of it, clearing the text column at wide
+         *  widths (Q2.md finding #1). Gated to `isDesktopHero` (`sm`+) —
+         *  unconditionally true clipped the compass at 390px, where the
+         *  canvas is a completely different (portrait, non-overlaid)
+         *  aspect. */}
+        <Viewer
+          design={options.defaults}
+          options={options}
+          hour={hour}
+          autoRotate={!reducedMotion}
+          frameShift={isDesktopHero}
+        />
       </div>
 
       <div className="relative z-10 flex flex-col justify-end gap-6 px-4 pt-6 pb-8 sm:absolute sm:inset-0 sm:h-full sm:px-10 sm:pt-0 sm:pb-14">

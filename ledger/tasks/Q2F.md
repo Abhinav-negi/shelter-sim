@@ -32,8 +32,11 @@ beside them, this file, the Q2F row in STUDIO.md. Must not: `apps/studio-server/
 2. Box and cylinder windows are unchanged: all existing geometry tests pass unmodified.
 3. Popover: at 1440 and 390, selecting the south window (box, WWR 30%) leaves the window fully visible — the popover
    does not overlap the window's screen rect. Screenshot evidence at both widths, light + dark.
-4. Landing 1440 light + dark: headline, subtitle and CTA don't overlap the model; 390 unchanged. Hero text passes AA
-   contrast (state the measured ratios or the token values used). `prefers-reduced-motion` still respected.
+4. Landing at 1280, 1440 and 1920 wide, light + dark: no seam or band anywhere in the hero; building and compass
+   fully in frame (no edge cropping); headline, subtitle and CTA don't overlap the model. 390: unchanged from before
+   Q2F. Hero text passes AA contrast (state the measured ratios or the token values used). `prefers-reduced-motion`
+   still respected. (Widened from the original 1440-only condition after orchestrator review round 1 caught a
+   seam/crop regression in the first fix attempt — see Evidence.)
 5. `npm test -w @shelter/studio` green (118 + new); `npm run build -w @shelter/studio` clean;
    `timeout 180 env PLAYWRIGHT_CORE=<path> node apps/studio/e2e/flow.mjs` → ALL PASS; frozen guard empty.
 
@@ -46,8 +49,16 @@ beside them, this file, the Q2F row in STUDIO.md. Must not: `apps/studio-server/
 
 **Status: DONE.** Files touched: `apps/studio/src/viewer/geometry.ts`, `apps/studio/src/viewer/geometry.test.ts`,
 `apps/studio/src/viewer/PartPopover.tsx`, `apps/studio/src/viewer/PartPopover.test.ts` (new),
-`apps/studio/src/routes/landing/Hero.tsx`, `apps/studio/src/routes/landing/hooks.ts`, this file, and the Q2F row in
-`STUDIO.md`. Nothing else. All screenshots/scripts are scratchpad-only (`/tmp/.../scratchpad/q2f/`), not committed.
+`apps/studio/src/viewer/ShelterViewer.tsx`, `apps/studio/src/routes/landing/Hero.tsx`,
+`apps/studio/src/routes/landing/hooks.ts`, this file, and the Q2F row in `STUDIO.md`. Nothing else. All
+screenshots/scripts are scratchpad-only (`/tmp/.../scratchpad/q2f/`), not committed.
+
+**Orchestrator review round 1** caught a regression in the first landing-overlap fix (a CSS transform on the
+viewer's DOM element — hard seam + right-edge crop at 1440). Reworked as a camera-level fix (`ShelterViewer.tsx`'s
+new `frameShift` prop) per the orchestrator's brief; see "Headline/model overlap" below for the full account,
+including a mobile-clipping regression caught and fixed before it shipped this time. Re-verified at 1280/1440/1920
+(new condition, added by the orchestrator) plus 390, both themes; re-ran the full suite/build/`flow.mjs`/frozen
+guard.
 
 ### 1. Dome windows never render
 
@@ -140,20 +151,66 @@ the scene/background not actually being dark, not the token pairing itself.
 
 **Headline/model overlap (finding #3), fixed separately:** even with contrast fixed, the building's silhouette
 still visually sat behind/under the headline at 1440 (same geometry, unrelated to token colours) — Q2's own pixel
-measurement (`x=310-605` overlap) still applied. Rather than resizing the "full-viewport" canvas (G5's explicit
-design decision) or narrowing the hero text (would force ugly wrapping of a `text-6xl` headline), took the other
-option the brief explicitly named ("offset the model right"): the viewer's outer `<div>` (`Hero.tsx`) gets
-`sm:translate-x-[22%]` — a **visual-only CSS transform**, not a resize, so `ShelterViewer.tsx`/`framing.ts`'s camera
-math (which reacts to the canvas's actual layout size/aspect) is completely untouched; only where the already-
-rendered frame is *painted* moves. The revealed strip on the left (where the canvas used to start) shows the
-section's own `bg-paper` (now dark-forced, so it blends with the scene's own dark sky/fog rather than creating a
-visible seam). Verified live at 1440: building's leftmost edge now clears the text column (headline/subtitle/CTA/
-temp-strip) with a visible gap, both themes. **390 unchanged** — the transform is `sm:`-prefixed only, and the
-mobile stacked layout (Q1F #1) doesn't use this div's absolute positioning at all. `prefers-reduced-motion`:
-untouched code path (`useReducedMotion`/`autoRotate={!reducedMotion}` in `Hero.tsx` wasn't touched), still respected.
+measurement (`x=310-605` overlap) still applied.
 
-Screenshots: `landing-1440-{light,dark}.png`, `landing-390-light.png`. 0 console errors in every screenshot run
-(only the allowed `THREE.Clock` warning would have been allow-listed; none appeared).
+*First attempt (reverted after orchestrator review):* a CSS `sm:translate-x-[22%]` on the viewer's outer `<div>`
+(`Hero.tsx`). This visually worked at 1440 but the orchestrator caught two regressions on inspection: (a) a hard
+vertical seam at the canvas's original left edge, where the section's own (lighter) background showed through
+behind the headline — visible specifically because the light-theme screenshot at that instant hadn't fully settled
+into the forced-dark backdrop the transform's "blends in" assumption depended on; (b) the building/compass were
+cropped at the viewport's right edge, since a CSS transform shifts the already-rendered raster without changing the
+canvas's actual size — content that rendered near the original right edge just moves further right and off-screen.
+Both are exactly the "resize the DOM element" failure mode the brief warned about; reverted in full.
+
+**Fix that shipped:** shift the *camera's rendered frame*, not the DOM element, via a new `frameShift` prop on
+`ShelterViewer`/`Scene` (`viewer/ShelterViewer.tsx`) — default `false`, so every other caller (Studio, DevViewer,
+ShapeStrip) is untouched. When on, it:
+1. Multiplies `camDist` (the existing `cameraDistance()` result) by a fixed `FRAME_SHIFT_ZOOM_OUT` (1.55) — a
+   genuine zoom-out, moving the camera further away so the building appears smaller with headroom to spare.
+2. Calls `camera.setViewOffset(FULL, FULL, offsetX, 0, viewWidth, FULL)` — a **projection-matrix crop+shift**
+   (`FULL`/`viewWidth`/`offsetX` are abstract ratios, not pixels, so it doesn't need to react to the canvas's actual
+   size) that crops to `FRAME_SHIFT_CROP` (0.82) of the full frustum's width and positions that crop so the
+   frustum's true centre (where the building/target sit) renders at `FRAME_SHIFT_TARGET_D` (0.6) of the canvas's
+   width — i.e. the building ends up noticeably right-of-centre, inside the canvas's own actual bounds (no crop at
+   the edge, because the canvas itself was never resized/moved).
+
+**Why `setViewOffset` and not "move the OrbitControls target/camera position"** (the other option the brief
+suggested) — traced through before implementing, not discovered by trial and error: `autoRotate` makes
+`OrbitControls` continuously revolve the *camera* around its `target` at a fixed radius/polar angle, and by
+`OrbitControls`' own definition the `target` always renders at screen-centre. If the target (or the camera position
+relative to it) were the thing offset instead, the vector from target to the (fixed-at-origin) building would stay
+constant in *world* space but its *screen-space* projection would sweep through a full sine wave as the camera
+revolves — i.e. the building would visibly swing from the right side of the frame to the left and back once per
+auto-rotate cycle, re-overlapping the text column for half of every rotation. `setViewOffset`'s shift lives entirely
+in the projection matrix (screen space), so it's invariant to the camera's current orbit angle — the target
+(always screen-centre) simply always renders shifted, at every rotation angle, and `OrbitControls` never touches
+`camera.view` so it can't fight or reset it.
+
+**Mobile regression caught before it shipped:** `frameShift` was initially passed unconditionally (`<Viewer ...
+frameShift />`). A live screenshot at 390px showed the compass ring/"N" glyph almost entirely clipped — the crop
+constants were tuned against the wide/landscape desktop aspects (1280-1920), and applying the same fixed crop to
+the mobile hero's much narrower, portrait-ish viewer box clipped content that the *unshifted* framing had always
+kept comfortably in view. Fixed by gating `frameShift` to the same `sm` (640px) breakpoint the hero's own `sm:`
+classes already switch the mobile stacked layout to the desktop overlay at: a new `useMinWidth(px)` hook
+(`routes/landing/hooks.ts`, same plain-`matchMedia` pattern as the existing `useReducedMotion`), consumed as
+`frameShift={isDesktopHero}` in `Hero.tsx`. Below `sm`, `frameShift` is `false` and the camera is byte-identical to
+pre-Q2F — confirmed live, the 390px screenshot now matches the original (pre-frameShift) framing again.
+
+Verified live at **1280, 1440 and 1920 wide, both themes**: no seam anywhere in the hero (the "background" is the
+scene's own vignette/fog, not a flat CSS colour meeting a hard edge), building and compass fully in frame with
+margin on every side, no overlap with the text column (headline/subtitle/CTA/temp-strip all sit over the plain dark
+backdrop, not the building). **390 unchanged** from before this fix. `prefers-reduced-motion`: untouched code path
+(`useReducedMotion`/`autoRotate={!reducedMotion}` wasn't touched), still respected.
+
+**Studio/flow.mjs unaffected, confirmed numerically, not just "should be identical":** `frameShift` defaults to
+`false` everywhere except the Hero's `sm`+ path, so Studio's `<ShelterViewer interactive .../>` never passes it —
+`camDist` multiplies by `1` (a no-op) and the `useEffect` calls `camera.clearViewOffset()` (a no-op on a camera that
+was never offset). Re-ran `flow.mjs` after this change: the canvas bbox numbers (`492×249` before, `560×282` after
+widening) and the South-window patch-diff score (`29904`) are **byte-identical** to the pre-Q2F run — not just
+"tests still pass", the actual pixel-level numbers didn't move at all.
+
+Screenshots: `landing-{1280,1440,1920}-{light,dark}.png`, `landing-390-light.png`. 0 console errors in every
+screenshot run (only the allowed `THREE.Clock` warning would have been allow-listed; none appeared).
 
 ### Verification
 
