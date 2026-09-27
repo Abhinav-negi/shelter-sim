@@ -44,3 +44,10 @@ beside them, this file, the Q2F row in STUDIO.md. Must not: `apps/studio-server/
 
 ## Evidence
 (filled by the subagent)
+
+## Orchestrator review (session 6, round 1)
+Conditions 1, 2, 3 and 5 PASS (re-ran: studio 122/122, build clean, flow.mjs 29/29, frozen guard empty; dome and popover
+screenshots read). MutationObserver dark-token fix accepted (no loop: it only re-applies when the value isn't 'dark';
+disconnected on unmount). **Condition 4 FAIL:** `sm:translate-x-[22%]` on the hero viewer leaves a hard vertical
+seam (~x=318 at 1440) and crops the building + compass at the right edge. Sent back: keep the canvas full-bleed and
+offset the framing via a landing-only ShelterViewer prop (Studio framing unchanged); check 1280/1440/1920 light+dark.
