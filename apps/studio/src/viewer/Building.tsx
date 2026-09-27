@@ -10,9 +10,34 @@
 
 import { Edges, Line } from '@react-three/drei';
 import { useEffect, useMemo } from 'react';
-import { type BufferGeometry, ExtrudeGeometry, Path, Shape } from 'three';
+import { type BufferGeometry, DoubleSide, ExtrudeGeometry, Matrix4, Path, Quaternion, Shape, Vector3 } from 'three';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { Orientation, SceneGeometry, WallGeometry, WindowRect } from './geometry';
+import type { PartId } from '../design/selection';
+import {
+  azimuthDirection,
+  CYLINDER_SECTORS,
+  DOME_SECTORS,
+  type DomeFacet,
+  type Orientation,
+  type SceneGeometry,
+  type WallGeometry,
+  type WindowRect,
+} from './geometry';
+import { useTintedColor, usePartInteraction } from './usePartInteraction';
+
+/** G4: hover/click/highlight is opt-in (default off) — Landing/Compare render
+ *  the same `Building` non-interactively (condition 2). Threaded from
+ *  `ShelterViewer` down through every wall/roof/floor/window mesh below. */
+export interface BuildingInteractionProps {
+  interactive: boolean;
+  /** The theme's accent colour, for the hover/select tint — Building's own
+   *  material palette is fixed regardless of theme (see the header comment),
+   *  but the SELECTION tint should still read as "this app's accent", light
+   *  or dark. */
+  accent: string;
+}
+
+const DEG2RAD = Math.PI / 180;
 
 // A fixed, theme-independent material palette — a real shelter's plaster and
 // timber don't change colour when someone toggles the app's UI theme. Only
@@ -26,6 +51,12 @@ const ROOF_COLOR = '#a9a596';
 const FLOOR_COLOR = '#bdb8a9';
 const EDGE_COLOR = '#3a362c';
 const GLASS_COLOR = '#a9c3d6';
+
+/** Box walls meet at 90° corners — see `mitreWallEnds`'s comment. */
+const BOX_MITRE_ANGLE_DEG = 45;
+/** G3: generalises the box's 45° (=180/4) to a 12-gon ring (cylinder walls,
+ *  and — via the same shared constant — the dome's sector half-angle). */
+const RING_HALF_ANGLE_DEG = 180 / CYLINDER_SECTORS;
 
 /** The wall's outline as a `Shape` (u = across the facade, v = up the wall),
  *  with the window opening (if any) cut out as a `Path` hole. `half` is
@@ -145,24 +176,35 @@ function WallOutline({
  *  `depthAxis`/`uAxis` say which world axis is which for this wall;
  *  `outerFace`/`sign` (already computed by the caller) locate the exterior
  *  plane and which way is "outward". Window-hole vertices are untouched —
- *  their u is always well inside `±half`. */
+ *  their u is always well inside `±half`.
+ *
+ *  `mitreAngleDeg` (G3, V2.md §G3: "mitreWallEnds generalised from 45° to
+ *  180°/N so facets close with no seams") is the mitre bisector's own
+ *  angle: for a box (N=4 walls meeting at 90° corners) that's 45°, and
+ *  `d*tan(45°)` is (up to float noise) exactly `d`, the box's original
+ *  pull-in — so passing 45 here reproduces the pre-G3 box math unchanged.
+ *  For a regular N-gon ring (cylinder, N=12) adjacent walls meet at an
+ *  exterior turn of `360/N`, whose bisector is `180/N` — the general mitre
+ *  pull-in is `d*tan(180/N)`. */
 function mitreWallEnds(
   geom: BufferGeometry,
   half: number,
   outerFace: number,
   sign: 1 | -1,
   runAxis: 'x' | 'z',
+  mitreAngleDeg: number,
 ): void {
   const pos = geom.attributes.position!; // ExtrudeGeometry always has a position attribute
   const EPS = 1e-4; // far below any real dimension; just tight enough to hit exactly the u=±half vertices
+  const tanMitre = Math.tan(mitreAngleDeg * DEG2RAD);
   const getU = runAxis === 'x' ? (i: number) => pos.getX(i) : (i: number) => pos.getZ(i);
   const setU = runAxis === 'x' ? (i: number, v: number) => pos.setX(i, v) : (i: number, v: number) => pos.setZ(i, v);
   const getDepthCoord = runAxis === 'x' ? (i: number) => pos.getZ(i) : (i: number) => pos.getX(i);
   for (let i = 0; i < pos.count; i++) {
     const u = getU(i);
     const d = sign * (outerFace - getDepthCoord(i)); // 0 at the exterior face, +wallThicknessM at the interior face
-    if (Math.abs(u - half) < EPS) setU(i, half - d);
-    else if (Math.abs(u + half) < EPS) setU(i, -(half - d));
+    if (Math.abs(u - half) < EPS) setU(i, half - d * tanMitre);
+    else if (Math.abs(u + half) < EPS) setU(i, -(half - d * tanMitre));
   }
   pos.needsUpdate = true;
   geom.computeVertexNormals(); // non-indexed (ExtrudeGeometry) -> flat per-face normals, correct for the new mitre faces
@@ -207,43 +249,39 @@ export function buildWallGeometry(geometry: SceneGeometry, wall: WallGeometry): 
     geom.rotateY(-Math.PI / 2);
     geom.translate(centerDepth + depth / 2, 0, 0);
   }
-  mitreWallEnds(geom, half, outerFace, sign, runAxis);
+  mitreWallEnds(geom, half, outerFace, sign, runAxis, BOX_MITRE_ANGLE_DEG);
   return geom;
 }
 
-/** All 4 walls' solids as ONE merged, vertex-welded mesh. With the mitred
- *  corners above, each wall's own mitred end face lands exactly on the same
- *  3D plane as its neighbour's — worked out algebraically and confirmed by
- *  a dedicated test (`Building.test.ts`) — so `mergeVertices` welds those
- *  coincident corner vertices into a single continuous solid with no
- *  internal seam anywhere, exterior or interior. Kept as one mesh (not 4)
- *  regardless: it's still the more correct "one solid" reading of F2b's
- *  goal, and gives a single shadow-caster for the whole envelope rather
- *  than four independently shadow-mapped ones. */
-function WallsSolid({ geometry }: { geometry: SceneGeometry }) {
-  const merged = useMemo(() => {
-    const parts = geometry.walls.map((wall) => buildWallGeometry(geometry, wall));
-    const combined = mergeGeometries(parts, false);
-    parts.forEach((g) => g.dispose());
-    const welded = mergeVertices(combined);
-    combined.dispose();
-    return welded;
-  }, [geometry]);
-
-  useEffect(() => () => merged.dispose(), [merged]);
+/** One wall's mitred solid as its own mesh, tagged `wall:<orientation>` (G4)
+ *  so it can be hovered/clicked independently of its neighbours. Pre-G4 this
+ *  merged all 4 into one mesh (a single shadow-caster); 4 box walls is cheap
+ *  enough that dropping that merge for per-wall picking costs nothing
+ *  visible — see `RingWallsSolid`/`DomeFacetsSolid` below for the cylinder/
+ *  dome cases, where facets ARE merged, just grouped by orientation instead
+ *  of all together, to keep the same one-mesh-per-selectable-part shape. */
+function WallSolid({ geometry, wall, interactive, accent }: { geometry: SceneGeometry; wall: WallGeometry } & BuildingInteractionProps) {
+  const solid = useMemo(() => buildWallGeometry(geometry, wall), [geometry, wall]);
+  useEffect(() => () => solid.dispose(), [solid]);
+  const partId: PartId = `wall:${wall.orientation}`;
+  const { isHovered, isSelected, handlers } = usePartInteraction(partId, interactive);
+  const color = useTintedColor(WALL_COLOR, accent, isSelected, isHovered);
 
   return (
-    <mesh geometry={merged} castShadow receiveShadow>
-      <meshStandardMaterial color={WALL_COLOR} roughness={0.92} metalness={0} />
+    <mesh geometry={solid} castShadow receiveShadow {...handlers}>
+      <meshStandardMaterial color={color} roughness={0.92} metalness={0} />
     </mesh>
   );
 }
 
-function Wall({ geometry, wall }: { geometry: SceneGeometry; wall: WallGeometry }) {
+function Wall({ geometry, wall, interactive, accent }: { geometry: SceneGeometry; wall: WallGeometry } & BuildingInteractionProps) {
   const { runAxis, sign } = WALL_SIDE[wall.orientation];
   const depthHalfExtent = runAxis === 'x' ? geometry.widthM / 2 : geometry.lengthM / 2;
   const outerFace = sign * depthHalfExtent;
   const centerDepth = outerFace - (sign * geometry.wallThicknessM) / 2;
+  const windowPartId: PartId = `window:${wall.orientation}`;
+  const { isHovered, isSelected, handlers } = usePartInteraction(windowPartId, interactive && !!wall.window);
+  const glassColor = useTintedColor(GLASS_COLOR, accent, isSelected, isHovered);
 
   return (
     <group>
@@ -255,6 +293,7 @@ function Wall({ geometry, wall }: { geometry: SceneGeometry; wall: WallGeometry 
               ? [0, wall.window.sill + wall.window.height / 2, centerDepth]
               : [centerDepth, wall.window.sill + wall.window.height / 2, 0]
           }
+          {...handlers}
         >
           <boxGeometry
             args={
@@ -264,7 +303,7 @@ function Wall({ geometry, wall }: { geometry: SceneGeometry; wall: WallGeometry 
             }
           />
           <meshPhysicalMaterial
-            color={GLASS_COLOR}
+            color={glassColor}
             transparent
             opacity={0.35}
             roughness={0.05}
@@ -277,32 +316,453 @@ function Wall({ geometry, wall }: { geometry: SceneGeometry; wall: WallGeometry 
   );
 }
 
-export function Building({ geometry }: { geometry: SceneGeometry }) {
+/** G3 (V2.md §G3, API.md §3c): the intermediate floor between two storeys —
+ *  a single-zone approximation on the server (one `rock` StorageElement,
+ *  not a real second floor); here just a thin visual slab at `heightM`
+ *  (the first storey's own ceiling / second storey's own floor). Thickness
+ *  mirrors `SLAB_THICKNESS_M` (assemble.ts) — a visual echo of that
+ *  constant, not a load-bearing number in the viewer. `radiusM` picks a
+ *  circular slab (cylinder) over the default box. */
+const SLAB_THICKNESS_M = 0.15;
+
+function IntermediateSlab({ geometry, radiusM }: { geometry: SceneGeometry; radiusM?: number }) {
+  return (
+    <mesh position={[0, geometry.heightM, 0]} receiveShadow castShadow>
+      {radiusM !== undefined ? (
+        <cylinderGeometry args={[radiusM, radiusM, SLAB_THICKNESS_M, CYLINDER_SECTORS]} />
+      ) : (
+        <boxGeometry args={[geometry.lengthM, SLAB_THICKNESS_M, geometry.widthM]} />
+      )}
+      <meshStandardMaterial color={FLOOR_COLOR} roughness={0.95} />
+    </mesh>
+  );
+}
+
+/** Box: unchanged for `storeys:1` (a single `<group position-y={0}>` wrapper
+ *  around the exact pre-G3 walls/floor/roof adds nothing visually or
+ *  numerically). `storeys:2` stacks a second, identical wall ring at
+ *  `heightM` (condition 2: "stacked walls ... one window row per storey")
+ *  and inserts the intermediate slab between them; the roof moves up to
+ *  `buildingHeightM` (`heightM*storeys`, same value as `heightM` at
+ *  storeys:1). */
+function BoxBuilding({ geometry, interactive, accent }: { geometry: SceneGeometry } & BuildingInteractionProps) {
+  const roof = usePartInteraction('roof', interactive);
+  const roofColor = useTintedColor(ROOF_COLOR, accent, roof.isSelected, roof.isHovered);
+  const floor = usePartInteraction('floor', interactive);
+  const floorColor = useTintedColor(FLOOR_COLOR, accent, floor.isSelected, floor.isHovered);
+
   return (
     <group>
-      <WallsSolid geometry={geometry} />
-      {geometry.walls.map((wall) => (
-        <Wall key={wall.orientation} geometry={geometry} wall={wall} />
+      {Array.from({ length: geometry.storeys }, (_, storey) => (
+        <group key={storey} position={[0, storey * geometry.heightM, 0]}>
+          {geometry.walls.map((wall) => (
+            <WallSolid key={wall.orientation} geometry={geometry} wall={wall} interactive={interactive} accent={accent} />
+          ))}
+          {geometry.walls.map((wall) => (
+            <Wall key={wall.orientation} geometry={geometry} wall={wall} interactive={interactive} accent={accent} />
+          ))}
+        </group>
       ))}
 
+      {geometry.storeys > 1 && <IntermediateSlab geometry={geometry} />}
+
       {/* Floor slab: top face at y=0, the walls' base. */}
-      <mesh position={[0, -geometry.floorThicknessM / 2, 0]} receiveShadow>
+      <mesh position={[0, -geometry.floorThicknessM / 2, 0]} receiveShadow {...floor.handlers}>
         <boxGeometry args={[geometry.lengthM, geometry.floorThicknessM, geometry.widthM]} />
-        <meshStandardMaterial color={FLOOR_COLOR} roughness={0.95} />
+        <meshStandardMaterial color={floorColor} roughness={0.95} />
       </mesh>
 
       {/* Flat roof slab, flush with the wall footprint — no eaves, no roof type
           control (F2.md Rules: the model reflects only what the physics
           models, and the engine only knows a flat roof). */}
       <mesh
-        position={[0, geometry.heightM + geometry.roofThicknessM / 2, 0]}
+        position={[0, geometry.buildingHeightM + geometry.roofThicknessM / 2, 0]}
         castShadow
         receiveShadow
+        {...roof.handlers}
       >
         <boxGeometry args={[geometry.lengthM, geometry.roofThicknessM, geometry.widthM]} />
-        <meshStandardMaterial color={ROOF_COLOR} roughness={0.85} />
+        <meshStandardMaterial color={roofColor} roughness={0.85} />
         <Edges threshold={20} color={EDGE_COLOR} opacity={0.35} transparent linewidth={1} />
       </mesh>
     </group>
   );
+}
+
+// ============================== CYLINDER (G3) ==============================
+// A 12-facet ring: same wall-panel construction as the box (`wallShape` +
+// `mitreWallEnds`), just placed by azimuth around a circle instead of the
+// box's 4 fixed orientations. The mitre step runs in the RAW, pre-placement
+// local frame (u=local x, depth=local z, exactly the box's own S/N case) —
+// rotation/translation happen afterwards, so `mitreWallEnds` needs no
+// azimuth-aware generalisation of its own; only the placement differs.
+
+/** Exported for Building.test.ts — the generalised (180°/N) mitre is worth
+ *  testing directly against real vertex data too, same as the box's
+ *  `buildWallGeometry` (F2b). */
+export function buildRingWallGeometry(geometry: SceneGeometry, wall: WallGeometry): BufferGeometry {
+  const half = Math.max(1e-4, wall.facadeWidth) / 2;
+  const depth = geometry.wallThicknessM;
+  const shape = wallShape(wall.facadeWidth, geometry.heightM, wall.window);
+  const geom = new ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 1 });
+  // Raw extrude occupies local z in [0, depth]; outerFace=depth, sign=1 ->
+  // exterior (z=depth) unmoved, interior (z=0) pulled in by depth*tan(15°).
+  mitreWallEnds(geom, half, depth, 1, 'x', RING_HALF_ANGLE_DEG);
+  const r = geometry.lengthM / 2; // diameter -> radius, API.md §3b
+  geom.translate(0, 0, r - depth); // exterior face -> radius r; interior -> r-depth
+  geom.rotateY(-(wall.azimuthDeg ?? 0) * DEG2RAD); // sweep to this facet's azimuth (geometry.ts header's sign convention)
+  return geom;
+}
+
+/** Merges a set of already-built facet geometries into one welded mesh per
+ *  distinct orientation (not all 12 into one, as pre-G4) — a cylinder's 12
+ *  wall facets are picked/highlighted per quadrant (G4.md: "cylinder ...
+ *  facets map to their quadrant's wall:<o>"), so each orientation needs to
+ *  stay its own mesh to carry its own `wall:<o>` pointer handlers, while
+ *  facets sharing an orientation still merge into one draw call. */
+function mergeByOrientation(parts: Array<{ orientation: Orientation; geom: BufferGeometry }>): Array<{
+  orientation: Orientation;
+  geometry: BufferGeometry;
+}> {
+  const byOrientation = new Map<Orientation, BufferGeometry[]>();
+  for (const { orientation, geom } of parts) {
+    const list = byOrientation.get(orientation);
+    if (list) list.push(geom);
+    else byOrientation.set(orientation, [geom]);
+  }
+  return Array.from(byOrientation.entries()).map(([orientation, geoms]) => {
+    const combined = mergeGeometries(geoms, false);
+    geoms.forEach((g) => g.dispose());
+    const welded = mergeVertices(combined);
+    combined.dispose();
+    return { orientation, geometry: welded };
+  });
+}
+
+function RingWallsSolid({ geometry, interactive, accent }: { geometry: SceneGeometry } & BuildingInteractionProps) {
+  const groups = useMemo(
+    () =>
+      mergeByOrientation(
+        geometry.walls.map((wall) => ({ orientation: wall.orientation, geom: buildRingWallGeometry(geometry, wall) })),
+      ),
+    [geometry],
+  );
+
+  useEffect(() => () => groups.forEach((g) => g.geometry.dispose()), [groups]);
+
+  return (
+    <>
+      {groups.map((group) => (
+        <WallOrientationMesh key={group.orientation} orientation={group.orientation} geometry={group.geometry} interactive={interactive} accent={accent} />
+      ))}
+    </>
+  );
+}
+
+/** One merged, per-orientation wall mesh (cylinder ring or dome wall bands),
+ *  tagged `wall:<orientation>` — shared by `RingWallsSolid` and
+ *  `DomeFacetsSolid`. `doubleSided` matches each caller's pre-G4 material
+ *  (the dome's thin curved panels needed `DoubleSide`; the cylinder's
+ *  mitred solid ring never did). */
+function WallOrientationMesh({
+  orientation,
+  geometry,
+  interactive,
+  accent,
+  doubleSided,
+}: { orientation: Orientation; geometry: BufferGeometry; doubleSided?: boolean } & BuildingInteractionProps) {
+  const { isHovered, isSelected, handlers } = usePartInteraction(`wall:${orientation}`, interactive);
+  const color = useTintedColor(WALL_COLOR, accent, isSelected, isHovered);
+  return (
+    <mesh geometry={geometry} castShadow receiveShadow {...handlers}>
+      <meshStandardMaterial color={color} roughness={0.92} metalness={0} {...(doubleSided ? { side: DoubleSide } : {})} />
+    </mesh>
+  );
+}
+
+/** Outline + window for one cylinder facet, in a group already
+ *  positioned/rotated to that facet's azimuth (mid-thickness radius) — so
+ *  the outline/window's own local coordinates are exactly the box's own
+ *  (u,v) wall-local frame, just like `WallOutline`/`Wall`'s box case. */
+function RingWall({ geometry, wall, interactive, accent }: { geometry: SceneGeometry; wall: WallGeometry } & BuildingInteractionProps) {
+  const azimuthDeg = wall.azimuthDeg ?? 0;
+  const r = geometry.lengthM / 2;
+  const depth = geometry.wallThicknessM;
+  const centerRadius = r - depth / 2;
+  const dir = azimuthDirection(azimuthDeg);
+  const azimuthRad = -azimuthDeg * DEG2RAD;
+  const windowPartId: PartId = `window:${wall.orientation}`;
+  const { isHovered, isSelected, handlers } = usePartInteraction(windowPartId, interactive && !!wall.window);
+  const glassColor = useTintedColor(GLASS_COLOR, accent, isSelected, isHovered);
+
+  const outlinePoints = useMemo(() => {
+    const segments = outlineSegments(wall.facadeWidth, geometry.heightM, wall.window);
+    const faceZ = depth / 2 + OUTLINE_EPS; // flush against the exterior face, nudged out (see OUTLINE_EPS)
+    return segments.flatMap(([[u0, v0], [u1, v1]]): Array<[number, number, number]> => [
+      [u0, v0, faceZ],
+      [u1, v1, faceZ],
+    ]);
+  }, [wall.facadeWidth, geometry.heightM, wall.window, depth]);
+
+  return (
+    <group position={[dir.x * centerRadius, 0, dir.z * centerRadius]} rotation={[0, azimuthRad, 0]}>
+      <Line segments points={outlinePoints} color={EDGE_COLOR} transparent opacity={0.4} lineWidth={1} />
+      {wall.window && (
+        <mesh position={[0, wall.window.sill + wall.window.height / 2, 0]} {...handlers}>
+          <boxGeometry args={[wall.window.width, wall.window.height, Math.max(0.02, depth * 0.3)]} />
+          <meshPhysicalMaterial
+            color={glassColor}
+            transparent
+            opacity={0.35}
+            roughness={0.05}
+            metalness={0}
+            reflectivity={0.4}
+          />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
+/** Same storeys-stacking as `BoxBuilding` (a second ring at `heightM`, plus
+ *  the intermediate slab), with circular floor/roof/slab primitives
+ *  (three.js's built-in `cylinderGeometry`, `radialSegments=12` to match
+ *  the facet count — no CSG needed for a flat-topped drum). */
+function CylinderBuilding({ geometry, interactive, accent }: { geometry: SceneGeometry } & BuildingInteractionProps) {
+  const r = geometry.lengthM / 2;
+  const roof = usePartInteraction('roof', interactive);
+  const roofColor = useTintedColor(ROOF_COLOR, accent, roof.isSelected, roof.isHovered);
+  const floor = usePartInteraction('floor', interactive);
+  const floorColor = useTintedColor(FLOOR_COLOR, accent, floor.isSelected, floor.isHovered);
+
+  return (
+    <group>
+      {Array.from({ length: geometry.storeys }, (_, storey) => (
+        <group key={storey} position={[0, storey * geometry.heightM, 0]}>
+          <RingWallsSolid geometry={geometry} interactive={interactive} accent={accent} />
+          {geometry.walls.map((wall) => (
+            <RingWall key={wall.azimuthDeg} geometry={geometry} wall={wall} interactive={interactive} accent={accent} />
+          ))}
+        </group>
+      ))}
+
+      {geometry.storeys > 1 && <IntermediateSlab geometry={geometry} radiusM={r} />}
+
+      <mesh position={[0, -geometry.floorThicknessM / 2, 0]} receiveShadow {...floor.handlers}>
+        <cylinderGeometry args={[r, r, geometry.floorThicknessM, CYLINDER_SECTORS]} />
+        <meshStandardMaterial color={floorColor} roughness={0.95} />
+      </mesh>
+
+      <mesh
+        position={[0, geometry.buildingHeightM + geometry.roofThicknessM / 2, 0]}
+        castShadow
+        receiveShadow
+        {...roof.handlers}
+      >
+        <cylinderGeometry args={[r, r, geometry.roofThicknessM, CYLINDER_SECTORS]} />
+        <meshStandardMaterial color={roofColor} roughness={0.85} />
+        <Edges threshold={20} color={EDGE_COLOR} opacity={0.35} transparent linewidth={1} />
+      </mesh>
+    </group>
+  );
+}
+
+// ============================== DOME (G3) ==============================
+// A hemisphere as 3 stacked frustum bands (mirrors `domeGeometry`,
+// assemble.ts) — each band/sector is a FLAT trapezoid, the standard "a
+// regular-polygon frustum's lateral faces are planar" identity, so no CSG
+// is needed: 4 corner points (two elevation rings x two sector edges) via
+// `ringPoint`, then an orthonormal basis (right/up/normal) built from those
+// corners places a plain rectangle-ish `Shape` (extruded by thickness) onto
+// the real 3D panel. Deliberately NOT mitred between neighbours (ponytail:
+// unlike the cylinder ring, adjacent sectors' EXTERIOR corners are already
+// the exact same `ringPoint` by construction — only the invisible interior
+// thickness corners could gap slightly; add mitring if a screenshot shows
+// it).
+
+const DOME_HALF_ANGLE_DEG = RING_HALF_ANGLE_DEG; // 180/12 — DOME_SECTORS === CYLINDER_SECTORS (both 12, contract)
+
+function ringPoint(azimuthDeg: number, radius: number, height: number): Vector3 {
+  const dir = azimuthDirection(azimuthDeg);
+  return new Vector3(dir.x * radius, height, dir.z * radius);
+}
+
+interface DomeFacetFrame {
+  basis: Matrix4;
+  halfBottom: number;
+  halfTop: number;
+  slantHeight: number;
+}
+
+function domeFacetFrame(facet: DomeFacet): DomeFacetFrame {
+  const bottomLeft = ringPoint(facet.azimuthDeg - DOME_HALF_ANGLE_DEG, facet.radiusLow, facet.heightLow);
+  const bottomRight = ringPoint(facet.azimuthDeg + DOME_HALF_ANGLE_DEG, facet.radiusLow, facet.heightLow);
+  const topLeft = ringPoint(facet.azimuthDeg - DOME_HALF_ANGLE_DEG, facet.radiusHigh, facet.heightHigh);
+  const topRight = ringPoint(facet.azimuthDeg + DOME_HALF_ANGLE_DEG, facet.radiusHigh, facet.heightHigh);
+  const bottomMid = bottomLeft.clone().add(bottomRight).multiplyScalar(0.5);
+  const topMid = topLeft.clone().add(topRight).multiplyScalar(0.5);
+
+  const right = bottomRight.clone().sub(bottomLeft).normalize();
+  const upRaw = topMid.clone().sub(bottomMid);
+  const up = upRaw.clone().sub(right.clone().multiplyScalar(right.dot(upRaw))).normalize();
+  const normal = right.clone().cross(up).normalize();
+  const outward = new Vector3(bottomMid.x, 0, bottomMid.z).normalize();
+  if (normal.dot(outward) < 0) normal.negate();
+
+  return {
+    basis: new Matrix4().makeBasis(right, up, normal).setPosition(bottomMid),
+    halfBottom: bottomRight.distanceTo(bottomLeft) / 2,
+    halfTop: topRight.distanceTo(topLeft) / 2,
+    slantHeight: bottomMid.distanceTo(topMid),
+  };
+}
+
+/** Like `wallShape` but tapered (bottom/top half-widths can differ) — the
+ *  band-2 roof cap's `halfTop` is ~0 (the dome's apex), degenerating this
+ *  to a triangle, which just works. */
+function domeFacetShape(halfBottom: number, halfTop: number, slantHeight: number, win: WindowRect | null): Shape {
+  const hb = Math.max(1e-4, halfBottom);
+  const ht = Math.max(1e-4, halfTop);
+  const shape = new Shape();
+  shape.moveTo(-hb, 0);
+  shape.lineTo(hb, 0);
+  shape.lineTo(ht, slantHeight);
+  shape.lineTo(-ht, slantHeight);
+  shape.closePath();
+
+  if (win) {
+    const halfWin = win.width / 2;
+    const top = win.sill + win.height;
+    const hole = new Path();
+    hole.moveTo(-halfWin, win.sill);
+    hole.lineTo(halfWin, win.sill);
+    hole.lineTo(halfWin, top);
+    hole.lineTo(-halfWin, top);
+    hole.closePath();
+    shape.holes.push(hole);
+  }
+  return shape;
+}
+
+function buildDomeFacetGeometry(facet: DomeFacet, thicknessM: number): BufferGeometry {
+  const { basis, halfBottom, halfTop, slantHeight } = domeFacetFrame(facet);
+  const shape = domeFacetShape(halfBottom, halfTop, slantHeight, facet.window);
+  const geom = new ExtrudeGeometry(shape, { depth: thicknessM, bevelEnabled: false, curveSegments: 1 });
+  geom.translate(0, 0, -thicknessM); // exterior face (z=0) -> the true ring points; interior insets inward
+  geom.computeVertexNormals();
+  geom.applyMatrix4(basis);
+  return geom;
+}
+
+/** Dome wall bands (kind='wall'): merged per orientation (G4 — 4 pickable
+ *  meshes, `wall:<o>`, same shared component as the cylinder ring). Dome
+ *  roof (kind='roof', band 2, the cap): every sector maps to the single
+ *  `roof` part (G3 review note: "dome roof bands -> roof") regardless of
+ *  orientation, so it stays ONE merged mesh, just with pointer handlers. */
+function DomeWallFacetsSolid({ geometry, thicknessM, interactive, accent }: { geometry: SceneGeometry; thicknessM: number } & BuildingInteractionProps) {
+  const groups = useMemo(() => {
+    const facets = geometry.domeFacets.filter((f) => f.kind === 'wall');
+    return mergeByOrientation(facets.map((f) => ({ orientation: f.orientation, geom: buildDomeFacetGeometry(f, thicknessM) })));
+  }, [geometry, thicknessM]);
+
+  useEffect(() => () => groups.forEach((g) => g.geometry.dispose()), [groups]);
+
+  return (
+    <>
+      {groups.map((group) => (
+        <WallOrientationMesh
+          key={group.orientation}
+          orientation={group.orientation}
+          geometry={group.geometry}
+          interactive={interactive}
+          accent={accent}
+          doubleSided
+        />
+      ))}
+    </>
+  );
+}
+
+function DomeRoofFacetsSolid({ geometry, thicknessM, interactive, accent }: { geometry: SceneGeometry; thicknessM: number } & BuildingInteractionProps) {
+  const merged = useMemo(() => {
+    const facets = geometry.domeFacets.filter((f) => f.kind === 'roof');
+    const parts = facets.map((f) => buildDomeFacetGeometry(f, thicknessM));
+    const combined = mergeGeometries(parts, false);
+    parts.forEach((g) => g.dispose());
+    const welded = mergeVertices(combined);
+    combined.dispose();
+    return welded;
+  }, [geometry, thicknessM]);
+
+  useEffect(() => () => merged.dispose(), [merged]);
+
+  const { isHovered, isSelected, handlers } = usePartInteraction('roof', interactive);
+  const color = useTintedColor(ROOF_COLOR, accent, isSelected, isHovered);
+
+  return (
+    <mesh geometry={merged} castShadow receiveShadow {...handlers}>
+      <meshStandardMaterial color={color} roughness={0.85} metalness={0} side={DoubleSide} />
+    </mesh>
+  );
+}
+
+/** A dome band's window, oriented flush with its tilted facet — same basis
+ *  as the facet's own solid, so a plain `boxGeometry` just needs that
+ *  basis's rotation (as a quaternion) and a mid-thickness position. */
+function DomeWindow({ facet, wallThicknessM, interactive, accent }: { facet: DomeFacet; wallThicknessM: number } & BuildingInteractionProps) {
+  const frame = useMemo(() => domeFacetFrame(facet), [facet]);
+  const quaternion = useMemo(() => new Quaternion().setFromRotationMatrix(frame.basis), [frame]);
+  const win = facet.window;
+  const position = useMemo(
+    () => (win ? new Vector3(0, win.sill + win.height / 2, -wallThicknessM / 2).applyMatrix4(frame.basis) : null),
+    [frame, win, wallThicknessM],
+  );
+  const windowPartId: PartId = `window:${facet.orientation}`;
+  const { isHovered, isSelected, handlers } = usePartInteraction(windowPartId, interactive && !!win);
+  const glassColor = useTintedColor(GLASS_COLOR, accent, isSelected, isHovered);
+
+  if (!win || !position) return null;
+  return (
+    <mesh position={position} quaternion={quaternion} {...handlers}>
+      <boxGeometry args={[win.width, win.height, Math.max(0.02, wallThicknessM * 0.3)]} />
+      <meshPhysicalMaterial color={glassColor} transparent opacity={0.35} roughness={0.05} metalness={0} reflectivity={0.4} />
+    </mesh>
+  );
+}
+
+/** Dome is always 1 storey (API.md §3: "dome ⇒ storeys must be 1") — no
+ *  stacking, no intermediate slab. */
+function DomeBuilding({ geometry, interactive, accent }: { geometry: SceneGeometry } & BuildingInteractionProps) {
+  const r = geometry.lengthM / 2;
+  const floor = usePartInteraction('floor', interactive);
+  const floorColor = useTintedColor(FLOOR_COLOR, accent, floor.isSelected, floor.isHovered);
+
+  return (
+    <group>
+      <DomeWallFacetsSolid geometry={geometry} thicknessM={geometry.wallThicknessM} interactive={interactive} accent={accent} />
+      <DomeRoofFacetsSolid geometry={geometry} thicknessM={geometry.roofThicknessM} interactive={interactive} accent={accent} />
+      {geometry.domeFacets
+        .filter((f) => f.kind === 'wall')
+        .map((f) => (
+          <DomeWindow key={f.id} facet={f} wallThicknessM={geometry.wallThicknessM} interactive={interactive} accent={accent} />
+        ))}
+
+      <mesh position={[0, -geometry.floorThicknessM / 2, 0]} receiveShadow {...floor.handlers}>
+        <cylinderGeometry args={[r, r, geometry.floorThicknessM, DOME_SECTORS]} />
+        <meshStandardMaterial color={floorColor} roughness={0.95} />
+      </mesh>
+    </group>
+  );
+}
+
+export interface BuildingProps extends Partial<BuildingInteractionProps> {
+  geometry: SceneGeometry;
+}
+
+const DEFAULT_ACCENT = '#26597e'; // useThemeColors.ts's own light-mode FALLBACK.accent
+
+export function Building({ geometry, interactive = false, accent = DEFAULT_ACCENT }: BuildingProps) {
+  if (geometry.shape === 'dome') return <DomeBuilding geometry={geometry} interactive={interactive} accent={accent} />;
+  if (geometry.shape === 'cylinder') return <CylinderBuilding geometry={geometry} interactive={interactive} accent={accent} />;
+  return <BoxBuilding geometry={geometry} interactive={interactive} accent={accent} />;
 }

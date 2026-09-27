@@ -288,6 +288,44 @@ describe('designs', () => {
     });
     expect(res.statusCode).toBe(404);
   });
+
+  // G2 (V2.md §G2, ledger/tasks/G2.md condition 8): a design saved before
+  // shape/storeys existed (or one hand-built without them) must still load
+  // and preview as a box.
+  it('a design saved without shape/storeys loads and previews as a box', async () => {
+    const a = app();
+    const { cookie } = await register(a, 'owner5@example.com');
+    const noShape = { ...defaults } as Record<string, unknown>;
+    delete noShape['shape'];
+    delete noShape['storeys'];
+
+    const created = await a.inject({
+      method: 'POST',
+      url: '/api/designs',
+      headers: { cookie },
+      payload: { name: 'Old design', design: noShape },
+    });
+    expect(created.statusCode).toBe(201);
+    const id = created.json().id;
+
+    const got = await a.inject({ method: 'GET', url: `/api/designs/${id}`, headers: { cookie } });
+    expect(got.statusCode).toBe(200);
+    expect(got.json().design.shape).toBeUndefined();
+    expect(got.json().design.storeys).toBeUndefined();
+
+    const preview = await a.inject({
+      method: 'POST',
+      url: '/api/simulate/preview',
+      payload: got.json().design,
+    });
+    expect(preview.statusCode).toBe(200);
+    const boxPreview = await a.inject({
+      method: 'POST',
+      url: '/api/simulate/preview',
+      payload: { ...defaults, shape: 'box', storeys: 1 },
+    });
+    expect(preview.json().kpis).toEqual(boxPreview.json().kpis);
+  });
 });
 
 describe('simulations', () => {

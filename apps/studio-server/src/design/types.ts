@@ -27,12 +27,22 @@ export interface SurfaceConstruction {
   thicknessM: number;
 }
 
+/** G2 (V2.md §G2). `box` is the only shape the frozen engine has ever seen --
+ * `cylinder`/`dome` are turned into facet surfaces by `design/assemble.ts`'s
+ * `setShapeFacets`, entirely inside studio-server. */
+export type Shape = 'box' | 'cylinder' | 'dome';
+/** 2 storeys is a SINGLE-ZONE approximation: one air node, with the
+ * intermediate floor modelled as one `rock` `StorageElement` (API.md §3). */
+export type Storeys = 1 | 2;
+
 export interface ShelterDesign {
   location: DesignLocation;
   date: string; // ISO 'YYYY-MM-DD'
   presetId: string;
+  /** m. For `shape:'cylinder'|'dome'` this is the DIAMETER; `widthM` is ignored. */
   lengthM: number;
   widthM: number;
+  /** m, PER STOREY. Ignored for `shape:'dome'` (a hemisphere has no independent height). */
   heightM: number;
   /** Degrees, -180..180. 0 = long side faces south. -> Building.azimuth. */
   azimuthDeg: number;
@@ -43,6 +53,11 @@ export interface ShelterDesign {
   glazingId: string;
   nightShutters: boolean;
   occupancyPresetId: string;
+  /** Optional, default 'box' -- so every saved design and frozen run
+   * `inputSnapshot` predating G2 stays valid (API.md §3). */
+  shape?: Shape;
+  /** Optional, default 1. `shape:'dome'` requires 1 (rejected otherwise). */
+  storeys?: Storeys;
 }
 
 // ============================== GET /api/options ==============================

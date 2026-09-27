@@ -5,6 +5,7 @@
 // stays usable without a mouse.
 import { useCallback, useId, useRef } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
+import { NumberInput } from '../components/ui';
 
 export interface OrientationDialProps {
   value: number; // degrees, -180..180
@@ -106,7 +107,17 @@ export function OrientationDial({ value, onChange, min, max, step = 1 }: Orienta
         <p id={labelId} className="text-xs font-medium tracking-wide text-ink-muted uppercase">
           Orientation
         </p>
-        <p className="mt-1 font-mono text-sm text-ink">{Math.round(value)}°</p>
+        <div className="mt-1">
+          <NumberInput
+            value={value}
+            onChange={onChange}
+            min={min}
+            max={max}
+            step={step}
+            unit="°"
+            label="Orientation"
+          />
+        </div>
         <p className="text-xs text-ink-muted">0° = long side faces south</p>
       </div>
     </div>

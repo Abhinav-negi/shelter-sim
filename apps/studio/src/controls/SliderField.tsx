@@ -1,7 +1,8 @@
 // FieldRow + Slider + a mono value/unit readout — every numeric control in
 // the panel is one of these (F3.md Rules: "Units are always shown in mono").
 import { useId } from 'react';
-import { FieldRow, Slider } from '../components/ui';
+import { FieldRow, NumberInput, Slider } from '../components/ui';
+import type { PartId } from '../design/selection';
 
 export interface SliderFieldProps {
   label: string;
@@ -14,6 +15,8 @@ export interface SliderFieldProps {
   decimals?: number;
   hint?: string;
   disabled?: boolean;
+  /** G4: the 3D part this slider edits (see FieldRow's `part` doc). */
+  part?: PartId;
 }
 
 export function SliderField({
@@ -27,10 +30,11 @@ export function SliderField({
   decimals = 1,
   hint,
   disabled,
+  part,
 }: SliderFieldProps) {
   const id = useId();
   return (
-    <FieldRow label={label} htmlFor={id} {...(hint !== undefined ? { hint } : {})}>
+    <FieldRow label={label} htmlFor={id} {...(hint !== undefined ? { hint } : {})} {...(part !== undefined ? { part } : {})}>
       <div className="flex items-center gap-3">
         <Slider
           id={id}
@@ -42,10 +46,17 @@ export function SliderField({
           {...(disabled !== undefined ? { disabled } : {})}
           className="flex-1"
         />
-        <span className="w-20 shrink-0 text-right font-mono text-xs text-ink">
-          {value.toFixed(decimals)}
-          {unit ? <span className="text-ink-muted"> {unit}</span> : null}
-        </span>
+        <NumberInput
+          value={value}
+          onChange={onChange}
+          min={min}
+          max={max}
+          step={step ?? 1}
+          decimals={decimals}
+          unit={unit}
+          label={label}
+          {...(disabled !== undefined ? { disabled } : {})}
+        />
       </div>
     </FieldRow>
   );

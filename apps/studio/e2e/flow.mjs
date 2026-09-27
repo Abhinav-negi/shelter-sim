@@ -1,10 +1,14 @@
 #!/usr/bin/env node
-// apps/studio/e2e/flow.mjs — Q1 end-to-end flow (ledger/tasks/Q1.md
-// condition 1): register -> new design -> change width (viewer bounding box
-// grows) -> preview completes -> save -> run saved -> second design ->
-// compare shows both -> logout -> /app redirects to login. Records console
-// errors; only the pre-existing `THREE.Clock` deprecation warning is
-// allowed, anything else fails the run.
+// apps/studio/e2e/flow.mjs — Q1 (ledger/tasks/Q1.md condition 1) + Q2
+// (ledger/tasks/Q2.md condition 1) end-to-end flow: register -> new design
+// -> change width (viewer bounding box grows) -> type South window 10%
+// (field/model update, preview reruns) -> switch to cylinder -> set 2
+// storeys -> click a window in 3D (Openings field highlights, no preview
+// refire) -> preview completes -> save -> reload (shape/storeys persist) ->
+// run saved -> second design -> compare shows both -> a design saved
+// without shape/storeys, inserted via the API, opens as a box -> logout ->
+// /app redirects to login. Records console errors; only the pre-existing
+// `THREE.Clock` deprecation warning is allowed, anything else fails the run.
 //
 // Run (playwright-core is NOT an installed dependency of this repo -- point
 // PLAYWRIGHT_CORE at any local playwright-core package, e.g. the one this
@@ -96,6 +100,26 @@ async function startPreview() {
   console.log(`[flow] preview up on ${PREVIEW_PORT}`);
 }
 
+// Q2: sum of per-channel abs differences between two same-sized decoded PNGs
+// within a small square patch centred on (x, y) -- used to detect a window
+// pane appearing/disappearing at a known 3D-projected screen position. A
+// whole-canvas silhouette bbox (edgeBBox, above) can't see this: a window is
+// an interior surface detail, not a change to the building's outer extent.
+function patchDiffScore(imgA, imgB, x, y, half = 24) {
+  const x0 = Math.max(0, Math.round(x - half));
+  const x1 = Math.min(imgA.width, Math.round(x + half));
+  const y0 = Math.max(0, Math.round(y - half));
+  const y1 = Math.min(imgA.height, Math.round(y + half));
+  let diff = 0;
+  for (let yy = y0; yy < y1; yy++) {
+    for (let xx = x0; xx < x1; xx++) {
+      const i = (yy * imgA.width + xx) * 4;
+      diff += Math.abs(imgA.data[i] - imgB.data[i]) + Math.abs(imgA.data[i + 1] - imgB.data[i + 1]) + Math.abs(imgA.data[i + 2] - imgB.data[i + 2]);
+    }
+  }
+  return diff;
+}
+
 async function setSliderValue(locator, value) {
   await locator.evaluate((el, v) => {
     const proto = Object.getPrototypeOf(el);
@@ -150,6 +174,15 @@ async function runFlow() {
     });
     page.on('pageerror', (err) => consoleErrors.push(`pageerror: ${err.message}`));
 
+    // Q2: counts every completed preview call across the whole flow, so the
+    // shape/storeys/typed-value checks below can assert "reruns the preview"
+    // (or, for a 3D selection click, "does NOT") as a request-count delta
+    // rather than guessing at timing.
+    let previewRequestCount = 0;
+    page.on('requestfinished', (req) => {
+      if (req.method() === 'POST' && req.url().includes('/api/simulate/preview')) previewRequestCount++;
+    });
+
     const email = `q1-e2e-${Date.now()}@example.com`;
     const password = 'q1-flow-password';
 
@@ -165,6 +198,11 @@ async function runFlow() {
     // 2. New design.
     await page.click('text=New shelter');
     await page.waitForURL(/\/app\/design\/new/);
+    // Q2: reload with G4's dev/test-only screen-position hook armed for this
+    // whole design/new session (`?g4e2e=1` -- Studio.tsx always passes
+    // `interactive` to ShelterViewer, so the query param alone gates it).
+    // Used below to click a window in 3D with a real `page.mouse.click`.
+    await page.goto(`${BASE_URL}/app/design/new?g4e2e=1`);
     await page.waitForSelector('canvas', { timeout: 15000 });
     await page.waitForTimeout(500); // let the first demand-frameloop render settle
 
@@ -177,8 +215,12 @@ async function runFlow() {
     // "camera anchor" axis never moves, so growing Width really does grow
     // the rendered extent, which is what this condition is actually asking
     // to be proven.
-    const lengthSlider = page.getByLabel('Length');
-    const widthSlider = page.getByLabel('Width');
+    // G1 added a typed NumberInput alongside every slider, sharing the same
+    // aria-label -- getByLabel is ambiguous since then (G4.md's Evidence
+    // documents the identical gotcha for its own verification script).
+    // getByRole('slider', ...) picks the range input specifically.
+    const lengthSlider = page.getByRole('slider', { name: 'Length' });
+    const widthSlider = page.getByRole('slider', { name: 'Width' });
     await setSliderValue(lengthSlider, 25);
     await page.waitForTimeout(500);
     await setSliderValue(widthSlider, 3);
@@ -203,6 +245,69 @@ async function runFlow() {
       afterArea > beforeArea,
     );
 
+    // 3b. (Q2) Type a value: South window 10% -> field commits, the 3D model
+    // changes, and the preview reruns after the 400ms debounce (Studio.tsx).
+    // "Model changes" is checked as a local pixel-patch diff at window:S's
+    // own projected screen position (G4's `?g4e2e=1` hook, armed since step
+    // 2's navigation) -- a whole-canvas silhouette bbox (used above for the
+    // width check) can't see a window appear: it's an interior surface
+    // detail, not a change to the building's outer extent.
+    await page.waitForFunction(() => typeof window.__g4PartScreenPosition === 'function');
+    const southWindowPos = await page.evaluate(() => window.__g4PartScreenPosition('window:S'));
+    const southWindowInput = page.getByRole('spinbutton', { name: 'South window' });
+    const beforeTypeCount = previewRequestCount;
+    const beforeTypeImg = decodePng(await canvas.screenshot());
+    await southWindowInput.fill('10');
+    await southWindowInput.press('Enter');
+    check('typed South window value committed', (await southWindowInput.inputValue()) === '10');
+    await page.waitForTimeout(700);
+    const afterTypeImg = decodePng(await canvas.screenshot());
+    const modelDiff = patchDiffScore(beforeTypeImg, afterTypeImg, southWindowPos.x, southWindowPos.y);
+    console.log('[flow] South window patch diff score', modelDiff);
+    check('typing South window updates the 3D model', modelDiff > 500);
+    check('typing South window reruns the preview', previewRequestCount > beforeTypeCount);
+
+    // 3c. (Q2) Switch to cylinder -- preview still OK (reruns, no error).
+    // Segmented (components/ui/Segmented.tsx) renders each option as a
+    // visible <label> wrapping a visually-hidden (`sr-only`) native radio --
+    // clicking the label is what a real user does; clicking the hidden input
+    // node directly (what `getByRole('radio').click()` targets) fails
+    // actionability checks. `getByRole` still works fine for read-only
+    // `isChecked()` assertions below.
+    const beforeShapeCount = previewRequestCount;
+    await page.locator('label:has(input[value="cylinder"])').click();
+    await page.waitForTimeout(700);
+    check('cylinder shape selected', await page.getByRole('radio', { name: 'Cylinder' }).isChecked());
+    check('switching to cylinder reruns the preview', previewRequestCount > beforeShapeCount);
+    await page.waitForSelector('text=Indoor vs outdoor', { timeout: 15000 });
+    check('preview OK after switching to cylinder', true);
+
+    // 3d. (Q2) Set 2 storeys.
+    const beforeStoreysCount = previewRequestCount;
+    await page.locator('label:has(input[value="2"])').click();
+    await page.waitForTimeout(700);
+    check('2 storeys selected', await page.getByRole('radio', { name: '2' }).isChecked());
+    check('setting 2 storeys reruns the preview', previewRequestCount > beforeStoreysCount);
+
+    // 3e. (Q2) Click a window in 3D -> the Openings/South window field
+    // highlights (G4.md condition 3), via a REAL page.mouse.click (never a
+    // synthetic DOM event) at the screen position G4's `?g4e2e=1` hook
+    // reports for `window:S` -- still a real mesh here since South's WWR is
+    // 10% from step 3b. Selecting must NOT rerun the preview (G4.md).
+    const beforeClickCount = previewRequestCount;
+    await page.waitForFunction(() => typeof window.__g4PartScreenPosition === 'function');
+    const canvasBox = await canvas.boundingBox();
+    const partPos = await page.evaluate(() => window.__g4PartScreenPosition('window:S'));
+    await page.mouse.click(canvasBox.x + partPos.x, canvasBox.y + partPos.y);
+    await page.waitForTimeout(200);
+    const selection = await page.evaluate(() => window.__g4GetSelection());
+    check('clicking the South window in 3D selects window:S', selection.selectedPart === 'window:S');
+    const southWindowRow = page.locator('label:text-is("South window")').locator('xpath=..');
+    const rowClass = (await southWindowRow.getAttribute('class')) ?? '';
+    check('Openings/South window field is highlighted', /outline-accent/.test(rowClass));
+    await page.waitForTimeout(400);
+    check('selecting a part in 3D does not rerun the preview', previewRequestCount === beforeClickCount);
+
     // 4. Preview completes.
     await page.waitForSelector('text=Indoor vs outdoor', { timeout: 15000 });
     check('preview completed (results panel rendered)', true);
@@ -213,6 +318,12 @@ async function runFlow() {
     await page.waitForURL(/\/app\/design\/(?!new)[a-zA-Z0-9]+/, { timeout: 10000 });
     check('save design navigated to a real id', true);
 
+    // 5b. (Q2) Save + reload -> shape and storeys persist.
+    await page.reload();
+    await page.waitForSelector('canvas', { timeout: 15000 });
+    check('reloaded design keeps cylinder shape', await page.getByRole('radio', { name: 'Cylinder' }).isChecked());
+    check('reloaded design keeps 2 storeys', await page.getByRole('radio', { name: '2' }).isChecked());
+
     // 6. Run saved.
     await page.click('text=Save run');
     await page.waitForSelector('text=Run saved.', { timeout: 15000 });
@@ -222,7 +333,7 @@ async function runFlow() {
     await page.goto(`${BASE_URL}/app/design/new`);
     await page.waitForSelector('canvas', { timeout: 15000 });
     await page.fill('[aria-label="Design name"]', 'Q1 Flow Design Two');
-    await setSliderValue(page.getByLabel('Length'), 12);
+    await setSliderValue(page.getByRole('slider', { name: 'Length' }), 12);
     await page.waitForTimeout(700);
     await page.waitForSelector('text=Indoor vs outdoor', { timeout: 15000 });
     await page.click('text=Save design');
@@ -244,6 +355,25 @@ async function runFlow() {
       'compare shows both designs by name',
       compareBody.includes('Q1 Flow Design One') && compareBody.includes('Q1 Flow Design Two'),
     );
+
+    // 8b. (Q2) A design saved WITHOUT shape/storeys (inserted directly via
+    // the API, simulating a design saved before G2) still opens as a box, 1
+    // storey -- the server/client default. `page.request` shares this
+    // context's auth cookie, so no separate login is needed.
+    const optionsRes = await page.request.get(`${BASE_URL}/api/options`);
+    const { defaults } = await optionsRes.json();
+    const oldShapeDesign = { ...defaults };
+    delete oldShapeDesign.shape;
+    delete oldShapeDesign.storeys;
+    const insertRes = await page.request.post(`${BASE_URL}/api/designs`, {
+      data: { name: 'Q2 Old-Shape Design', design: oldShapeDesign },
+    });
+    check('old-shape design (no shape/storeys keys) inserted via the API', insertRes.ok());
+    const { id: oldShapeId } = await insertRes.json();
+    await page.goto(`${BASE_URL}/app/design/${oldShapeId}`);
+    await page.waitForSelector('canvas', { timeout: 15000 });
+    check('design with no shape/storeys keys opens as Box', await page.getByRole('radio', { name: 'Box' }).isChecked());
+    check('design with no shape/storeys keys opens at 1 storey', await page.getByRole('radio', { name: '1' }).isChecked());
 
     // 9. Logout.
     await page.goto(`${BASE_URL}/app`);

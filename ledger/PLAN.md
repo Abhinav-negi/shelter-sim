@@ -24,6 +24,7 @@ wallConstruction | roofConstruction | floorConstruction:
 // unchanged: date, presetId, lengthM, widthM, heightM, windowWwr{S,E,W,N}, glazingId, nightShutters, occupancyPresetId
 ```
 There is no engine change and no roof type: the engine models a flat roof, so the 3D model shows a flat roof.
+**v2:** optional `shape: 'box'|'cylinder'|'dome'` (default box) and `storeys: 1|2` (default 1, heightM per storey, dome ⇒ 1). Non-box shapes are generated facet surfaces (cylinder 12 walls; dome 3 bands × 12); two storeys = one zone + the intermediate slab as a storage element. See `ledger/tasks/G2.md`.
 
 **Custom location:** fetch a full year of hourly weather once (the ground temperature needs the annual mean), then
 `normaliseWeather`, then cache it in Mongo, then slice the chosen day. `standardMeridian = utcOffsetHours × 15`
@@ -80,7 +81,7 @@ temp, min/max, hours <0 °C and <5 °C, decrement factor, time lag, aux kWh/day,
 Precise, calm, scientific. Warm off-white / near-black neutrals. One accent (a cold instrument blue). A thermal
 diverging scale used **only** for temperature data. Geist for UI, Geist Mono for numbers and units. Hairline rules and
 whitespace, not cards. **Banned:** glassmorphism, gradient blobs, purple/blue gradients, pill badges, heavy shadows,
-fake stats/logos/testimonials, stock imagery, icon confetti, generic 3-column feature grids, decorative motion.
+fake stats/logos/testimonials, stock imagery, icon confetti, generic 3-column feature grids, decorative motion (v2: slow, purposeful motion is allowed, always off under `prefers-reduced-motion`).
 Light and dark themes via CSS variables.
 
 **Landing:** a full-bleed live 3D shelter at dawn. "Design for the cold." / "Simulate your shelter before you build

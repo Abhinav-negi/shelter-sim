@@ -1,0 +1,428 @@
+<title>ShelterSim Studio Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --fg:#16202a; --muted:#566573; --line:#c9d2da; --soft:#e7ecf0;
+  --accent:#1c6b8a; --accent-soft:#dcebf2; --frozen:#a45a14; --frozen-soft:#f6e8d8;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --display:"Archivo","IBM Plex Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --panel:#17202a; --fg:#e3e9ee; --muted:#93a3b1; --line:#34424f; --soft:#1e2933;
+  --accent:#6cb8d6; --accent-soft:#16323f; --frozen:#e0a262; --frozen-soft:#3a2915; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --panel:#17202a; --fg:#e3e9ee; --muted:#93a3b1; --line:#34424f; --soft:#1e2933;
+  --accent:#6cb8d6; --accent-soft:#16323f; --frozen:#e0a262; --frozen-soft:#3a2915; color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--sans);padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:1040px;margin:0 auto}
+header{padding-block:48px 28px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(30px,5vw,46px)/1.08 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font:700 24px/1.2 var(--display);margin:0;text-wrap:balance}
+h3{font:600 15px/1.3 var(--sans);margin:0}
+p{margin:0;max-width:68ch}
+.lede{color:var(--muted);font-size:17px}
+code,.mono{font-family:var(--mono);font-size:.88em}
+code{background:var(--soft);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;padding-block:16px;font-size:13px}
+nav.toc a{color:var(--muted);text-decoration:none;border-bottom:1px solid transparent}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}
+section{display:grid;gap:18px;padding-block:40px 8px}
+section+section{border-top:1px solid var(--line)}
+.sec-head{display:grid;gap:6px}
+figure{margin:0;display:grid;gap:10px}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:640px;color:var(--fg);font-family:var(--sans)}
+figcaption{font-size:13px;color:var(--muted);max-width:80ch}
+/* svg classes (kept outside the svg) */
+.n{fill:var(--panel);stroke:var(--line);stroke-width:1.2}
+.n-acc{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.4}
+.n-frz{fill:var(--frozen-soft);stroke:var(--frozen);stroke-width:1.2;stroke-dasharray:5 4}
+.zone{fill:none;stroke:var(--line);stroke-dasharray:3 4}
+.e{stroke:currentColor;stroke-width:1.3;fill:none}
+.e-acc{stroke:var(--accent);stroke-width:1.6;fill:none}
+.e-dash{stroke:currentColor;stroke-width:1.2;fill:none;stroke-dasharray:4 4}
+.t{fill:currentColor;font-size:13px}
+.tb{fill:currentColor;font-size:13px;font-weight:600}
+.tm{fill:var(--muted);font-size:11.5px;font-family:var(--mono)}
+.tl{fill:var(--muted);font-size:11.5px}
+.ta{fill:var(--accent);font-size:11.5px;font-weight:600}
+.tf{fill:var(--frozen);font-size:11.5px;font-weight:600}
+.ah{fill:currentColor}.ah-acc{fill:var(--accent)}
+.facet{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1}
+.facet2{fill:var(--panel);stroke:var(--accent);stroke-width:1}
+/* tables */
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--soft)}
+th{font:600 11.5px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--soft)}
+tr:last-child td{border-bottom:0}
+td code{background:none;padding:0;color:var(--accent)}
+.pill{display:inline-block;font:500 11px/1 var(--mono);padding:3px 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.f{background:var(--frozen-soft);color:var(--frozen)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.note{border-left:3px solid var(--frozen);padding:10px 14px;background:var(--frozen-soft);border-radius:0 8px 8px 0;font-size:14px;max-width:80ch}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:8px;align-content:start}
+.card ul,.card ol{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+ol.steps{margin:0;padding-left:22px;display:grid;gap:6px;max-width:80ch}
+ol.steps li::marker{font-family:var(--mono);color:var(--accent)}
+footer{padding-block:40px 0;font-size:13px;color:var(--muted);border-top:1px solid var(--line);margin-top:40px}
+@media (max-width:600px){header{padding-block:32px 20px}section{padding-block:32px 4px}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">ShelterSim Studio · architecture map · studio/main</div>
+  <h1>How a shelter design becomes a simulation</h1>
+  <p class="lede">What runs in the browser, on the server, in MongoDB and in the thermal engine, and how a request moves between them. Every claim points to a file in <code>apps/studio</code> or <code>apps/studio-server</code>. The API contract is <code>apps/studio-server/API.md</code>.</p>
+</header>
+<nav class="toc" aria-label="Sections">
+  <a href="#system">System</a><a href="#client">Client</a><a href="#server">Server</a><a href="#sequences">Request sequences</a>
+  <a href="#weather">Weather</a><a href="#auth">Auth</a><a href="#data">Data model</a><a href="#shapes">Design → surfaces</a><a href="#change">Where to change what</a><a href="#run">Run &amp; test</a>
+</nav>
+
+<!-- SYSTEM -->
+<section id="system">
+  <div class="sec-head"><h2>System</h2>
+  <p>Two new apps sit beside the original ShelterSim, which is frozen. The Studio server imports the engine and data packages read-only. The browser never runs physics: it only imports types.</p></div>
+  <figure>
+    <div class="fig">
+    <svg viewBox="0 0 960 380" role="img" aria-label="The Studio client calls the Studio server over /api with a cookie; the server imports the engine and data packages, stores users, designs, simulations and a weather cache in MongoDB, and fetches weather from Open-Meteo or NASA POWER for custom locations.">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+        <marker id="a1c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-acc"/></marker>
+      </defs>
+      <!-- client -->
+      <rect x="20" y="40" width="240" height="120" rx="8" class="n-acc"/>
+      <text x="36" y="66" class="tb">apps/studio</text>
+      <text x="36" y="86" class="tm">Vite · React 19 · R3F · :5273</text>
+      <text x="36" y="112" class="t">routes · zustand design store</text>
+      <text x="36" y="130" class="t">3D viewer · results · compare</text>
+      <text x="36" y="148" class="tl">import type only from @shelter/engine</text>
+      <!-- server -->
+      <rect x="360" y="40" width="260" height="170" rx="8" class="n-acc"/>
+      <text x="376" y="66" class="tb">apps/studio-server</text>
+      <text x="376" y="86" class="tm">Fastify 5 · Mongoose · :4100</text>
+      <text x="376" y="112" class="t">auth · designs · simulations</text>
+      <text x="376" y="130" class="t">prepare → assemble → provider</text>
+      <text x="376" y="148" class="t">weather resolve + cache</text>
+      <text x="376" y="166" class="t">locations search · options</text>
+      <text x="376" y="194" class="tm">API.md is the contract</text>
+      <line x1="260" y1="90" x2="356" y2="90" class="e-acc" marker-end="url(#a1c)"/>
+      <text x="268" y="82" class="ta">/api/* JSON</text>
+      <line x1="356" y1="120" x2="264" y2="120" class="e" marker-end="url(#a1)"/>
+      <text x="270" y="138" class="tl">cookie: token (JWT)</text>
+      <!-- packages -->
+      <rect x="360" y="270" width="125" height="80" rx="8" class="n-frz"/>
+      <text x="372" y="294" class="tb">@shelter/engine</text>
+      <text x="372" y="314" class="tl">simulate()</text>
+      <text x="372" y="334" class="tf">frozen</text>
+      <rect x="495" y="270" width="125" height="80" rx="8" class="n-frz"/>
+      <text x="507" y="294" class="tb">@shelter/data</text>
+      <text x="507" y="314" class="tl">presets · TMY</text>
+      <text x="507" y="334" class="tf">frozen</text>
+      <line x1="422" y1="210" x2="422" y2="266" class="e" marker-end="url(#a1)"/>
+      <line x1="557" y1="210" x2="557" y2="266" class="e" marker-end="url(#a1)"/>
+      <text x="430" y="244" class="tl">imports</text>
+      <!-- mongo -->
+      <rect x="720" y="40" width="220" height="130" rx="8" class="n"/>
+      <text x="736" y="66" class="tb">MongoDB</text>
+      <text x="736" y="90" class="tm">users</text>
+      <text x="736" y="108" class="tm">designs</text>
+      <text x="736" y="126" class="tm">simulations</text>
+      <text x="736" y="144" class="tm">weatherCache</text>
+      <line x1="620" y1="100" x2="716" y2="100" class="e" marker-end="url(#a1)"/>
+      <text x="630" y="92" class="tl">Mongoose</text>
+      <!-- upstream -->
+      <rect x="720" y="230" width="220" height="100" rx="8" class="n"/>
+      <text x="736" y="256" class="tb">Weather upstreams</text>
+      <text x="736" y="278" class="t">Open-Meteo archive</text>
+      <text x="736" y="296" class="t">NASA POWER (fallback)</text>
+      <text x="736" y="316" class="tl">Open-Meteo geocoding</text>
+      <path d="M620 180 C 670 180, 670 270, 716 270" class="e-dash" marker-end="url(#a1)"/>
+      <text x="636" y="228" class="tl">custom sites</text>
+      <!-- frozen legacy -->
+      <rect x="20" y="230" width="240" height="120" rx="8" class="n-frz"/>
+      <text x="36" y="256" class="tb">Original app</text>
+      <text x="36" y="278" class="tm">apps/server :4000</text>
+      <text x="36" y="296" class="tm">apps/client :5173 · apps/web</text>
+      <text x="36" y="322" class="tf">frozen · read and copy only</text>
+      <text x="36" y="340" class="tl">assemble.ts copied, then extended</text>
+    </svg>
+    </div>
+    <figcaption>Blue boxes are the Studio code you change. Dashed amber boxes are frozen. In development, Vite on :5273 proxies <code>/api</code> to :4100, so the browser sees one origin.</figcaption>
+  </figure>
+</section>
+
+<!-- CLIENT -->
+<section id="client">
+  <div class="sec-head"><h2>Client internals</h2>
+  <p>One zustand store holds the <code>ShelterDesign</code>. The controls, the 3D part popover and the preview all read and write that store. Selection state lives in a separate store, so hovering or clicking a part never marks the design dirty or triggers a simulation.</p></div>
+  <figure>
+    <div class="fig">
+    <svg viewBox="0 0 960 330" role="img" aria-label="Controls and the part popover write to the design store; the store feeds the 3D viewer through buildSceneGeometry, and feeds a 400 ms debounced preview request whose result goes to the results panel. A separate selection store links viewer parts and control rows.">
+      <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+      <marker id="a2c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-acc"/></marker></defs>
+      <rect x="20" y="30" width="200" height="70" rx="8" class="n"/>
+      <text x="34" y="56" class="tb">ControlsPanel</text>
+      <text x="34" y="76" class="tm">controls/*Section.tsx</text>
+      <text x="34" y="92" class="tm">NumberInput · FieldRow</text>
+      <rect x="20" y="130" width="200" height="60" rx="8" class="n"/>
+      <text x="34" y="156" class="tb">PartPopover</text>
+      <text x="34" y="176" class="tm">viewer/PartPopover.tsx</text>
+      <rect x="320" y="70" width="220" height="80" rx="8" class="n-acc"/>
+      <text x="336" y="96" class="tb">useShelterDesign</text>
+      <text x="336" y="116" class="tm">design/store.ts</text>
+      <text x="336" y="136" class="tl">ShelterDesign + dirty</text>
+      <line x1="220" y1="70" x2="316" y2="96" class="e-acc" marker-end="url(#a2c)"/>
+      <line x1="220" y1="160" x2="316" y2="126" class="e-acc" marker-end="url(#a2c)"/>
+      <text x="238" y="66" class="ta">setters</text>
+      <!-- viewer path -->
+      <rect x="640" y="20" width="300" height="90" rx="8" class="n"/>
+      <text x="656" y="46" class="tb">3D viewer</text>
+      <text x="656" y="66" class="tm">geometry.ts buildSceneGeometry</text>
+      <text x="656" y="84" class="tm">→ Building.tsx → ShelterViewer.tsx</text>
+      <text x="656" y="102" class="tl">pure mirror of the server's facets</text>
+      <line x1="540" y1="96" x2="636" y2="66" class="e" marker-end="url(#a2)"/>
+      <text x="556" y="72" class="tl">design</text>
+      <!-- preview path -->
+      <rect x="640" y="140" width="300" height="70" rx="8" class="n"/>
+      <text x="656" y="166" class="tb">useDebouncedRequest</text>
+      <text x="656" y="186" class="tm">400 ms · stale responses dropped</text>
+      <text x="656" y="202" class="tm">POST /api/simulate/preview</text>
+      <line x1="540" y1="126" x2="636" y2="166" class="e" marker-end="url(#a2)"/>
+      <rect x="640" y="240" width="300" height="70" rx="8" class="n"/>
+      <text x="656" y="266" class="tb">ResultsPanel</text>
+      <text x="656" y="286" class="tm">insights · charts · Kpis.tsx</text>
+      <line x1="790" y1="210" x2="790" y2="236" class="e" marker-end="url(#a2)"/>
+      <!-- selection -->
+      <rect x="320" y="230" width="220" height="80" rx="8" class="n"/>
+      <text x="336" y="256" class="tb">useSelection</text>
+      <text x="336" y="276" class="tm">design/selection.ts</text>
+      <text x="336" y="296" class="tl">UI-only · never saved</text>
+      <path d="M540 260 C 600 260, 600 100, 636 100" class="e-dash" marker-end="url(#a2)" marker-start="url(#a2)"/>
+      <path d="M316 270 C 250 270, 250 100, 222 100" class="e-dash" marker-end="url(#a2)" marker-start="url(#a2)"/>
+      <text x="556" y="230" class="tl">hover / select</text>
+      <text x="232" y="228" class="tl">highlight row</text>
+    </svg>
+    </div>
+    <figcaption>Solid arrows carry the design. Dashed arrows carry selection only: clicking a wall in 3D scrolls to and flashes its control row (<code>partMapping.ts</code>), and hovering a row tints the part (<code>usePartInteraction.ts</code>).</figcaption>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>Route</th><th>Page</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>/</code></td><td>Landing</td><td>Auto-rotating viewer; its chart comes from a real preview call against <code>options.defaults</code>.</td></tr>
+      <tr><td><code>/login</code> · <code>/register</code></td><td>Auth forms</td><td><code>api/auth.ts</code></td></tr>
+      <tr><td><code>/app</code></td><td>Dashboard</td><td rowspan="3">Behind <code>routes/RequireAuth.tsx</code>: it calls <code>getMe()</code> and redirects to <code>/login</code> on 401.</td></tr>
+      <tr><td><code>/app/design/:id</code></td><td>Studio</td></tr>
+      <tr><td><code>/app/compare</code></td><td>Compare</td></tr>
+    </tbody></table></div>
+  <p>All HTTP goes through one <code>request&lt;T&gt;()</code> in <code>api/client.ts</code>, which turns every failure into <code>ApiError{code, message, field?}</code>. Wire types are imported with <code>import type</code> from <code>@shelter/studio-server</code>, so client and server share one definition.</p>
+</section>
+
+<!-- SERVER -->
+<section id="server">
+  <div class="sec-head"><h2>Server internals</h2>
+  <p><code>index.ts</code> loads the environment and exits if <code>MONGODB_URI</code> or <code>JWT_SECRET</code> is missing. It then calls <code>buildApp()</code> in <code>app.ts</code>, connects Mongo and listens. Every route follows the same path: route → service → Mongoose model. One error handler turns typed errors into stable codes.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Route</th><th>Auth</th><th>Route → service → model</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET /api/health</code>, <code>/api/options</code></td><td>–</td><td><code>app.ts</code>; options memoised in <code>options.ts</code></td></tr>
+      <tr><td><code>POST /api/simulate/preview</code></td><td>–</td><td><code>design/prepare.ts</code> → <code>design/assemble.ts</code> → <code>providers/index.ts</code> (not stored)</td></tr>
+      <tr><td><code>GET /api/locations/search?q=</code></td><td>–</td><td><code>locations/routes.ts</code> → <code>weather/geocode.ts</code></td></tr>
+      <tr><td><code>/api/auth/register · login · logout · me</code></td><td><span class="pill">me</span></td><td><code>auth/routes.ts</code> → <code>auth/service.ts</code> → User</td></tr>
+      <tr><td><code>/api/designs</code> (list, create) · <code>/:id</code> (get, put, delete)</td><td><span class="pill">owner</span></td><td><code>designs/routes.ts</code> → <code>designs/service.ts</code> → Design</td></tr>
+      <tr><td><code>/api/designs/:id/simulations</code> (run, list) · <code>/api/simulations/:id</code></td><td><span class="pill">owner</span></td><td><code>simulations/routes.ts</code> → <code>simulations/service.ts</code> → Simulation</td></tr>
+    </tbody></table></div>
+  <div class="grid2">
+    <div class="card"><h3>Error codes (<code>app.ts</code>)</h3>
+      <ul><li>400 <span class="mono">VALIDATION_ERROR</span> (ajv, with <span class="mono">field</span>)</li><li>401 unauthenticated or bad credentials · 409 email taken</li><li>404 not found or not owned</li><li>422 custom location without weather · 502 upstream down</li><li>413 payload over 5 MB · engine errors via <span class="mono">STATUS_BY_CODE</span></li></ul></div>
+    <div class="card"><h3>Provider seam</h3>
+      <p style="font-size:14px"><code>SimulationProvider {id, run}</code> in <code>providers/index.ts</code> has one implementation, <code>fast-physics</code>, which wraps the engine's <code>simulate()</code>. Routes call the provider and never call the engine directly. There is no mock provider.</p></div>
+  </div>
+</section>
+
+<!-- SEQUENCES -->
+<section id="sequences">
+  <div class="sec-head"><h2>Request sequences</h2>
+  <p>A preview and a saved run use the same pipeline. They differ in the input (the live store vs the stored design) and in what happens to the result.</p></div>
+  <figure>
+    <div class="fig">
+    <svg viewBox="0 0 960 400" role="img" aria-label="Preview: the browser posts the design, the server prepares, assembles and runs the provider, and returns the result without storing it. Saved run: the server loads the design, clones it as inputSnapshot, runs the same pipeline, and inserts a Simulation document.">
+      <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+      <marker id="a3c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="ah-acc"/></marker></defs>
+      <!-- lifelines -->
+      <g class="tb"><text x="90" y="28" text-anchor="middle">Browser</text><text x="300" y="28" text-anchor="middle">Route</text><text x="510" y="28" text-anchor="middle">prepare + assemble</text><text x="700" y="28" text-anchor="middle">fast-physics</text><text x="880" y="28" text-anchor="middle">MongoDB</text></g>
+      <g class="zone"><line x1="90" y1="40" x2="90" y2="390"/><line x1="300" y1="40" x2="300" y2="390"/><line x1="510" y1="40" x2="510" y2="390"/><line x1="700" y1="40" x2="700" y2="390"/><line x1="880" y1="40" x2="880" y2="390"/></g>
+      <text x="16" y="62" class="ta">PREVIEW</text>
+      <line x1="90" y1="80" x2="296" y2="80" class="e-acc" marker-end="url(#a3c)"/><text x="100" y="74" class="tl">POST /simulate/preview {design}</text>
+      <line x1="300" y1="104" x2="506" y2="104" class="e" marker-end="url(#a3)"/><text x="310" y="98" class="tl">ajv-validated design</text>
+      <line x1="510" y1="128" x2="696" y2="128" class="e" marker-end="url(#a3)"/><text x="520" y="122" class="tl">SimulationRequest</text>
+      <line x1="700" y1="152" x2="94" y2="152" class="e-dash" marker-end="url(#a3)"/><text x="310" y="146" class="tl">200 {kpis, result} · nothing stored</text>
+      <line x1="16" y1="185" x2="944" y2="185" class="zone"/>
+      <text x="16" y="212" class="ta">SAVED RUN</text>
+      <line x1="90" y1="230" x2="296" y2="230" class="e-acc" marker-end="url(#a3c)"/><text x="100" y="224" class="tl">POST /designs/:id/simulations</text>
+      <line x1="300" y1="254" x2="876" y2="254" class="e" marker-end="url(#a3)"/><text x="600" y="248" class="tl">load owned design</text>
+      <rect x="306" y="266" width="196" height="26" rx="4" class="n-frz"/><text x="316" y="284" class="tf">structuredClone → inputSnapshot</text>
+      <line x1="300" y1="308" x2="506" y2="308" class="e" marker-end="url(#a3)"/><text x="310" y="302" class="tl">snapshot</text>
+      <line x1="510" y1="326" x2="696" y2="326" class="e" marker-end="url(#a3)"/><text x="520" y="320" class="tl">SimulationRequest</text>
+      <line x1="700" y1="350" x2="876" y2="350" class="e" marker-end="url(#a3)"/><text x="710" y="344" class="tl">insert Simulation</text>
+      <line x1="300" y1="376" x2="94" y2="376" class="e-dash" marker-end="url(#a3)"/><text x="110" y="370" class="tl">201 SimulationFull</text>
+    </svg>
+    </div>
+    <figcaption>A saved run stores a copy of the design as it was at run time (<code>simulations/service.ts runSimulation</code>), along with <code>requestHash</code>, KPIs, the full result and the engine version. Editing the design later never changes past runs, and a Simulation document has no <code>updatedAt</code>.</figcaption>
+  </figure>
+</section>
+
+<!-- WEATHER -->
+<section id="weather">
+  <div class="sec-head"><h2>Custom location weather</h2>
+  <p>Preset sites use typical-year weather bundled in <code>@shelter/data</code>. A custom site fetches real 2023 weather. The fetch is async and <code>assemble()</code> is sync, so <code>design/prepare.ts</code> resolves weather first and passes it in as a closure.</p></div>
+  <figure>
+    <div class="fig">
+    <svg viewBox="0 0 960 200" role="img" aria-label="Weather resolution: read the Mongo cache keyed by source, lat and lon rounded to two decimals, and year; on a miss try Open-Meteo, then NASA POWER; if both fail return 502; on success upsert the cache and hand the series to assemble.">
+      <defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+      <marker id="a4c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="ah-acc"/></marker></defs>
+      <rect x="20" y="50" width="150" height="64" rx="8" class="n"/><text x="34" y="76" class="tb">Cache read</text><text x="34" y="96" class="tm">lat/lon 2 dp · 2023</text>
+      <rect x="230" y="50" width="150" height="64" rx="8" class="n"/><text x="244" y="76" class="tb">Open-Meteo</text><text x="244" y="96" class="tm">archive, tz=auto</text>
+      <rect x="440" y="50" width="150" height="64" rx="8" class="n"/><text x="454" y="76" class="tb">NASA POWER</text><text x="454" y="96" class="tm">fallback</text>
+      <rect x="650" y="50" width="130" height="64" rx="8" class="n"/><text x="664" y="76" class="tb">Cache upsert</text><text x="664" y="96" class="tm">weatherCache</text>
+      <rect x="830" y="50" width="110" height="64" rx="8" class="n-acc"/><text x="844" y="76" class="tb">assemble</text><text x="844" y="96" class="tm">weatherFor()</text>
+      <line x1="170" y1="82" x2="226" y2="82" class="e" marker-end="url(#a4)"/><text x="178" y="74" class="tl">miss</text>
+      <line x1="380" y1="82" x2="436" y2="82" class="e" marker-end="url(#a4)"/><text x="388" y="74" class="tl">fail</text>
+      <line x1="590" y1="82" x2="646" y2="82" class="e" marker-end="url(#a4)"/><text x="598" y="74" class="tl">ok</text>
+      <line x1="780" y1="82" x2="826" y2="82" class="e-acc" marker-end="url(#a4c)"/>
+      <path d="M305 50 C 305 20, 715 20, 715 46" class="e" marker-end="url(#a4)"/><text x="480" y="24" class="tl">ok</text>
+      <path d="M95 114 C 95 180, 885 180, 885 118" class="e-acc" marker-end="url(#a4c)"/><text x="420" y="172" class="ta">hit (skip fetch)</text>
+      <line x1="515" y1="114" x2="515" y2="146" class="e-dash" marker-end="url(#a4)"/><text x="524" y="142" class="tf">both fail → 502</text>
+    </svg>
+    </div>
+    <figcaption>From <code>weather/resolve.ts</code> and <code>weather/cache.ts</code>. When Mongo isn't connected the cache always misses and is never written. A failed fetch never quietly falls back to a preset site. Place search (<code>GET /api/locations/search</code>) uses Open-Meteo geocoding and returns at most 8 results.</figcaption>
+  </figure>
+</section>
+
+<!-- AUTH -->
+<section id="auth">
+  <div class="sec-head"><h2>Auth</h2>
+  <p>A session is a JWT stored in an httpOnly cookie. There are no tokens in JavaScript and no refresh endpoint.</p></div>
+  <ol class="steps">
+    <li><strong>Register / login</strong> (<code>auth/routes.ts</code>): the password is hashed with scrypt and a 16-byte salt (<code>auth/password.ts</code>) and checked with <code>timingSafeEqual</code>. A login with an unknown email still hashes against a dummy hash, so response timing can't reveal which accounts exist.</li>
+    <li><strong>Cookie</strong>: the server signs <code>{sub: userId}</code> with <code>JWT_SECRET</code> and sets it as the cookie <code>token</code>. It lasts 7 days and is <code>httpOnly</code> and <code>sameSite=lax</code>. It is <code>secure</code> only when <code>NODE_ENV=production</code>.</li>
+    <li><strong>Guard</strong>: <code>auth/authenticate.ts</code> runs as a preHandler on every designs and simulations route and on <code>/auth/me</code>. A bad or missing cookie returns 401. A resource you don't own returns 404, so its existence isn't revealed.</li>
+    <li><strong>Client</strong>: <code>RequireAuth</code> calls <code>/auth/me</code>. On 401 or a network error it redirects to <code>/login</code>. Logout clears the cookie.</li>
+  </ol>
+</section>
+
+<!-- DATA -->
+<section id="data">
+  <div class="sec-head"><h2>Data model</h2>
+  <p>Four collections. The design is stored whole, as a <code>ShelterDesign</code> document, so the API shape and the stored shape are the same.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Collection</th><th>Fields</th><th>Index</th></tr></thead>
+    <tbody>
+      <tr><td><code>users</code></td><td>email (unique, lowercased), name, passwordHash, createdAt</td><td>unique email</td></tr>
+      <tr><td><code>designs</code></td><td>ownerId → users, name, design (ShelterDesign), timestamps</td><td>{ownerId, updatedAt −1}</td></tr>
+      <tr><td><code>simulations</code></td><td>ownerId, designId, provider, engineVersion, requestHash, <strong>inputSnapshot</strong>, kpis, weatherProvenance?, result (~250 KB), createdAt only</td><td>{designId, createdAt −1}</td></tr>
+      <tr><td><code>weatherCache</code></td><td>source, lat, lon, year, standardMeridian, weather (arrays as number[])</td><td>unique {source, lat, lon, year}</td></tr>
+    </tbody></table></div>
+  <div class="tbl"><table>
+    <thead><tr><th>ShelterDesign field</th><th>Meaning (<code>design/types.ts</code>)</th></tr></thead>
+    <tbody>
+      <tr><td><code>location</code></td><td>Preset id, or custom {name, lat, lon, elevation}</td></tr>
+      <tr><td><code>date</code> · <code>presetId</code></td><td>ISO day (reference year 2023) · base construction preset</td></tr>
+      <tr><td><code>lengthM</code> · <code>widthM</code> · <code>heightM</code></td><td>Length is the diameter for a cylinder or dome. Width applies to boxes only. Height is per storey and unused for a dome.</td></tr>
+      <tr><td><code>azimuthDeg</code></td><td>−180 to 180, where 0 means facing south</td></tr>
+      <tr><td><code>wall/roof/floorConstruction</code></td><td>A single layer {material, thicknessM}, or null to keep the preset's stack</td></tr>
+      <tr><td><code>windowWwr</code> · <code>glazingId</code> · <code>nightShutters</code></td><td>Window-to-wall ratio per side S/E/W/N (0 to 0.9) · glazing type · night shutters on or off</td></tr>
+      <tr><td><code>occupancyPresetId</code></td><td>One of four occupancy presets</td></tr>
+      <tr><td><code>shape?</code> <span class="pill">v2</span></td><td><code>box</code> | <code>cylinder</code> | <code>dome</code>. Defaults to box.</td></tr>
+      <tr><td><code>storeys?</code> <span class="pill">v2</span></td><td>1 | 2. Defaults to 1. A two-storey dome is rejected by the schema.</td></tr>
+    </tbody></table></div>
+  <p>Designs saved before v2 have no <code>shape</code> or <code>storeys</code>. They open as a one-storey box: <code>store.ts loadDesign</code> fills in the defaults, and so does <code>viewer/geometry.ts</code>.</p>
+</section>
+
+<!-- SHAPES -->
+<section id="shapes">
+  <div class="sec-head"><h2>ShelterDesign → surfaces</h2>
+  <p><code>design/assemble.ts</code> turns a design into the engine's <code>SimulationRequest</code>. The engine only understands flat surfaces with an area, tilt and azimuth. Cylinders and domes are therefore approximated as flat facets, and the engine itself was not changed.</p></div>
+  <figure>
+    <div class="fig">
+    <svg viewBox="0 0 960 250" role="img" aria-label="Plan views: a box has four walls; a cylinder has twelve 30-degree wall sectors; a dome has three equal-height bands of twelve sectors, with facets steeper than 60 degrees counted as walls and the rest as roof.">
+      <!-- box -->
+      <text x="130" y="24" class="tb" text-anchor="middle">box</text>
+      <rect x="60" y="50" width="140" height="100" class="facet"/>
+      <text x="130" y="170" class="tm" text-anchor="middle">4 walls · roof · floor</text>
+      <text x="130" y="188" class="tl" text-anchor="middle">setSize() · matches frozen app</text>
+      <text x="130" y="46" class="tl" text-anchor="middle">N</text><text x="130" y="164" class="tl" text-anchor="middle"></text>
+      <!-- cylinder: 12-gon -->
+      <text x="450" y="24" class="tb" text-anchor="middle">cylinder</text>
+      <polygon points="450,40 480,48 502,70 510,100 502,130 480,152 450,160 420,152 398,130 390,100 398,70 420,48" class="facet"/>
+      <g class="e"><line x1="450" y1="100" x2="450" y2="40"/><line x1="450" y1="100" x2="480" y2="48"/><line x1="450" y1="100" x2="502" y2="70"/><line x1="450" y1="100" x2="510" y2="100"/><line x1="450" y1="100" x2="502" y2="130"/><line x1="450" y1="100" x2="480" y2="152"/><line x1="450" y1="100" x2="450" y2="160"/><line x1="450" y1="100" x2="420" y2="152"/><line x1="450" y1="100" x2="398" y2="130"/><line x1="450" y1="100" x2="390" y2="100"/><line x1="450" y1="100" x2="398" y2="70"/><line x1="450" y1="100" x2="420" y2="48"/></g>
+      <text x="450" y="182" class="tm" text-anchor="middle">12 wall sectors @ 30° · area πDh/12</text>
+      <text x="450" y="200" class="tl" text-anchor="middle">roof + floor πr² · volume πr²h</text>
+      <!-- dome: 3 rings -->
+      <text x="780" y="24" class="tb" text-anchor="middle">dome</text>
+      <circle cx="780" cy="100" r="62" class="facet"/>
+      <circle cx="780" cy="100" r="47" class="facet2"/>
+      <circle cx="780" cy="100" r="28" class="facet"/>
+      <g class="e"><line x1="780" y1="38" x2="780" y2="162"/><line x1="718" y1="100" x2="842" y2="100"/><line x1="749" y1="46" x2="811" y2="154"/><line x1="811" y1="46" x2="749" y2="154"/><line x1="726" y1="69" x2="834" y2="131"/><line x1="834" y1="69" x2="726" y2="131"/></g>
+      <text x="780" y="182" class="tm" text-anchor="middle">3 equal-height bands × 12 sectors</text>
+      <text x="780" y="200" class="tl" text-anchor="middle">tilt ≥ 60° → wall, else roof · volume ⅔πr³</text>
+      <text x="480" y="236" class="ta" text-anchor="middle">storeys = 2 (box or cylinder): one rock slab storage element, 0.15 m, 8 W/m²K, same single air zone</text>
+    </svg>
+    </div>
+    <figcaption>Plan views. The client's <code>viewer/geometry.ts</code> keeps its own copy of these constants (12 sectors, 3 bands, 60° threshold) and draws the same facets, so the model on screen is the geometry that gets simulated.</figcaption>
+  </figure>
+  <ol class="steps">
+    <li>Load the base request from the preset (<code>resolvePreset</code>).</li>
+    <li>Set weather and site from <code>design.location</code>: bundled TMY for a preset site, <code>weatherFor()</code> for a custom one (422 if it's missing).</li>
+    <li>Set <code>building.azimuth = azimuthDeg</code>. The engine applies the rotation.</li>
+    <li>Build the shape: <code>setSize</code> (box), <code>cylinderGeometry</code> or <code>domeGeometry</code>, then <code>addIntermediateSlab</code> if there are 2 storeys.</li>
+    <li>Apply wall, roof and floor construction overrides, only where they aren't null.</li>
+    <li>Set the window-to-wall ratio per quadrant. A wall belongs to the quadrant within ±45° of its facing; ties go to S or N.</li>
+    <li>Apply the glazing type and night shutters (R 0.4, 20:00–06:00).</li>
+    <li>Apply the occupancy preset (<code>OCCUPANCY_PRESETS</code>).</li>
+    <li>Set the options: 1 simulated day and <code>skyModel: 'isotropic'</code>. This setting is load-bearing; the other sky model diverges on these presets.</li>
+  </ol>
+  <p class="note">A one-storey box must produce a request identical to the frozen app's for the same input. <code>test/parity.test.ts</code> checks this by comparing canonical request hashes against <code>apps/server/src/assemble.ts</code>.</p>
+</section>
+
+<!-- CHANGE -->
+<section id="change">
+  <div class="sec-head"><h2>Where to change what</h2>
+  <p>Any change to a wire shape starts in <code>API.md</code>. Paths below are relative to <code>apps/studio-server/src</code> (server) and <code>apps/studio/src</code> (client).</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Change</th><th>Server</th><th>Client</th></tr></thead>
+    <tbody>
+      <tr><td>Add a design field</td><td><code>design/types.ts</code>, <code>app.ts</code> schema, <code>design/assemble.ts</code>, <code>options.ts</code></td><td><code>design/store.ts</code>, a <code>controls/*Section.tsx</code>, <code>viewer/geometry.ts</code> if it's visible</td></tr>
+      <tr><td>Add a shape</td><td>Everything above, plus a <code>*Geometry</code> function in <code>assemble.ts</code></td><td><code>viewer/geometry.ts</code>, <code>Building.tsx</code>, <code>controls/GeometrySection.tsx</code></td></tr>
+      <tr><td>Add an API route</td><td><code>&lt;domain&gt;/routes.ts</code> (+ service, model), register it in <code>app.ts</code></td><td>A wrapper in <code>api/</code></td></tr>
+      <tr><td>Show another KPI</td><td>–</td><td><code>results/Kpis.tsx</code>, <code>routes/compare/kpiTable.ts</code></td></tr>
+      <tr><td>Change the weather source</td><td><code>weather/resolve.ts</code></td><td>–</td></tr>
+      <tr><td>Add an occupancy preset</td><td><code>OCCUPANCY_PRESETS</code> in <code>design/assemble.ts</code></td><td>Comes through <code>/api/options</code></td></tr>
+      <tr><td>Change the cookie policy</td><td><code>app.ts</code> (jwt), <code>auth/routes.ts</code> (cookie flags)</td><td>–</td></tr>
+      <tr><td>Change the physics</td><td colspan="2"><span class="pill f">frozen</span> <code>packages/engine</code> is off limits. Add a new <code>SimulationProvider</code> instead.</td></tr>
+    </tbody></table></div>
+</section>
+
+<!-- RUN -->
+<section id="run">
+  <div class="sec-head"><h2>Run &amp; test</h2></div>
+  <div class="tbl"><table>
+    <thead><tr><th>What</th><th>Command</th></tr></thead>
+    <tbody>
+      <tr><td>Setup</td><td><code>npm run setup</code></td></tr>
+      <tr><td>Run both apps</td><td><code>npm run dev:studio</code> (needs <code>apps/studio-server/.env</code>: PORT, HOST, MONGODB_URI, JWT_SECRET, NODE_ENV)</td></tr>
+      <tr><td>Server tests</td><td><code>npm test -w @shelter/studio-server</code> (69 pass, 2 live-network tests skipped; in-memory Mongo)</td></tr>
+      <tr><td>Client tests · build</td><td><code>npm test -w @shelter/studio</code> (118) · <code>npm run build -w @shelter/studio</code></td></tr>
+      <tr><td>End to end</td><td><code>timeout 180 env PLAYWRIGHT_CORE=&lt;path&gt; node apps/studio/e2e/flow.mjs</code> (scratch server :4109, preview :5281)</td></tr>
+      <tr><td>Frozen guard</td><td><code>git diff --stat studio/main -- apps/server apps/client apps/web packages</code> → empty</td></tr>
+    </tbody></table></div>
+</section>
+
+<footer>Generated from <code>studio/main</code> on 2026-09-27. A condensed copy for agents is in <code>ARCHITECTURE-STUDIO.md</code>.</footer>
+</div>

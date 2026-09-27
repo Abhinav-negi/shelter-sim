@@ -129,6 +129,21 @@ export function shelterDesignSchema() {
       glazingId: { type: 'string', enum: glazingIds },
       nightShutters: { type: 'boolean' },
       occupancyPresetId: { type: 'string', enum: occupancyIds },
+      // G2 (V2.md §G2): both optional, so a saved design or frozen
+      // inputSnapshot predating this task (neither field present) still
+      // validates -- absence is NOT in `required` below.
+      shape: { type: 'string', enum: ['box', 'cylinder', 'dome'] },
+      storeys: { type: 'integer', enum: [1, 2] },
+    },
+    // Dome is a hemisphere: there is no second storey to stack (G2 condition
+    // 2). Only fires when BOTH fields are explicitly present and in conflict;
+    // storeys defaults to 1 when absent, so `{shape:'dome'}` alone is fine.
+    if: {
+      properties: { shape: { const: 'dome' } },
+      required: ['shape', 'storeys'],
+    },
+    then: {
+      properties: { storeys: { const: 1 } },
     },
   };
 }

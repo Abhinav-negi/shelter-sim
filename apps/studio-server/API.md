@@ -97,24 +97,99 @@ interface ShelterDesign {
   location: DesignLocation;
   date: string; // ISO 'YYYY-MM-DD', reference year 2023 (isoDateToDayOfYear)
   presetId: string; // shelter-type card id, e.g. 'traditionalLadakhiByre'
-  lengthM: number; // 2-30 -- S/N wall run
-  widthM: number; // 2-30 -- E/W wall run
-  heightM: number; // 2-6
+  lengthM: number; // 2-30 -- S/N wall run for 'box'; DIAMETER for 'cylinder'/'dome' (widthM ignored then)
+  widthM: number; // 2-30 -- E/W wall run, 'box' only; ignored for 'cylinder'/'dome'
+  heightM: number; // 2-6, PER STOREY; ignored for 'dome' (a hemisphere has no independent height)
   azimuthDeg: number; // -180..180, 0 = long side faces south -> Building.azimuth
   wallConstruction: SurfaceConstruction | null; // null = keep the preset's own (multi-layer) construction
   roofConstruction: SurfaceConstruction | null; // same rule
   floorConstruction: SurfaceConstruction | null; // same rule
-  windowWwr: { S: number; E: number; W: number; N: number }; // 0-0.9, window-to-wall-area ratio per orientation
+  windowWwr: { S: number; E: number; W: number; N: number }; // 0-0.9, window-to-wall-area ratio per orientation (§3a)
   glazingId: string; // @shelter/data GLAZING id
   nightShutters: boolean; // closed 20:00-06:00 when true, adds shutterResistance=0.4 m^2*K/W
   occupancyPresetId: string; // server-side table id -- see §6 note 2
+  shape?: 'box' | 'cylinder' | 'dome'; // optional, default 'box' (§3b)
+  storeys?: 1 | 2; // optional, default 1 (§3b); 'dome' + storeys 2 is rejected
 }
 ```
 
 `ShelterDesign` is `apps/server`'s `DesignInput` (S1) with: `locationId` replaced by `location`
-(preset | custom), `azimuthDeg` added (new -- maps to `Building.azimuth`), and the three
+(preset | custom), `azimuthDeg` added (new -- maps to `Building.azimuth`), the three
 `*MaterialId` fields replaced by `SurfaceConstruction | null` (the thickness is now given directly,
-not looked up from a category default).
+not looked up from a category default), and `shape`/`storeys` added (G2, §3b).
+
+`shape`/`storeys` are OPTIONAL, both defaulting when absent, so every design saved before G2 and
+every frozen run `inputSnapshot` predating it stays valid with no migration. `/api/options`
+`defaults` spells the default out explicitly (`shape:'box', storeys:1`) rather than relying on the
+client inferring it.
+
+### 3a. Window-to-wall ratio and the box/cylinder/dome envelope
+
+The engine (`packages/engine/src/types.ts:67`) has no notion of "box" -- `Building.surfaces` is
+just a flat list of `Surface{type,area,tilt,azimuth,construction,...}`. `apps/studio-server`'s
+`design/assemble.ts` is the ONLY place a shape exists; the frozen `packages/**` is unchanged by G2.
+
+`windowWwr.{S,E,W,N}` names a *quadrant*, not a single wall. `wallsInQuadrant(orientation)`
+(`design/assemble.ts`) collects every `wall`-type surface within **±45° of the cardinal azimuth**
+(ties at exactly ±45°/±135° go to S/N, never E/W), and the quadrant's WWR ratio is applied to EACH
+of those walls' own area -- since every wall in a quadrant gets the same ratio, the window area
+sums in proportion to each wall's share of the quadrant's total wall area automatically. A box has
+exactly one wall per quadrant, so this is byte-identical to the pre-G2 single-wall rule. A cylinder
+or dome can have several walls in one quadrant (their facets fall within ±45° of S/E/W/N too), and
+the same WWR is spread across all of them.
+
+### 3b. Shape -> facets (`setShapeFacets`, `cylinderGeometry`, `domeGeometry` in `design/assemble.ts`)
+
+For `shape:'box'` (default), nothing changes: `setSize` is exactly the pre-G2 function (byte-
+identical output when `storeys` is also absent/1). For `'cylinder'`/`'dome'`, `setShapeFacets`
+replaces `setSize` and generates a facet list, copying the preset's OWN S wall / roof / floor as
+TEMPLATES (construction, boundary, `exteriorAbsorptivity`/`exteriorEmissivity`/`interiorEmissivity`)
+so that `wallConstruction`/`roofConstruction`/`floorConstruction` overrides -- which replace a
+surface TYPE's construction, applied after this step -- still apply uniformly no matter how many
+facets exist of that type.
+
+- **Cylinder** (`lengthM` = diameter `D`, radius `r = D/2`): 12 wall facets at azimuth `-150,
+  -120, ..., 180` (30° apart), each `area = pi*D*h/12` where `h = heightM * storeys`. One roof and
+  one floor facet, each `area = pi*r^2`. `building.volume = pi*r^2*h`.
+- **Dome** (hemisphere, `lengthM` = diameter; `widthM`/`heightM` ignored; `storeys` must be 1): 3
+  equal-HEIGHT elevation bands (each `dz = r/3`) x 12 azimuth sectors (same 30° spacing). Every
+  sector's area is `2*pi*r*dz/12` -- the Archimedes "hat-box" identity that a spherical zone's area
+  depends only on its height, not its angular span, so all 3 bands have equal facet area despite
+  unequal angular width. A band's tilt is `90 - elevationMidDeg`, where `elevationMidDeg` is the
+  elevation angle at the band's mid-HEIGHT (`asin(zMid/r)`); tilt >= 60 deg -> `wall` (can host
+  windows, uses the wall template); otherwise -> `roof` (uses the roof template). With 3 bands this
+  puts the lower two (24 facets) at `wall` and the top cap (12 facets) at `roof`. One floor facet,
+  `area = pi*r^2`. `building.volume = (2/3)*pi*r^3`.
+- Facet ids are unique per shape (`wallC<k>` for a cylinder wall, `<type>D<band>S<k>` for a dome
+  band facet, e.g. `wallD0S3`), so window ids (`<wallId>Window`, unchanged rule) stay unique too.
+- Regenerating the facet list clears `windows` (the box template's `windowSouth`-on-`wallSouth`
+  etc. would otherwise dangle -- `wallSouth` no longer exists as a surface). This is never
+  user-visible: the very next assembly step re-derives every orientation's windows from
+  `windowWwr` regardless of shape (§3a).
+
+### 3c. Two storeys -- SINGLE-ZONE approximation
+
+`storeys:2` is honestly a **single-zone approximation**, not a second floor: there is still exactly
+one indoor-air node. Both shapes it applies to (box, cylinder; dome is 1-storey only) get:
+
+- Wall area and `building.volume` **doubled** (via `h = heightM * storeys` baked into the same
+  area/volume formulas used for storeys 1 -- there is no separate "resize then double" step).
+  Roof/floor footprint (`building.floorArea`) is unchanged.
+- One `rock` `StorageElement` (`packages/engine/src/types.ts:102`) added, representing the
+  intermediate floor slab between the two storeys, coupled only to the single air node (the
+  engine's own T-20 storage-node model, `packages/engine/src/solve/assemble.ts`):
+  - `materialId`: the CURRENT floor surface's own construction's last (innermost/room-facing)
+    layer -- read at this point in `assemble`, i.e. the preset's own floor material, before any
+    `floorConstruction` override.
+  - `massKg = footprint * 0.15 * density(materialId)` -- `0.15` m is a documented GUESS at a
+    nominal intermediate-storey slab thickness (a thin timber deck or rammed-earth floor, not the
+    ground floor's own usually-thicker construction); not user-configurable.
+  - `conductanceToRoom = 2 * footprint * 8` W/K -- `8` W/(m^2*K) is a documented GUESS at a nominal
+    interior convective coefficient, doubled because the single-zone approximation exposes BOTH
+    faces of the slab (top and bottom) to the same air node.
+  - `kind: 'rock'`, `surfaceAreaToRoom = 2 * footprint`.
+  These constants are approximations, not measured values -- exactly the kind of simplification
+  LOG.md rule 13 requires disclosing, not hiding; the UI must label 2 storeys as an approximation.
 
 ## 4. `POST /api/simulate/preview`
 
@@ -348,11 +423,7 @@ interface SimulationFull extends SimulationSummary {
 | `GET /api/designs/:id/simulations` | ✓ owner | 200 `SimulationSummary[]` (no `result`), newest first. |
 | `GET /api/simulations/:id` | ✓ owner | 200 `SimulationFull` (with `result`). Not owned → 404 `NOT_FOUND`. |
 
-## 10. Planned routes (P3 — not implemented yet)
-
-| Route | Auth | Task |
-|---|---|---|
-| `GET /api/locations/search?q=` (Open-Meteo geocoding) | – | P3 |
+## 10. Environment
 
 `env.ts`'s `MONGODB_URI`/`JWT_SECRET` were optional in P1; `src/index.ts` now requires both and
 exits with a clear message if either is missing (§ condition 5, `db.ts` owns the mongoose

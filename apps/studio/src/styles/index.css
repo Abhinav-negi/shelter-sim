@@ -86,3 +86,23 @@ body {
 .shelter-slider:disabled::-webkit-slider-thumb {
   background: var(--ink-muted);
 }
+
+/* Landing (G5): scroll-reveal for the "How it works" stages. Purposeful,
+   slow, and — per PLAN.md v2's motion rule — always off under
+   prefers-reduced-motion, where content must simply be visible. */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
