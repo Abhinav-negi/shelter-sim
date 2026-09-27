@@ -23,6 +23,22 @@ Browser ── apps/studio (Vite + React 19 + TS + Tailwind v4 + R3F, :5273)
   Client API types come from `@shelter/studio-server` (`package.json` `"types"` → `src/design/types.ts`).
 - `packages/optimise` is not used by Studio.
 
+**Repo layout (npm workspaces).** Five app folders, three packages:
+
+| Workspace | What it is | Status |
+|---|---|---|
+| `apps/studio` | Studio client: React 19 + Vite 8 SPA (entry `index.html` → `src/main.tsx`), Tailwind 4, R3F/three, zustand, recharts | **you change this** |
+| `apps/studio-server` | Studio API: Fastify 5, Mongoose/MongoDB, JWT cookie auth, tsx | **you change this** |
+| `packages/engine` | The physics simulator (`simulate`): thermal node network, backward Euler, 300 s step | frozen |
+| `packages/data` | Materials, glazing, constructions, presets, bundled TMY weather | frozen |
+| `packages/optimise` | Design-space sweep (`expandVariants`); not imported by any app yet | frozen |
+| `apps/client` + `apps/server` | Classic form-based app (React/Vite + Fastify) | frozen |
+| `apps/web` | First prototype: Next.js 16 + Prisma. Studio is **not** Next.js | frozen |
+
+**Stack at a glance.** TypeScript everywhere · Vitest (+ jsdom, Testing Library; mongodb-memory-server on the server)
+· ESLint + Prettier · `concurrently` for `dev:studio` · playwright-core (scratchpad only) for `e2e/flow.mjs`.
+Per-file roles for all ~150 source files: the codebase guide page (README link), source in `ledger/d2-guide/`.
+
 ## 2. Server (`apps/studio-server/src`)
 
 **Boot:** `index.ts` → `loadEnv()` (`env.ts`; `PORT`=4100, `HOST`=127.0.0.1, `MONGODB_URI`, `JWT_SECRET`,

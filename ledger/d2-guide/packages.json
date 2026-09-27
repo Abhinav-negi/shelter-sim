@@ -1,0 +1,637 @@
+{
+  "summary": "ShelterSim predicts how warm a passive-solar winter shelter stays through a Ladakh night, so a design can be checked in seconds instead of built and found wrong (DRDO/DIHAR Leh, SIH problem statement 26051). The repo holds two apps sharing one thermal engine: 'ShelterSim classic' (apps/client + apps/server), the original form-based app, now frozen and kept running unchanged; and 'ShelterSim Studio' (apps/studio + apps/studio-server, outside this survey's scope), the newer design-driven product with a live 3D model, saved designs and comparisons. apps/web is a third, separately legacy Next.js full-stack prototype (its own Prisma database, API routes and worker) that predates the client/server split. All apps sit on top of three shared TypeScript packages: @shelter/engine (the pure physics simulator), @shelter/data (material/glazing/construction/weather catalogues and presets), and @shelter/optimise (expands a design into many variants for a design-space sweep). The whole thing is an npm workspaces monorepo built and tested with TypeScript project references and Vitest.",
+  "physics": "The engine models a shelter as a graph of thermal nodes: one indoor-air node, one zero-capacitance mean-radiant 'star' node standing in for interior longwave exchange between surfaces, and a through-thickness chain of nodes for every wall/roof/floor surface (plus one lumped node per discrete storage element such as a water drum, rock bed or PCM pack). Each wall is sliced so nodes sit exactly on material interfaces, giving an exact steady-state U-value and a mesh fine enough to resolve the daily temperature wave (penetration-depth rule) so it correctly reproduces thermal lag and swing damping through thick earth or stone walls. Exterior surfaces exchange convection with outdoor air (altitude-corrected, since Leh's air is ~65% as dense as sea level) and longwave radiation with an effective sky temperature; interior surfaces exchange convection with room air and radiation with the star node. Solar gain is split into beam/diffuse/ground-reflected components (Erbs decomposition plus HDKR or isotropic sky transposition), reduced by shading/incidence-angle effects, and deposited mostly onto exterior opaque surfaces or, for glazing, distributed mostly onto the floor mass (not straight to the air) so it can be stored and released overnight. Ventilation/infiltration is modelled as a mass-flow heat loss with a hard safety-floor air-change rate (never sealed below what is safe with an unvented stove), and ground-coupled floors see a Kusuda-Achenbach deep-soil temperature. The system is integrated forward in time with backward Euler (unconditionally stable) at a default 300 s timestep, with matrix coefficients frozen and refactorised once per weather-hour for speed (a fast Schur-complement/Thomas-algorithm solver exploits the tridiagonal wall chains); a design day is repeated until day-to-day drift converges (spin-up) before the reported period is simulated. Output is a full time series of every node's temperature plus eleven named heat-flow pathways (solar, convection, sky radiation, conduction, infiltration, ground, internal gains, auxiliary heat) and derived KPIs (minimum/pre-dawn indoor temperature, comfort hours, decrement factor, time lag, fuel/CO2/cost estimates), self-checked against an energy-balance residual that must stay under 0.1%.",
+  "stack": [
+    {
+      "name": "TypeScript",
+      "version": "^5.6.3 (root) / ~6.0.2 (client)",
+      "role": "primary language for every package and app",
+      "why": "strict, shared tsconfig.base.json (strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes) across the whole monorepo for type safety on physics code"
+    },
+    {
+      "name": "npm workspaces",
+      "version": "n/a",
+      "role": "monorepo package management",
+      "why": "links packages/* and apps/* together locally without publishing, per root package.json workspaces field"
+    },
+    {
+      "name": "Vitest",
+      "version": "^2.1.5",
+      "role": "test runner for engine/data/optimise/server/web",
+      "why": "fast, native ESM + TS support; vitest.config.ts forces single-process serial execution because some apps/web tests mutate shared process.env/global state"
+    },
+    {
+      "name": "ESLint",
+      "version": "^10.10.0 (flat config)",
+      "role": "linting",
+      "why": "eslint.config.js composes @typescript-eslint plus eslint-config-next (hoisted from apps/web) for one lint pass over the whole repo"
+    },
+    {
+      "name": "Prettier",
+      "version": "^3.9.6",
+      "role": "code formatting",
+      "why": "repo-wide format/format:check scripts, .prettierrc"
+    },
+    {
+      "name": "concurrently",
+      "version": "^9.1.0",
+      "role": "runs multiple dev servers together",
+      "why": "root npm run dev / dev:lan / dev:studio scripts start server+client (or studio-server+studio) side by side with one command"
+    },
+    {
+      "name": "Fastify",
+      "version": "^5.0.0",
+      "role": "HTTP server framework for apps/server",
+      "why": "the frozen classic app's REST API (health/options/simulate/assemble routes)"
+    },
+    {
+      "name": "tsx",
+      "version": "^4.19.0",
+      "role": "TypeScript runner for apps/server dev/start scripts",
+      "why": "runs src/index.ts directly without a separate build step in dev"
+    },
+    {
+      "name": "React 19 + Vite",
+      "version": "react ^19.2.8 / vite ^8.3.0",
+      "role": "apps/client frontend framework and dev/build tool",
+      "why": "the frozen classic app's browser UI: wizard + results, built with shadcn/radix-ui components and Tailwind CSS 4"
+    },
+    {
+      "name": "Recharts",
+      "version": "^3.8.0",
+      "role": "charting library in apps/client",
+      "why": "renders the results temperature/heat-flow charts; lazy-loaded to keep the wizard-only bundle small"
+    },
+    {
+      "name": "Next.js",
+      "version": "^16.3.5",
+      "role": "full-stack framework for apps/web",
+      "why": "the separate legacy prototype app: server-rendered pages plus its own API routes"
+    },
+    {
+      "name": "Prisma + PostgreSQL/SQLite",
+      "version": "prisma ^6.19.3",
+      "role": "ORM/database for apps/web",
+      "why": "persists designs/materials/weather/runs; schema.prisma is provider-swapped between sqlite (local dev) and postgresql (deploy) by prisma/generate-schema.mjs"
+    },
+    {
+      "name": "d3 (array/sankey/scale/shape)",
+      "version": "^3-4.x per module",
+      "role": "chart primitives in apps/web",
+      "why": "builds the heat-flow Sankey diagram and other custom charts not covered by a higher-level chart library"
+    }
+  ],
+  "packages": [
+    {
+      "name": "@shelter/engine",
+      "path": "packages/engine",
+      "summary": "The pure physics simulator: one function, simulate(request) -> result, with no I/O, no state and no side effects. It builds a thermal node-graph from a Building description, integrates it forward in time with backward Euler, and returns full temperature/heat-flow time series plus KPIs and an energy-balance self-check. It also owns the engine's shared vocabulary (units, types, error codes) and the only place allowed to convert between Float64Array and JSON.",
+      "publicApi": [
+        "simulate",
+        "DEFAULT_SIM_OPTIONS",
+        "validateRequest",
+        "requestToJson/requestFromJson/resultToJson/resultFromJson/seriesToJson/seriesFromJson",
+        "canonicalRequestHash",
+        "buildWallMesh",
+        "sunPosition",
+        "decompose",
+        "transpose",
+        "infiltration",
+        "GAIN_WATTS",
+        "CONVERSIONS/keroseneLitres",
+        "EngineError",
+        "types (Material, Glazing, Building, Site, SimulationRequest, SimulationResult, ...)"
+      ],
+      "usedBy": [
+        "@shelter/data",
+        "@shelter/optimise",
+        "apps/server",
+        "apps/client (types only)",
+        "apps/web",
+        "scripts/ci-energy-balance.mjs"
+      ]
+    },
+    {
+      "name": "@shelter/data",
+      "path": "packages/data",
+      "summary": "The material, glazing, construction, TMY-weather and preset catalogues the engine and UIs draw from, plus a weather-normalisation pipeline (gap-fill, lapse-rate correction, resampling, Erbs/Swinbank derivation) and NASA POWER / Open-Meteo request builders and parsers. It also builds the eighteen-scenario matrix (coldest day, sunless streak, design winter, etc.) from real recorded history for stress-testing a design. It depends only on @shelter/engine at runtime.",
+      "publicApi": [
+        "MATERIALS/materialById",
+        "GLAZING/glazingById",
+        "CONSTRUCTIONS",
+        "PRESETS/presetById",
+        "TMY_LOCATIONS/tmyById/groundAlbedoById",
+        "buildScenarios/scenarioWeather",
+        "normaliseWeather",
+        "nasaPowerUrl/parseNasaPower",
+        "openMeteoUrl/parseOpenMeteo",
+        "parseWeatherCsv"
+      ],
+      "usedBy": [
+        "apps/server",
+        "apps/web",
+        "scripts/ci-energy-balance.mjs"
+      ]
+    },
+    {
+      "name": "@shelter/optimise",
+      "path": "packages/optimise",
+      "summary": "The sweep engine: expands a SweepRequest (a base design plus a list of variables to vary, e.g. wall construction, WWR, glazing, ACH) into concrete SimulationRequest variants and dispatches them through an injected runner to collect a SweepResult. It intentionally does no ranking, Pareto-sorting or tie-grouping itself (left to a later task/consumer) and has no worker pool of its own, so the same dispatch loop can run synchronously in a test or against a real worker-thread/browser-worker pool.",
+      "publicApi": [
+        "expandVariants"
+      ],
+      "usedBy": [
+        "apps/studio-server (outside this survey's scope, per README)"
+      ]
+    }
+  ],
+  "folders": [
+    {
+      "path": "packages/engine/src",
+      "title": "Engine root",
+      "summary": "Top-level engine modules: units/constants/types contract, air-at-altitude corrections, input validation, the public simulate() entry point (index.ts), and the JSON serialisation boundary (serialise.ts)."
+    },
+    {
+      "path": "packages/engine/src/envelope",
+      "title": "Wall meshing and analytical drive",
+      "summary": "Slices a wall construction into a node chain placed exactly on material interfaces (mesh.ts) and drives a single wall with a prescribed sinusoidal temperature for validation and the UI thermal-lag explorer (response.ts)."
+    },
+    {
+      "path": "packages/engine/src/loads",
+      "title": "Non-solar heat loads",
+      "summary": "Ground coupling, infiltration/ventilation (with the hard safety-floor ACH), internal gains schedules, and window glazing conduction/solar transmission."
+    },
+    {
+      "path": "packages/engine/src/post",
+      "title": "Post-processing",
+      "summary": "Turns raw solved node states into unit conversions/fuel costs, the energy-balance residual self-check, the eleven named heat-flow series, and the final KPI numbers (comfort hours, decrement factor, kerosene/CO2/cost estimates)."
+    },
+    {
+      "path": "packages/engine/src/solar",
+      "title": "Solar geometry and irradiance",
+      "summary": "Pure astronomy (sun position, declination, equation of time), splitting measured GHI into beam/diffuse components (Erbs), transposing irradiance onto a tilted oriented surface (isotropic/HDKR), and shading from terrain horizon or window overhangs."
+    },
+    {
+      "path": "packages/engine/src/solve",
+      "title": "The linear solver and time loop",
+      "summary": "Assembles the building into a node graph (assemble.ts), provides dense LU and Thomas tridiagonal solvers (linalg.ts) plus a fast Schur-complement/arrow factorisation exploiting the tridiagonal wall chains (schur.ts), and runs the backward-Euler time-stepping loop with per-weather-hour coefficient freezing and convergence-based spin-up (integrator.ts)."
+    },
+    {
+      "path": "packages/engine/src/storage",
+      "title": "Discrete thermal storage",
+      "summary": "Models water drums, rock beds and PCM packs as lumped storage nodes coupled to the room, including the PCM apparent-heat-capacity method for latent heat around a melt point."
+    },
+    {
+      "path": "packages/engine/src/surfaces",
+      "title": "Surface boundary conditions",
+      "summary": "Exterior surface convection/sky-radiation coefficients (altitude-corrected, with sky-view-factor) and interior surface convection/radiation coefficients (direction-of-heat-flow-dependent) plus where transmitted solar gets deposited."
+    },
+    {
+      "path": "packages/data/src",
+      "title": "Data package root",
+      "summary": "The material, glazing, construction, TMY-location, preset and named-scenario catalogues, plus the package public surface (index.ts) and its own mirrored error type."
+    },
+    {
+      "path": "packages/data/src/weather",
+      "title": "Weather ingestion pipeline",
+      "summary": "User-CSV parsing, the six-stage normalisation pipeline (Kelvin conversion, lapse-rate correction, gap-fill, Erbs/Swinbank derivation, resampling, validation), and NASA POWER / Open-Meteo request builders and response parsers."
+    },
+    {
+      "path": "packages/optimise/src",
+      "title": "Optimise package root",
+      "summary": "The whole @shelter/optimise package: variable-expansion logic that turns a SweepRequest into concrete simulation variants, and the package's one-line public export."
+    }
+  ],
+  "files": [
+    {
+      "path": "packages/engine/src/air.ts",
+      "folder": "packages/engine/src",
+      "kind": "physics",
+      "role": "Air density/pressure at altitude and the convection-coefficient altitude correction factor (Leh air is ~65% as dense as sea level).",
+      "loc": 42
+    },
+    {
+      "path": "packages/engine/src/constants.ts",
+      "folder": "packages/engine/src",
+      "kind": "config",
+      "role": "Physical constants (Stefan-Boltzmann, solar constant, air properties), the ventilation safety-floor ACH, solver plausibility bounds, and fuel/cost/carbon conversion constants.",
+      "loc": 56
+    },
+    {
+      "path": "packages/engine/src/envelope/mesh.ts",
+      "folder": "packages/engine/src/envelope",
+      "kind": "physics",
+      "role": "Builds the through-thickness node mesh for one wall construction, placing nodes on material interfaces so conductance is exact; also the analytical decrement-factor/lag formula used for validation.",
+      "loc": 169
+    },
+    {
+      "path": "packages/engine/src/envelope/response.ts",
+      "folder": "packages/engine/src/envelope",
+      "kind": "physics",
+      "role": "Drives a single wall chain with a prescribed sinusoidal exterior temperature (Thomas algorithm) for validation and the thermal-lag explorer, plus harmonic-fit/lag-extraction helpers.",
+      "loc": 155
+    },
+    {
+      "path": "packages/engine/src/index.ts",
+      "folder": "packages/engine/src",
+      "kind": "entry",
+      "role": "The engine public entry point: simulate(request) -> result, wiring together the ACH/glazing coupling, model assembly, integration, energy balance, heat flows and KPIs, plus the package's re-exports.",
+      "loc": 271
+    },
+    {
+      "path": "packages/engine/src/loads/ground.ts",
+      "folder": "packages/engine/src/loads",
+      "kind": "physics",
+      "role": "Kusuda-Achenbach undisturbed deep-soil temperature at depth, and the simplified slab-to-soil conductance.",
+      "loc": 39
+    },
+    {
+      "path": "packages/engine/src/loads/infiltration.ts",
+      "folder": "packages/engine/src/loads",
+      "kind": "physics",
+      "role": "Air-leakage mass flow/conductance with a hard carbon-monoxide-safety ACH floor, the glazing-area-coupled effective ACH, and effective indoor-air heat capacitance.",
+      "loc": 132
+    },
+    {
+      "path": "packages/engine/src/loads/internal.ts",
+      "folder": "packages/engine/src/loads",
+      "kind": "physics",
+      "role": "Indicative internal heat-gain wattages (people, stoves, livestock) and an hourly-schedule lookup helper.",
+      "loc": 28
+    },
+    {
+      "path": "packages/engine/src/loads/windows.ts",
+      "folder": "packages/engine/src/loads",
+      "kind": "physics",
+      "role": "Incidence-angle modifier, night-shutter state, effective window U-value with a closed shutter, and transmitted solar power through a window.",
+      "loc": 51
+    },
+    {
+      "path": "packages/engine/src/post/conversions.ts",
+      "folder": "packages/engine/src/post",
+      "kind": "post",
+      "role": "Editable fuel/cost/carbon conversion constants (kerosene, dung cake) and litres-of-kerosene-per-useful-kWh helper.",
+      "loc": 27
+    },
+    {
+      "path": "packages/engine/src/post/energyBalance.ts",
+      "folder": "packages/engine/src/post",
+      "kind": "post",
+      "role": "Computes the energy-balance residual self-check: boundary-crossing heat flows vs. change in stored energy, including the PCM latent-heat correction.",
+      "loc": 86
+    },
+    {
+      "path": "packages/engine/src/post/heatFlows.ts",
+      "folder": "packages/engine/src/post",
+      "kind": "post",
+      "role": "Assembles the eleven named heat-flow time series (Q1-Q11, Qaux, storageRate, deltaT) and their period totals in kWh.",
+      "loc": 80
+    },
+    {
+      "path": "packages/engine/src/post/kpis.ts",
+      "folder": "packages/engine/src/post",
+      "kind": "post",
+      "role": "Computes the final KPI numbers: min/max/mean/06:00 indoor temperature, comfort hours, decrement factor, time lag, fuel/CO2/cost, condensation risk.",
+      "loc": 105
+    },
+    {
+      "path": "packages/engine/src/serialise.ts",
+      "folder": "packages/engine/src",
+      "kind": "lib",
+      "role": "The only place allowed to convert Float64Array<->number[]; JSON (de)serialisation of SimulationRequest/Result, a canonical-hash function for caching, and a dependency-free SHA-256 implementation.",
+      "loc": 337
+    },
+    {
+      "path": "packages/engine/src/solar/decomposition.ts",
+      "folder": "packages/engine/src/solar",
+      "kind": "physics",
+      "role": "Splits measured GHI into DNI/DHI beam/diffuse components via the Erbs correlation, with extraterrestrial-irradiance and clearness-index helpers.",
+      "loc": 76
+    },
+    {
+      "path": "packages/engine/src/solar/geometry.ts",
+      "folder": "packages/engine/src/solar",
+      "kind": "physics",
+      "role": "Pure solar astronomy: equation of time, declination, sun position (altitude/azimuth/zenith), incidence-angle cosine, sunrise/sunset and solar-noon clock hour.",
+      "loc": 148
+    },
+    {
+      "path": "packages/engine/src/solar/shading.ts",
+      "folder": "packages/engine/src/solar",
+      "kind": "physics",
+      "role": "Terrain-horizon blocking factor from a 36-sector horizon profile, and sunlit-fraction of a window under a horizontal overhang.",
+      "loc": 122
+    },
+    {
+      "path": "packages/engine/src/solar/transposition.ts",
+      "folder": "packages/engine/src/solar",
+      "kind": "physics",
+      "role": "Transposes decomposed irradiance onto a tilted, oriented surface using isotropic (Liu & Jordan) or HDKR anisotropic sky models, plus region-specific ground-albedo constants.",
+      "loc": 92
+    },
+    {
+      "path": "packages/engine/src/solve/assemble.ts",
+      "folder": "packages/engine/src/solve",
+      "kind": "solver",
+      "role": "Turns a Building into the node graph (air/star/per-surface chains/storage nodes) with fixed node ordering that every downstream module indexes through.",
+      "loc": 164
+    },
+    {
+      "path": "packages/engine/src/solve/integrator.ts",
+      "folder": "packages/engine/src/solve",
+      "kind": "solver",
+      "role": "The time loop: backward-Euler stepping with per-weather-hour frozen/refactorised coefficients, convergence-based spin-up, auxiliary-heating via linearity, and per-step StepRecord capture. The largest and most heavily documented file in the engine.",
+      "loc": 796
+    },
+    {
+      "path": "packages/engine/src/solve/linalg.ts",
+      "folder": "packages/engine/src/solve",
+      "kind": "solver",
+      "role": "Hand-written dense LU factorisation with partial pivoting and the Thomas tridiagonal algorithm, with no external numerics library.",
+      "loc": 122
+    },
+    {
+      "path": "packages/engine/src/solve/schur.ts",
+      "folder": "packages/engine/src/solve",
+      "kind": "solver",
+      "role": "The fast solver: exploits the bordered block-tridiagonal (\"arrow\") structure of the node graph via a 2x2 Schur complement, making each timestep linear in node count instead of cubic.",
+      "loc": 218
+    },
+    {
+      "path": "packages/engine/src/storage/pcm.ts",
+      "folder": "packages/engine/src/storage",
+      "kind": "physics",
+      "role": "Phase-change-material apparent-heat-capacity method: a temperature-dependent specific heat spiking across the melt band, plus its closed-form enthalpy integral for the energy-balance check.",
+      "loc": 89
+    },
+    {
+      "path": "packages/engine/src/storage/waterMass.ts",
+      "folder": "packages/engine/src/storage",
+      "kind": "physics",
+      "role": "Builds the capacitance/conductance spec for a discrete lumped storage node (water drum, rock bed or PCM pack) coupled to the room.",
+      "loc": 69
+    },
+    {
+      "path": "packages/engine/src/surfaces/exterior.ts",
+      "folder": "packages/engine/src/surfaces",
+      "kind": "physics",
+      "role": "Exterior convection coefficient (altitude-corrected), effective sky temperature (measured or Swinbank), linearised sky-radiation coefficient, and sky-view factor.",
+      "loc": 69
+    },
+    {
+      "path": "packages/engine/src/surfaces/interior.ts",
+      "folder": "packages/engine/src/surfaces",
+      "kind": "physics",
+      "role": "Interior natural-convection coefficient (direction-of-flow dependent), linearised interior-radiation coefficient to the star node, and the transmitted-solar floor/air distribution fractions.",
+      "loc": 68
+    },
+    {
+      "path": "packages/engine/src/types.ts",
+      "folder": "packages/engine/src",
+      "kind": "types",
+      "role": "The frozen contract: every shape the engine and its callers share (Material, Glazing, Surface, Building, Site, WeatherSeries, SimulationRequest/Result, HeatFlows, Kpis, sweep types, worker protocol, EngineError).",
+      "loc": 535
+    },
+    {
+      "path": "packages/engine/src/units.ts",
+      "folder": "packages/engine/src",
+      "kind": "lib",
+      "role": "Branded Kelvin/Celsius types plus the toK/toC conversion functions (the only place Celsius may appear) and degree/radian helpers.",
+      "loc": 27
+    },
+    {
+      "path": "packages/engine/src/validate.ts",
+      "folder": "packages/engine/src",
+      "kind": "lib",
+      "role": "Validates a SimulationRequest at the top of simulate(), collecting every problem before throwing rather than failing on the first one.",
+      "loc": 71
+    },
+    {
+      "path": "packages/data/src/constructions.ts",
+      "folder": "packages/data/src",
+      "kind": "catalogue",
+      "role": "Named wall/roof/floor assemblies (e.g. 400mm rammed earth, insulated RCC roof) built from the material catalogue, self-checked at module load.",
+      "loc": 158
+    },
+    {
+      "path": "packages/data/src/errors.ts",
+      "folder": "packages/data/src",
+      "kind": "lib",
+      "role": "A local EngineError mirror for @shelter/data, matching the engine's error shape without taking a hard dependency on it.",
+      "loc": 26
+    },
+    {
+      "path": "packages/data/src/glazing.ts",
+      "folder": "packages/data/src",
+      "kind": "catalogue",
+      "role": "The glazing catalogue (single/double/triple glazing, polycarbonate, night-shutter variant) with U/SHGC/tauVis/incidence-angle values.",
+      "loc": 122
+    },
+    {
+      "path": "packages/data/src/index.ts",
+      "folder": "packages/data/src",
+      "kind": "entry",
+      "role": "The @shelter/data public surface: re-exports of every catalogue, the weather pipeline and source parsers, plus a schema-version assertion helper.",
+      "loc": 51
+    },
+    {
+      "path": "packages/data/src/materials.ts",
+      "folder": "packages/data/src",
+      "kind": "catalogue",
+      "role": "The full building-material catalogue (structural, insulation, finish, storage) with k/rho/c/optical properties and citations, many tagged locally-available-in-Ladakh.",
+      "loc": 468
+    },
+    {
+      "path": "packages/data/src/presets.ts",
+      "folder": "packages/data/src",
+      "kind": "catalogue",
+      "role": "Six named, ready-to-run shelter presets (shared 5x5m box geometry) used as the app's fixed first-screen starting points and the CI energy-balance gate's fixtures.",
+      "loc": 798
+    },
+    {
+      "path": "packages/data/src/scenarios.ts",
+      "folder": "packages/data/src",
+      "kind": "catalogue",
+      "role": "Builds an eighteen-scenario weather matrix (twelve monthly days, coldest/hottest/design-winter/sunless-streak/clear-cold-night/annual-mean) from real recorded TMY history.",
+      "loc": 458
+    },
+    {
+      "path": "packages/data/src/tmy.ts",
+      "folder": "packages/data/src",
+      "kind": "weather",
+      "role": "Loads the five bundled real-NASA-POWER-based annual TMY weather files from disk synchronously (no network) and their location metadata/ground-albedo series.",
+      "loc": 116
+    },
+    {
+      "path": "packages/data/src/weather/csv.ts",
+      "folder": "packages/data/src/weather",
+      "kind": "weather",
+      "role": "Parses a user-uploaded weather CSV, reporting malformed cells by row/column as gaps rather than aborting the whole file.",
+      "loc": 146
+    },
+    {
+      "path": "packages/data/src/weather/pipeline.ts",
+      "folder": "packages/data/src/weather",
+      "kind": "weather",
+      "role": "The six-stage weather normalisation pipeline: Kelvin conversion, lapse-rate correction, gap-fill, Erbs/Swinbank derivation, energy-conserving resampling, and validation.",
+      "loc": 489
+    },
+    {
+      "path": "packages/data/src/weather/sources.ts",
+      "folder": "packages/data/src/weather",
+      "kind": "weather",
+      "role": "Pure request-URL builders and response parsers for the NASA POWER and Open-Meteo weather APIs (no fetch/network calls themselves).",
+      "loc": 303
+    },
+    {
+      "path": "packages/optimise/src/index.ts",
+      "folder": "packages/optimise/src",
+      "kind": "entry",
+      "role": "The package's entire public export: re-exports everything from sweep.ts.",
+      "loc": 2
+    },
+    {
+      "path": "packages/optimise/src/sweep.ts",
+      "folder": "packages/optimise/src",
+      "kind": "solver",
+      "role": "Expands a SweepRequest's variable specs (wall construction, insulation thickness/position, glazing, WWR, azimuth, aspect ratio, night shutters, mass strategy, ACH) into concrete SimulationRequest variants and dispatches them through an injected runner.",
+      "loc": 607
+    }
+  ],
+  "frozenApps": [
+    {
+      "path": "apps/server",
+      "title": "ShelterSim classic API server (frozen)",
+      "stack": "Fastify 5, tsx, TypeScript, depends on @shelter/data + @shelter/engine",
+      "summary": "The original app's backend: a small Fastify server exposing GET /api/health, GET /api/options, POST /api/simulate, POST /api/assemble and POST /api/simulate/raw, per apps/server/API.md. assemble.ts turns a simple DesignInput (location, date, preset, size, materials, window-to-wall ratios, glazing, occupancy) into a full engine SimulationRequest by resolving a preset and layering overrides on top, porting logic originally from apps/web. It is explicitly frozen and kept running unchanged.",
+      "parts": [
+        {
+          "path": "apps/server/src/app.ts",
+          "role": "Builds the Fastify instance: request-body JSON-schema validation, the five API routes, error-code-to-HTTP-status mapping, and permissive CORS headers."
+        },
+        {
+          "path": "apps/server/src/assemble.ts",
+          "role": "DesignInput -> SimulationRequest assembly: occupancy presets, default layer thicknesses, material/glazing record rebuilding, size/WWR/glazing/night-shutter/occupancy setters, and weather day-slicing by ISO date."
+        },
+        {
+          "path": "apps/server/src/index.ts",
+          "role": "Process entry point: reads PORT/HOST env vars and starts the Fastify app."
+        },
+        {
+          "path": "apps/server/src/options.ts",
+          "role": "Builds and memoises the GET /api/options payload (locations, presets, materials, glazings, occupancy presets, and default DesignInput) from the @shelter/data catalogues."
+        }
+      ]
+    },
+    {
+      "path": "apps/client",
+      "title": "ShelterSim classic frontend (frozen)",
+      "stack": "React 19, Vite, Tailwind CSS 4, shadcn/radix-ui, Recharts",
+      "summary": "The original app's browser UI: a step-by-step wizard collects a DesignInput, POSTs it to apps/server, and a lazy-loaded Results view charts the returned temperatures/heat-flows/KPIs. Only import type from @shelter/engine is allowed (never a runtime import), keeping the physics engine out of the browser bundle. 32 files total, organised into: components/ui (13 shadcn primitives: button, card, tabs, chart, slider, switch, etc.) plus Header.tsx and HowToUseSheet.tsx; features/wizard (Wizard.tsx, Stepper.tsx, steps.tsx — the multi-step design form); features/results (Results.tsx, charts.tsx, explain.ts, labels.ts — the post-run view); hooks (useServerStatus.ts, useTheme.ts); lib/utils.ts; and the root api.ts (typed fetch wrapper mirroring apps/server/API.md), App.tsx and main.tsx.",
+      "parts": [
+        {
+          "path": "apps/client/src/api.ts",
+          "role": "Typed fetch wrapper for the server API — request/response types mirrored exactly from apps/server/API.md, plus the ApiError class."
+        },
+        {
+          "path": "apps/client/src/App.tsx",
+          "role": "Top-level app: loads /api/options, holds the current DesignInput (persisted to localStorage) and simulation result, and switches between the wizard and results views."
+        },
+        {
+          "path": "apps/client/src/main.tsx",
+          "role": "React DOM entry point mounting App."
+        },
+        {
+          "path": "apps/client/src/components/",
+          "role": "Header/HowToUseSheet plus a ui/ subfolder of 13 shadcn-style primitives (alert, badge, button, card, chart, input, label, progress, select, separator, sheet, skeleton, slider, switch, tabs, tooltip)."
+        },
+        {
+          "path": "apps/client/src/features/wizard/",
+          "role": "The multi-step design-input form: Wizard.tsx (orchestration), Stepper.tsx (step list/nav), steps.tsx (the individual step forms — the largest file in the app at 498 lines)."
+        },
+        {
+          "path": "apps/client/src/features/results/",
+          "role": "The post-simulation view: Results.tsx (layout), charts.tsx (Recharts visualisations), explain.ts/labels.ts (plain-language KPI explanations and chart labels)."
+        },
+        {
+          "path": "apps/client/src/hooks/",
+          "role": "useServerStatus.ts (polls server health) and useTheme.ts (light/dark theme)."
+        },
+        {
+          "path": "apps/client/src/lib/utils.ts",
+          "role": "Small shared utility (className merge helper, typical shadcn scaffold)."
+        }
+      ]
+    },
+    {
+      "path": "apps/web",
+      "title": "Legacy Next.js prototype (separate from classic and Studio)",
+      "stack": "Next.js 16, React 19, Prisma (SQLite/PostgreSQL), d3, Service Worker/PWA",
+      "summary": "A separate, self-contained Next.js full-stack app (165 files) that predates the client/server split described in the root README: it has its own database (Prisma schema with provider-swapping between SQLite for local dev and PostgreSQL for deploy, see prisma/README.md), its own API routes under app/api/{designs,materials,simulate,weather}, its own simulation worker (workers/sim.worker.ts + a Node worker variant), and a PWA manifest/service-worker for offline use. Its UI lives under app/(workspace)/{setup,results,compare} with a large components/ tree (advanced, charts/{heatflow,solar,temp}, house/daynight 3D-ish visualisation, inputs, kpis, meta/{assumptions,export,locale}, nav, grid) and its own AGENTS.md/CLAUDE.md governing how agents should work in it. It depends on both @shelter/data and @shelter/engine.",
+      "parts": [
+        {
+          "path": "apps/web/app",
+          "role": "Next.js App Router pages: app/(workspace)/{setup,results,compare} plus app/api/{designs,materials,simulate,weather} route handlers, layout.tsx, globals.css/tokens.css, and PWA registration."
+        },
+        {
+          "path": "apps/web/lib",
+          "role": "Server-side helpers: db.ts/pool.ts (Prisma access), i18n.ts, log.ts, store.ts, units.ts, workerClient.ts, and a lib/repo subfolder for data-repository functions."
+        },
+        {
+          "path": "apps/web/components",
+          "role": "The UI component tree: advanced, charts/{heatflow,solar,temp}, house/daynight, inputs, kpis, meta/{assumptions,export,locale}, nav, grid."
+        },
+        {
+          "path": "apps/web/prisma",
+          "role": "schema.prisma (source of truth) + generate-schema.mjs (provider switcher) + migrations + seed.ts + dev.db (local SQLite file)."
+        },
+        {
+          "path": "apps/web/workers",
+          "role": "sim.worker.ts (browser Web Worker) and sim.node.worker.mjs (Node worker-thread variant) running simulations off the main thread."
+        },
+        {
+          "path": "apps/web/test",
+          "role": "11 Vitest test files covering the advanced panel, API routes (designs/simulate/weather), DB on/off states, repositories (designs/materials/runs/weather), connection pool, and the worker."
+        },
+        {
+          "path": "apps/web/scripts",
+          "role": "build-static.mjs and check-db-off.mjs build/CI helper scripts."
+        },
+        {
+          "path": "apps/web/public",
+          "role": "PWA manifest, service worker (sw.js), icon, and bundled TMY files under public/tmy."
+        }
+      ]
+    }
+  ],
+  "rootFiles": [
+    {
+      "path": "README.md",
+      "role": "Repo overview: what ShelterSim is, the two apps (classic vs. Studio) sharing one engine, and high-level architecture."
+    },
+    {
+      "path": "STUDIO.md",
+      "role": "Index/ledger for the ShelterSim Studio build (the newer design-driven app), out of this survey's scope."
+    },
+    {
+      "path": "ORCHESTRATOR.md",
+      "role": "Describes how work on ShelterSim Studio is orchestrated (task distribution/process document)."
+    },
+    {
+      "path": "ARCHITECTURE-STUDIO.md",
+      "role": "Architecture reference for ShelterSim Studio aimed at coding agents."
+    },
+    {
+      "path": "EQUATIONS.md",
+      "role": "The governing equations, citations and named simplifications behind every physics module in packages/engine/src, section-by-section."
+    },
+    {
+      "path": "INPUT.md",
+      "role": "How to call the ShelterSim backend: endpoints, the simple DesignInput level and the full engine-level SimulationRequest, errors and result schema."
+    },
+    {
+      "path": "ledger/",
+      "role": "Project planning/handoff documents (PLAN.md, V2.md, HANDOFF-ARCHIVE.md) and a tasks/ subfolder — process history, not code."
+    }
+  ]
+}
