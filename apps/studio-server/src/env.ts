@@ -1,7 +1,6 @@
 // apps/studio-server/src/env.ts — process environment, read once.
 //
-// DB/auth variables are optional in P1 (no route needs them yet); P2 makes
-// MONGODB_URI/JWT_SECRET required at startup once auth/persistence land.
+// MONGODB_URI/JWT_SECRET are required at startup; src/index.ts exits if either is missing.
 
 export interface Env {
   PORT: number;

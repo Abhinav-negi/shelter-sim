@@ -423,11 +423,7 @@ interface SimulationFull extends SimulationSummary {
 | `GET /api/designs/:id/simulations` | ✓ owner | 200 `SimulationSummary[]` (no `result`), newest first. |
 | `GET /api/simulations/:id` | ✓ owner | 200 `SimulationFull` (with `result`). Not owned → 404 `NOT_FOUND`. |
 
-## 10. Planned routes (P3 — not implemented yet)
-
-| Route | Auth | Task |
-|---|---|---|
-| `GET /api/locations/search?q=` (Open-Meteo geocoding) | – | P3 |
+## 10. Environment
 
 `env.ts`'s `MONGODB_URI`/`JWT_SECRET` were optional in P1; `src/index.ts` now requires both and
 exits with a clear message if either is missing (§ condition 5, `db.ts` owns the mongoose
