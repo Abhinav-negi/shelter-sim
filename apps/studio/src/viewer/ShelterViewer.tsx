@@ -39,6 +39,16 @@ export interface ShelterViewerProps {
    *  "Viewer on Landing/Compare stays non-interactive"). Default off, so
    *  every existing non-Studio caller is unaffected. */
   interactive?: boolean;
+  /** Q2F (landing hero only): shifts the camera's rendered frame — a
+   *  `camera.setViewOffset` crop, plus a modest zoom-out — so the building
+   *  (and the off-to-one-side compass) sit inside the right ~60% of the
+   *  canvas instead of dead-centre, clearing a column on the left for the
+   *  hero's overlaid text (Q2.md finding #1) without resizing the
+   *  full-viewport canvas itself. Default false — Studio/DevViewer/
+   *  ShapeStrip are all byte-identical (see `Scene`'s own comment for why
+   *  this isn't done by moving OrbitControls' target/camera position
+   *  instead). */
+  frameShift?: boolean;
 }
 
 /** Keeps `frameloop="demand"` rendering while `autoRotate` is on -- mounted
@@ -71,6 +81,18 @@ function resolveLatLon(design: ShelterDesign, options: Options): { lat: number; 
 const SUN_COLOR = '#fff6e8';
 const SKY_COLOR = '#eef3f7';
 
+// Q2F (landing hero `frameShift`, see ShelterViewerProps' doc comment):
+// tuned by eye against the hero at 1280/1440/1920 wide. `FRAME_SHIFT_CROP`
+// is the fraction of the full (uncropped) frustum width kept — cropping
+// necessarily magnifies slightly, which `FRAME_SHIFT_ZOOM_OUT` (extra camera
+// distance) more than compensates, so the net effect is "smaller AND shifted
+// right", not just shifted. `FRAME_SHIFT_TARGET_D` is the display-fraction
+// (0=left edge, 1=right edge) the frustum's true centre (where the building
+// sits) ends up at.
+const FRAME_SHIFT_CROP = 0.82;
+const FRAME_SHIFT_ZOOM_OUT = 1.55;
+const FRAME_SHIFT_TARGET_D = 0.6;
+
 function mix(a: string, b: string, t: number): string {
   return new Color(a).lerp(new Color(b), t).getStyle();
 }
@@ -84,7 +106,7 @@ function Ground({ radius, color }: { radius: number; color: string }) {
   );
 }
 
-function Scene({ design, options, hour, autoRotate = false, interactive = false }: ShelterViewerProps) {
+function Scene({ design, options, hour, autoRotate = false, interactive = false, frameShift = false }: ShelterViewerProps) {
   const colors = useThemeColors();
   const geometry = useMemo(() => buildSceneGeometry(design, options), [design, options]);
   const { lat, lon } = useMemo(() => resolveLatLon(design, options), [design, options]);
@@ -124,6 +146,7 @@ function Scene({ design, options, hour, autoRotate = false, interactive = false 
   // param nobody sets by accident, and only wired up when `interactive`.
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
+  const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
     if (!interactive || typeof window === 'undefined') return;
     if (new URLSearchParams(window.location.search).get('g4e2e') !== '1') return;
@@ -166,7 +189,34 @@ function Scene({ design, options, hour, autoRotate = false, interactive = false 
   // — a tall+thin design shouldn't zoom the camera out further than before).
   const aspect = size.width / size.height;
   const cameraFootprint = Math.max(geometry.lengthM, geometry.widthM);
-  const camDist = cameraDistance(cameraFootprint, aspect);
+  const camDist = cameraDistance(cameraFootprint, aspect) * (frameShift ? FRAME_SHIFT_ZOOM_OUT : 1);
+
+  // Q2F: `frameShift` crops+shifts the rendered frame via a projection-matrix
+  // view offset instead of moving OrbitControls' target/camera position.
+  // OrbitControls' `autoRotate` continuously revolves the camera AROUND its
+  // target at a fixed radius/polar angle, so the target is *always* rendered
+  // at screen-centre by definition — if the target (or the camera position
+  // relative to it) were the thing offset instead, the building would swing
+  // from one side of the frame to the other over each rotation instead of
+  // staying put on the right. `setViewOffset`'s shift lives in screen space
+  // (the projection matrix), so it stays put regardless of the camera's
+  // current orbit angle. Purely ratio-based (an abstract 1000-unit "full
+  // width"), so it doesn't need to react to the canvas's actual pixel size.
+  useEffect(() => {
+    if (!frameShift) {
+      camera.clearViewOffset();
+      invalidate();
+      return;
+    }
+    const FULL = 1000;
+    const viewWidth = FRAME_SHIFT_CROP * FULL;
+    const offsetX = (0.5 - FRAME_SHIFT_CROP * FRAME_SHIFT_TARGET_D) * FULL;
+    camera.setViewOffset(FULL, FULL, offsetX, 0, viewWidth, FULL);
+    invalidate();
+    return () => {
+      camera.clearViewOffset();
+    };
+  }, [camera, frameShift, invalidate]);
   // Lift the ground a step toward the (lighter) hairline token: on its own,
   // dark-theme `surface` is dark enough that the shadow disappears into it
   // (review: "the ground is pure black so the shadow disappears"). A small,
@@ -235,7 +285,14 @@ function Scene({ design, options, hour, autoRotate = false, interactive = false 
   *  preview route) decides where `design`/`options`/`hour` come from.
   *  `autoRotate` (G5, landing hero) and `interactive` (G4, Studio selection)
   *  are both optional and default off. */
-export function ShelterViewer({ design, options, hour, autoRotate = false, interactive = false }: ShelterViewerProps) {
+export function ShelterViewer({
+  design,
+  options,
+  hour,
+  autoRotate = false,
+  interactive = false,
+  frameShift = false,
+}: ShelterViewerProps) {
   const clearSelection = useSelection((s) => s.clearSelection);
   return (
     <Canvas
@@ -244,7 +301,14 @@ export function ShelterViewer({ design, options, hour, autoRotate = false, inter
       dpr={[1, 2]}
       {...(interactive ? { onPointerMissed: () => clearSelection() } : {})}
     >
-      <Scene design={design} options={options} hour={hour} autoRotate={autoRotate} interactive={interactive} />
+      <Scene
+        design={design}
+        options={options}
+        hour={hour}
+        autoRotate={autoRotate}
+        interactive={interactive}
+        frameShift={frameShift}
+      />
     </Canvas>
   );
 }

@@ -165,7 +165,35 @@ function resolveThickness(
   return override?.thicknessM ?? presetThickness ?? FALLBACK_THICKNESS_M;
 }
 
-function windowRect(facadeWidth: number, heightM: number, wwr: number): WindowRect | null {
+interface WindowMargins {
+  sillM: number;
+  lintelM: number;
+}
+
+const FIXED_WINDOW_MARGINS: WindowMargins = { sillM: WINDOW_SILL_M, lintelM: WINDOW_LINTEL_MARGIN_M };
+
+/** Q2F: a dome wall band's slant height (≈0.85m at a 5m-diameter dome) is
+ *  shorter than the fixed 1.2m sill+lintel clearance, so `windowRect` always
+ *  returned null for every dome facet regardless of WWR — the 3D preview hid
+ *  a window the server actually simulates (Q2.md finding #3). Scales the same
+ *  3:1 sill:lintel ratio to the facet's own height instead, capped at the
+ *  fixed metres, so a short facet keeps proportionally smaller (but still
+ *  present) margins rather than clamping the window to zero. Box/cylinder
+ *  walls don't pass this (they call `windowRect` with the default fixed
+ *  margins below), so their output is unchanged. */
+function scaledWindowMargins(heightM: number): WindowMargins {
+  return {
+    sillM: Math.min(WINDOW_SILL_M, heightM * 0.45),
+    lintelM: Math.min(WINDOW_LINTEL_MARGIN_M, heightM * 0.15),
+  };
+}
+
+function windowRect(
+  facadeWidth: number,
+  heightM: number,
+  wwr: number,
+  margins: WindowMargins = FIXED_WINDOW_MARGINS,
+): WindowRect | null {
   if (wwr <= 0 || facadeWidth <= 0 || heightM <= 0) return null;
 
   const area = wwr * facadeWidth * heightM;
@@ -173,12 +201,12 @@ function windowRect(facadeWidth: number, heightM: number, wwr: number): WindowRe
   let width = height * WINDOW_ASPECT;
 
   const maxWidth = Math.max(0, facadeWidth - 2 * WINDOW_MARGIN_SIDE_M);
-  const maxHeight = Math.max(0, heightM - WINDOW_SILL_M - WINDOW_LINTEL_MARGIN_M);
+  const maxHeight = Math.max(0, heightM - margins.sillM - margins.lintelM);
   width = Math.min(width, maxWidth);
   height = Math.min(height, maxHeight);
   if (width <= 0 || height <= 0) return null;
 
-  return { width, height, sill: WINDOW_SILL_M };
+  return { width, height, sill: margins.sillM };
 }
 
 /** 12 wall facets at `-150 + k*30`, each a flat side of the regular 12-gon
@@ -245,7 +273,10 @@ function domeFacetsFor(design: ShelterDesign): DomeFacet[] {
         radiusHigh,
         heightLow,
         heightHigh,
-        window: kind === 'wall' ? windowRect(chordEstimate, slantHeight, design.windowWwr[orientation]) : null,
+        window:
+          kind === 'wall'
+            ? windowRect(chordEstimate, slantHeight, design.windowWwr[orientation], scaledWindowMargins(slantHeight))
+            : null,
       });
     }
   }
