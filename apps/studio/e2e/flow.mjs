@@ -177,8 +177,12 @@ async function runFlow() {
     // "camera anchor" axis never moves, so growing Width really does grow
     // the rendered extent, which is what this condition is actually asking
     // to be proven.
-    const lengthSlider = page.getByLabel('Length');
-    const widthSlider = page.getByLabel('Width');
+    // G1 added a typed NumberInput alongside every slider, sharing the same
+    // aria-label -- getByLabel is ambiguous since then (G4.md's Evidence
+    // documents the identical gotcha for its own verification script).
+    // getByRole('slider', ...) picks the range input specifically.
+    const lengthSlider = page.getByRole('slider', { name: 'Length' });
+    const widthSlider = page.getByRole('slider', { name: 'Width' });
     await setSliderValue(lengthSlider, 25);
     await page.waitForTimeout(500);
     await setSliderValue(widthSlider, 3);
@@ -222,7 +226,7 @@ async function runFlow() {
     await page.goto(`${BASE_URL}/app/design/new`);
     await page.waitForSelector('canvas', { timeout: 15000 });
     await page.fill('[aria-label="Design name"]', 'Q1 Flow Design Two');
-    await setSliderValue(page.getByLabel('Length'), 12);
+    await setSliderValue(page.getByRole('slider', { name: 'Length' }), 12);
     await page.waitForTimeout(700);
     await page.waitForSelector('text=Indoor vs outdoor', { timeout: 15000 });
     await page.click('text=Save design');
