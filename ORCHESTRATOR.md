@@ -43,7 +43,9 @@ apps/server :4000 · apps/client :5173 · apps/web (legacy) · packages/*
   UI-only: never saved, never sent to the server, never triggers a preview.
 - Keep `skyModel: 'isotropic'` (presets diverge under `hdkr`).
 - Simulations store a frozen `inputSnapshot`. Editing a design never changes past runs.
-- No fake ANSYS. There is a `SimulationProvider` seam with one implementation, `fast-physics`.
+- ANSYS is a **UI placeholder** (user-approved 2026-09-29, task A1): a design stores only `ansysStartedAt`; the UI
+  shows a timer that ticks until cancelled and never produces results or fake numbers. Don't remove it as "fake".
+  The real provider still goes behind the `SimulationProvider` seam (one implementation today, `fast-physics`).
 - Secrets live only in `apps/studio-server/.env` (gitignored). Never invent or commit credentials.
 
 **Commands**
