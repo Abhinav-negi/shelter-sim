@@ -18,9 +18,9 @@ Suites on `studio/main`: studio 122/122, studio-server 69 (+2 skipped), build cl
 
 **Also session 6:** D2 grew the architecture page into a full codebase guide (same link). S1 fixed the Studio page scrolling as a whole (see S1 row).
 
-**In progress:** A1 "Run on ANSYS" placeholder (`ledger/tasks/A1.md`, worktree `../wt-a1`, branch `task/a1`).
+**Session 7 (2026-09-29):** A1 "Run on ANSYS" placeholder merged (see A1 row, Decision 10). studio-server 72 (+2 skipped), studio 122/122, build clean, frozen guard empty.
 
-**Previously in progress:** nothing. No task worktrees or branches remain; no orchestrator-started servers running.
+**In progress:** nothing. No task worktrees or branches remain; no orchestrator-started servers running.
 
 **Known follow-ups (candidates for the next phase):** the landing's animated sun disc can sit at or past the frame edge
 at some hours (and the sun line leaves the frame); Dashboard/Compare N+1 `GET .../simulations`; duplicated KPI labels
@@ -75,7 +75,7 @@ E2E is staged per session in the scratchpad (`npm i playwright-core` in `<scratc
 | D1 | Studio architecture map (HTML page + ARCHITECTURE-STUDIO.md) | Q2 | orchestrator | DONE | `ARCHITECTURE-STUDIO.md` + page https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv (superseded by D2; source now `ledger/d2-guide/d1-diagrams.html`). Re-checked after Q2F: no stale claims. See `ledger/tasks/D1.md`. |
 | S1 | Studio page-level scroll (outer window scrollbar) | – | orchestrator | DONE | Root cause: `components/ui/Segmented.tsx` sr-only radios were `position:absolute` with no positioned ancestor → containing block `<body>`, escaped the panel's `overflow-y-auto` and stretched `<html>` to 1822px (960px window). Fix: `relative` on the label. Measured after: scrollHeight == innerHeight at 1920×960/1440×900/390×844. New flow.mjs check → 30/30; studio 122/122; build clean; frozen guard empty (session 6). |
 | D2 | Codebase guide web app (tech stack, every file's role, server breakdown) — same link as D1 | D1 | orchestrator | DONE | https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv v2; source + generator `ledger/d2-guide/`; 149 files explained; see `ledger/tasks/D2.md` |
-| A1 | "Run on ANSYS" placeholder: confirm dialog, `ansysStartedAt` on design, ticking timer + Cancel (Dashboard + Studio) | – | sonnet | IN-PROGRESS | see `ledger/tasks/A1.md` |
+| A1 | "Run on ANSYS" placeholder: confirm dialog, `ansysStartedAt` on design, ticking timer + Cancel (Dashboard + Studio) | – | sonnet | DONE | merged into studio/main; `ansysStartedAt` + POST/DELETE `/api/designs/:id/ansys`, `components/AnsysTimer.tsx`; +3 mongo tests (72 pass); see `ledger/tasks/A1.md` |
 
 ## Required from user
 ```
