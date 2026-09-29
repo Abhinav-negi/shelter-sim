@@ -14,6 +14,10 @@ const designSchema = new Schema(
     ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },
     design: { type: Schema.Types.Mixed, required: true },
+    // "Run on ANSYS" placeholder (A1.md): one nullable start timestamp, so
+    // the run survives logout/login/devices. Start/cancel save with
+    // `{ timestamps: false }` so this never touches `updatedAt`.
+    ansysStartedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

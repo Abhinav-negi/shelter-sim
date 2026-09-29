@@ -17,6 +17,7 @@ export interface DesignSummary {
   id: string;
   name: string;
   design: ShelterDesign;
+  ansysStartedAt: string | null; // ISO
   createdAt: string; // ISO
   updatedAt: string; // ISO
 }
@@ -26,6 +27,7 @@ function toSummary(doc: HydratedDocument<DesignDoc>): DesignSummary {
     id: doc._id.toString(),
     name: doc.name,
     design: doc.design,
+    ansysStartedAt: doc.ansysStartedAt ? (doc.ansysStartedAt as unknown as Date).toISOString() : null,
     createdAt: (doc.createdAt as unknown as Date).toISOString(),
     updatedAt: (doc.updatedAt as unknown as Date).toISOString(),
   };
@@ -78,4 +80,23 @@ export async function updateDesign(
 export async function deleteDesign(ownerId: string, id: string): Promise<void> {
   const doc = await getOwnedDesignDoc(ownerId, id);
   await doc.deleteOne();
+}
+
+/** Placeholder "run on ANSYS" (A1.md): idempotent — a design that's already
+ * running keeps its original `ansysStartedAt`. `{ timestamps: false }` so
+ * this never bumps `updatedAt`. */
+export async function startAnsys(ownerId: string, id: string): Promise<DesignSummary> {
+  const doc = await getOwnedDesignDoc(ownerId, id);
+  if (!doc.ansysStartedAt) {
+    doc.ansysStartedAt = new Date();
+    await doc.save({ timestamps: false });
+  }
+  return toSummary(doc);
+}
+
+export async function cancelAnsys(ownerId: string, id: string): Promise<DesignSummary> {
+  const doc = await getOwnedDesignDoc(ownerId, id);
+  doc.ansysStartedAt = null;
+  await doc.save({ timestamps: false });
+  return toSummary(doc);
 }

@@ -8,8 +8,9 @@ import { Link, useNavigate } from 'react-router';
 import type { DesignSummary, Options } from '@shelter/studio-server';
 import { logout } from '../api/auth';
 import { ApiError } from '../api/client';
-import { deleteDesign, listDesigns, listSimulations } from '../api/designs';
+import { cancelAnsys, deleteDesign, listDesigns, listSimulations } from '../api/designs';
 import { useOptions } from '../design/useOptions';
+import { AnsysTimer } from '../components/AnsysTimer';
 import { Button } from '../components/ui';
 import { fmtC } from '../results/format';
 
@@ -34,17 +35,21 @@ function DesignRow({
   options,
   confirming,
   deleting,
+  cancellingAnsys,
   onDeleteClick,
   onCancel,
   onConfirmDelete,
+  onCancelAnsys,
 }: {
   row: Row;
   options: Options | null;
   confirming: boolean;
   deleting: boolean;
+  cancellingAnsys: boolean;
   onDeleteClick: () => void;
   onCancel: () => void;
   onConfirmDelete: () => void;
+  onCancelAnsys: () => void;
 }) {
   const { summary, dawnTempC } = row;
   return (
@@ -63,6 +68,9 @@ function DesignRow({
       <div className="shrink-0 text-right font-mono text-xs text-ink-muted">
         {dawnTempC === undefined ? '…' : dawnTempC === null ? 'Not run yet' : `${dawnTempC}°C at dawn`}
       </div>
+      {summary.ansysStartedAt ? (
+        <AnsysTimer startedAt={summary.ansysStartedAt} onCancel={onCancelAnsys} cancelling={cancellingAnsys} />
+      ) : null}
       <div className="flex shrink-0 items-center gap-3">
         {confirming ? (
           <>
@@ -92,6 +100,7 @@ export function Dashboard() {
   const [retryToken, setRetryToken] = useState(0);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [cancellingAnsysId, setCancellingAnsysId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -151,6 +160,22 @@ export function Dashboard() {
     }
   }
 
+  async function handleCancelAnsys(id: string) {
+    setCancellingAnsysId(id);
+    try {
+      const result = await cancelAnsys(id);
+      setRows((prev) =>
+        prev
+          ? prev.map((r) => (r.summary.id === id ? { ...r, summary: { ...r.summary, ansysStartedAt: result.ansysStartedAt } } : r))
+          : prev,
+      );
+    } catch {
+      // Leave the timer running; the person can try again.
+    } finally {
+      setCancellingAnsysId(null);
+    }
+  }
+
   async function handleLogout() {
     await logout().catch(() => {});
     navigate('/login');
@@ -201,9 +226,11 @@ export function Dashboard() {
                 options={options}
                 confirming={confirmingId === row.summary.id}
                 deleting={deletingId === row.summary.id}
+                cancellingAnsys={cancellingAnsysId === row.summary.id}
                 onDeleteClick={() => setConfirmingId(row.summary.id)}
                 onCancel={() => setConfirmingId(null)}
                 onConfirmDelete={() => handleDelete(row.summary.id)}
+                onCancelAnsys={() => handleCancelAnsys(row.summary.id)}
               />
             ))}
           </div>

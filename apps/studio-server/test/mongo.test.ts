@@ -278,6 +278,78 @@ describe('designs', () => {
     expect(del.statusCode).toBe(404);
   });
 
+  it('POST .../ansys sets ansysStartedAt; a second start keeps the same timestamp', async () => {
+    const a = app();
+    const { cookie } = await register(a, 'ansys1@example.com');
+    const created = await a.inject({
+      method: 'POST',
+      url: '/api/designs',
+      headers: { cookie },
+      payload: { name: 'Shelter', design: defaults },
+    });
+    const id = created.json().id;
+    expect(created.json().ansysStartedAt).toBeNull();
+
+    const first = await a.inject({ method: 'POST', url: `/api/designs/${id}/ansys`, headers: { cookie } });
+    expect(first.statusCode).toBe(200);
+    const startedAt = first.json().ansysStartedAt;
+    expect(typeof startedAt).toBe('string');
+
+    const second = await a.inject({ method: 'POST', url: `/api/designs/${id}/ansys`, headers: { cookie } });
+    expect(second.statusCode).toBe(200);
+    expect(second.json().ansysStartedAt).toBe(startedAt); // idempotent, not restarted
+
+    const del = await a.inject({ method: 'DELETE', url: `/api/designs/${id}/ansys`, headers: { cookie } });
+    expect(del.statusCode).toBe(200);
+    expect(del.json().ansysStartedAt).toBeNull();
+  });
+
+  it("another user's design id -> 404 for POST/DELETE .../ansys too", async () => {
+    const a = app();
+    const { cookie: ownerCookie } = await register(a, 'ansys2-owner@example.com');
+    const { cookie: otherCookie } = await register(a, 'ansys2-other@example.com');
+    const created = await a.inject({
+      method: 'POST',
+      url: '/api/designs',
+      headers: { cookie: ownerCookie },
+      payload: { name: 'Mine', design: defaults },
+    });
+    const id = created.json().id;
+
+    const start = await a.inject({ method: 'POST', url: `/api/designs/${id}/ansys`, headers: { cookie: otherCookie } });
+    expect(start.statusCode).toBe(404);
+
+    const cancel = await a.inject({
+      method: 'DELETE',
+      url: `/api/designs/${id}/ansys`,
+      headers: { cookie: otherCookie },
+    });
+    expect(cancel.statusCode).toBe(404);
+  });
+
+  it('PUT leaves ansysStartedAt unchanged', async () => {
+    const a = app();
+    const { cookie } = await register(a, 'ansys3@example.com');
+    const created = await a.inject({
+      method: 'POST',
+      url: '/api/designs',
+      headers: { cookie },
+      payload: { name: 'Shelter', design: defaults },
+    });
+    const id = created.json().id;
+    const started = await a.inject({ method: 'POST', url: `/api/designs/${id}/ansys`, headers: { cookie } });
+    const startedAt = started.json().ansysStartedAt;
+
+    const updated = await a.inject({
+      method: 'PUT',
+      url: `/api/designs/${id}`,
+      headers: { cookie },
+      payload: { name: 'Renamed', design: defaults },
+    });
+    expect(updated.statusCode).toBe(200);
+    expect(updated.json().ansysStartedAt).toBe(startedAt);
+  });
+
   it('a malformed id -> 404, not a 500', async () => {
     const a = app();
     const { cookie } = await register(a, 'owner4@example.com');

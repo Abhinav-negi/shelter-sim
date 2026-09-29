@@ -17,6 +17,11 @@ export const updateDesign = (id: string, name: string, design: ShelterDesign) =>
 
 export const deleteDesign = (id: string) => del<void>(`/designs/${id}`);
 
+/** "Run on ANSYS" placeholder (API.md §8): idempotent start, and cancel. */
+export const startAnsys = (id: string) => post<DesignSummary>(`/designs/${id}/ansys`);
+
+export const cancelAnsys = (id: string) => del<DesignSummary>(`/designs/${id}/ansys`);
+
 export const runSimulation = (designId: string) =>
   post<SimulationFull>(`/designs/${designId}/simulations`);
 
