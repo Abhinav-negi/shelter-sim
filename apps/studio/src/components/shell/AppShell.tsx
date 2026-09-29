@@ -1,6 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 import { logout } from '../../api/auth';
-import { Button } from '../ui';
 import { ThemeToggle } from './ThemeToggle';
 
 /** The app frame: wordmark, minimal nav, theme toggle, then the routed page.
@@ -27,15 +26,9 @@ export function AppShell() {
             Studio
           </Link>
           {inApp ? (
-            // !px-0 !py-0: Tailwind utilities of equal specificity are
-            // ordered by the compiled sheet, not by class-list position, so
-            // a plain `py-0` here loses to Button's own `py-2` -- `!` forces
-            // it. Needed so this reads as plain nav text (like "Studio"
-            // beside it) instead of growing this shared header past the
-            // ~56px Studio.tsx hardcodes for its own fixed-height layout (S1).
-            <Button variant="ghost" onClick={handleLogout} className="!px-0 !py-0 text-sm">
+            <button onClick={handleLogout} className="text-sm text-ink-muted transition-colors hover:text-ink">
               Log out
-            </Button>
+            </button>
           ) : null}
           <ThemeToggle />
         </nav>
