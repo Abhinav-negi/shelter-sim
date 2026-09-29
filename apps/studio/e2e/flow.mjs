@@ -380,11 +380,13 @@ async function runFlow() {
     check('design with no shape/storeys keys opens as Box', await page.getByRole('radio', { name: 'Box' }).isChecked());
     check('design with no shape/storeys keys opens at 1 storey', await page.getByRole('radio', { name: '1' }).isChecked());
 
-    // 9. Logout.
+    // 9. Logout -- A2.md condition 5: AppShell's own Log out (now next to
+    // "Studio" in the header, replacing Dashboard's) navigates to `/`, not
+    // `/login`.
     await page.goto(`${BASE_URL}/app`);
     await page.click('text=Log out');
-    await page.waitForURL(`${BASE_URL}/login`);
-    check('logout redirects to /login', true);
+    await page.waitForURL(`${BASE_URL}/`);
+    check('logout redirects to /', true);
 
     // 10. /app redirects to login when logged out.
     await page.goto(`${BASE_URL}/app`);
