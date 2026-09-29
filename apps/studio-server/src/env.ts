@@ -16,7 +16,7 @@ export interface Env {
 export function loadEnv(): Env {
   return {
     PORT: Number(process.env['PORT'] || 4100),
-    HOST: process.env['HOST'] || '127.0.0.1',
+    HOST: process.env['HOST'] || '0.0.0.0',
     MONGODB_URI: process.env['MONGODB_URI'] || undefined,
     JWT_SECRET: process.env['JWT_SECRET'] || undefined,
     NODE_ENV: process.env['NODE_ENV'] || 'development',
