@@ -6,7 +6,15 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { authenticate, userId } from '../auth/authenticate.js';
 import { shelterDesignSchema } from '../app.js';
 import type { ShelterDesign } from '../design/types.js';
-import { createDesign, deleteDesign, getDesign, listDesigns, updateDesign } from './service.js';
+import {
+  cancelAnsys,
+  createDesign,
+  deleteDesign,
+  getDesign,
+  listDesigns,
+  startAnsys,
+  updateDesign,
+} from './service.js';
 
 const designsRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
   // Built inside the plugin body (registration time), not at module load,
@@ -51,6 +59,18 @@ const designsRoutes: FastifyPluginAsync = async (app: FastifyInstance) => {
     const { id } = request.params as { id: string };
     await deleteDesign(userId(request), id);
     reply.code(204);
+  });
+
+  // "Run on ANSYS" placeholder (API.md §8, A1.md): no provider call, just a
+  // persisted start timestamp so the running state survives logout/login.
+  app.post('/api/designs/:id/ansys', async (request) => {
+    const { id } = request.params as { id: string };
+    return startAnsys(userId(request), id);
+  });
+
+  app.delete('/api/designs/:id/ansys', async (request) => {
+    const { id } = request.params as { id: string };
+    return cancelAnsys(userId(request), id);
   });
 };
 

@@ -206,6 +206,11 @@ async function runFlow() {
     await page.waitForSelector('canvas', { timeout: 15000 });
     await page.waitForTimeout(500); // let the first demand-frameloop render settle
 
+    // S1: only the side panels scroll, never the page itself (Segmented's
+    // sr-only radios once escaped the panel and stretched <html>).
+    const pageScroll = await page.evaluate(() => [document.documentElement.scrollHeight, innerHeight]);
+    check(`Studio page itself does not scroll (${pageScroll[0]} <= ${pageScroll[1]})`, pageScroll[0] <= pageScroll[1] + 1);
+
     // 3. Change width -- the viewer bounding box grows. Length is pinned
     // large first: F2c's camera auto-frames to `max(lengthM, widthM)`, so if
     // Width were varied alone across that max it would also pull the camera
@@ -375,11 +380,13 @@ async function runFlow() {
     check('design with no shape/storeys keys opens as Box', await page.getByRole('radio', { name: 'Box' }).isChecked());
     check('design with no shape/storeys keys opens at 1 storey', await page.getByRole('radio', { name: '1' }).isChecked());
 
-    // 9. Logout.
+    // 9. Logout -- A2.md condition 5: AppShell's own Log out (now next to
+    // "Studio" in the header, replacing Dashboard's) navigates to `/`, not
+    // `/login`.
     await page.goto(`${BASE_URL}/app`);
     await page.click('text=Log out');
-    await page.waitForURL(`${BASE_URL}/login`);
-    check('logout redirects to /login', true);
+    await page.waitForURL(`${BASE_URL}/`);
+    check('logout redirects to /', true);
 
     // 10. /app redirects to login when logged out.
     await page.goto(`${BASE_URL}/app`);

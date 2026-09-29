@@ -380,6 +380,7 @@ interface DesignSummary {
   id: string;
   name: string;
   design: ShelterDesign;
+  ansysStartedAt: string | null; // ISO; set by POST .../ansys, cleared by DELETE
   createdAt: string; // ISO
   updatedAt: string; // ISO
 }
@@ -390,8 +391,10 @@ interface DesignSummary {
 | `POST /api/designs` | `{name, design}` | 201 `DesignSummary` |
 | `GET /api/designs` | – | 200 `DesignSummary[]`, newest (`updatedAt`) first |
 | `GET /api/designs/:id` | – | 200 `DesignSummary` |
-| `PUT /api/designs/:id` | `{name, design}` (whole replacement, same schema as POST) | 200 `DesignSummary` |
+| `PUT /api/designs/:id` | `{name, design}` (whole replacement, same schema as POST) | 200 `DesignSummary` (`ansysStartedAt` unchanged) |
 | `DELETE /api/designs/:id` | – | 204, empty body |
+| `POST /api/designs/:id/ansys` | – | 200 `DesignSummary`. Placeholder "run on ANSYS": idempotent — a design that's already running keeps its original `ansysStartedAt`. |
+| `DELETE /api/designs/:id/ansys` | – | 200 `DesignSummary`, `ansysStartedAt` back to `null`. |
 
 ## 9. Simulations (P2)
 

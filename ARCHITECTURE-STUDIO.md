@@ -23,6 +23,22 @@ Browser ── apps/studio (Vite + React 19 + TS + Tailwind v4 + R3F, :5273)
   Client API types come from `@shelter/studio-server` (`package.json` `"types"` → `src/design/types.ts`).
 - `packages/optimise` is not used by Studio.
 
+**Repo layout (npm workspaces).** Five app folders, three packages:
+
+| Workspace | What it is | Status |
+|---|---|---|
+| `apps/studio` | Studio client: React 19 + Vite 8 SPA (entry `index.html` → `src/main.tsx`), Tailwind 4, R3F/three, zustand, recharts | **you change this** |
+| `apps/studio-server` | Studio API: Fastify 5, Mongoose/MongoDB, JWT cookie auth, tsx | **you change this** |
+| `packages/engine` | The physics simulator (`simulate`): thermal node network, backward Euler, 300 s step | frozen |
+| `packages/data` | Materials, glazing, constructions, presets, bundled TMY weather | frozen |
+| `packages/optimise` | Design-space sweep (`expandVariants`); not imported by any app yet | frozen |
+| `apps/client` + `apps/server` | Classic form-based app (React/Vite + Fastify) | frozen |
+| `apps/web` | First prototype: Next.js 16 + Prisma. Studio is **not** Next.js | frozen |
+
+**Stack at a glance.** TypeScript everywhere · Vitest (+ jsdom, Testing Library; mongodb-memory-server on the server)
+· ESLint + Prettier · `concurrently` for `dev:studio` · playwright-core (scratchpad only) for `e2e/flow.mjs`.
+Per-file roles for all ~150 source files: the codebase guide page (README link), source in `ledger/d2-guide/`.
+
 ## 2. Server (`apps/studio-server/src`)
 
 **Boot:** `index.ts` → `loadEnv()` (`env.ts`; `PORT`=4100, `HOST`=127.0.0.1, `MONGODB_URI`, `JWT_SECRET`,
@@ -41,13 +57,14 @@ route plugins; `shelterDesignSchema()` (the ajv schema for `ShelterDesign`, reus
 | `GET /api/locations/search?q=` | – | `locations/routes.ts` → `weather/geocode.ts` (Open-Meteo, ≤8 results) |
 | `POST /api/auth/{register,login,logout}` · `GET /api/auth/me` | me only | `auth/routes.ts` → `auth/service.ts` → `User` |
 | `GET/POST /api/designs` · `GET/PUT/DELETE /api/designs/:id` | owner | `designs/routes.ts` → `designs/service.ts` → `Design` (not owned → 404) |
+| `POST/DELETE /api/designs/:id/ansys` | owner | `designs/service.ts startAnsys/cancelAnsys` — sets/clears `ansysStartedAt` only (UI placeholder, no provider call, no results) |
 | `POST/GET /api/designs/:id/simulations` · `GET /api/simulations/:id` | owner | `simulations/routes.ts` → `simulations/service.ts` → `Simulation` |
 
 **Auth:** scrypt + 16-byte salt (`auth/password.ts`), `timingSafeEqual`; unknown emails hash against `DUMMY_HASH`
 (no timing enumeration). JWT `{sub:userId}`, 7 d, in cookie `token` (`httpOnly`, `sameSite:lax`, `secure` in
 production). Guard: `auth/authenticate.ts` (preHandler hook on designs/simulations routes).
 
-**Models:** `User` (unique email) · `Design {ownerId, name, design: ShelterDesign}` index `{ownerId, updatedAt:-1}` ·
+**Models:** `User` (unique email) · `Design {ownerId, name, design: ShelterDesign, ansysStartedAt: Date|null}` index `{ownerId, updatedAt:-1}` ·
 `Simulation {ownerId, designId, provider, engineVersion, requestHash, inputSnapshot, kpis, weatherProvenance?,
 result}` index `{designId, createdAt:-1}`, no `updatedAt` · `weatherCache` unique `{source, lat, lon, year}`.
 
@@ -82,7 +99,7 @@ rejected). Old saved designs without `shape`/`storeys` load as a 1-storey box (c
 
 ## 4. Client (`apps/studio/src`)
 
-- **Routes** (`App.tsx`): `/` Landing · `/login` · `/register` · `/dev/viewer` · behind `routes/RequireAuth.tsx`
+- **Routes** (`App.tsx`): `/` Landing (logged-in visitors → `/app`, via `getMe()`) · `/login` · `/register` · `/dev/viewer` · behind `routes/RequireAuth.tsx`
   (`getMe()` → redirect to `/login`): `/app` Dashboard · `/app/design/:id` Studio · `/app/compare` Compare.
 - **API** (`api/*.ts`): one `request<T>()` in `client.ts` normalising every failure to `ApiError{code,message,field?}`;
   thin wrappers per domain (auth, designs, simulate, locations, options, health).
@@ -99,6 +116,10 @@ rejected). Old saved designs without `shape`/`storeys` load as a 1-storey box (c
 - **Typed entry:** `components/ui/NumberInput.tsx` (draft string, commit on Enter/blur, clamp + round, Esc reverts).
 - **Compare:** `routes/Compare.tsx` + `routes/compare/kpiTable.ts` (deltas vs the first design, no rankings).
 - **Landing:** `routes/Landing.tsx` — hero with auto-rotating viewer; its chart is a real preview call.
+- **Shell:** `components/shell/AppShell.tsx` — header; on `/app/*` it shows Log out (→ `/`).
+- **ANSYS placeholder** (A1/A2): Studio header "Run on ANSYS" → `components/ConfirmDialog.tsx` (native `<dialog>`,
+  `m-auto` restores centering Tailwind preflight removes) → `startAnsys`; `components/AnsysTimer.tsx` shows elapsed
+  `now − ansysStartedAt` in Studio and Dashboard rows; Cancel asks for confirmation. Never produces results.
 
 ## 5. Commands and ports
 

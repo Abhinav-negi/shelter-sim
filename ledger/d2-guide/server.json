@@ -1,0 +1,928 @@
+{
+  "area": "apps/studio-server",
+  "summary": "This is the backend for ShelterSim Studio, a tool for designing passive-solar winter shelters in cold high-altitude regions like Ladakh. It is a Fastify HTTP server that turns a user's shelter design (walls, roof, glazing, size, location, etc.) into a physics simulation request, runs it through the frozen @shelter/engine physics solver, and returns indoor-temperature/energy results. It also handles user accounts, lets logged-in users save designs and persist simulation runs to MongoDB, and can fetch/cache real weather data for custom (non-preset) locations from Open-Meteo or NASA POWER. It does not do any 3D rendering, UI, or the physics math itself -- those live in the client app and the @shelter/engine/@shelter/data packages respectively.",
+  "stack": [
+    {
+      "name": "Fastify",
+      "version": "^5.0.0",
+      "role": "The HTTP server framework: registers all routes, plugins, error handling and CORS.",
+      "why": "Fast, small, plugin-based -- fits a single small Node API server with schema validation built in (ajv)."
+    },
+    {
+      "name": "@fastify/jwt",
+      "version": "^9.0.0",
+      "role": "Signs and verifies the JWT stored in the login cookie; request.jwtVerify() is the auth check every protected route uses.",
+      "why": "Official Fastify plugin, integrates directly with the request/reply lifecycle and @fastify/cookie."
+    },
+    {
+      "name": "@fastify/cookie",
+      "version": "^11.0.0",
+      "role": "Parses/sets the httpOnly `token` cookie that carries the JWT.",
+      "why": "Required by @fastify/jwt's cookie-extraction mode; avoids hand-rolling cookie parsing."
+    },
+    {
+      "name": "mongoose",
+      "version": "^8.0.0",
+      "role": "ODM for MongoDB: defines the users/designs/simulations/weatherCache collections and their schemas/indexes.",
+      "why": "Simple schema + model API, one shared default connection reused by every model in the app."
+    },
+    {
+      "name": "@shelter/engine",
+      "version": "0.1.0 (workspace)",
+      "role": "The frozen physics solver: builds/validates the simulation model, runs simulate(), and formats results/errors.",
+      "why": "Shared, already-tested engine package -- studio-server never reimplements the physics."
+    },
+    {
+      "name": "@shelter/data",
+      "version": "0.1.0 (workspace)",
+      "role": "Supplies catalogue data (materials, glazings, presets, TMY weather) and weather-fetch/parse helpers (Open-Meteo/NASA POWER builders+parsers, normaliseWeather).",
+      "why": "Keeps material/weather science and lookups in one shared package instead of duplicated per app."
+    },
+    {
+      "name": "tsx",
+      "version": "^4.19.0",
+      "role": "Runs/watches the TypeScript entry point directly (dev/start scripts) without a separate build step.",
+      "why": "No compile step needed for a Node ESM+TS server during development."
+    },
+    {
+      "name": "vitest",
+      "version": "(root devDependency, run via `vitest run`)",
+      "role": "Test runner for all *.test.ts files in test/.",
+      "why": "Fast, Jest-like API, native ESM/TS support, shared root config for the whole monorepo."
+    },
+    {
+      "name": "mongodb-memory-server",
+      "version": "^10.0.0",
+      "role": "Spins up a real, disposable MongoDB instance in-process for integration tests (auth, designs, simulations, weather cache).",
+      "why": "Lets tests exercise real Mongoose queries/indexes without a real MongoDB install or network."
+    },
+    {
+      "name": "typescript",
+      "version": "(root devDependency, project-wide tsconfig)",
+      "role": "Type-checks the whole package; `tsconfig.json` extends the repo's base config.",
+      "why": "Shared strictness/module settings across the monorepo, no per-app duplication."
+    }
+  ],
+  "layers": [
+    {
+      "name": "Bootstrap / env",
+      "summary": "src/env.ts reads process.env once into a typed Env object; src/index.ts is the real process entry point that requires MONGODB_URI/JWT_SECRET and fails fast if either is missing.",
+      "files": [
+        "apps/studio-server/src/env.ts",
+        "apps/studio-server/src/index.ts"
+      ]
+    },
+    {
+      "name": "HTTP app + error handling",
+      "summary": "src/app.ts builds the Fastify instance: registers cookie/JWT plugins, auth/designs/simulations/locations route plugins, CORS headers, and a single setErrorHandler that maps every known error class to its HTTP status/code (API.md §6).",
+      "files": [
+        "apps/studio-server/src/app.ts"
+      ]
+    },
+    {
+      "name": "Routes",
+      "summary": "Each feature area (auth, designs, simulations, locations) has its own Fastify plugin file defining its routes' schemas and preHandlers, delegating all real logic to a paired service.ts.",
+      "files": [
+        "apps/studio-server/src/auth/routes.ts",
+        "apps/studio-server/src/designs/routes.ts",
+        "apps/studio-server/src/simulations/routes.ts",
+        "apps/studio-server/src/locations/routes.ts"
+      ]
+    },
+    {
+      "name": "Services",
+      "summary": "Business logic called by routes: user register/login (auth/service.ts), design CRUD with ownership checks (designs/service.ts), and running+persisting a simulation (simulations/service.ts). Routes never touch Mongoose directly.",
+      "files": [
+        "apps/studio-server/src/auth/service.ts",
+        "apps/studio-server/src/designs/service.ts",
+        "apps/studio-server/src/simulations/service.ts"
+      ]
+    },
+    {
+      "name": "Models",
+      "summary": "Mongoose schemas/models for the four MongoDB collections: users, designs, simulations, and the weatherCache. All share mongoose's one default connection set up in src/db.ts.",
+      "files": [
+        "apps/studio-server/src/auth/model.ts",
+        "apps/studio-server/src/designs/model.ts",
+        "apps/studio-server/src/simulations/model.ts",
+        "apps/studio-server/src/weather/cache.ts"
+      ]
+    },
+    {
+      "name": "Design pipeline (prepare/assemble/types/options)",
+      "summary": "types.ts defines the ShelterDesign contract shared with the client; assemble.ts turns a ShelterDesign into an engine SimulationRequest (materials, geometry, shape/storeys, occupancy); prepare.ts is the one entry point every route uses (it resolves custom-location weather asynchronously first, then calls assemble); options.ts builds the GET /api/options catalogue payload.",
+      "files": [
+        "apps/studio-server/src/design/types.ts",
+        "apps/studio-server/src/design/assemble.ts",
+        "apps/studio-server/src/design/prepare.ts",
+        "apps/studio-server/src/options.ts"
+      ]
+    },
+    {
+      "name": "Providers",
+      "summary": "A small seam (SimulationProvider interface) so routes call a named provider instead of the engine's simulate() directly; fastPhysics is the only implementation today, wrapping @shelter/engine.",
+      "files": [
+        "apps/studio-server/src/providers/index.ts"
+      ]
+    },
+    {
+      "name": "Weather",
+      "summary": "Resolves real weather for custom (non-preset) locations: geocoding search, Open-Meteo/NASA POWER fetch with Mongo caching, and the shared upstream-failure error type.",
+      "files": [
+        "apps/studio-server/src/weather/resolve.ts",
+        "apps/studio-server/src/weather/cache.ts",
+        "apps/studio-server/src/weather/geocode.ts",
+        "apps/studio-server/src/weather/errors.ts"
+      ]
+    },
+    {
+      "name": "Auth",
+      "summary": "Email+password accounts: scrypt password hashing, a Mongoose User model, a shared authenticate() preHandler guard, and register/login/logout/me routes issuing a 7-day JWT cookie.",
+      "files": [
+        "apps/studio-server/src/auth/password.ts",
+        "apps/studio-server/src/auth/model.ts",
+        "apps/studio-server/src/auth/authenticate.ts",
+        "apps/studio-server/src/auth/service.ts",
+        "apps/studio-server/src/auth/routes.ts"
+      ]
+    }
+  ],
+  "folders": [
+    {
+      "path": "apps/studio-server/src/auth",
+      "title": "Auth",
+      "summary": "Email+password accounts: scrypt hashing (password.ts), the users Mongoose model, the shared JWT-cookie authenticate() guard, register/login logic, and the /api/auth/* routes."
+    },
+    {
+      "path": "apps/studio-server/src/design",
+      "title": "Design pipeline",
+      "summary": "The ShelterDesign contract type (types.ts) and the pure function (assemble.ts) that turns a ShelterDesign into an engine SimulationRequest, plus prepare.ts which adds the async custom-weather step in front of it."
+    },
+    {
+      "path": "apps/studio-server/src/designs",
+      "title": "Saved designs",
+      "summary": "CRUD for a logged-in user's saved ShelterDesign documents: Mongoose model, ownership-checked service functions, and the /api/designs routes."
+    },
+    {
+      "path": "apps/studio-server/src/simulations",
+      "title": "Simulation runs",
+      "summary": "Runs a saved design through the physics provider and freezes the result as a persisted record (inputSnapshot + kpis + result); routes to create/list/read those runs."
+    },
+    {
+      "path": "apps/studio-server/src/weather",
+      "title": "Weather",
+      "summary": "Everything needed to give a custom (non-catalogue) location real weather: Open-Meteo geocoding search, Open-Meteo/NASA POWER archive fetch with a Mongo-backed cache keyed by rounded lat/lon/year, and a shared UpstreamUnavailableError."
+    },
+    {
+      "path": "apps/studio-server/src/locations",
+      "title": "Location search",
+      "summary": "A single thin route (GET /api/locations/search) that proxies to weather/geocode.ts so the client can look up coordinates for a place name."
+    },
+    {
+      "path": "apps/studio-server/src/providers",
+      "title": "Providers",
+      "summary": "One-file seam wrapping @shelter/engine's simulate() behind a named SimulationProvider (fastPhysics), so a future alternate provider could be swapped in without route changes."
+    },
+    {
+      "path": "apps/studio-server/test",
+      "title": "Tests",
+      "summary": "Vitest integration/unit tests for the whole server: route behavior via app.inject(), real Mongo behavior via mongodb-memory-server, weather fetch/cache/geocode behavior against recorded fixtures, and a parity check against the older apps/server engine-assembly code."
+    }
+  ],
+  "files": [
+    {
+      "path": "apps/studio-server/src/app.ts",
+      "folder": "apps/studio-server/src",
+      "kind": "app",
+      "role": "Builds the Fastify app: registers cookie/JWT/route plugins, CORS, the shared ShelterDesign ajv schema, the central error handler, and the health/options/preview routes.",
+      "exports": [
+        "buildApp",
+        "shelterDesignSchema",
+        "BuildAppOptions"
+      ],
+      "usedBy": [
+        "src/index.ts",
+        "test/server.test.ts",
+        "test/mongo.test.ts"
+      ],
+      "loc": 282
+    },
+    {
+      "path": "apps/studio-server/src/db.ts",
+      "folder": "apps/studio-server/src",
+      "kind": "config",
+      "role": "Connects/disconnects Mongoose's single default connection, reused by every model in the app.",
+      "exports": [
+        "connectDb",
+        "disconnectDb"
+      ],
+      "usedBy": [
+        "src/index.ts",
+        "test/mongo.test.ts",
+        "test/custom-run.test.ts"
+      ],
+      "loc": 18
+    },
+    {
+      "path": "apps/studio-server/src/env.ts",
+      "folder": "apps/studio-server/src",
+      "kind": "config",
+      "role": "Reads PORT/HOST/MONGODB_URI/JWT_SECRET/NODE_ENV once from process.env with safe defaults.",
+      "exports": [
+        "loadEnv",
+        "Env"
+      ],
+      "usedBy": [
+        "src/index.ts"
+      ],
+      "loc": 24
+    },
+    {
+      "path": "apps/studio-server/src/index.ts",
+      "folder": "apps/studio-server/src",
+      "kind": "entry",
+      "role": "Real process entry point: loads env, requires MONGODB_URI/JWT_SECRET or exits, connects the DB, builds the app, and starts listening.",
+      "exports": [],
+      "usedBy": [
+        "package.json dev/start scripts",
+        "test/index-startup.test.ts"
+      ],
+      "loc": 30
+    },
+    {
+      "path": "apps/studio-server/src/options.ts",
+      "folder": "apps/studio-server/src",
+      "kind": "service",
+      "role": "Builds and memoises the GET /api/options payload: catalogue lists, the default ShelterDesign, and numeric ranges for every control.",
+      "exports": [
+        "buildOptions",
+        "defaultThicknessM"
+      ],
+      "usedBy": [
+        "src/app.ts",
+        "test/server.test.ts",
+        "test/mongo.test.ts"
+      ],
+      "loc": 147
+    },
+    {
+      "path": "apps/studio-server/src/auth/authenticate.ts",
+      "folder": "apps/studio-server/src/auth",
+      "kind": "lib",
+      "role": "Shared preHandler that verifies the JWT cookie and a helper to read the authenticated user's id off the request.",
+      "exports": [
+        "authenticate",
+        "userId",
+        "JwtPayload"
+      ],
+      "usedBy": [
+        "src/auth/routes.ts",
+        "src/designs/routes.ts",
+        "src/simulations/routes.ts"
+      ],
+      "loc": 23
+    },
+    {
+      "path": "apps/studio-server/src/auth/model.ts",
+      "folder": "apps/studio-server/src/auth",
+      "kind": "model",
+      "role": "Mongoose schema/model for the users collection (email unique, name, passwordHash).",
+      "exports": [
+        "User",
+        "UserDoc"
+      ],
+      "usedBy": [
+        "src/auth/service.ts",
+        "test/mongo.test.ts"
+      ],
+      "loc": 22
+    },
+    {
+      "path": "apps/studio-server/src/auth/password.ts",
+      "folder": "apps/studio-server/src/auth",
+      "kind": "lib",
+      "role": "Hashes and verifies passwords with node:crypto scrypt and a random per-user salt.",
+      "exports": [
+        "hashPassword",
+        "verifyPassword"
+      ],
+      "usedBy": [
+        "src/auth/service.ts"
+      ],
+      "loc": 23
+    },
+    {
+      "path": "apps/studio-server/src/auth/routes.ts",
+      "folder": "apps/studio-server/src/auth",
+      "kind": "route",
+      "role": "Fastify plugin for POST /api/auth/register, /login, /logout and GET /api/auth/me, setting/clearing the JWT cookie.",
+      "exports": [
+        "default (authRoutes)",
+        "AuthRoutesOptions"
+      ],
+      "usedBy": [
+        "src/app.ts"
+      ],
+      "loc": 87
+    },
+    {
+      "path": "apps/studio-server/src/auth/service.ts",
+      "folder": "apps/studio-server/src/auth",
+      "kind": "service",
+      "role": "Register/login/lookup logic: enforces unique email, verifies passwords (constant-time-ish via a dummy hash), and shapes the public user object.",
+      "exports": [
+        "registerUser",
+        "authenticateUser",
+        "getUserById",
+        "EmailTakenError",
+        "InvalidCredentialsError"
+      ],
+      "usedBy": [
+        "src/auth/routes.ts",
+        "src/app.ts (error mapping)"
+      ],
+      "loc": 63
+    },
+    {
+      "path": "apps/studio-server/src/design/assemble.ts",
+      "folder": "apps/studio-server/src/design",
+      "kind": "pipeline",
+      "role": "Turns a ShelterDesign into an engine SimulationRequest: resolves the preset, applies location/weather, azimuth rotation, shape/storeys geometry, material/glazing/shutter overrides, WWR-based windows, occupancy preset, and the isotropic sky-model override.",
+      "exports": [
+        "assemble",
+        "OCCUPANCY_PRESETS",
+        "occupancyPresetById",
+        "cylinderGeometry",
+        "domeGeometry",
+        "CustomLocationUnavailableError"
+      ],
+      "usedBy": [
+        "src/design/prepare.ts",
+        "src/app.ts",
+        "src/options.ts",
+        "test/shapes.test.ts",
+        "test/parity.test.ts"
+      ],
+      "loc": 729
+    },
+    {
+      "path": "apps/studio-server/src/design/prepare.ts",
+      "folder": "apps/studio-server/src/design",
+      "kind": "pipeline",
+      "role": "The one path every simulating route goes through: resolves custom-location weather asynchronously (if needed) then calls assemble().",
+      "exports": [
+        "prepareRequest",
+        "PreparedRequest"
+      ],
+      "usedBy": [
+        "src/app.ts",
+        "src/simulations/service.ts"
+      ],
+      "loc": 27
+    },
+    {
+      "path": "apps/studio-server/src/design/types.ts",
+      "folder": "apps/studio-server/src/design",
+      "kind": "types",
+      "role": "Defines ShelterDesign and the /api/options response shapes; this is the contract the client imports types from (package.json's \"types\" field points here).",
+      "exports": [
+        "ShelterDesign",
+        "DesignLocation",
+        "SurfaceConstruction",
+        "Shape",
+        "Storeys",
+        "Options",
+        "PreviewResponse"
+      ],
+      "usedBy": [
+        "nearly every other file in src/",
+        "the studio client (import type only)"
+      ],
+      "loc": 149
+    },
+    {
+      "path": "apps/studio-server/src/designs/model.ts",
+      "folder": "apps/studio-server/src/designs",
+      "kind": "model",
+      "role": "Mongoose schema/model for the designs collection: ownerId, name, and the whole ShelterDesign stored as Mixed, indexed by {ownerId, updatedAt}.",
+      "exports": [
+        "Design",
+        "DesignDoc"
+      ],
+      "usedBy": [
+        "src/designs/service.ts"
+      ],
+      "loc": 28
+    },
+    {
+      "path": "apps/studio-server/src/designs/routes.ts",
+      "folder": "apps/studio-server/src/designs",
+      "kind": "route",
+      "role": "Fastify plugin for /api/designs CRUD, validating the body's `design` field with the same ShelterDesign ajv schema as the preview route.",
+      "exports": [
+        "default (designsRoutes)"
+      ],
+      "usedBy": [
+        "src/app.ts"
+      ],
+      "loc": 57
+    },
+    {
+      "path": "apps/studio-server/src/designs/service.ts",
+      "folder": "apps/studio-server/src/designs",
+      "kind": "service",
+      "role": "Design CRUD logic with per-owner lookup (404 on not-found or not-owned), used by both design routes and the simulations service.",
+      "exports": [
+        "createDesign",
+        "listDesigns",
+        "getDesign",
+        "updateDesign",
+        "deleteDesign",
+        "getOwnedDesignDoc",
+        "NotFoundError"
+      ],
+      "usedBy": [
+        "src/designs/routes.ts",
+        "src/simulations/service.ts"
+      ],
+      "loc": 81
+    },
+    {
+      "path": "apps/studio-server/src/locations/routes.ts",
+      "folder": "apps/studio-server/src/locations",
+      "kind": "route",
+      "role": "Fastify plugin for GET /api/locations/search: trims the query, returns [] for blank input, otherwise delegates to geocode.ts.",
+      "exports": [
+        "locationsRoutes",
+        "LocationsRoutesOptions"
+      ],
+      "usedBy": [
+        "src/app.ts"
+      ],
+      "loc": 21
+    },
+    {
+      "path": "apps/studio-server/src/providers/index.ts",
+      "folder": "apps/studio-server/src/providers",
+      "kind": "provider",
+      "role": "Defines the SimulationProvider interface and the one real implementation (fastPhysics) wrapping @shelter/engine's simulate().",
+      "exports": [
+        "SimulationProvider",
+        "fastPhysics"
+      ],
+      "usedBy": [
+        "src/app.ts",
+        "src/simulations/service.ts"
+      ],
+      "loc": 21
+    },
+    {
+      "path": "apps/studio-server/src/simulations/model.ts",
+      "folder": "apps/studio-server/src/simulations",
+      "kind": "model",
+      "role": "Mongoose schema/model for the simulations collection: a frozen snapshot per run (ownerId, designId, provider, engineVersion, requestHash, inputSnapshot, kpis, result, optional weatherProvenance), indexed by {designId, createdAt}.",
+      "exports": [
+        "Simulation",
+        "SimulationDoc"
+      ],
+      "usedBy": [
+        "src/simulations/service.ts"
+      ],
+      "loc": 42
+    },
+    {
+      "path": "apps/studio-server/src/simulations/routes.ts",
+      "folder": "apps/studio-server/src/simulations",
+      "kind": "route",
+      "role": "Fastify plugin for POST/GET /api/designs/:id/simulations and GET /api/simulations/:id, all behind auth.",
+      "exports": [
+        "default (simulationsRoutes)"
+      ],
+      "usedBy": [
+        "src/app.ts"
+      ],
+      "loc": 34
+    },
+    {
+      "path": "apps/studio-server/src/simulations/service.ts",
+      "folder": "apps/studio-server/src/simulations",
+      "kind": "service",
+      "role": "Runs a design's current state through the provider, freezes a deep-copied inputSnapshot plus kpis/result, and persists it; also lists/reads runs (owner-checked).",
+      "exports": [
+        "runSimulation",
+        "listSimulations",
+        "getSimulation",
+        "SimulationSummary",
+        "SimulationFull"
+      ],
+      "usedBy": [
+        "src/simulations/routes.ts"
+      ],
+      "loc": 108
+    },
+    {
+      "path": "apps/studio-server/src/weather/cache.ts",
+      "folder": "apps/studio-server/src/weather",
+      "kind": "model",
+      "role": "Mongoose model + read/write helpers for the weatherCache collection, keyed by {source, lat(2dp), lon(2dp), year}; degrades gracefully (no-op) when Mongo isn't connected.",
+      "exports": [
+        "WeatherCacheModel",
+        "readWeatherCache",
+        "writeWeatherCache",
+        "round2",
+        "CachedWeather"
+      ],
+      "usedBy": [
+        "src/weather/resolve.ts",
+        "test/weather.cache.test.ts"
+      ],
+      "loc": 144
+    },
+    {
+      "path": "apps/studio-server/src/weather/errors.ts",
+      "folder": "apps/studio-server/src/weather",
+      "kind": "types",
+      "role": "Shared error class for any upstream (Open-Meteo/NASA POWER) failure, mapped to HTTP 502 in app.ts.",
+      "exports": [
+        "UpstreamUnavailableError"
+      ],
+      "usedBy": [
+        "src/weather/geocode.ts",
+        "src/weather/resolve.ts",
+        "src/app.ts"
+      ],
+      "loc": 14
+    },
+    {
+      "path": "apps/studio-server/src/weather/geocode.ts",
+      "folder": "apps/studio-server/src/weather",
+      "kind": "provider",
+      "role": "Builds the Open-Meteo geocoding URL, parses its response into LocationSearchResult[], and performs the fetch (injectable for tests).",
+      "exports": [
+        "searchLocations",
+        "geocodeUrl",
+        "parseGeocodingResponse",
+        "LocationSearchResult"
+      ],
+      "usedBy": [
+        "src/locations/routes.ts",
+        "test/weather.geocode.test.ts"
+      ],
+      "loc": 68
+    },
+    {
+      "path": "apps/studio-server/src/weather/resolve.ts",
+      "folder": "apps/studio-server/src/weather",
+      "kind": "pipeline",
+      "role": "Resolves a custom location's full-year weather: cache read, Open-Meteo archive fetch (falling back to NASA POWER), normalisation, Site construction, and cache write.",
+      "exports": [
+        "resolveCustomWeather",
+        "WeatherProvenanceSummary",
+        "CustomWeatherResult",
+        "CustomLocation"
+      ],
+      "usedBy": [
+        "src/design/prepare.ts",
+        "test/weather.resolve.test.ts",
+        "test/weather.cache.test.ts"
+      ],
+      "loc": 199
+    }
+  ],
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "auth": "none",
+      "file": "src/app.ts",
+      "does": "Always returns {ok:true}; a liveness check.",
+      "errors": "none"
+    },
+    {
+      "method": "GET",
+      "path": "/api/options",
+      "auth": "none",
+      "file": "src/app.ts",
+      "does": "Returns the full catalogue (locations, presets, materials, glazings, occupancy presets), default ShelterDesign, and numeric ranges for the UI's controls.",
+      "errors": "none"
+    },
+    {
+      "method": "POST",
+      "path": "/api/simulate/preview",
+      "auth": "none",
+      "file": "src/app.ts",
+      "does": "Validates a ShelterDesign body, resolves weather (real fetch for custom locations), assembles it into a SimulationRequest, runs it through fastPhysics, and returns {kpis, result, weatherProvenance?} without persisting anything.",
+      "errors": "VALIDATION_ERROR 400, CUSTOM_LOCATION_UNAVAILABLE 422, UPSTREAM_UNAVAILABLE 502, INVALID_INPUT/GEOMETRY_INCONSISTENT 400, WEATHER_INVALID/UNKNOWN_MATERIAL/UNKNOWN_GLAZING/DATA_SCHEMA_MISMATCH 422, SOLVER_DIVERGED/SINGULAR_MATRIX 500"
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/api/*",
+      "auth": "none",
+      "file": "src/app.ts",
+      "does": "CORS preflight, always 204.",
+      "errors": "none"
+    },
+    {
+      "method": "GET",
+      "path": "/api/locations/search",
+      "auth": "none",
+      "file": "src/locations/routes.ts",
+      "does": "Proxies a place-name query to Open-Meteo geocoding; blank query returns [] with no network call.",
+      "errors": "UPSTREAM_UNAVAILABLE 502"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/register",
+      "auth": "none",
+      "file": "src/auth/routes.ts",
+      "does": "Creates a user (hashed password), sets the JWT cookie, returns 201 {user}.",
+      "errors": "VALIDATION_ERROR 400, EMAIL_TAKEN 409"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "auth": "none",
+      "file": "src/auth/routes.ts",
+      "does": "Verifies email+password, sets the JWT cookie, returns {user}.",
+      "errors": "VALIDATION_ERROR 400, INVALID_CREDENTIALS 401"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "auth": "none",
+      "file": "src/auth/routes.ts",
+      "does": "Clears the auth cookie, returns {ok:true}.",
+      "errors": "none"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "auth": "login",
+      "file": "src/auth/routes.ts",
+      "does": "Returns the currently authenticated user's public profile.",
+      "errors": "UNAUTHENTICATED 401"
+    },
+    {
+      "method": "POST",
+      "path": "/api/designs",
+      "auth": "login",
+      "file": "src/designs/routes.ts",
+      "does": "Creates a new saved design for the current user.",
+      "errors": "VALIDATION_ERROR 400, UNAUTHENTICATED 401"
+    },
+    {
+      "method": "GET",
+      "path": "/api/designs",
+      "auth": "login",
+      "file": "src/designs/routes.ts",
+      "does": "Lists the current user's designs, newest updated first.",
+      "errors": "UNAUTHENTICATED 401"
+    },
+    {
+      "method": "GET",
+      "path": "/api/designs/:id",
+      "auth": "owner",
+      "file": "src/designs/routes.ts",
+      "does": "Returns one design if owned by the current user.",
+      "errors": "NOT_FOUND 404, UNAUTHENTICATED 401"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/designs/:id",
+      "auth": "owner",
+      "file": "src/designs/routes.ts",
+      "does": "Replaces a design's name+body (whole replacement) if owned by the current user.",
+      "errors": "VALIDATION_ERROR 400, NOT_FOUND 404, UNAUTHENTICATED 401"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/designs/:id",
+      "auth": "owner",
+      "file": "src/designs/routes.ts",
+      "does": "Deletes an owned design, returns 204.",
+      "errors": "NOT_FOUND 404, UNAUTHENTICATED 401"
+    },
+    {
+      "method": "POST",
+      "path": "/api/designs/:id/simulations",
+      "auth": "owner",
+      "file": "src/simulations/routes.ts",
+      "does": "Runs the design's current state through fastPhysics and persists a frozen snapshot (inputSnapshot, kpis, result, weatherProvenance).",
+      "errors": "NOT_FOUND 404, UNAUTHENTICATED 401, plus engine error codes on assembly/solve failure"
+    },
+    {
+      "method": "GET",
+      "path": "/api/designs/:id/simulations",
+      "auth": "owner",
+      "file": "src/simulations/routes.ts",
+      "does": "Lists an owned design's past simulation runs (no `result` field), newest first.",
+      "errors": "NOT_FOUND 404, UNAUTHENTICATED 401"
+    },
+    {
+      "method": "GET",
+      "path": "/api/simulations/:id",
+      "auth": "owner",
+      "file": "src/simulations/routes.ts",
+      "does": "Returns one full simulation record (including `result`) if owned by the current user.",
+      "errors": "NOT_FOUND 404, UNAUTHENTICATED 401"
+    }
+  ],
+  "models": [
+    {
+      "name": "User",
+      "collection": "users",
+      "file": "apps/studio-server/src/auth/model.ts",
+      "fields": "email (unique, lowercase, trim), name, passwordHash, createdAt",
+      "indexes": "unique on email"
+    },
+    {
+      "name": "Design",
+      "collection": "designs",
+      "file": "apps/studio-server/src/designs/model.ts",
+      "fields": "ownerId (ref User), name, design (Mixed ShelterDesign), createdAt, updatedAt",
+      "indexes": "{ownerId:1, updatedAt:-1}"
+    },
+    {
+      "name": "Simulation",
+      "collection": "simulations",
+      "file": "apps/studio-server/src/simulations/model.ts",
+      "fields": "ownerId (ref User), designId (ref Design), provider, engineVersion, requestHash, inputSnapshot (Mixed), kpis (Mixed), weatherProvenance (Mixed, optional), result (Mixed), createdAt",
+      "indexes": "{designId:1, createdAt:-1}"
+    },
+    {
+      "name": "WeatherCache",
+      "collection": "weatherCache",
+      "file": "apps/studio-server/src/weather/cache.ts",
+      "fields": "source, lat, lon, year, standardMeridian, weather (Mixed, serialised WeatherSeries)",
+      "indexes": "unique on {source:1, lat:1, lon:1, year:1}"
+    }
+  ],
+  "errors": [
+    {
+      "status": 400,
+      "code": "VALIDATION_ERROR",
+      "when": "The ShelterDesign (or auth) request body fails its ajv schema -- bad type, out-of-range value, or unknown enum id; `field` names the offending dotted key."
+    },
+    {
+      "status": 422,
+      "code": "CUSTOM_LOCATION_UNAVAILABLE",
+      "when": "location.kind==='custom' but no weatherFor hook was supplied to assemble() directly (not reachable through the routes since P3 added real resolution)."
+    },
+    {
+      "status": 502,
+      "code": "UPSTREAM_UNAVAILABLE",
+      "when": "GET /api/locations/search or custom-location weather resolution: both Open-Meteo and (for weather) NASA POWER are unreachable or return a non-2xx."
+    },
+    {
+      "status": 400,
+      "code": "INVALID_INPUT",
+      "when": "The engine rejects the assembled SimulationRequest as structurally invalid."
+    },
+    {
+      "status": 400,
+      "code": "GEOMETRY_INCONSISTENT",
+      "when": "The engine finds the building geometry inconsistent."
+    },
+    {
+      "status": 422,
+      "code": "WEATHER_INVALID",
+      "when": "The engine finds the weather series invalid."
+    },
+    {
+      "status": 422,
+      "code": "UNKNOWN_MATERIAL",
+      "when": "A materialId in the design isn't in @shelter/data's catalogue."
+    },
+    {
+      "status": 422,
+      "code": "UNKNOWN_GLAZING",
+      "when": "A glazingId in the design isn't in @shelter/data's catalogue."
+    },
+    {
+      "status": 422,
+      "code": "DATA_SCHEMA_MISMATCH",
+      "when": "Catalogue data doesn't match the shape the engine expects."
+    },
+    {
+      "status": 500,
+      "code": "SOLVER_DIVERGED",
+      "when": "The engine's numerical solver failed to converge."
+    },
+    {
+      "status": 500,
+      "code": "SINGULAR_MATRIX",
+      "when": "The engine's solve produced a singular matrix."
+    },
+    {
+      "status": 413,
+      "code": "PAYLOAD_TOO_LARGE",
+      "when": "Request body exceeds the 5 MB limit."
+    },
+    {
+      "status": 500,
+      "code": "INTERNAL_ERROR",
+      "when": "Any other unexpected server error (no stack trace leaked to the client)."
+    },
+    {
+      "status": 401,
+      "code": "UNAUTHENTICATED",
+      "when": "A protected route is called with a missing, invalid, or expired auth cookie."
+    },
+    {
+      "status": 409,
+      "code": "EMAIL_TAKEN",
+      "when": "POST /api/auth/register with an email already registered."
+    },
+    {
+      "status": 401,
+      "code": "INVALID_CREDENTIALS",
+      "when": "POST /api/auth/login with a wrong password or an unknown email (same message either way, to avoid leaking which)."
+    },
+    {
+      "status": 404,
+      "code": "NOT_FOUND",
+      "when": "A design or simulation id doesn't exist, or belongs to another user (ownership misses are always 404, never 403)."
+    }
+  ],
+  "tests": [
+    {
+      "path": "apps/studio-server/test/server.test.ts",
+      "covers": "Core P1 routes end to end: health, options, preview success/validation/error cases via app.inject()."
+    },
+    {
+      "path": "apps/studio-server/test/shapes.test.ts",
+      "covers": "Cylinder/dome geometry closed-form math plus full assemble()+simulate() runs for every shape/storeys combination (G2)."
+    },
+    {
+      "path": "apps/studio-server/test/parity.test.ts",
+      "covers": "New design/assemble.ts produces the same canonicalRequestHash as the frozen old apps/server/src/assemble.ts for an equivalent input."
+    },
+    {
+      "path": "apps/studio-server/test/mongo.test.ts",
+      "covers": "Real end-to-end auth + designs + simulations CRUD against a mongodb-memory-server instance."
+    },
+    {
+      "path": "apps/studio-server/test/auth-hardening.test.ts",
+      "covers": "The signed JWT itself carries a 7-day expiry, not just the cookie's maxAge."
+    },
+    {
+      "path": "apps/studio-server/test/custom-run.test.ts",
+      "covers": "A persisted simulation run for a custom-location design resolves and stores weatherProvenance the same way the preview route does."
+    },
+    {
+      "path": "apps/studio-server/test/index-startup.test.ts",
+      "covers": "The real src/index.ts process exits with a clear error when MONGODB_URI or JWT_SECRET is missing."
+    },
+    {
+      "path": "apps/studio-server/test/weather.cache.test.ts",
+      "covers": "A second custom-weather request for the same {source,lat,lon,year} is served from weatherCache with no network call."
+    },
+    {
+      "path": "apps/studio-server/test/weather.geocode.test.ts",
+      "covers": "GET /api/locations/search against a recorded geocoding fixture: normal results, blank query, and upstream failure."
+    },
+    {
+      "path": "apps/studio-server/test/weather.live.test.ts",
+      "covers": "Optional real-network smoke test against the live Open-Meteo APIs, skipped unless LIVE=1."
+    },
+    {
+      "path": "apps/studio-server/test/weather.preview.test.ts",
+      "covers": "POST /api/simulate/preview end-to-end for a custom location, checking the returned weatherProvenance shape/notes."
+    },
+    {
+      "path": "apps/studio-server/test/weather.resolve.test.ts",
+      "covers": "resolveCustomWeather's Open-Meteo success path, its NASA POWER fallback, and its both-sources-fail error, against recorded fixtures."
+    },
+    {
+      "path": "apps/studio-server/test/helpers/fetch.ts",
+      "covers": "Shared test helper: loads a JSON fixture and builds a fake fetch Response around it (not itself a test file)."
+    }
+  ],
+  "env": [
+    {
+      "name": "PORT",
+      "default": "4100",
+      "purpose": "TCP port the server listens on."
+    },
+    {
+      "name": "HOST",
+      "default": "127.0.0.1",
+      "purpose": "Network interface the server binds to."
+    },
+    {
+      "name": "MONGODB_URI",
+      "default": "undefined (required at real startup)",
+      "purpose": "MongoDB connection string; src/index.ts exits if unset."
+    },
+    {
+      "name": "JWT_SECRET",
+      "default": "undefined (required at real startup; buildApp() itself falls back to an insecure dev value for tests)",
+      "purpose": "Secret used to sign/verify the auth JWT cookie."
+    },
+    {
+      "name": "NODE_ENV",
+      "default": "development",
+      "purpose": "Only 'production' makes the auth cookie Secure; also read generically by env.ts."
+    }
+  ]
+}

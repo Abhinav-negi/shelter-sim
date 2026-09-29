@@ -10,8 +10,9 @@
 // chart section — API.md §4 takes no auth on this route, so there's no
 // reason to fake it.
 import { lazy, useEffect, useState } from 'react';
-import { Link } from 'react-router';
-import type { Options, PreviewResponse } from '@shelter/studio-server';
+import { Link, Navigate } from 'react-router';
+import type { Options, PreviewResponse, PublicUser } from '@shelter/studio-server';
+import { getMe } from '../api/auth';
 import { previewSimulation } from '../api/simulate';
 import { useOptions } from '../design/useOptions';
 import { Chart } from './landing/Chart';
@@ -55,9 +56,32 @@ function usePreview(options: Options | null): PreviewResponse | null {
   return preview;
 }
 
+/** `undefined` while GET /api/auth/me is in flight, then the user (or `null`
+ *  if logged out) -- a logged-in visitor lands on /app, not the marketing
+ *  page (A2.md condition 4). */
+function useMe(): PublicUser | null | undefined {
+  const [user, setUser] = useState<PublicUser | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMe().then((u) => {
+      if (!cancelled) setUser(u);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return user;
+}
+
 export function Landing() {
   const { options } = useOptions();
   const preview = usePreview(options);
+  const user = useMe();
+
+  if (user === undefined) return null;
+  if (user) return <Navigate to="/app" replace />;
 
   if (!options) return null;
 

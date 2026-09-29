@@ -1,0 +1,295 @@
+<title>ShelterSim Codebase Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --fg:#16202a; --muted:#566573; --line:#c9d2da; --soft:#e7ecf0;
+  --accent:#1c6b8a; --accent-soft:#dcebf2; --frozen:#a45a14; --frozen-soft:#f6e8d8; --pkg:#5b5aa6; --pkg-soft:#e8e8f6;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --display:"Archivo","IBM Plex Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --panel:#17202a; --fg:#e3e9ee; --muted:#93a3b1; --line:#34424f; --soft:#1e2933;
+  --accent:#6cb8d6; --accent-soft:#16323f; --frozen:#e0a262; --frozen-soft:#3a2915; --pkg:#a9a8ee; --pkg-soft:#26264a; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --panel:#17202a; --fg:#e3e9ee; --muted:#93a3b1; --line:#34424f; --soft:#1e2933;
+  --accent:#6cb8d6; --accent-soft:#16323f; --frozen:#e0a262; --frozen-soft:#3a2915; --pkg:#a9a8ee; --pkg-soft:#26264a; color-scheme:dark;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--sans);padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:1100px;margin:0 auto}
+.topnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);margin-inline:-16px;padding:10px 16px}
+.topnav .in{max-width:1100px;margin:0 auto;display:flex;gap:4px 14px;overflow-x:auto;white-space:nowrap;font-size:13px;scrollbar-width:thin}
+.topnav a{color:var(--muted);text-decoration:none;padding:4px 0;border-bottom:2px solid transparent}
+.topnav a:hover,.topnav a:focus-visible,.topnav a.on{color:var(--accent);border-color:var(--accent);outline:none}
+header.hero{padding-block:44px 28px;display:grid;gap:14px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(30px,5vw,48px)/1.06 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font:700 26px/1.2 var(--display);margin:0;text-wrap:balance}
+h3{font:600 16px/1.3 var(--sans);margin:0}
+p{margin:0;max-width:72ch}
+.lede{color:var(--muted);font-size:17px}
+code,.mono{font-family:var(--mono);font-size:.86em}
+code{background:var(--soft);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+section{display:grid;gap:18px;padding-block:44px 8px;border-top:1px solid var(--line)}
+.sec-head{display:grid;gap:6px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:2px}
+.stat b{font:700 26px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--muted)}
+figure{margin:0;display:grid;gap:10px}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:640px;color:var(--fg);font-family:var(--sans)}
+figcaption{font-size:13px;color:var(--muted);max-width:80ch}
+.n{fill:var(--panel);stroke:var(--line);stroke-width:1.2}
+.n-acc{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.4}
+.n-frz{fill:var(--frozen-soft);stroke:var(--frozen);stroke-width:1.2;stroke-dasharray:5 4}
+.zone{fill:none;stroke:var(--line);stroke-dasharray:3 4}
+.e{stroke:currentColor;stroke-width:1.3;fill:none}
+.e-acc{stroke:var(--accent);stroke-width:1.6;fill:none}
+.e-dash{stroke:currentColor;stroke-width:1.2;fill:none;stroke-dasharray:4 4}
+.t{fill:currentColor;font-size:13px}.tb{fill:currentColor;font-size:13px;font-weight:600}
+.tm{fill:var(--muted);font-size:11.5px;font-family:var(--mono)}.tl{fill:var(--muted);font-size:11.5px}
+.ta{fill:var(--accent);font-size:11.5px;font-weight:600}.tf{fill:var(--frozen);font-size:11.5px;font-weight:600}
+.ah{fill:currentColor}.ah-acc{fill:var(--accent)}
+.facet{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1}.facet2{fill:var(--panel);stroke:var(--accent);stroke-width:1}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:600px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--soft)}
+th{font:600 11px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--soft);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td code{background:none;padding:0;color:var(--accent)}
+td.why{color:var(--muted)}
+.pill{display:inline-block;font:500 11px/1 var(--mono);padding:3px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.f{background:var(--frozen-soft);color:var(--frozen)}.pill.p{background:var(--pkg-soft);color:var(--pkg)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:14px}
+.grid2>*,.repo>*,.stats>*,section>*,header.hero>*,figure>*{min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:6px;align-content:start}
+.card p{font-size:14px;overflow-wrap:anywhere}
+.card .path{font:500 12px/1.3 var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.card.f{border-style:dashed;border-color:var(--frozen)}
+.note{border-left:3px solid var(--frozen);padding:10px 14px;background:var(--frozen-soft);border-radius:0 8px 8px 0;font-size:14px;max-width:84ch}
+ol.steps{margin:0;padding-left:22px;display:grid;gap:5px;font-size:14px}
+ol.steps li::marker{font-family:var(--mono);color:var(--accent)}
+/* map */
+.repo{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px}
+.repo .col{display:grid;gap:10px;align-content:start}
+.repo h3{font:600 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+/* explorer */
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tools input[type=search]{flex:1 1 260px;min-width:0;font:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg)}
+.tools input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:500 12.5px/1 var(--sans);padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.chips button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+details.folder{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+details.folder+details.folder{margin-top:8px}
+details.folder>summary{cursor:pointer;list-style:none;padding:11px 14px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+details.folder>summary::-webkit-details-marker{display:none}
+details.folder>summary::before{content:"▸";color:var(--muted);font-size:12px;transition:transform .15s}
+details.folder[open]>summary::before{transform:rotate(90deg)}
+details.folder>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:10px}
+.fpath{font:500 13px/1.3 var(--mono);overflow-wrap:anywhere}
+.ftitle{font-weight:600;font-size:14px}
+.fsum{font-size:13px;color:var(--muted);flex-basis:100%;padding-left:20px}
+.fl{list-style:none;margin:0;padding:0 14px 12px}
+.fl li{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr);gap:4px 14px;padding:8px 0;border-top:1px solid var(--soft);font-size:13.5px}
+.fl .nm{font:500 12.5px/1.4 var(--mono);overflow-wrap:anywhere}
+.fl .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.fl .k{font:500 10.5px/1 var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:2px 5px}
+.fl .by{font-size:12px;color:var(--muted)}
+@media (max-width:640px){.fl li{grid-template-columns:minmax(0,1fr)}}
+mark{background:var(--accent-soft);color:inherit;border-radius:2px}
+.empty{padding:20px;text-align:center;color:var(--muted);font-size:14px}
+footer{padding-block:40px 0;font-size:13px;color:var(--muted);border-top:1px solid var(--line);margin-top:40px}
+</style>
+
+<nav class="topnav" aria-label="Sections"><div class="in">
+  <a href="#overview">Overview</a><a href="#stack">Tech stack</a><a href="#map">Codebase map</a><a href="#files">All files</a>
+  <a href="#server">Studio server</a><a href="#client">Studio client</a><a href="#physics">Engine &amp; data</a><a href="#legacy">Original app</a><a href="#change">Where to change what</a><a href="#run">Run &amp; test</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero" id="overview">
+  <div class="eyebrow">ShelterSim · codebase guide · studio/main</div>
+  <h1>ShelterSim, explained from the ground up</h1>
+  <p class="lede" id="hero-lede"></p>
+  <p id="hero-client"></p>
+  <div class="stats" id="stats"></div>
+</header>
+
+<section id="bigpicture">
+  <div class="sec-head"><h2>The big picture</h2>
+  <p>ShelterSim is one repository (an npm workspaces monorepo) with five app folders and three shared libraries. The product being built is <strong>Studio</strong>: a React + Vite client (<code>apps/studio</code>) and a Fastify server (<code>apps/studio-server</code>). Two earlier generations are kept frozen: the <strong>classic</strong> form-based app (<code>apps/client</code> + <code>apps/server</code>), and the first prototype, a <strong>Next.js</strong> full-stack app (<code>apps/web</code>). Studio is not Next.js: it is a single-page app whose entry is <code>apps/studio/index.html</code>. All of them run the same physics engine.</p></div>
+  <!--DIAGRAM:system-->
+</section>
+
+<section id="stack">
+  <div class="sec-head"><h2>Technology used, and why</h2>
+  <p>Everything is TypeScript. Versions come from each <code>package.json</code>.</p></div>
+  <div id="stack-tables"></div>
+</section>
+
+<section id="map">
+  <div class="sec-head"><h2>How the codebase is divided</h2>
+  <p>Each box is a workspace (a folder with its own <code>package.json</code>). Studio code is what you'll change. Packages are shared and frozen. The original app is frozen history.</p></div>
+  <div class="repo" id="repo-map"></div>
+  <h3 style="margin-top:8px">Folders inside each workspace</h3>
+  <div id="folder-cards"></div>
+</section>
+
+<section id="files">
+  <div class="sec-head"><h2>Every file and what it does</h2>
+  <p>Search by file name or by what it does (try <em>weather</em>, <em>popover</em> or <em>cookie</em>). Folders open automatically when they contain a match.</p></div>
+  <div class="tools">
+    <input type="search" id="q" placeholder="Search files and roles…" aria-label="Search files and roles" autocomplete="off">
+    <div class="chips" role="group" aria-label="Filter by area" id="chips"></div>
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+  <div id="explorer"></div>
+</section>
+
+<section id="server">
+  <div class="sec-head"><h2>Studio server, broken down</h2>
+  <p id="server-summary"></p></div>
+  <h3>Layers</h3>
+  <div class="grid2" id="server-layers"></div>
+  <h3>Every route</h3>
+  <div class="tbl" id="server-routes"></div>
+  <!--DIAGRAM:sequences-->
+  <!--DIAGRAM:weather-->
+  <h3>Database collections</h3>
+  <div class="tbl" id="server-models"></div>
+  <div class="grid2">
+    <div><h3 style="margin-bottom:8px">Error codes</h3><div class="tbl" id="server-errors"></div></div>
+    <div><h3 style="margin-bottom:8px">Environment variables</h3><div class="tbl" id="server-env"></div></div>
+  </div>
+  <!--AUTH-->
+  <h3>Server tests</h3>
+  <div class="tbl" id="server-tests"></div>
+</section>
+
+<section id="client">
+  <div class="sec-head"><h2>Studio client, broken down</h2>
+  <p id="client-summary"></p></div>
+  <!--DIAGRAM:client-->
+  <h3>Key flows, step by step</h3>
+  <div class="grid2" id="client-flows"></div>
+  <h3>Client tests</h3>
+  <div class="tbl" id="client-tests"></div>
+</section>
+
+<section id="physics">
+  <div class="sec-head"><h2>The engine and the data</h2>
+  <p id="physics-text"></p></div>
+  <div class="grid2" id="packages"></div>
+  <!--DIAGRAM:shapes-->
+</section>
+
+<section id="legacy">
+  <div class="sec-head"><h2>The original app (frozen)</h2>
+  <p>The first version of ShelterSim. Nobody edits it; Studio copies from it where useful (for example, the design-to-request pipeline started as a copy of its <code>assemble.ts</code>), and a parity test keeps Studio's box shelters identical to it.</p></div>
+  <div class="grid2" id="legacy-cards"></div>
+  <h3>Files at the repo root</h3>
+  <div class="tbl" id="root-files"></div>
+</section>
+
+<!--SECTION:change-->
+<!--SECTION:run-->
+
+<footer>Generated from <code>studio/main</code> on __DATE__ by reading every source file. A condensed copy for agents is <code>ARCHITECTURE-STUDIO.md</code>; the page source is <code>ledger/d2-guide/</code>.</footer>
+</div>
+
+<script>
+const DATA = /*DATA*/;
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const code = s => `<code>${esc(s)}</code>`;
+const table = (head, rows) => `<table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+const { client: C, server: S, packages: P } = DATA;
+
+// overview
+$('#hero-lede').textContent = P.summary;
+$('#hero-client').textContent = C.summary;
+const areas = [
+  { id:'client', label:'Studio client', files:C.files },
+  { id:'server', label:'Studio server', files:S.files },
+  { id:'pkg', label:'Packages', files:P.files },
+];
+const loc = fs => fs.reduce((a,f)=>a+(+f.loc||0),0);
+const stats = [
+  [C.files.length + S.files.length + P.files.length, 'files explained'],
+  [(loc(C.files)+loc(S.files)+loc(P.files)).toLocaleString('en-US'), 'lines of code covered'],
+  [(C.tests?.length||0) + (S.tests?.length||0), 'Studio test files'],
+  [(S.routes||[]).length, 'API routes'],
+  [(P.packages||[]).length + 2, 'workspaces you can change or read'],
+];
+$('#stats').innerHTML = stats.map(([b,s])=>`<div class="stat"><b>${esc(b)}</b><span>${esc(s)}</span></div>`).join('');
+
+// stack
+const stackGroups = [['Studio client (apps/studio)', C.stack], ['Studio server (apps/studio-server)', S.stack], ['Shared tooling, packages and the original app', P.stack]];
+$('#stack-tables').innerHTML = stackGroups.map(([t, rows]) => `<h3 style="margin:10px 0 8px">${esc(t)}</h3><div class="tbl">${table(['Technology','Version','What it does here','Why it fits'], (rows||[]).map(r=>`<tr><td><strong>${esc(r.name)}</strong></td><td class="mono">${esc(r.version)}</td><td>${esc(r.role)}</td><td class="why">${esc(r.why)}</td></tr>`))}</div>`).join('');
+
+// repo map
+const card = (title, path, text, cls='') => `<div class="card ${cls}"><h3>${esc(title)}</h3><div class="path">${esc(path)}</div><p>${esc(text)}</p></div>`;
+$('#repo-map').innerHTML = `
+ <div class="col"><h3>Studio: you change this</h3>${card('Studio client','apps/studio',C.summary.split('. ').slice(0,2).join('. ')+'.')}${card('Studio server','apps/studio-server',S.summary.split('. ').slice(0,2).join('. ')+'.')}</div>
+ <div class="col"><h3>Shared packages: frozen</h3>${(P.packages||[]).map(p=>card(p.name,p.path,p.summary)).join('')}</div>
+ <div class="col"><h3>Original app: frozen</h3>${(P.frozenApps||[]).map(a=>card(a.title,a.path,a.summary,'f')).join('')}</div>`;
+const folderGroup = (t, fs) => `<h3 style="margin:14px 0 8px;font-size:14px">${esc(t)}</h3><div class="grid2">${(fs||[]).map(f=>`<div class="card"><h3>${esc(f.title||f.path.split('/').pop())}</h3><div class="path">${esc(f.path)}</div><p>${esc(f.summary)}</p></div>`).join('')}</div>`;
+$('#folder-cards').innerHTML = folderGroup('Studio client', C.folders) + folderGroup('Studio server', S.folders) + folderGroup('Packages', P.folders);
+
+// explorer
+const all = areas.flatMap(a => a.files.map(f => ({...f, area:a.id, areaLabel:a.label})));
+const folderInfo = {}; [...(C.folders||[]),...(S.folders||[]),...(P.folders||[])].forEach(f => folderInfo[f.path] = f);
+let area = 'all';
+try { area = localStorage.getItem('guide-area') || 'all'; } catch {}
+$('#chips').innerHTML = [['all','All'],...areas.map(a=>[a.id,a.label])].map(([id,l])=>`<button type="button" data-a="${id}" aria-pressed="${id===area}">${esc(l)}</button>`).join('');
+$('#chips').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; area = b.dataset.a; try{localStorage.setItem('guide-area',area)}catch{} $('#chips').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', x===b)); render(); });
+const hl = (text, q) => { const t = esc(text); if(!q) return t; const i = t.toLowerCase().indexOf(esc(q).toLowerCase()); return i<0 ? t : t.slice(0,i)+'<mark>'+t.slice(i,i+esc(q).length)+'</mark>'+t.slice(i+esc(q).length); };
+function render(){
+  const q = $('#q').value.trim().toLowerCase();
+  const list = all.filter(f => (area==='all'||f.area===area) && (!q || (f.path+' '+f.role+' '+(f.kind||'')+' '+(f.exports||[]).join(' ')).toLowerCase().includes(q)));
+  const byFolder = {}; list.forEach(f => (byFolder[f.folder || f.path.split('/').slice(0,-1).join('/')] ??= []).push(f));
+  $('#count').textContent = `${list.length} of ${all.length} files`;
+  const keys = Object.keys(byFolder).sort();
+  $('#explorer').innerHTML = keys.length ? keys.map(k => {
+    const fi = folderInfo[k] || {}; const fs = byFolder[k].sort((a,b)=>a.path.localeCompare(b.path));
+    return `<details class="folder" ${q?'open':''}><summary><span class="fpath">${esc(k)}/</span><span class="ftitle">${esc(fi.title||'')}</span><span class="count">${fs.length} file${fs.length>1?'s':''}</span>${fi.summary?`<span class="fsum">${esc(fi.summary)}</span>`:''}</summary><ul class="fl">${fs.map(f=>`<li><div class="nm">${hl(f.path.slice(k.length+1)||f.path, q)}</div><div>${hl(f.role,q)}<div class="meta">${f.kind?`<span class="k">${esc(f.kind)}</span>`:''}${f.loc?`<span class="k">${esc(f.loc)} lines</span>`:''}${f.exports?.length?`<span class="by">exports ${f.exports.map(esc).join(', ')}</span>`:''}${f.usedBy?.length?`<span class="by">used by ${f.usedBy.map(esc).join(', ')}</span>`:''}</div></div></li>`).join('')}</ul></details>`;
+  }).join('') : `<div class="empty">No file matches “${esc(q)}”. Try a shorter word.</div>`;
+}
+$('#q').addEventListener('input', render); render();
+
+// server
+$('#server-summary').textContent = S.summary;
+$('#server-layers').innerHTML = (S.layers||[]).map((l,i)=>`<div class="card"><h3>${esc(l.name)}</h3><p>${esc(l.summary)}</p><div class="path">${(l.files||[]).map(esc).join(' · ')}</div></div>`).join('');
+const authPill = a => a==='none'||!a ? '–' : `<span class="pill">${esc(a)}</span>`;
+$('#server-routes').innerHTML = table(['Method','Path','Auth','What it does','Errors','File'], (S.routes||[]).map(r=>`<tr><td class="mono">${esc(r.method)}</td><td>${code(r.path)}</td><td>${authPill(r.auth)}</td><td>${esc(r.does)}</td><td class="why">${esc(r.errors)}</td><td class="mono">${esc(r.file)}</td></tr>`));
+$('#server-models').innerHTML = table(['Model','Collection','Fields','Indexes','File'], (S.models||[]).map(m=>`<tr><td><strong>${esc(m.name)}</strong></td><td>${code(m.collection)}</td><td>${esc(m.fields)}</td><td class="why">${esc(m.indexes)}</td><td class="mono">${esc(m.file)}</td></tr>`));
+$('#server-errors').innerHTML = table(['Status','Code','When'], (S.errors||[]).map(e=>`<tr><td class="mono">${esc(e.status)}</td><td>${code(e.code)}</td><td>${esc(e.when)}</td></tr>`));
+$('#server-env').innerHTML = table(['Name','Default','Purpose'], (S.env||[]).map(e=>`<tr><td>${code(e.name)}</td><td class="mono">${esc(e.default||'–')}</td><td>${esc(e.purpose)}</td></tr>`));
+$('#server-tests').innerHTML = table(['Test file','Covers'], (S.tests||[]).map(t=>`<tr><td class="mono">${esc(t.path)}</td><td>${esc(t.covers)}</td></tr>`));
+
+// client
+$('#client-summary').textContent = C.summary;
+$('#client-flows').innerHTML = (C.flows||[]).map(f=>`<div class="card"><h3>${esc(f.name)}</h3><ol class="steps">${f.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol></div>`).join('');
+$('#client-tests').innerHTML = table(['Test file','Covers'], (C.tests||[]).map(t=>`<tr><td class="mono">${esc(t.path)}</td><td>${esc(t.covers)}</td></tr>`));
+
+// physics + packages
+$('#physics-text').textContent = P.physics;
+$('#packages').innerHTML = (P.packages||[]).map(p=>`<div class="card"><h3>${esc(p.name)} <span class="pill f">frozen</span></h3><div class="path">${esc(p.path)}</div><p>${esc(p.summary)}</p><p style="font-size:13px;color:var(--muted)">Public API: ${(p.publicApi||[]).map(esc).join(', ')}<br>Used by: ${(p.usedBy||[]).map(esc).join(', ')}</p></div>`).join('');
+
+// legacy
+$('#legacy-cards').innerHTML = (P.frozenApps||[]).map(a=>`<div class="card f"><h3>${esc(a.title)} <span class="pill f">frozen</span></h3><div class="path">${esc(a.path)} · ${esc(a.stack)}</div><p>${esc(a.summary)}</p>${a.parts?.length?`<ul style="margin:4px 0 0;padding-left:18px;font-size:13px;display:grid;gap:3px">${a.parts.map(x=>`<li><code>${esc(x.path)}</code>: ${esc(x.role)}</li>`).join('')}</ul>`:''}</div>`).join('');
+$('#root-files').innerHTML = table(['File','Purpose'], (P.rootFiles||[]).map(r=>`<tr><td>${code(r.path)}</td><td>${esc(r.role)}</td></tr>`));
+
+// active nav
+const links = [...document.querySelectorAll('.topnav a')];
+const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ links.forEach(l => l.classList.toggle('on', l.getAttribute('href')==='#'+e.target.id)); } }), { rootMargin:'-40% 0px -55% 0px' });
+document.querySelectorAll('header.hero[id], section[id]').forEach(s => io.observe(s));
+</script>

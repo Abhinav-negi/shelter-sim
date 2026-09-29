@@ -1,0 +1,1220 @@
+{
+  "area": "apps/studio",
+  "summary": "ShelterSim Studio's client is a React 19 single-page app where someone designs a passive winter shelter (box, cylinder or dome, sized in metres, with walls/roof/floor materials and windows) for a cold-region site like Ladakh and instantly sees a live 3D model plus a simulated 24-hour indoor temperature curve. Every edit in the left control panel writes straight into a shared zustand store; the centre 3D viewer (react-three-fiber/three.js) reads that store and re-renders immediately, while a debounced call to the studio-server's fast physics engine refreshes the results panel (charts, KPIs, plain-language insights) on the right. People can also register/log in, save designs, re-run and compare 2-4 saved designs' KPIs and curves side by side, and there's a marketing landing page with the same real viewer/engine wired in for a live demo. It talks to the sibling `studio-server` app only over HTTP (`/api/*`, proxied by Vite in dev) and imports types (never runtime code) from the `@shelter/engine` and `@shelter/studio-server` packages.",
+  "stack": [
+    {
+      "name": "React",
+      "version": "19.3.0",
+      "role": "Renders every page/component and owns component state (forms, load/save status, loading flags).",
+      "why": "Its component + hooks model fits a form-and-3D-viewer UI whose panes need to re-render independently and cheaply."
+    },
+    {
+      "name": "react-dom",
+      "version": "19.3.0",
+      "role": "Mounts the React tree onto the page's #root element (main.tsx).",
+      "why": "Required companion to React for any browser-rendered app."
+    },
+    {
+      "name": "react-router",
+      "version": "8.4.0",
+      "role": "Client-side routing between Landing/Login/Register/Dashboard/Studio/Compare/dev-viewer, plus the RequireAuth guard.",
+      "why": "A single-page app with distinct auth/design/compare screens needs URL-based navigation without full page reloads."
+    },
+    {
+      "name": "zustand",
+      "version": "5.0.15",
+      "role": "Two small global stores: the ShelterDesign store (design/store.ts, what every control edits) and the UI-only 3D selection store (design/selection.ts).",
+      "why": "Lightweight, selector-based state that lets one field's edit re-render only the components reading that field, without Redux-style boilerplate."
+    },
+    {
+      "name": "three",
+      "version": "0.186.1",
+      "role": "The underlying WebGL/3D engine: builds wall/roof/floor geometry, materials, lights and the camera for the shelter model.",
+      "why": "The de-facto standard JS 3D library; needed to actually draw a 3D building in a browser."
+    },
+    {
+      "name": "@react-three/fiber",
+      "version": "9.8.1",
+      "role": "React renderer for three.js — lets the viewer be written as JSX (<mesh>, <PerspectiveCamera>, etc.) that reacts to design changes.",
+      "why": "Keeps the 3D scene declarative and in sync with React state (the ShelterDesign store) instead of hand-written imperative three.js code."
+    },
+    {
+      "name": "@react-three/drei",
+      "version": "10.7.8",
+      "role": "Helper components on top of fiber: OrbitControls (orbit/zoom/pan), PerspectiveCamera, Html (the PartPopover), Line, Edges, Billboard (compass label).",
+      "why": "Saves reimplementing common camera/controls/label primitives that every three.js app needs."
+    },
+    {
+      "name": "recharts",
+      "version": "3.10.1",
+      "role": "Draws the indoor/outdoor temperature line chart and the compare page's overlay chart.",
+      "why": "A ready-made, React-friendly charting library, lazy-loaded so it doesn't weigh down pages that don't show charts."
+    },
+    {
+      "name": "tailwindcss",
+      "version": "4.3.3",
+      "role": "Utility-class styling for every component; design tokens (colors, spacing, radii) are layered on top in styles/tokens.css.",
+      "why": "Fast to write consistent, hairline-instrument-style UI without hand-written CSS files per component."
+    },
+    {
+      "name": "@tailwindcss/vite",
+      "version": "4.3.3",
+      "role": "Vite plugin that runs Tailwind's build as part of the dev/build pipeline.",
+      "why": "Official integration path for Tailwind v4 with Vite, no separate PostCSS config needed."
+    },
+    {
+      "name": "@fontsource-variable/geist",
+      "version": "5.3.0",
+      "role": "Self-hosts the Geist variable sans-serif font used as the app's body font.",
+      "why": "Avoids a runtime Google Fonts request; ships the font as part of the app bundle."
+    },
+    {
+      "name": "@fontsource-variable/geist-mono",
+      "version": "5.3.0",
+      "role": "Self-hosts Geist Mono, used for numeric/unit fields throughout the UI.",
+      "why": "Keeps monospaced numbers self-hosted and consistent with the sans font family."
+    },
+    {
+      "name": "vite",
+      "version": "8.3.1",
+      "role": "Dev server (port 5273, proxies /api to studio-server) and production bundler/build tool.",
+      "why": "Fast HMR dev loop and a standard modern build for a React+TS app."
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "version": "6.1.1",
+      "role": "Vite plugin enabling JSX/Fast Refresh for React components.",
+      "why": "Required for Vite to compile .tsx files and support React's fast-refresh dev experience."
+    },
+    {
+      "name": "typescript",
+      "version": "5.9.3",
+      "role": "Static typing across the whole client; tsconfig.json extends the repo's shared base config.",
+      "why": "Catches type errors early and lets the client import server/engine *types* safely without pulling in runtime code."
+    },
+    {
+      "name": "vitest",
+      "version": "2.1.9",
+      "role": "Unit/component test runner (jsdom environment) for the 22 *.test.{ts,tsx} files.",
+      "why": "Fast, Vite-native test runner that shares the same config/transform pipeline as the app itself."
+    },
+    {
+      "name": "@testing-library/react",
+      "version": "16.3.3",
+      "role": "Renders React components in tests and queries them the way a user would (by role/label/text).",
+      "why": "Standard choice for component tests that assert on behavior/accessibility rather than internals."
+    },
+    {
+      "name": "jsdom",
+      "version": "30.1.1",
+      "role": "Simulates a browser DOM inside vitest so component tests can run in Node.",
+      "why": "Needed for vitest's 'environment: jsdom' setting since there's no real browser in CI."
+    },
+    {
+      "name": "@shelter/studio-server",
+      "version": "0.1.0 (workspace)",
+      "role": "Dev dependency only for its exported TypeScript types (ShelterDesign, Options, DesignSummary, etc.) that the client's api/* wrappers use.",
+      "why": "Keeps client and server payload shapes in lockstep without hand-copying interfaces."
+    },
+    {
+      "name": "@types/node, @types/react, @types/react-dom, @types/three",
+      "version": "22.20.1 / 19.3.0 / 19.3.0 / 0.186.0",
+      "role": "Type declarations for Node APIs, React, ReactDOM and three.js.",
+      "why": "Needed for TypeScript to type-check code that touches Node/React/three APIs."
+    }
+  ],
+  "folders": [
+    {
+      "path": "apps/studio/src/api",
+      "title": "API client layer",
+      "summary": "Thin typed fetch wrappers (one file per server resource: auth, designs, simulate, locations, options, health) plus a shared client.ts that normalises every failure into one ApiError type. This is the only place that calls fetch() against /api/*."
+    },
+    {
+      "path": "apps/studio/src/components/shell",
+      "title": "App shell",
+      "summary": "The outer page frame shown on every route: the header with the ShelterSim wordmark, Studio link and theme toggle, wrapping the routed page content."
+    },
+    {
+      "path": "apps/studio/src/components/ui",
+      "title": "UI primitives",
+      "summary": "The small set of reusable form/layout controls (Button, Input, NumberInput, Select, Segmented, Slider, FieldRow) that every page and control section is built from, so the whole app shares one visual language."
+    },
+    {
+      "path": "apps/studio/src/controls",
+      "title": "Design controls panel",
+      "summary": "The left-hand panel on the Studio page: one section per design concern (Environment, Geometry, Materials, Openings, Orientation, Advanced), each reading/writing the ShelterDesign store directly, plus shared helpers like SliderField and the debounced-request hook."
+    },
+    {
+      "path": "apps/studio/src/design",
+      "title": "Design state & selection",
+      "summary": "The zustand stores at the heart of the app: the ShelterDesign store (the single source of truth for the shelter being edited) and the UI-only 3D part-selection store, plus the pure PartId-to-control-field mapping and a small cached options-fetch hook."
+    },
+    {
+      "path": "apps/studio/src/lib",
+      "title": "Small shared utilities",
+      "summary": "Two tiny standalone helpers: cx() for joining conditional class names, and the theme hook that reads/writes the light/dark/system preference to localStorage and the <html> tag."
+    },
+    {
+      "path": "apps/studio/src/results",
+      "title": "Results panel",
+      "summary": "Everything that turns a simulation response into something a non-expert can read: plain-language Insights (explain.ts), the KPI list, the temperature line chart, and the heat-flow bar breakdown, assembled by ResultsPanel.tsx."
+    },
+    {
+      "path": "apps/studio/src/routes",
+      "title": "Top-level pages",
+      "summary": "One file per route: Landing (marketing home), Login/Register, Dashboard ('Your shelters'), Studio (the main design workspace), Compare, and RequireAuth (the auth guard), plus two subfolders for page-specific pieces."
+    },
+    {
+      "path": "apps/studio/src/routes/compare",
+      "title": "Compare page internals",
+      "summary": "The pure KPI-delta-table logic (kpiTable.ts) and the multi-design overlay temperature chart (OverlayChart.tsx) used by routes/Compare.tsx."
+    },
+    {
+      "path": "apps/studio/src/routes/landing",
+      "title": "Landing page internals",
+      "summary": "The marketing page's building blocks: the cinematic dark Hero with the live rotating 3D shelter, the shape strip, scroll-revealed how-it-works Stages, the live Chart section, and shared motion/visibility hooks (reduced-motion, in-view, animated hour)."
+    },
+    {
+      "path": "apps/studio/src/styles",
+      "title": "Global styles & design tokens",
+      "summary": "index.css (Tailwind entry, global resets, the native slider's restyle, scroll-reveal animation) and tokens.css (the light/dark colour, type-scale and spacing CSS variables every component reads)."
+    },
+    {
+      "path": "apps/studio/src/viewer",
+      "title": "3D viewer",
+      "summary": "The whole react-three-fiber shelter scene: pure geometry math (geometry.ts), the actual wall/roof/floor meshes with mitred corners (Building.tsx), camera framing, sun/solar position, the compass, part hover/click interaction, theme-aware colours, and the popover shown when a 3D part is selected."
+    },
+    {
+      "path": "apps/studio/e2e",
+      "title": "End-to-end test script",
+      "summary": "A standalone Playwright-core-driven script (flow.mjs) plus its own scratch studio-server, preview-server config and a hand-rolled PNG decoder (png.mjs) — not run by `vitest`; a manual, real-browser flow test covering register → design → save → run → compare → logout."
+    }
+  ],
+  "files": [
+    {
+      "path": "apps/studio/index.html",
+      "folder": "apps/studio",
+      "kind": "entry",
+      "role": "The HTML page Vite serves: a bare #root div and a <script> loading src/main.tsx as an ES module.",
+      "usedBy": [
+        "Vite"
+      ],
+      "loc": 18
+    },
+    {
+      "path": "apps/studio/package.json",
+      "folder": "apps/studio",
+      "kind": "config",
+      "role": "Declares the studio package's name, scripts (dev/build/test/preview) and every runtime + dev dependency.",
+      "usedBy": [
+        "Vite",
+        "vitest"
+      ],
+      "loc": 39
+    },
+    {
+      "path": "apps/studio/vite.config.ts",
+      "folder": "apps/studio",
+      "kind": "config",
+      "role": "Vite dev/build config: React + Tailwind plugins, and a dev-server proxy sending /api requests to studio-server on port 4100.",
+      "usedBy": [
+        "Vite"
+      ],
+      "loc": 17
+    },
+    {
+      "path": "apps/studio/tsconfig.json",
+      "folder": "apps/studio",
+      "kind": "config",
+      "role": "TypeScript compiler options for the client, extending the repo's shared base config; scopes type-checking to src/.",
+      "usedBy": [
+        "tsc",
+        "editors"
+      ],
+      "loc": 19
+    },
+    {
+      "path": "apps/studio/vitest.config.ts",
+      "folder": "apps/studio",
+      "kind": "config",
+      "role": "Vitest config: jsdom test environment and the src/**/*.test.{ts,tsx} test file glob.",
+      "usedBy": [
+        "vitest"
+      ],
+      "loc": 8
+    },
+    {
+      "path": "apps/studio/e2e/flow.mjs",
+      "folder": "apps/studio/e2e",
+      "kind": "e2e",
+      "role": "The main end-to-end script: drives a real Chromium via playwright-core through register → new design → edit geometry/openings → 3D click-to-select → save → reload → run → second design → compare → logout → auth-redirect, asserting on screenshots, DOM state and network call counts.",
+      "usedBy": [
+        "a person running E2E manually"
+      ],
+      "loc": 424
+    },
+    {
+      "path": "apps/studio/e2e/png.mjs",
+      "folder": "apps/studio/e2e",
+      "kind": "e2e",
+      "role": "A minimal hand-rolled PNG decoder (using only node:zlib) plus an edge-gradient bounding-box function, used by flow.mjs to measure the 3D viewer canvas's rendered extent before/after a design change.",
+      "usedBy": [
+        "flow.mjs"
+      ],
+      "loc": 144
+    },
+    {
+      "path": "apps/studio/e2e/preview.config.mjs",
+      "folder": "apps/studio/e2e",
+      "kind": "e2e",
+      "role": "A plain-object Vite preview config serving the built dist/ and proxying /api to the scratch studio-server, used only by flow.mjs's own E2E run.",
+      "usedBy": [
+        "flow.mjs"
+      ],
+      "loc": 18
+    },
+    {
+      "path": "apps/studio/e2e/scratch-server.mjs",
+      "folder": "apps/studio/e2e",
+      "kind": "e2e",
+      "role": "Boots a throwaway studio-server (in-memory MongoDB + buildApp) on a given port, so flow.mjs has a real backend to talk to without touching a real database.",
+      "usedBy": [
+        "flow.mjs"
+      ],
+      "loc": 27
+    },
+    {
+      "path": "apps/studio/src/api/auth.ts",
+      "folder": "apps/studio/src/api",
+      "kind": "api",
+      "role": "Typed wrappers for the auth endpoints (login, register, logout, getMe); getMe never throws, resolving to null on a 401 or network failure.",
+      "usedBy": [
+        "RequireAuth",
+        "Login",
+        "Register",
+        "Dashboard"
+      ],
+      "loc": 23
+    },
+    {
+      "path": "apps/studio/src/api/client.ts",
+      "folder": "apps/studio/src/api",
+      "kind": "lib",
+      "role": "The shared fetch wrapper every api/* module calls: adds credentials/JSON headers, and normalises any HTTP error, network failure or unparsable body into one ApiError class.",
+      "usedBy": [
+        "every src/api/*.ts file"
+      ],
+      "loc": 69
+    },
+    {
+      "path": "apps/studio/src/api/designs.ts",
+      "folder": "apps/studio/src/api",
+      "kind": "api",
+      "role": "Typed wrappers for the designs + simulations REST endpoints: list/create/get/update/delete a design, and run/list/get its saved simulations.",
+      "usedBy": [
+        "Studio",
+        "Dashboard",
+        "Compare"
+      ],
+      "loc": 26
+    },
+    {
+      "path": "apps/studio/src/api/health.ts",
+      "folder": "apps/studio/src/api",
+      "kind": "api",
+      "role": "A single GET /api/health wrapper.",
+      "usedBy": [
+        "not wired into any route (utility)"
+      ],
+      "loc": 7
+    },
+    {
+      "path": "apps/studio/src/api/locations.ts",
+      "folder": "apps/studio/src/api",
+      "kind": "api",
+      "role": "Wraps GET /api/locations/search for the custom-location search box.",
+      "usedBy": [
+        "LocationSearch"
+      ],
+      "loc": 7
+    },
+    {
+      "path": "apps/studio/src/api/options.ts",
+      "folder": "apps/studio/src/api",
+      "kind": "api",
+      "role": "Wraps GET /api/options, which returns presets, materials, glazings, ranges and defaults the whole app needs before it can render a design.",
+      "usedBy": [
+        "useOptions"
+      ],
+      "loc": 4
+    },
+    {
+      "path": "apps/studio/src/api/simulate.ts",
+      "folder": "apps/studio/src/api",
+      "kind": "api",
+      "role": "Wraps POST /api/simulate/preview, the non-persisted preview run used for the live debounced results panel.",
+      "usedBy": [
+        "Studio (useDebouncedRequest)",
+        "Landing"
+      ],
+      "loc": 6
+    },
+    {
+      "path": "apps/studio/src/App.tsx",
+      "folder": "apps/studio/src",
+      "kind": "entry",
+      "role": "Declares every route (Landing, Login, Register, dev viewer, and the auth-guarded Dashboard/Studio/Compare) inside the AppShell wrapper.",
+      "usedBy": [
+        "main.tsx"
+      ],
+      "loc": 39
+    },
+    {
+      "path": "apps/studio/src/main.tsx",
+      "folder": "apps/studio/src",
+      "kind": "entry",
+      "role": "The real app entry point: loads the self-hosted fonts and global CSS, then mounts <App> inside a BrowserRouter into #root.",
+      "usedBy": [
+        "index.html"
+      ],
+      "loc": 18
+    },
+    {
+      "path": "apps/studio/src/components/shell/AppShell.tsx",
+      "folder": "apps/studio/src/components/shell",
+      "kind": "component",
+      "role": "The page frame rendered around every route: wordmark, Studio nav link, ThemeToggle, then the routed page via <Outlet>.",
+      "usedBy": [
+        "App.tsx"
+      ],
+      "loc": 24
+    },
+    {
+      "path": "apps/studio/src/components/shell/ThemeToggle.tsx",
+      "folder": "apps/studio/src/components/shell",
+      "kind": "component",
+      "role": "A 3-way Segmented control (Auto/Light/Dark) wired to the useTheme hook.",
+      "usedBy": [
+        "AppShell"
+      ],
+      "loc": 18
+    },
+    {
+      "path": "apps/studio/src/components/ui/Button.tsx",
+      "folder": "apps/studio/src/components/ui",
+      "kind": "component",
+      "role": "The one button primitive, with primary/secondary/ghost variants — deliberately no other button variants exist.",
+      "usedBy": [
+        "most pages/controls"
+      ],
+      "loc": 21
+    },
+    {
+      "path": "apps/studio/src/components/ui/FieldRow.tsx",
+      "folder": "apps/studio/src/components/ui",
+      "kind": "component",
+      "role": "Label + control + hint/error wrapper used by nearly every form field; also owns the 3D-part hover/highlight wiring (sets hoveredPart on mouse/focus, flashes when its part becomes selected).",
+      "usedBy": [
+        "SliderField",
+        "every controls section",
+        "Login",
+        "Register"
+      ],
+      "loc": 72
+    },
+    {
+      "path": "apps/studio/src/components/ui/index.ts",
+      "folder": "apps/studio/src/components/ui",
+      "kind": "lib",
+      "role": "Barrel file re-exporting every ui/* component and its prop types.",
+      "usedBy": [
+        "controls/*, routes/*"
+      ],
+      "loc": 14
+    },
+    {
+      "path": "apps/studio/src/components/ui/Input.tsx",
+      "folder": "apps/studio/src/components/ui",
+      "kind": "component",
+      "role": "The base text/date/email/password input, with an optional monospace variant for numeric fields.",
+      "usedBy": [
+        "Login",
+        "Register",
+        "EnvironmentSection",
+        "LocationSearch"
+      ],
+      "loc": 21
+    },
+    {
+      "path": "apps/studio/src/components/ui/NumberInput.tsx",
+      "folder": "apps/studio/src/components/ui",
+      "kind": "component",
+      "role": "A typed numeric entry box paired with sliders/dials: keeps a local draft string, commits (clamped + step-rounded) on Enter/blur, reverts on Escape, arrow keys commit one step immediately.",
+      "usedBy": [
+        "SliderField",
+        "OrientationDial",
+        "PartPopover"
+      ],
+      "loc": 121
+    },
+    {
+      "path": "apps/studio/src/components/ui/Segmented.tsx",
+      "folder": "apps/studio/src/components/ui",
+      "kind": "component",
+      "role": "A radio group styled as a row of segments, built from native <input type=radio> elements for free keyboard support.",
+      "usedBy": [
+        "GeometrySection",
+        "EnvironmentSection",
+        "OpeningsSection",
+        "ThemeToggle"
+      ],
+      "loc": 56
+    },
+    {
+      "path": "apps/studio/src/components/ui/Select.tsx",
+      "folder": "apps/studio/src/components/ui",
+      "kind": "component",
+      "role": "A styled native <select> with a custom dropdown arrow.",
+      "usedBy": [
+        "GeometrySection",
+        "MaterialsSection",
+        "OpeningsSection",
+        "AdvancedSection"
+      ],
+      "loc": 33
+    },
+    {
+      "path": "apps/studio/src/components/ui/Slider.tsx",
+      "folder": "apps/studio/src/components/ui",
+      "kind": "component",
+      "role": "A restyled native range input (the hairline-instrument look).",
+      "usedBy": [
+        "SliderField",
+        "Studio (time-of-day slider)"
+      ],
+      "loc": 24
+    },
+    {
+      "path": "apps/studio/src/controls/AdvancedSection.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "The collapsed-by-default 'Advanced' section: a single Occupancy preset selector.",
+      "usedBy": [
+        "ControlsPanel"
+      ],
+      "loc": 25
+    },
+    {
+      "path": "apps/studio/src/controls/ControlsPanel.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "Composes the six ordered control sections (Environment/Geometry/Materials/Openings/Orientation/Advanced) into the Studio page's left panel.",
+      "usedBy": [
+        "Studio"
+      ],
+      "loc": 28
+    },
+    {
+      "path": "apps/studio/src/controls/EnvironmentSection.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "Location (preset site or custom search), date, and a weather-provenance note when the preview reports one.",
+      "usedBy": [
+        "ControlsPanel"
+      ],
+      "loc": 72
+    },
+    {
+      "path": "apps/studio/src/controls/GeometrySection.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "Shelter type preset, Shape (box/cylinder/dome), Storeys, and Length/Width/Height sliders — hides Width for ring shapes and Storeys/Height quirks for a dome.",
+      "usedBy": [
+        "ControlsPanel"
+      ],
+      "loc": 95
+    },
+    {
+      "path": "apps/studio/src/controls/LocationSearch.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "A debounced free-text place search box (via useDebouncedRequest + searchLocations) that lets someone pick a custom lat/lon location.",
+      "usedBy": [
+        "EnvironmentSection"
+      ],
+      "loc": 53
+    },
+    {
+      "path": "apps/studio/src/controls/MaterialsSection.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "Wall/Roof/Floor construction (material + thickness) fields; opens and highlights the matching field when a wall/roof/floor part is clicked in 3D.",
+      "usedBy": [
+        "ControlsPanel"
+      ],
+      "loc": 123
+    },
+    {
+      "path": "apps/studio/src/controls/OpeningsSection.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "The four window-to-wall-ratio sliders (S/E/W/N), glazing choice and night-shutters toggle; each window slider is tagged with its PartId for 3D highlighting.",
+      "usedBy": [
+        "ControlsPanel"
+      ],
+      "loc": 72
+    },
+    {
+      "path": "apps/studio/src/controls/OrientationDial.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "A drag-to-orient compass-dial SVG control for azimuthDeg, with pointer-drag and arrow-key support plus a paired NumberInput.",
+      "usedBy": [
+        "OrientationSection"
+      ],
+      "loc": 125
+    },
+    {
+      "path": "apps/studio/src/controls/OrientationSection.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "Wraps OrientationDial in a Section, wired to the azimuthDeg range from options.",
+      "usedBy": [
+        "ControlsPanel"
+      ],
+      "loc": 16
+    },
+    {
+      "path": "apps/studio/src/controls/Section.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "The collapsible, titled group wrapper every control section uses; can be force-opened (e.g. by a 3D selection) without fighting a user's own toggle.",
+      "usedBy": [
+        "every *Section.tsx file"
+      ],
+      "loc": 40
+    },
+    {
+      "path": "apps/studio/src/controls/SliderField.tsx",
+      "folder": "apps/studio/src/controls",
+      "kind": "component",
+      "role": "FieldRow + Slider + NumberInput combined — the one shape every numeric control in the panel uses.",
+      "usedBy": [
+        "GeometrySection",
+        "MaterialsSection",
+        "OpeningsSection"
+      ],
+      "loc": 63
+    },
+    {
+      "path": "apps/studio/src/controls/useDebouncedRequest.ts",
+      "folder": "apps/studio/src/controls",
+      "kind": "hook",
+      "role": "Generic debounce-then-fetch hook: waits delayMs after the last input change, tracks an AbortController so a stale response can never overwrite a newer one, and exposes a retry() escape hatch.",
+      "usedBy": [
+        "Studio (preview)",
+        "LocationSearch"
+      ],
+      "loc": 68
+    },
+    {
+      "path": "apps/studio/src/design/partMapping.ts",
+      "folder": "apps/studio/src/design",
+      "kind": "lib",
+      "role": "Pure function mapping a 3D PartId to which controls section/field should open and highlight (window:o -> Openings; wall/roof/floor -> Materials).",
+      "usedBy": [
+        "MaterialsSection",
+        "OpeningsSection"
+      ],
+      "loc": 26
+    },
+    {
+      "path": "apps/studio/src/design/selection.ts",
+      "folder": "apps/studio/src/design",
+      "kind": "store",
+      "role": "A tiny zustand store for UI-only 3D hover/selection state (hoveredPart, selectedPart) — deliberately separate from the design store so selecting a part never marks the design dirty or reruns the preview.",
+      "usedBy": [
+        "FieldRow",
+        "usePartInteraction",
+        "PartPopover",
+        "MaterialsSection",
+        "OpeningsSection"
+      ],
+      "loc": 31
+    },
+    {
+      "path": "apps/studio/src/design/store.ts",
+      "folder": "apps/studio/src/design",
+      "kind": "store",
+      "role": "The ShelterDesign zustand store: the single source of truth every control writes to and the 3D viewer only reads from — one setter per design field, plus loadDesign/reset.",
+      "usedBy": [
+        "every controls/* section",
+        "Studio",
+        "PartPopover"
+      ],
+      "loc": 95
+    },
+    {
+      "path": "apps/studio/src/design/useOptions.ts",
+      "folder": "apps/studio/src/design",
+      "kind": "hook",
+      "role": "A tiny cached hook around GET /api/options so every page/component sharing one request instead of each firing its own on mount.",
+      "usedBy": [
+        "Studio",
+        "Dashboard",
+        "Compare",
+        "Landing",
+        "DevViewer"
+      ],
+      "loc": 45
+    },
+    {
+      "path": "apps/studio/src/lib/cx.ts",
+      "folder": "apps/studio/src/lib",
+      "kind": "lib",
+      "role": "Joins truthy class-name strings — the whole app's className-combining helper, no classnames dependency needed.",
+      "usedBy": [
+        "most components"
+      ],
+      "loc": 4
+    },
+    {
+      "path": "apps/studio/src/lib/theme.ts",
+      "folder": "apps/studio/src/lib",
+      "kind": "hook",
+      "role": "Reads/writes the light/dark/system theme preference to localStorage and applies it to <html data-theme>.",
+      "usedBy": [
+        "ThemeToggle",
+        "routes/landing/hooks.ts (useForceDarkTokens)"
+      ],
+      "loc": 33
+    },
+    {
+      "path": "apps/studio/src/results/explain.ts",
+      "folder": "apps/studio/src/results",
+      "kind": "lib",
+      "role": "Turns raw simulation KPIs into up to three plain-language sentences (dawn temperature, hours below freezing, auxiliary-heat need, decrement factor), each tagged good/warn/danger.",
+      "usedBy": [
+        "ResultsPanel"
+      ],
+      "loc": 71
+    },
+    {
+      "path": "apps/studio/src/results/format.ts",
+      "folder": "apps/studio/src/results",
+      "kind": "lib",
+      "role": "Shared number formatting: Kelvin-to-Celsius conversion, one-decimal/zero-decimal formatting with negative-zero folding, and hour-of-day formatting.",
+      "usedBy": [
+        "Kpis",
+        "explain",
+        "TemperatureChart",
+        "OverlayChart",
+        "kpiTable",
+        "Dashboard",
+        "landing files"
+      ],
+      "loc": 26
+    },
+    {
+      "path": "apps/studio/src/results/HeatFlowChart.tsx",
+      "folder": "apps/studio/src/results",
+      "kind": "component",
+      "role": "A plain flexbox bar chart of the daily heat-flow pathway breakdown (kWh gained/lost per pathway), bars pointing left/right from a zero line instead of using colour for sign.",
+      "usedBy": [
+        "ResultsPanel"
+      ],
+      "loc": 82
+    },
+    {
+      "path": "apps/studio/src/results/Kpis.tsx",
+      "folder": "apps/studio/src/results",
+      "kind": "component",
+      "role": "A plain hairline-row list of the nine exposed engine KPIs (dawn temp, min/max indoor, hours below 0/5°C, decrement factor, time lag, aux heat, kerosene).",
+      "usedBy": [
+        "ResultsPanel"
+      ],
+      "loc": 35
+    },
+    {
+      "path": "apps/studio/src/results/labels.ts",
+      "folder": "apps/studio/src/results",
+      "kind": "lib",
+      "role": "The ordered list of heat-flow keys shown in the chart, and their human-readable labels, trimmed from the engine's full pathway list to avoid double counting.",
+      "usedBy": [
+        "HeatFlowChart"
+      ],
+      "loc": 36
+    },
+    {
+      "path": "apps/studio/src/results/ResultsPanel.tsx",
+      "folder": "apps/studio/src/results",
+      "kind": "component",
+      "role": "Assembles the whole results pane for the latest preview: status line, Insights, TemperatureChart, HeatFlowChart, Kpis and weather-provenance note.",
+      "usedBy": [
+        "Studio"
+      ],
+      "loc": 104
+    },
+    {
+      "path": "apps/studio/src/results/TemperatureChart.tsx",
+      "folder": "apps/studio/src/results",
+      "kind": "component",
+      "role": "The 24h indoor-vs-outdoor line chart (recharts), with a custom tooltip and thermal-scale colours.",
+      "usedBy": [
+        "ResultsPanel",
+        "routes/landing/Chart.tsx"
+      ],
+      "loc": 96
+    },
+    {
+      "path": "apps/studio/src/results/types.ts",
+      "folder": "apps/studio/src/results",
+      "kind": "lib",
+      "role": "The client's own hand-typed view of the engine's documented (but not exported-typed) simulation result JSON shape, trimmed to the fields the UI actually reads.",
+      "usedBy": [
+        "ResultsPanel",
+        "TemperatureChart",
+        "HeatFlowChart",
+        "OverlayChart",
+        "sampleAtHour"
+      ],
+      "loc": 19
+    },
+    {
+      "path": "apps/studio/src/routes/Compare.tsx",
+      "folder": "apps/studio/src/routes",
+      "kind": "page",
+      "role": "The Compare page: pick 2-4 saved designs, fetch each one's latest run, then show an overlay chart and a plain KPI delta table (no scores/rankings) against the first pick.",
+      "usedBy": [
+        "App.tsx"
+      ],
+      "loc": 290
+    },
+    {
+      "path": "apps/studio/src/routes/Dashboard.tsx",
+      "folder": "apps/studio/src/routes",
+      "kind": "page",
+      "role": "'Your shelters' grid: lists saved designs with location/updated/dawn-temp, a New shelter action, and inline delete-with-confirm (no native browser dialog).",
+      "usedBy": [
+        "App.tsx"
+      ],
+      "loc": 220
+    },
+    {
+      "path": "apps/studio/src/routes/Landing.tsx",
+      "folder": "apps/studio/src/routes",
+      "kind": "page",
+      "role": "The marketing front door: fetches one real preview of the default shelter and shares it between the Hero's live temperature strip and the Chart section, composing Hero/ShapeStrip/Stages/Chart.",
+      "usedBy": [
+        "App.tsx"
+      ],
+      "loc": 84
+    },
+    {
+      "path": "apps/studio/src/routes/Login.tsx",
+      "folder": "apps/studio/src/routes",
+      "kind": "page",
+      "role": "Login form: email/password, calls the login() API wrapper and navigates to /app on success, surfacing field-level or generic errors.",
+      "usedBy": [
+        "App.tsx"
+      ],
+      "loc": 81
+    },
+    {
+      "path": "apps/studio/src/routes/Register.tsx",
+      "folder": "apps/studio/src/routes",
+      "kind": "page",
+      "role": "Registration form: name/email/password, same error-handling pattern as Login.",
+      "usedBy": [
+        "App.tsx"
+      ],
+      "loc": 93
+    },
+    {
+      "path": "apps/studio/src/routes/RequireAuth.tsx",
+      "folder": "apps/studio/src/routes",
+      "kind": "component",
+      "role": "Auth guard for /app/*: calls getMe() and either renders the nested route (<Outlet>) or redirects to /login.",
+      "usedBy": [
+        "App.tsx"
+      ],
+      "loc": 28
+    },
+    {
+      "path": "apps/studio/src/routes/Studio.tsx",
+      "folder": "apps/studio/src/routes",
+      "kind": "page",
+      "role": "The main design workspace: three-pane layout (controls | live 3D viewer | results), loads/creates a design, debounces a preview request on every design change, and handles save-design/save-run.",
+      "usedBy": [
+        "App.tsx"
+      ],
+      "loc": 327
+    },
+    {
+      "path": "apps/studio/src/routes/compare/kpiTable.ts",
+      "folder": "apps/studio/src/routes/compare",
+      "kind": "lib",
+      "role": "Pure logic building the KPI delta table rows: converts Kelvin to °C, computes each design's delta vs the first (baseline) design, folds negative-zero, signs deltas explicitly.",
+      "usedBy": [
+        "Compare"
+      ],
+      "loc": 87
+    },
+    {
+      "path": "apps/studio/src/routes/compare/OverlayChart.tsx",
+      "folder": "apps/studio/src/routes/compare",
+      "kind": "component",
+      "role": "Overlays 2-4 designs' indoor-air temperature curves on one recharts LineChart, one colour per design.",
+      "usedBy": [
+        "Compare"
+      ],
+      "loc": 132
+    },
+    {
+      "path": "apps/studio/src/routes/landing/Chart.tsx",
+      "folder": "apps/studio/src/routes/landing",
+      "kind": "component",
+      "role": "The landing page's live-chart section, reusing the same real preview response the hero strip samples — never a fake chart.",
+      "usedBy": [
+        "Landing"
+      ],
+      "loc": 36
+    },
+    {
+      "path": "apps/studio/src/routes/landing/Hero.tsx",
+      "folder": "apps/studio/src/routes/landing",
+      "kind": "component",
+      "role": "The full-viewport cinematic hero: an auto-rotating live 3D shelter with the sun sweeping dawn→dusk, forced dark theme tokens, and a live temperature readout sampled off a real preview.",
+      "usedBy": [
+        "Landing"
+      ],
+      "loc": 103
+    },
+    {
+      "path": "apps/studio/src/routes/landing/hooks.ts",
+      "folder": "apps/studio/src/routes/landing",
+      "kind": "hook",
+      "role": "Landing-only motion/visibility helpers built on native browser APIs: reduced-motion detection, min-width media query, IntersectionObserver-based in-view, an animated dawn→dusk hour sweep, and forcing dark tokens while the hero is in view.",
+      "usedBy": [
+        "Hero",
+        "ShapeStrip",
+        "Stages"
+      ],
+      "loc": 163
+    },
+    {
+      "path": "apps/studio/src/routes/landing/sampleAtHour.ts",
+      "folder": "apps/studio/src/routes/landing",
+      "kind": "lib",
+      "role": "Samples a real preview's 24h indoor/outdoor curve at a given clock hour, linearly interpolating between bracketing samples, so the hero's live numbers always come from a real simulation.",
+      "usedBy": [
+        "Hero"
+      ],
+      "loc": 35
+    },
+    {
+      "path": "apps/studio/src/routes/landing/ShapeStrip.tsx",
+      "folder": "apps/studio/src/routes/landing",
+      "kind": "component",
+      "role": "Three small live 3D viewers (box/cylinder/dome), each only mounted once scrolled into view so idle WebGL contexts never sit on the page at load.",
+      "usedBy": [
+        "Landing"
+      ],
+      "loc": 60
+    },
+    {
+      "path": "apps/studio/src/routes/landing/Stages.tsx",
+      "folder": "apps/studio/src/routes/landing",
+      "kind": "component",
+      "role": "The 'How it works' four-stage list, revealed on scroll via useInView + a CSS transition (respecting prefers-reduced-motion).",
+      "usedBy": [
+        "Landing"
+      ],
+      "loc": 57
+    },
+    {
+      "path": "apps/studio/src/styles/index.css",
+      "folder": "apps/studio/src/styles",
+      "kind": "style",
+      "role": "Tailwind entry point: imports tokens.css, maps design tokens into Tailwind's @theme, global resets/focus rings, the native slider restyle, and the scroll-reveal animation.",
+      "usedBy": [
+        "main.tsx"
+      ],
+      "loc": 108
+    },
+    {
+      "path": "apps/studio/src/styles/tokens.css",
+      "folder": "apps/studio/src/styles",
+      "kind": "style",
+      "role": "The CSS custom properties for the whole design system: light/dark neutrals, the accent colour, the reserved thermal colour scale, type scale and spacing — switches via prefers-color-scheme or an explicit data-theme attribute.",
+      "usedBy": [
+        "index.css",
+        "useThemeColors"
+      ],
+      "loc": 97
+    },
+    {
+      "path": "apps/studio/src/viewer/Building.tsx",
+      "folder": "apps/studio/src/viewer",
+      "kind": "component",
+      "role": "Builds the actual 3D building: mitred-corner extruded wall solids, windows, roof/floor slabs, for box, cylinder (12-facet ring) and dome (3-band hemisphere) shapes, wired for hover/select part interaction.",
+      "usedBy": [
+        "ShelterViewer (via Scene)"
+      ],
+      "loc": 768
+    },
+    {
+      "path": "apps/studio/src/viewer/Compass.tsx",
+      "folder": "apps/studio/src/viewer",
+      "kind": "component",
+      "role": "A ground-plane compass (ring + needle + block-glyph 'N') placed just outside the building footprint, always in true world-north regardless of the building's own rotation.",
+      "usedBy": [
+        "ShelterViewer (Scene)"
+      ],
+      "loc": 68
+    },
+    {
+      "path": "apps/studio/src/viewer/DevViewer.tsx",
+      "folder": "apps/studio/src/viewer",
+      "kind": "page",
+      "role": "A dev-only route (/dev/viewer) previewing ShelterViewer against real options data with query-param overrides for geometry/hour, for visual QA outside the full Studio page.",
+      "usedBy": [
+        "App.tsx"
+      ],
+      "loc": 53
+    },
+    {
+      "path": "apps/studio/src/viewer/framing.ts",
+      "folder": "apps/studio/src/viewer",
+      "kind": "lib",
+      "role": "Pure camera-distance math that keeps the scene framed regardless of the canvas's own aspect ratio (fits both a vertical and horizontal half-extent, takes whichever needs more distance).",
+      "usedBy": [
+        "ShelterViewer (Scene)"
+      ],
+      "loc": 68
+    },
+    {
+      "path": "apps/studio/src/viewer/geometry.ts",
+      "folder": "apps/studio/src/viewer",
+      "kind": "lib",
+      "role": "Pure ShelterDesign → SceneGeometry conversion: wall/window placement and sizing for box/cylinder/dome shapes, mirroring the server's own facet-generation constants so the viewer draws exactly what the engine simulates.",
+      "usedBy": [
+        "Building",
+        "ShelterViewer",
+        "PartPopover"
+      ],
+      "loc": 335
+    },
+    {
+      "path": "apps/studio/src/viewer/PartPopover.tsx",
+      "folder": "apps/studio/src/viewer",
+      "kind": "component",
+      "role": "A small floating panel next to a selected 3D part with 1-2 NumberInputs editing that part's key value, writing straight through the same ShelterDesign store setters the main controls use.",
+      "usedBy": [
+        "ShelterViewer (Scene)"
+      ],
+      "loc": 183
+    },
+    {
+      "path": "apps/studio/src/viewer/ShelterViewer.tsx",
+      "folder": "apps/studio/src/viewer",
+      "kind": "component",
+      "role": "The top-level 3D viewer: sets up the Canvas, camera, lights, sun, ground, compass and Building, and wires optional autoRotate/interactive/frameShift behaviour for its different callers (Studio, Landing, Compare-less, DevViewer).",
+      "usedBy": [
+        "Studio",
+        "Landing",
+        "ShapeStrip",
+        "DevViewer"
+      ],
+      "loc": 314
+    },
+    {
+      "path": "apps/studio/src/viewer/solar.ts",
+      "folder": "apps/studio/src/viewer",
+      "kind": "lib",
+      "role": "Independent implementation of standard solar-position astronomy (declination, equation of time, hour angle) converting a date/lat/lon/clock-hour into a sun direction vector matching the viewer's world frame.",
+      "usedBy": [
+        "ShelterViewer (Scene)",
+        "Studio (sun-below-horizon note)"
+      ],
+      "loc": 115
+    },
+    {
+      "path": "apps/studio/src/viewer/Sun.tsx",
+      "folder": "apps/studio/src/viewer",
+      "kind": "component",
+      "role": "A small disc placed at the real sun direction/distance, with a dashed line back to the building centre — only rendered when the sun is above the horizon.",
+      "usedBy": [
+        "ShelterViewer (Scene)"
+      ],
+      "loc": 54
+    },
+    {
+      "path": "apps/studio/src/viewer/usePartInteraction.ts",
+      "folder": "apps/studio/src/viewer",
+      "kind": "hook",
+      "role": "Shared pointer-event wiring (hover/select) for any selectable 3D part, plus a colour-tinting helper for the hover/selected highlight.",
+      "usedBy": [
+        "Building (walls/roof/floor/windows)"
+      ],
+      "loc": 65
+    },
+    {
+      "path": "apps/studio/src/viewer/useThemeColors.ts",
+      "folder": "apps/studio/src/viewer",
+      "kind": "hook",
+      "role": "Reads the current CSS design-token colours off <html> so the 3D scene's backdrop (background/ground/compass) matches the light/dark theme, re-reading on theme or system-preference changes.",
+      "usedBy": [
+        "ShelterViewer (Scene)",
+        "Compass"
+      ],
+      "loc": 72
+    }
+  ],
+  "tests": [
+    {
+      "path": "apps/studio/src/api/auth.test.ts",
+      "covers": "auth API wrappers (login/register/logout/getMe, including getMe's never-throws behaviour)"
+    },
+    {
+      "path": "apps/studio/src/api/designs.test.ts",
+      "covers": "designs + simulations API wrappers (CRUD, run/list/get simulation)"
+    },
+    {
+      "path": "apps/studio/src/api/health.test.ts",
+      "covers": "health API wrapper"
+    },
+    {
+      "path": "apps/studio/src/api/locations.test.ts",
+      "covers": "location search API wrapper, including query encoding"
+    },
+    {
+      "path": "apps/studio/src/api/options.test.ts",
+      "covers": "options API wrapper"
+    },
+    {
+      "path": "apps/studio/src/api/simulate.test.ts",
+      "covers": "preview simulation API wrapper, including weatherProvenance passthrough"
+    },
+    {
+      "path": "apps/studio/src/components/ui/FieldRow.test.tsx",
+      "covers": "3D part hover/focus/selection highlighting behaviour of FieldRow"
+    },
+    {
+      "path": "apps/studio/src/components/ui/Segmented.test.tsx",
+      "covers": "Segmented radio-group check/switch behaviour"
+    },
+    {
+      "path": "apps/studio/src/controls/SliderField.test.tsx",
+      "covers": "SliderField commit/clamp/revert/step behaviour (Enter, Escape, blur, arrow keys, fractional steps)"
+    },
+    {
+      "path": "apps/studio/src/controls/useDebouncedRequest.test.ts",
+      "covers": "debounce timing, stale-response discarding, retry, and null-input skipping"
+    },
+    {
+      "path": "apps/studio/src/design/partMapping.test.ts",
+      "covers": "PartId-to-controls-section/field mapping"
+    },
+    {
+      "path": "apps/studio/src/design/selection.test.ts",
+      "covers": "the UI-only 3D selection zustand store"
+    },
+    {
+      "path": "apps/studio/src/design/store.test.ts",
+      "covers": "the ShelterDesign zustand store (loadDesign normalisation, every setter, dirty flag, reset)"
+    },
+    {
+      "path": "apps/studio/src/results/explain.test.ts",
+      "covers": "plain-language KPI insight generation and its severity/priority/cap rules"
+    },
+    {
+      "path": "apps/studio/src/results/format.test.ts",
+      "covers": "Kelvin-to-Celsius, negative-zero folding, and hour formatting"
+    },
+    {
+      "path": "apps/studio/src/routes/compare/kpiTable.test.ts",
+      "covers": "KPI delta table construction: units, deltas vs baseline, negative-zero folding, 2-4 design support"
+    },
+    {
+      "path": "apps/studio/src/routes/landing/sampleAtHour.test.ts",
+      "covers": "sampling/interpolating/wrapping/clamping a preview's temperature curve at a given hour"
+    },
+    {
+      "path": "apps/studio/src/viewer/Building.test.ts",
+      "covers": "mitred wall-corner geometry for both box (45°) and cylinder ring (15°, N=12) construction, checked against real vertex data"
+    },
+    {
+      "path": "apps/studio/src/viewer/framing.test.ts",
+      "covers": "camera-distance formula across aspect ratios, FOV and footprint"
+    },
+    {
+      "path": "apps/studio/src/viewer/geometry.test.ts",
+      "covers": "ShelterDesign-to-SceneGeometry conversion for box/cylinder/dome shapes, window sizing/clamping, storeys, and thickness resolution"
+    },
+    {
+      "path": "apps/studio/src/viewer/PartPopover.test.ts",
+      "covers": "popover anchor-position geometry, especially the window-top anchor fix"
+    },
+    {
+      "path": "apps/studio/src/viewer/solar.test.ts",
+      "covers": "solar position (day-of-year, sun altitude/azimuth at Leh on the winter solstice, sun direction vector)"
+    }
+  ],
+  "flows": [
+    {
+      "name": "App boot",
+      "steps": [
+        "index.html loads src/main.tsx as an ES module",
+        "main.tsx imports fonts + global CSS and renders <App> inside a <BrowserRouter> into #root",
+        "App.tsx (App()) declares all routes inside AppShell, lazy-loading the dev-only 3D viewer",
+        "The matched route component (e.g. Landing, Login, Studio) renders inside AppShell's <Outlet>"
+      ]
+    },
+    {
+      "name": "Auth guard for /app/*",
+      "steps": [
+        "RequireAuth.tsx mounts and calls api/auth.ts's getMe()",
+        "client.ts's fetch wrapper hits GET /api/auth/me; a 401 or network failure both resolve getMe() to null, never throwing",
+        "RequireAuth renders 'Checking session…' while pending, then either <Outlet> (authed) or <Navigate to='/login'> (anon)"
+      ]
+    },
+    {
+      "name": "Edit a design -> live 3D preview -> debounced results",
+      "steps": [
+        "A controls/* section (e.g. GeometrySection's SliderField) calls a setter on design/store.ts's useShelterDesign",
+        "The store's edit() helper patches the design object and marks dirty; only components selecting that field re-render",
+        "viewer/ShelterViewer.tsx reads the updated design, viewer/geometry.ts's buildSceneGeometry recomputes the scene, viewer/Building.tsx re-renders the 3D meshes immediately (no debounce)",
+        "routes/Studio.tsx's useDebouncedRequest (controls/useDebouncedRequest.ts) waits 400ms after the last design change, then calls api/simulate.ts's previewSimulation()",
+        "results/ResultsPanel.tsx renders the new Insights/TemperatureChart/HeatFlowChart/Kpis once the response resolves"
+      ]
+    },
+    {
+      "name": "3D select-to-edit a part",
+      "steps": [
+        "Clicking a wall/window/roof/floor mesh in viewer/Building.tsx fires usePartInteraction.ts's onClick, calling design/selection.ts's selectPart()",
+        "viewer/PartPopover.tsx (rendered when interactive) shows a small NumberInput panel anchored at that part, writing through the same design/store.ts setters as the main controls",
+        "design/partMapping.ts's mapPartToField() tells controls/MaterialsSection.tsx or OpeningsSection.tsx which section/field to force-open and highlight via components/ui/FieldRow.tsx's flash effect",
+        "Selecting a part never marks the design store dirty or reruns the preview — selection.ts is a separate store from store.ts by design"
+      ]
+    },
+    {
+      "name": "Save design / save run / compare",
+      "steps": [
+        "routes/Studio.tsx's handleSaveDesign() calls api/designs.ts's createDesign()/updateDesign(), then loadDesign() on the response (clears dirty) and navigates to the real design id on first save",
+        "handleSaveRun() saves first if needed, then calls runSimulation(id) to persist a SimulationFull run",
+        "routes/Dashboard.tsx lists saved designs (listDesigns) and, per design, fetches its latest run (listSimulations) to show a dawn-temperature preview",
+        "routes/Compare.tsx lets someone pick 2-4 designs, fetches each one's latest saved run, then routes/compare/kpiTable.ts builds a delta table and routes/compare/OverlayChart.tsx overlays their indoor curves"
+      ]
+    },
+    {
+      "name": "Theme toggle",
+      "steps": [
+        "components/shell/ThemeToggle.tsx (in AppShell) renders a Segmented control bound to lib/theme.ts's useTheme()",
+        "Picking Light/Dark/Auto sets the data-theme attribute on <html> and persists the choice to localStorage",
+        "styles/tokens.css's [data-theme='dark'] block (or the prefers-color-scheme media query, for Auto) swaps the CSS variable values",
+        "viewer/useThemeColors.ts re-reads those CSS variables via a MutationObserver, so the 3D scene's backdrop colours follow the same toggle"
+      ]
+    }
+  ]
+}

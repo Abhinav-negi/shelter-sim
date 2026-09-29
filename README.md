@@ -33,8 +33,9 @@ model, the simulation, saved designs and comparisons. The client never runs phys
 build ledger is `STUDIO.md` (task table + handoff), with the architecture in `ledger/PLAN.md`. The current phase,
 **Studio v2** (typed values, box/cylinder/dome and two-storey shelters, click-to-edit 3D model, new landing,
 architecture map), is planned in `ledger/V2.md`; `ORCHESTRATOR.md` is the entry point for resuming work.
-Architecture map: `ARCHITECTURE-STUDIO.md` (condensed) and the illustrated page
-https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv (source: `ledger/d1-architecture-page.html`).
+Architecture: `ARCHITECTURE-STUDIO.md` (condensed, for agents) and the codebase guide web app — tech stack, how the
+repo is divided, every source file's role, server and client breakdowns — at
+https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv (source + generator: `ledger/d2-guide/`).
 
 ### Classic
 
@@ -116,7 +117,7 @@ npm test --workspace @shelter/data          # material / location catalogue
 npm run build --workspace @shelter/client   # type-check + production build
 ```
 
-Studio end-to-end (register → design → preview → save → run → compare → logout), headless system Chrome.
+Studio end-to-end (register → design → preview → save → run → compare → logout to `/`), headless system Chrome.
 `playwright-core` is deliberately not a repo dependency; install it into any scratch directory:
 
 ```bash
