@@ -117,7 +117,7 @@ npm test --workspace @shelter/data          # material / location catalogue
 npm run build --workspace @shelter/client   # type-check + production build
 ```
 
-Studio end-to-end (register → design → preview → save → run → compare → logout), headless system Chrome.
+Studio end-to-end (register → design → preview → save → run → compare → logout to `/`), headless system Chrome.
 `playwright-core` is deliberately not a repo dependency; install it into any scratch directory:
 
 ```bash
