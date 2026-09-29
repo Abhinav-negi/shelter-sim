@@ -20,7 +20,7 @@ Suites on `studio/main`: studio 122/122, studio-server 69 (+2 skipped), build cl
 
 **Session 7 (2026-09-29):** A1 "Run on ANSYS" placeholder merged (see A1 row, Decision 10). studio-server 72 (+2 skipped), studio 122/122, build clean, frozen guard empty.
 
-**In progress:** nothing. No task worktrees or branches remain; no orchestrator-started servers running.
+**In progress:** A2 (`ledger/tasks/A2.md`, worktree `../wt-a2`, branch `task/a2`). No task worktrees or branches remain; no orchestrator-started servers running.
 
 **Known follow-ups (candidates for the next phase):** the landing's animated sun disc can sit at or past the frame edge
 at some hours (and the sun line leaves the frame); Dashboard/Compare N+1 `GET .../simulations`; duplicated KPI labels
@@ -47,6 +47,9 @@ E2E is staged per session in the scratchpad (`npm i playwright-core` in `<scratc
 10. (user, 2026-09-29) "Run on ANSYS" placeholder (A1): button + 7–8 h confirm; server stores `ansysStartedAt` on the
    design (Mongo, survives logout/devices); timer ticks forever until Cancel, shown in Dashboard row + Studio header;
    never says "coming soon", never produces results. Replaces the old "No fake ANSYS" rule.
+11. (user, 2026-09-29, A2) ANSYS dialogs centered; Cancel needs a confirm popup (Studio + Dashboard). Keep the existing
+   JWT httpOnly cookie (7 d). Logged-in visitor at `/` → `/app`. Log out lives in the app header on `/app/*` → `/`;
+   the Dashboard's own Log out is removed. `/login`, `/register` are NOT redirected.
 
 ## Tasks
 
@@ -76,6 +79,7 @@ E2E is staged per session in the scratchpad (`npm i playwright-core` in `<scratc
 | S1 | Studio page-level scroll (outer window scrollbar) | – | orchestrator | DONE | Root cause: `components/ui/Segmented.tsx` sr-only radios were `position:absolute` with no positioned ancestor → containing block `<body>`, escaped the panel's `overflow-y-auto` and stretched `<html>` to 1822px (960px window). Fix: `relative` on the label. Measured after: scrollHeight == innerHeight at 1920×960/1440×900/390×844. New flow.mjs check → 30/30; studio 122/122; build clean; frozen guard empty (session 6). |
 | D2 | Codebase guide web app (tech stack, every file's role, server breakdown) — same link as D1 | D1 | orchestrator | DONE | https://claude.ai/artifact/4hcTeGv6GQPQFD9f3fRsEv v2; source + generator `ledger/d2-guide/`; 149 files explained; see `ledger/tasks/D2.md` |
 | A1 | "Run on ANSYS" placeholder: confirm dialog, `ansysStartedAt` on design, ticking timer + Cancel (Dashboard + Studio) | – | sonnet | DONE | merged into studio/main; `ansysStartedAt` + POST/DELETE `/api/designs/:id/ansys`, `components/AnsysTimer.tsx`; +3 mongo tests (72 pass); see `ledger/tasks/A1.md` |
+| A2 | Centered ANSYS dialogs + cancel confirm, logged-in `/`→`/app`, header Log out | A1 | sonnet | IN-PROGRESS | see `ledger/tasks/A2.md` |
 
 ## Required from user
 ```
