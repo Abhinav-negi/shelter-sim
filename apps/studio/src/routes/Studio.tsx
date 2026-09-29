@@ -10,6 +10,7 @@ import { cancelAnsys, createDesign, getDesign, runSimulation, startAnsys, update
 import { previewSimulation } from '../api/simulate';
 import { ApiError } from '../api/client';
 import { AnsysTimer } from '../components/AnsysTimer';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Button } from '../components/ui';
 import { ControlsPanel } from '../controls/ControlsPanel';
 import { useDebouncedRequest } from '../controls/useDebouncedRequest';
@@ -59,10 +60,11 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
   const [ansysStartedAt, setAnsysStartedAt] = useState<string | null>(null);
   const [ansysState, setAnsysState] = useState<'idle' | 'starting' | 'cancelling' | 'error'>('idle');
   const [ansysError, setAnsysError] = useState<string | null>(null);
+  const [ansysConfirmOpen, setAnsysConfirmOpen] = useState(false);
+  const [ansysCancelConfirmOpen, setAnsysCancelConfirmOpen] = useState(false);
 
   const loadedIdRef = useRef<string | null>(null);
   const lastSavedNameRef = useRef('Untitled shelter');
-  const ansysDialogRef = useRef<HTMLDialogElement>(null);
 
   // Load the design: `new` seeds the store from options.defaults, an existing
   // id fetches it. Guarded so a save-triggered navigate (new -> real id)
@@ -153,7 +155,7 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
   }
 
   async function handleConfirmAnsys() {
-    ansysDialogRef.current?.close();
+    setAnsysConfirmOpen(false);
     setAnsysState('starting');
     setAnsysError(null);
     try {
@@ -273,13 +275,13 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
         {ansysStartedAt ? (
           <AnsysTimer
             startedAt={ansysStartedAt}
-            onCancel={handleCancelAnsys}
+            onCancel={() => setAnsysCancelConfirmOpen(true)}
             cancelling={ansysState === 'cancelling'}
           />
         ) : (
           <Button
             variant="secondary"
-            onClick={() => ansysDialogRef.current?.showModal()}
+            onClick={() => setAnsysConfirmOpen(true)}
             disabled={ansysState === 'starting'}
           >
             {ansysState === 'starting' ? 'Starting…' : 'Run on ANSYS'}
@@ -299,20 +301,26 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
         <p className="border-b border-hairline px-4 py-1.5 text-xs text-thermal-hottest sm:px-6">{ansysError}</p>
       ) : null}
 
-      <dialog
-        ref={ansysDialogRef}
-        className="w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-hairline bg-paper p-5 text-ink backdrop:bg-ink/40"
-      >
-        <p className="text-sm">ANSYS simulations can take up to 7–8 hours to complete. Do you want to continue?</p>
-        <div className="mt-4 flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => ansysDialogRef.current?.close()}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleConfirmAnsys}>
-            Continue
-          </Button>
-        </div>
-      </dialog>
+      <ConfirmDialog
+        open={ansysConfirmOpen}
+        message="ANSYS simulations can take up to 7–8 hours to complete. Do you want to continue?"
+        cancelLabel="Cancel"
+        confirmLabel="Continue"
+        onClose={() => setAnsysConfirmOpen(false)}
+        onConfirm={handleConfirmAnsys}
+      />
+      <ConfirmDialog
+        open={ansysCancelConfirmOpen}
+        message="Cancel this ANSYS run? The elapsed time will be lost."
+        cancelLabel="Keep running"
+        confirmLabel="Cancel run"
+        busy={ansysState === 'cancelling'}
+        onClose={() => setAnsysCancelConfirmOpen(false)}
+        onConfirm={() => {
+          setAnsysCancelConfirmOpen(false);
+          handleCancelAnsys();
+        }}
+      />
 
       {/* Mobile (<lg): one scrolling column, viewer first ("designing a
        * shelter, not filling a form" -- PLAN.md) at a fixed 45vh so its

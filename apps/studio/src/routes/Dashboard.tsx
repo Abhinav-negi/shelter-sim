@@ -4,13 +4,13 @@
 // app has no other native browser dialogs either, so a two-step inline
 // control matches the rest of the UI better than a modal would).
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import type { DesignSummary, Options } from '@shelter/studio-server';
-import { logout } from '../api/auth';
 import { ApiError } from '../api/client';
 import { cancelAnsys, deleteDesign, listDesigns, listSimulations } from '../api/designs';
 import { useOptions } from '../design/useOptions';
 import { AnsysTimer } from '../components/AnsysTimer';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Button } from '../components/ui';
 import { fmtC } from '../results/format';
 
@@ -93,7 +93,6 @@ function DesignRow({
 }
 
 export function Dashboard() {
-  const navigate = useNavigate();
   const { options } = useOptions();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +100,7 @@ export function Dashboard() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [cancellingAnsysId, setCancellingAnsysId] = useState<string | null>(null);
+  const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -176,25 +176,15 @@ export function Dashboard() {
     }
   }
 
-  async function handleLogout() {
-    await logout().catch(() => {});
-    navigate('/login');
-  }
-
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl font-semibold">Your shelters</h1>
-        <div className="flex items-center gap-4">
-          {rows && rows.length >= 2 ? (
-            <Link to="/app/compare" className="text-sm text-ink-muted transition-colors hover:text-ink">
-              Compare
-            </Link>
-          ) : null}
-          <Button variant="ghost" onClick={handleLogout} className="px-0 text-sm">
-            Log out
-          </Button>
-        </div>
+        {rows && rows.length >= 2 ? (
+          <Link to="/app/compare" className="text-sm text-ink-muted transition-colors hover:text-ink">
+            Compare
+          </Link>
+        ) : null}
       </div>
 
       {error ? (
@@ -230,7 +220,7 @@ export function Dashboard() {
                 onDeleteClick={() => setConfirmingId(row.summary.id)}
                 onCancel={() => setConfirmingId(null)}
                 onConfirmDelete={() => handleDelete(row.summary.id)}
-                onCancelAnsys={() => handleCancelAnsys(row.summary.id)}
+                onCancelAnsys={() => setConfirmCancelId(row.summary.id)}
               />
             ))}
           </div>
@@ -242,6 +232,20 @@ export function Dashboard() {
           </Link>
         </>
       )}
+
+      <ConfirmDialog
+        open={confirmCancelId !== null}
+        message="Cancel this ANSYS run? The elapsed time will be lost."
+        cancelLabel="Keep running"
+        confirmLabel="Cancel run"
+        busy={cancellingAnsysId === confirmCancelId}
+        onClose={() => setConfirmCancelId(null)}
+        onConfirm={() => {
+          const id = confirmCancelId;
+          setConfirmCancelId(null);
+          if (id) handleCancelAnsys(id);
+        }}
+      />
     </div>
   );
 }
