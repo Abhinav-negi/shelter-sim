@@ -6,9 +6,10 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import type { DesignSummary, Options, ShelterDesign } from '@shelter/studio-server';
-import { createDesign, getDesign, runSimulation, updateDesign } from '../api/designs';
+import { cancelAnsys, createDesign, getDesign, runSimulation, startAnsys, updateDesign } from '../api/designs';
 import { previewSimulation } from '../api/simulate';
 import { ApiError } from '../api/client';
+import { AnsysTimer } from '../components/AnsysTimer';
 import { Button } from '../components/ui';
 import { ControlsPanel } from '../controls/ControlsPanel';
 import { useDebouncedRequest } from '../controls/useDebouncedRequest';
@@ -55,9 +56,13 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
   const [runState, setRunState] = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
   const [runError, setRunError] = useState<string | null>(null);
   const [hour, setHour] = useState(12);
+  const [ansysStartedAt, setAnsysStartedAt] = useState<string | null>(null);
+  const [ansysState, setAnsysState] = useState<'idle' | 'starting' | 'cancelling' | 'error'>('idle');
+  const [ansysError, setAnsysError] = useState<string | null>(null);
 
   const loadedIdRef = useRef<string | null>(null);
   const lastSavedNameRef = useRef('Untitled shelter');
+  const ansysDialogRef = useRef<HTMLDialogElement>(null);
 
   // Load the design: `new` seeds the store from options.defaults, an existing
   // id fetches it. Guarded so a save-triggered navigate (new -> real id)
@@ -69,6 +74,7 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
         setName('Untitled shelter');
         lastSavedNameRef.current = 'Untitled shelter';
         setSavedId(null);
+        setAnsysStartedAt(null);
         loadedIdRef.current = 'new';
       }
       setLoading(false);
@@ -88,6 +94,7 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
         setName(d.name);
         lastSavedNameRef.current = d.name;
         setSavedId(d.id);
+        setAnsysStartedAt(d.ansysStartedAt);
         loadedIdRef.current = d.id;
         setLoading(false);
       },
@@ -145,6 +152,39 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
     }
   }
 
+  async function handleConfirmAnsys() {
+    ansysDialogRef.current?.close();
+    setAnsysState('starting');
+    setAnsysError(null);
+    try {
+      let runId = savedId;
+      if (!runId || dirty || name !== lastSavedNameRef.current) {
+        const saved = await handleSaveDesign();
+        runId = saved.id;
+      }
+      const result = await startAnsys(runId!);
+      setAnsysStartedAt(result.ansysStartedAt);
+      setAnsysState('idle');
+    } catch (err) {
+      setAnsysState('error');
+      setAnsysError(errorMessage(err, 'Could not start the ANSYS run.'));
+    }
+  }
+
+  async function handleCancelAnsys() {
+    if (!savedId) return;
+    setAnsysState('cancelling');
+    setAnsysError(null);
+    try {
+      const result = await cancelAnsys(savedId);
+      setAnsysStartedAt(result.ansysStartedAt);
+      setAnsysState('idle');
+    } catch (err) {
+      setAnsysState('error');
+      setAnsysError(errorMessage(err, 'Could not cancel the ANSYS run.'));
+    }
+  }
+
   if (loading || !design) {
     // Q1F #3: keep the page frame (header row + three-pane layout) so the
     // fetch doesn't read as a near-blank/broken page; only the pane bodies
@@ -162,6 +202,9 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
           </Button>
           <Button variant="primary" disabled>
             Save run
+          </Button>
+          <Button variant="secondary" disabled>
+            Run on ANSYS
           </Button>
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
@@ -227,6 +270,21 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
         <Button variant="primary" onClick={handleSaveRun} disabled={runState === 'saving'}>
           {runState === 'saving' ? 'Saving run…' : 'Save run'}
         </Button>
+        {ansysStartedAt ? (
+          <AnsysTimer
+            startedAt={ansysStartedAt}
+            onCancel={handleCancelAnsys}
+            cancelling={ansysState === 'cancelling'}
+          />
+        ) : (
+          <Button
+            variant="secondary"
+            onClick={() => ansysDialogRef.current?.showModal()}
+            disabled={ansysState === 'starting'}
+          >
+            {ansysState === 'starting' ? 'Starting…' : 'Run on ANSYS'}
+          </Button>
+        )}
       </div>
       {saveState === 'error' && saveError ? (
         <p className="border-b border-hairline px-4 py-1.5 text-xs text-thermal-hottest sm:px-6">{saveError}</p>
@@ -237,6 +295,24 @@ function StudioLoaded({ id, isNew, options }: { id: string | undefined; isNew: b
       {runState === 'done' ? (
         <p className="border-b border-hairline px-4 py-1.5 text-xs text-ink-muted sm:px-6">Run saved.</p>
       ) : null}
+      {ansysState === 'error' && ansysError ? (
+        <p className="border-b border-hairline px-4 py-1.5 text-xs text-thermal-hottest sm:px-6">{ansysError}</p>
+      ) : null}
+
+      <dialog
+        ref={ansysDialogRef}
+        className="w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-hairline bg-paper p-5 text-ink backdrop:bg-ink/40"
+      >
+        <p className="text-sm">ANSYS simulations can take up to 7–8 hours to complete. Do you want to continue?</p>
+        <div className="mt-4 flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => ansysDialogRef.current?.close()}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleConfirmAnsys}>
+            Continue
+          </Button>
+        </div>
+      </dialog>
 
       {/* Mobile (<lg): one scrolling column, viewer first ("designing a
        * shelter, not filling a form" -- PLAN.md) at a fixed 45vh so its
